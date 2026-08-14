@@ -1,0 +1,42 @@
+name: Verify iOS Project
+
+on:
+  workflow_dispatch:
+
+jobs:
+  verify-ios:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Create and sync iOS project
+        run: |
+          if [ ! -d ios ]; then
+            npx cap add ios
+          fi
+          npx cap sync ios
+
+      - name: Build iOS simulator app (no signing required)
+        run: |
+          xcodebuild \
+            -project ios/App/App.xcodeproj \
+            -scheme App \
+            -configuration Debug \
+            -sdk iphonesimulator \
+            -derivedDataPath $RUNNER_TEMP/DerivedData \
+            CODE_SIGNING_ALLOWED=NO \
+            build
+
+      - name: Upload simulator build
+        uses: actions/upload-artifact@v4
+        with:
+          name: BC-Rybarna-Scoreboard-iOS-Simulator
+          path: ${{ runner.temp }}/DerivedData/Build/Products/Debug-iphonesimulator/App.app

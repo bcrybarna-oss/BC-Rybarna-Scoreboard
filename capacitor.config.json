@@ -1,0 +1,9 @@
+{
+  "appId": "cz.bcrybarna.scoreboard",
+  "appName": "BC Rybárna Scoreboard",
+  "webDir": "www",
+  "bundledWebRuntime": false,
+  "server": {
+    "androidScheme": "https"
+  }
+}

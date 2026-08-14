@@ -1,0 +1,10 @@
+BC Rybárna Scoreboard – co nahrát na GitHub
+
+Nahraj CELÝ obsah této složky, včetně skryté složky:
+.github/workflows/
+
+Potom:
+1. GitHub → Actions
+2. nejdřív spusť "Verify iOS Project"
+3. pro podepsané IPA nastav Apple secrets
+4. spusť "Build iOS IPA"
