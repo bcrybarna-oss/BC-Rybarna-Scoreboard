@@ -85,7 +85,6 @@
     .match-title{font-size:11px;font-weight:900;color:#fff;letter-spacing:.5px;margin-bottom:2px;white-space:nowrap;max-width:220px;overflow:hidden;text-overflow:ellipsis}
     .discipline{font-size:14px;font-weight:950;letter-spacing:.8px;color:var(--gold2)}
     .race{font-size:10px;color:var(--muted);margin-top:2px}
-    .live-state{font-size:10px;color:#fff;margin-top:4px;font-weight:900;letter-spacing:.5px;white-space:nowrap;max-width:220px;overflow:hidden;text-overflow:ellipsis}
     .clock{
       margin-top:6px;
       font-size:22px;font-weight:950;
@@ -125,7 +124,6 @@
       <div id="matchTitle" class="match-title">ČPT • 9-BALL</div>
       <div id="discipline" class="discipline">9-BALL</div>
       <div id="race" class="race">RACE TO 7</div>
-      <div id="liveState" class="live-state">U STOLU: JARDA</div>
       <div id="clock" class="clock">30</div>
     </div>
 
@@ -209,11 +207,6 @@
       $('p2Box').classList.toggle('turn',state.turn===1 && !state.solo14);
 
       $('p2Box').classList.toggle('hidden',!!state.solo14);
-
-      const activeName = state.turn===0 ? p1 : p2;
-      const roleText = state.isBreakShot ? 'ROZSTŘELUJE' : 'U STOLU';
-      $('liveState').textContent = activeName ? (roleText+': '+activeName) : '';
-      $('liveState').classList.toggle('hidden',!activeName);
 
       $('p1Role').classList.add('hidden');
       $('p2Role').classList.add('hidden');
