@@ -85,6 +85,8 @@
     .match-title{font-size:11px;font-weight:900;color:#fff;letter-spacing:.5px;margin-bottom:2px;white-space:nowrap;max-width:220px;overflow:hidden;text-overflow:ellipsis}
     .discipline{font-size:14px;font-weight:950;letter-spacing:.8px;color:var(--gold2)}
     .race{font-size:10px;color:var(--muted);margin-top:2px}
+    .ghost-rules{font-size:9px;color:#fff;margin-top:4px;font-weight:800;line-height:1.25;text-align:center;white-space:normal;max-width:230px}
+    .ghost-rules strong{color:var(--gold2)}
     .clock{
       margin-top:6px;
       font-size:22px;font-weight:950;
@@ -124,6 +126,7 @@
       <div id="matchTitle" class="match-title">ČPT • 9-BALL</div>
       <div id="discipline" class="discipline">9-BALL</div>
       <div id="race" class="race">RACE TO 7</div>
+      <div id="ghostRules" class="ghost-rules hidden"></div>
       <div id="clock" class="clock">30</div>
     </div>
 
@@ -198,9 +201,19 @@
       if(state.discipline==='14.1'){
         $('race').textContent='DO '+(state.target||100)+' BODŮ';
       }else if(state.ghostMode){
-        $('race').textContent='GHOST SESSION';
+        $('race').textContent='DO '+(state.target||7)+' BODŮ';
       }else{
         $('race').textContent='RACE TO '+(state.target||7);
+      }
+
+      if(state.ghostMode){
+        $('ghostRules').innerHTML =
+          '<strong>ČISTÁ 2 B</strong> • <strong>BIH 1 B</strong> • ' +
+          'NEDOHRÁNO = GHOST +1 • DRY BREAK = GHOST +1';
+        $('ghostRules').classList.remove('hidden');
+      }else{
+        $('ghostRules').classList.add('hidden');
+        $('ghostRules').textContent='';
       }
 
       $('p1Box').classList.toggle('turn',state.turn===0);
