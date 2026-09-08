@@ -1133,7 +1133,7 @@
           <li>Turnaj může organizátor nastavit podle disciplíny, Race to, systému rozstřelu a počtu stolů.</li>
           <li>Nasazení může být <strong>náhodné</strong>, <strong>losováním čísel</strong>, <strong>dle ELO</strong> nebo <strong>ruční</strong>. Při losování čísel dostane každý účastník jedno unikátní číslo od 1 do počtu hráčů a turnaj se následně nasadí podle tohoto pořadí. ELO nasazení používá stejné celkové ELO jako profily hráčů; host bez historie má výchozí ELO 1500. U skupin se ELO hráči rozdělují hadovitě pro vyrovnanější skupiny, u SKO/DKO se nejvýše nasazení rozmisťují do různých částí pavouka.</li>
           <li>U turnajů <strong>Skupiny → SKO / DKO</strong> se při nasazení do play-off i u hráčů v pavouku zobrazuje jejich původ ze skupiny a pořadí, například „Skupina A • 1. místo“.</li>
-          <li>U ručního nasazení ze skupin lze určit přesné dvojice prvního kola play-off. U varianty Skupiny → SKO s 8 postupujícími lze navíc zvolit, jak se vítězové QF1–QF4 napojí do semifinále, takže lze přesně kopírovat papírového pavouka.</li>
+          <li>U <strong>ručního nasazení ze skupin</strong> lze určit přesné dvojice prvního kola play-off. U SKO s 8 postupujícími lze navíc zvolit i napojení čtvrtfinále do semifinále, například QF1×QF3 a QF2×QF4.</li>
           <li>Podporované jsou skupinové formáty, SKO, DKO, návazné formáty Skupiny → SKO / DKO a <strong>Švýcarský systém</strong>.</li>
           <li>Ve Švýcarském systému se před turnajem nastaví počet kol nebo se nechá automatický výpočet. Výhra = 1 bod, volno = 1 bod. Po každém kompletně dohraném kole aplikace vytvoří další kolo podle aktuálního pořadí.</li>
           <li>Volitelně lze nastavit, kolik nejlepších hráčů po švýcarské části postoupí do následného <strong>SKO</strong>: 2, 4, 8 nebo 16. Pokud je zvoleno „Bez SKO“, turnaj skončí po švýcarské části.</li>
@@ -2619,14 +2619,17 @@
             Zvol přesně, kdo bude hrát proti komu v prvním kole play-off. U každého hráče je uvedena skupina i aktuální umístění.
           </div>
           <div id="groupPlayoffManualList"></div>
+
           <div id="groupPlayoffSemiRoutingBox" class="subpanel hidden" style="margin-top:12px">
             <label>Napojení čtvrtfinále do semifinále</label>
             <select id="groupPlayoffSemiRouting">
+              <option value="cross13">Vítěz QF1 × vítěz QF3 • vítěz QF2 × vítěz QF4</option>
               <option value="cross14">Vítěz QF1 × vítěz QF4 • vítěz QF2 × vítěz QF3</option>
               <option value="adjacent">Vítěz QF1 × vítěz QF2 • vítěz QF3 × vítěz QF4</option>
-              <option value="cross13">Vítěz QF1 × vítěz QF3 • vítěz QF2 × vítěz QF4</option>
             </select>
-            <div class="muted" style="margin-top:6px">Použije se pouze u SKO s 8 postupujícími.</div>
+            <div class="muted" style="margin-top:6px">
+              Pro tvůj papírový pavouk odpovídá první volba: QF1→SF1 s QF3 a QF2→SF2 s QF4.
+            </div>
           </div>
         </div>
       </div>
@@ -8662,8 +8665,8 @@ $('liveScoreClose').onclick=()=>{
     const matches=[],byes=[];
 
     // Skupiny → SKO s 8 postupujícími:
-    // napojení vítězů čtvrtfinále do semifinále může být zvoleno ručně.
-    // Výchozí varianta zůstává QF1×QF4 a QF2×QF3.
+    // při ručním nasazení lze zvolit i přesné napojení QF do SF.
+    // Výchozí ruční varianta je QF1×QF3 a QF2×QF4.
     const previousRound=(k.rounds||[])[k.rounds.length-1]||null;
     const previousMatches=(previousRound?.matches||[]);
 
@@ -8676,10 +8679,10 @@ $('liveScoreClose').onclick=()=>{
     ){
       const qfWinners=previousMatches.map(m=>m.winnerId).filter(Boolean);
       if(qfWinners.length===4){
-        const routing=k.semifinalRouting||'cross14';
-        const pairs=routing==='adjacent'
-          ? [[0,1],[2,3]]
-          : (routing==='cross13' ? [[0,2],[1,3]] : [[0,3],[1,2]]);
+        const routing=k.semifinalRouting||'cross13';
+        const pairs=routing==='cross14'
+          ? [[0,3],[1,2]]
+          : (routing==='adjacent' ? [[0,1],[2,3]] : [[0,2],[1,3]]);
 
         matches.push(tournamentMatchObject(qfWinners[pairs[0][0]],qfWinners[pairs[0][1]],'Semifinále','SF'));
         matches.push(tournamentMatchObject(qfWinners[pairs[1][0]],qfWinners[pairs[1][1]],'Semifinále','SF'));
@@ -9038,7 +9041,7 @@ $('liveScoreClose').onclick=()=>{
       t.ko={
         participantIds:[...seeds],rounds:[],wave:0,eliminatedIds:[],eliminations:[],championId:null,runnerUpId:null,
         thirdPlacePlayoff:!!t.thirdPlacePlayoff,thirdPlaceWinnerId:null,thirdPlaceLoserId:null,
-        semifinalRouting:t.manualGroupPlayoffSemiRouting||'cross14'
+        semifinalRouting:t.manualGroupPlayoffSemiRouting||'cross13'
       };
       knockoutCreateWave(t);
     }else if(t.format==='groups_dko'){
@@ -10121,11 +10124,11 @@ $('liveScoreClose').onclick=()=>{
     if(!wrap)return;
 
     const advance=Math.max(1,Number(t.advancePerGroup||2));
-    const qualifierRows=[];
+    const qualifiers=[];
 
     for(const g of (t.groups||[])){
       const rows=groupStandings(g,t).slice(0,advance);
-      rows.forEach((r,i)=>qualifierRows.push({
+      rows.forEach((r,i)=>qualifiers.push({
         id:r.id,
         groupId:g.id,
         groupName:g.name||('Skupina '+g.id),
@@ -10133,38 +10136,39 @@ $('liveScoreClose').onclick=()=>{
       }));
     }
 
-    const qualifierIds=qualifierRows.map(x=>x.id);
-    const defaultOrder=groupPlayoffSeeds(t).filter(id=>qualifierIds.includes(id));
+    const qualifierIds=qualifiers.map(q=>q.id);
     const existing=(t.manualGroupPlayoffOrder||[]).filter(id=>qualifierIds.includes(id));
-    const order=existing.length===qualifierIds.length ? existing : defaultOrder;
+    const suggested=groupPlayoffSeeds(t).filter(id=>qualifierIds.includes(id));
+    const order=existing.length===qualifierIds.length ? existing : suggested;
 
-    const options=qualifierRows.map(q=>`
+    const options=qualifiers.map(q=>`
       <option value="${q.id}">
         ${escapeHtml(tournamentPlayerName(q.id,t))} • ${escapeHtml(q.groupName)} • ${q.place}. místo
       </option>`).join('');
 
-    const pairCount=Math.ceil(qualifierIds.length/2);
+    const pairCount=Math.floor(qualifierIds.length/2);
     let html='';
 
     for(let pair=0;pair<pairCount;pair++){
       const aIndex=pair*2;
       const bIndex=aIndex+1;
-      const roundLabel=qualifierIds.length===8?'QF '+(pair+1)
-        :(qualifierIds.length===4?'SF '+(pair+1):'Zápas '+(pair+1));
+      const label=qualifierIds.length===8
+        ? 'QF '+(pair+1)
+        : (qualifierIds.length===4 ? 'SF '+(pair+1) : 'ZÁPAS '+(pair+1));
 
       html+=`
         <div class="subpanel" style="margin-bottom:10px;border-color:rgba(212,175,55,.38)">
-          <strong>${roundLabel}</strong>
+          <strong>${label}</strong>
           <div class="grid two" style="margin-top:8px">
             <div>
-              <label>Hráč A</label>
+              <label>Hráč 1</label>
               <select class="manual-playoff-slot" data-slot="${aIndex}">
                 <option value="">— vyber hráče —</option>
                 ${options}
               </select>
             </div>
             <div>
-              <label>Hráč B</label>
+              <label>Hráč 2</label>
               <select class="manual-playoff-slot" data-slot="${bIndex}">
                 <option value="">— vyber hráče —</option>
                 ${options}
@@ -10183,9 +10187,9 @@ $('liveScoreClose').onclick=()=>{
 
     const semiBox=$('groupPlayoffSemiRoutingBox');
     const showSemi=t.format==='groups_sko' && qualifierIds.length===8;
-    semiBox?.classList.toggle('hidden',!showSemi);
+    if(semiBox)semiBox.classList.toggle('hidden',!showSemi);
     if(showSemi && $('groupPlayoffSemiRouting')){
-      $('groupPlayoffSemiRouting').value=t.manualGroupPlayoffSemiRouting||'cross14';
+      $('groupPlayoffSemiRouting').value=t.manualGroupPlayoffSemiRouting||'cross13';
     }
   }
 
@@ -10213,23 +10217,22 @@ $('liveScoreClose').onclick=()=>{
       groupStandings(g,t).slice(0,advance).forEach(r=>qualifierIds.push(r.id));
     }
 
-    const selects=[...($('groupPlayoffManualList')?.querySelectorAll('.manual-playoff-slot')||[])];
-    const order=selects
-      .sort((a,b)=>Number(a.dataset.slot)-Number(b.dataset.slot))
-      .map(sel=>sel.value||'');
+    const selects=[...($('groupPlayoffManualList')?.querySelectorAll('.manual-playoff-slot')||[])]
+      .sort((a,b)=>Number(a.dataset.slot)-Number(b.dataset.slot));
+
+    const order=selects.map(sel=>sel.value||'');
 
     if(order.length!==qualifierIds.length || order.some(id=>!id)){
       return {error:'Vyber hráče do všech pozic prvního kola play-off.'};
     }
 
-    const used=new Set(order);
-    if(used.size!==order.length){
+    if(new Set(order).size!==order.length){
       return {error:'Jeden hráč nemůže být nasazen do play-off dvakrát.'};
     }
 
     const allowed=new Set(qualifierIds);
     if(order.some(id=>!allowed.has(id))){
-      return {error:'Do play-off lze nasadit pouze hráče, kteří postoupili ze skupin.'};
+      return {error:'Do play-off lze nasadit pouze postupující ze skupin.'};
     }
 
     return {order};
@@ -10265,7 +10268,7 @@ $('liveScoreClose').onclick=()=>{
 
       manualOrder=collected.order;
       t.manualGroupPlayoffOrder=[...manualOrder];
-      t.manualGroupPlayoffSemiRouting=$('groupPlayoffSemiRouting')?.value||'cross14';
+      t.manualGroupPlayoffSemiRouting=$('groupPlayoffSemiRouting')?.value||'cross13';
       t.groupAdvanceTieRule='manual';
       t.groupPenaltyTieBreak=false;
       t.groupPenaltyWinners={};
@@ -12261,6 +12264,11 @@ function renderTournamentDetail(){
     const manual=$('groupPlayoffSeedMode').value==='manual';
     $('groupPlayoffSeedRulesBox').classList.toggle('hidden',manual);
     $('groupPlayoffManualBox').classList.toggle('hidden',!manual);
+
+    if(manual){
+      const t=(data.tournaments||[]).find(x=>x.id===groupPlayoffSeedTournamentId);
+      if(t)buildManualGroupSeedEditor(t);
+    }
   };
   if($('groupPlayoffSeedApplyBtn'))$('groupPlayoffSeedApplyBtn').onclick=applyGroupPlayoffSeeding;
   if($('groupPlayoffSeedCancelBtn'))$('groupPlayoffSeedCancelBtn').onclick=()=>{
