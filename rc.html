@@ -171,6 +171,8 @@
       -webkit-overflow-scrolling:touch
     }
     .modal.show{display:flex}
+    #matchStatsModal{z-index:140}
+    #playerDevelopmentModal{z-index:125}
     .modal-card{
       width:min(520px,100%);
       max-height:calc(100vh - 40px);
@@ -186,7 +188,7 @@
     .modal-card.danger{border-color:#7d2424}
     .modal-actions{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-top:18px}
     .toast{
-      position:fixed;right:18px;bottom:18px;z-index:110;background:#161616;border:1px solid #3d3d3d;
+      position:fixed;right:18px;bottom:18px;z-index:160;background:#161616;border:1px solid #3d3d3d;
       padding:12px 15px;border-radius:12px;box-shadow:var(--shadow);display:none
     }
     .toast.show{display:block}
@@ -1268,8 +1270,7 @@
         <h3>15. Historie, PDF, mazání a záloha</h3>
         <ul>
           <li>Historie obsahuje dokončené zápasy a jejich zápasové statistiky.</li>
-          <li>V sekci Hráči má každý hráč samostatná tlačítka <strong>PROFIL</strong> a <strong>HISTORIE ZÁPASŮ</strong>. Historie je oddělená od profilu a obsahuje všechny dohledatelné dokončené zápasy včetně ručně zapsaných turnajových výsledků.</li>
-          <li><strong>VÝVOJ HRÁČE</strong> se odemkne po 20 dokončených zápasech proti alespoň 5 různým soupeřům. Nabízí ELO, formu posledních 10 zápasů, úspěšnost breaku, safety a trend čistých her/dohrávek.</li>
+          <li>V sekci Hráči má každý hráč samostatná tlačítka <strong>PROFIL</strong>, <strong>HISTORIE ZÁPASŮ</strong> a po splnění podmínek také <strong>VÝVOJ HRÁČE</strong>. Vývoj se odemkne po 20 dokončených zápasech proti alespoň 5 různým soupeřům a nabízí ELO, formu, break, čisté hry a safety v čase.</li>
           <li>Pořadí série zahrnuje všechny hráče z turnajů. Neregistrovaný hráč nově dostane předpřipravený profil bez vlastníka, takže se jeho zápasy, ELO, turnaje a série ukládají pod stejným profilem. Po registraci může požádat o převzetí profilu a uvidí výsledky zpětně. Starší turnajoví hosté se při administrátorském načtení převádějí na tyto profily.</li>
           <li>U vlastního bodování série se vždy používá přesné individuální pořadí uložené u hráče. I když turnaj zobrazuje skupinu „5.–8. místo“, série rozliší 5., 6., 7. a 8. místo a přidělí body přesně podle vlastní bodovací tabulky.</li>
           <li><strong>PDF REPORT</strong> vytvoří report konkrétního zápasu.</li>
@@ -2403,49 +2404,49 @@
   </div>
 </div>
 
-<div id="playerPerformanceModal" class="modal">
+<div id="playerDevelopmentModal" class="modal">
   <div class="modal-card" style="max-width:980px;text-align:left">
     <div style="display:flex;justify-content:space-between;gap:12px;align-items:flex-start;flex-wrap:wrap">
       <div>
         <div class="muted" style="font-weight:900">VÝVOJ HRÁČE</div>
-        <h2 id="playerPerformanceTitle" style="margin:3px 0 0">Výkonnostní graf</h2>
-        <div id="playerPerformanceSummary" class="muted" style="margin-top:5px"></div>
+        <h2 id="playerDevelopmentTitle" style="margin:3px 0 0">Výkonnostní vývoj</h2>
+        <div id="playerDevelopmentSummary" class="muted" style="margin-top:5px"></div>
       </div>
-      <button id="playerPerformanceClose" class="btn">ZAVŘÍT</button>
+      <button id="playerDevelopmentClose" class="btn">ZAVŘÍT</button>
     </div>
 
     <div class="hr"></div>
 
-    <div id="playerPerformanceKpis" class="grid four"></div>
+    <div id="playerDevelopmentGate"></div>
 
-    <div class="subpanel" style="margin-top:14px">
-      <div class="grid two">
-        <div>
-          <label>Metrika grafu</label>
-          <select id="playerPerformanceMetric">
-            <option value="elo">ELO</option>
-            <option value="form">Forma • posledních 10 zápasů</option>
-            <option value="break">Úspěšnost breaku • posledních 10 zápasů</option>
-            <option value="safety">Úspěšnost safety • posledních 10 zápasů</option>
-            <option value="finishing">Čisté hry + dohrávky • posledních 10 zápasů</option>
-          </select>
+    <div id="playerDevelopmentContent" class="hidden">
+      <div class="grid three" style="margin-bottom:12px">
+        <div class="subpanel">
+          <div class="muted">ZÁPASY</div>
+          <div id="playerDevelopmentMatches" style="font-size:30px;font-weight:950;color:var(--gold2)">0</div>
         </div>
-        <div>
-          <label>Rozsah</label>
-          <select id="playerPerformanceRange">
-            <option value="all">Všechny zápasy</option>
-            <option value="50">Posledních 50</option>
-            <option value="30">Posledních 30</option>
-            <option value="20">Posledních 20</option>
-          </select>
+        <div class="subpanel">
+          <div class="muted">SOUPEŘI</div>
+          <div id="playerDevelopmentOpponents" style="font-size:30px;font-weight:950;color:var(--gold2)">0</div>
+        </div>
+        <div class="subpanel">
+          <div class="muted">AKTUÁLNÍ ELO</div>
+          <div id="playerDevelopmentElo" style="font-size:30px;font-weight:950;color:var(--gold2)">1500</div>
         </div>
       </div>
 
-      <div id="playerPerformanceMetricInfo" class="muted" style="margin-top:9px"></div>
-      <div id="playerPerformanceChart" style="margin-top:12px"></div>
-    </div>
+      <label for="playerDevelopmentMetric">Ukazatel</label>
+      <select id="playerDevelopmentMetric">
+        <option value="elo">ELO</option>
+        <option value="form">Forma • výhry v posledních 10</option>
+        <option value="break">Úspěšnost breaku • posledních 10</option>
+        <option value="clean">Čisté hry z breaků • posledních 10</option>
+        <option value="safety">Úspěšnost safety • posledních 10</option>
+      </select>
 
-    <div id="playerPerformanceNotes" class="muted" style="margin-top:10px;line-height:1.5"></div>
+      <div id="playerDevelopmentMetricInfo" class="muted" style="margin:10px 0"></div>
+      <div id="playerDevelopmentChart" class="subpanel" style="padding:12px;overflow-x:auto"></div>
+    </div>
   </div>
 </div>
 
@@ -15026,6 +15027,7 @@ function openMatchStatsCard(m,isCurrent=false){
       : 'ZAVŘÍT';
     $('matchStatsClose').dataset.endsTournament=endsTournament?'1':'0';
     $('winnerModal').classList.remove('show');
+    $('matchStatsModal').style.zIndex='140';
     $('matchStatsModal').classList.add('show');
   }
 
@@ -16300,253 +16302,240 @@ function renderHistory(){
     toast('Profil byl znovu aktivován.');
   };
 
-  const PERFORMANCE_MIN_MATCHES=20;
-  const PERFORMANCE_MIN_OPPONENTS=5;
-  let performancePlayerId=null;
 
-  function playerPerformanceEligibility(playerId){
+  const PLAYER_DEVELOPMENT_MIN_MATCHES=20;
+  const PLAYER_DEVELOPMENT_MIN_OPPONENTS=5;
+
+  function playerDevelopmentEligibility(playerId){
     const facts=playerMatchHistoryFacts(playerId);
     const opponents=new Set();
-
     facts.forEach(f=>{
       const i=f.playerIds.indexOf(playerId);
-      if(i>=0){
-        const opponent=f.playerIds[1-i];
-        if(opponent)opponents.add(opponent);
-      }
+      if(i<0)return;
+      const j=1-i;
+      if(f.playerIds[j])opponents.add(f.playerIds[j]);
     });
-
     return {
       matches:facts.length,
       opponents:opponents.size,
-      eligible:facts.length>=PERFORMANCE_MIN_MATCHES && opponents.size>=PERFORMANCE_MIN_OPPONENTS
+      eligible:facts.length>=PLAYER_DEVELOPMENT_MIN_MATCHES && opponents.size>=PLAYER_DEVELOPMENT_MIN_OPPONENTS
     };
   }
 
-  function rollingSlice(arr,index,size=10){
-    return arr.slice(Math.max(0,index-size+1),index+1);
-  }
-
-  function calculateEloTimeline(){
-    const facts=completedRealMatchFacts()
-      .filter(f=>f.winnerId && Array.isArray(f.playerIds) && f.playerIds.length===2)
+  function chronologicalRealMatchFacts(){
+    return completedRealMatchFacts()
+      .filter(f=>f && Array.isArray(f.playerIds) && f.playerIds.length>=2 && f.winnerId)
       .sort((a,b)=>new Date(a.endedAt||0)-new Date(b.endedAt||0));
+  }
 
+  function playerEloDevelopmentSeries(playerId){
     const ratings={};
-    const timelines={};
+    Object.keys(data.players||{}).forEach(id=>ratings[id]=ELO_START);
+    const points=[];
+    let seq=0;
 
-    const getRating=id=>{
-      if(!Number.isFinite(Number(ratings[id])))ratings[id]=ELO_START;
-      return ratings[id];
-    };
-
-    facts.forEach(f=>{
+    chronologicalRealMatchFacts().forEach(f=>{
       const a=f.playerIds[0], b=f.playerIds[1];
       if(!a || !b)return;
+      if(ratings[a]==null)ratings[a]=ELO_START;
+      if(ratings[b]==null)ratings[b]=ELO_START;
 
-      const ra=getRating(a), rb=getRating(b);
+      const ra=ratings[a], rb=ratings[b];
       const ea=1/(1+Math.pow(10,(rb-ra)/400));
-      const eb=1-ea;
       const sa=f.winnerId===a?1:0;
       const sb=1-sa;
+      ratings[a]=ra+ELO_K*(sa-ea);
+      ratings[b]=rb+ELO_K*(sb-(1-ea));
 
-      const newA=Math.round(ra+ELO_K*(sa-ea));
-      const newB=Math.round(rb+ELO_K*(sb-eb));
-      ratings[a]=newA;
-      ratings[b]=newB;
-
-      if(!timelines[a])timelines[a]=[];
-      if(!timelines[b])timelines[b]=[];
-
-      timelines[a].push({matchKey:f.key,elo:newA,endedAt:f.endedAt});
-      timelines[b].push({matchKey:f.key,elo:newB,endedAt:f.endedAt});
+      if(a===playerId || b===playerId){
+        seq++;
+        points.push({
+          x:seq,
+          value:Math.round(ratings[playerId]),
+          date:f.endedAt||'',
+          fact:f
+        });
+      }
     });
-
-    return timelines;
+    return points;
   }
 
-  function performanceSeriesForPlayer(playerId){
+  function playerRollingMetricSeries(playerId,metric){
     const facts=playerMatchHistoryFacts(playerId)
       .slice()
       .sort((a,b)=>new Date(a.endedAt||0)-new Date(b.endedAt||0));
 
-    const eloTimeline=calculateEloTimeline()[playerId]||[];
-    const eloByKey=new Map(eloTimeline.map(x=>[x.matchKey,x.elo]));
-    let lastElo=ELO_START;
+    return facts.map((f,idx)=>{
+      const windowFacts=facts.slice(Math.max(0,idx-9),idx+1);
+      let value=null;
 
-    return facts.map((f,index)=>{
-      if(eloByKey.has(f.key))lastElo=eloByKey.get(f.key);
+      if(metric==='form'){
+        const decided=windowFacts.filter(x=>x.winnerId);
+        if(decided.length){
+          value=decided.filter(x=>x.winnerId===playerId).length/decided.length*100;
+        }
+      }else{
+        let num=0,den=0;
+        windowFacts.forEach(x=>{
+          const i=x.playerIds.indexOf(playerId);
+          const s=(i>=0 && x.stats && x.stats[i]) ? x.stats[i] : null;
+          if(!s)return;
 
-      const last10=rollingSlice(facts,index,10);
-      const wins10=last10.filter(x=>x.winnerId===playerId).length;
-      const decisive10=last10.filter(x=>!!x.winnerId).length;
-      const formPct=decisive10?Math.round(wins10/decisive10*100):0;
-
-      let breaks=0,dry=0,soft=0,breakFouls=0;
-      let trackedSafeties=0,successfulSafeties=0;
-      let finishing=0;
-      let detailedMatches=0;
-
-      last10.forEach(x=>{
-        const pi=x.playerIds.indexOf(playerId);
-        const s=(pi>=0 && x.stats && x.stats[pi]) ? x.stats[pi] : null;
-        if(!s)return;
-        detailedMatches++;
-        breaks+=Number(s.breaks||0);
-        dry+=Number(s.dryBreaks||0);
-        soft+=Number(s.softBreaks||0);
-        breakFouls+=Number(s.breakFouls||0);
-        trackedSafeties+=Number(s.trackedSafeties||0);
-        successfulSafeties+=Number(s.successfulSafeties||0);
-        finishing+=Number(s.breakAndRun||0)+Number(s.runouts||0);
-      });
-
-      const breakPct=breaks
-        ? Math.round(Math.max(0,breaks-dry-soft-breakFouls)/breaks*100)
-        : null;
-      const safetyPct=trackedSafeties
-        ? Math.round(successfulSafeties/trackedSafeties*100)
-        : null;
+          if(metric==='break'){
+            const breaks=Number(s.breaks||0);
+            if(breaks>0){
+              const failed=Number(s.dryBreaks||0)+Number(s.softBreaks||0)+Number(s.breakFouls||0);
+              num+=Math.max(0,breaks-failed);
+              den+=breaks;
+            }
+          }else if(metric==='clean'){
+            const breaks=Number(s.breaks||0);
+            if(breaks>0){
+              num+=Number(s.breakAndRun||0);
+              den+=breaks;
+            }
+          }else if(metric==='safety'){
+            const tracked=Number(s.trackedSafeties||0);
+            if(tracked>0){
+              num+=Number(s.successfulSafeties||0);
+              den+=tracked;
+            }
+          }
+        });
+        if(den>0)value=num/den*100;
+      }
 
       return {
-        index:index+1,
-        key:f.key,
-        endedAt:f.endedAt,
-        elo:lastElo,
-        form:formPct,
-        break:breakPct,
-        safety:safetyPct,
-        finishing,
-        detailedMatches,
-        opponentId:f.playerIds[1-f.playerIds.indexOf(playerId)]||null,
-        result:f.winnerId===playerId?'W':'L'
+        x:idx+1,
+        value:value==null?null:Math.round(value*10)/10,
+        date:f.endedAt||'',
+        fact:f
       };
-    });
+    }).filter(p=>p.value!=null);
   }
 
-  function svgPerformanceChart(points,metric){
-    const valid=points.filter(p=>Number.isFinite(Number(p[metric])));
-    if(valid.length<2){
-      return '<div class="empty">Pro tuto metriku zatím není dost detailních dat.</div>';
+  function svgLineChart(points,{percent=false}={}){
+    if(!points.length){
+      return '<div class="empty">Pro tento ukazatel zatím nejsou dostatečná detailní data ze zápasů.</div>';
     }
 
-    const width=880,height=330,padL=52,padR=18,padT=20,padB=42;
-    const vals=valid.map(p=>Number(p[metric]));
-    let min=Math.min(...vals),max=Math.max(...vals);
+    const width=Math.max(720,points.length*30);
+    const height=320;
+    const left=54,right=24,top=20,bottom=44;
+    const plotW=width-left-right,plotH=height-top-bottom;
+    let minV=Math.min(...points.map(p=>p.value));
+    let maxV=Math.max(...points.map(p=>p.value));
 
-    if(metric==='form'||metric==='break'||metric==='safety'){
-      min=0;max=100;
-    }else if(metric==='finishing'){
-      min=0;max=Math.max(1,max);
-    }else{
-      const spread=Math.max(20,max-min);
-      min=Math.floor((min-spread*.15)/10)*10;
-      max=Math.ceil((max+spread*.15)/10)*10;
-      if(min===max){min-=10;max+=10;}
+    if(percent){ minV=0; maxV=100; }
+    else{
+      if(minV===maxV){minV-=20;maxV+=20;}
+      const pad=Math.max(10,(maxV-minV)*.12);
+      minV=Math.floor(minV-pad);
+      maxV=Math.ceil(maxV+pad);
     }
 
-    const x=(i)=>padL+(width-padL-padR)*(i/(valid.length-1));
-    const y=(v)=>padT+(height-padT-padB)*(1-(v-min)/(max-min||1));
-    const poly=valid.map((p,i)=>`${x(i).toFixed(1)},${y(Number(p[metric])).toFixed(1)}`).join(' ');
+    const xPos=i=>left+(points.length===1?plotW/2:(i/(points.length-1))*plotW);
+    const yPos=v=>top+((maxV-v)/(maxV-minV||1))*plotH;
 
-    const grid=[];
-    for(let g=0;g<=4;g++){
-      const v=min+(max-min)*(1-g/4);
-      const gy=padT+(height-padT-padB)*(g/4);
-      grid.push(`
-        <line x1="${padL}" y1="${gy}" x2="${width-padR}" y2="${gy}" stroke="rgba(255,255,255,.12)" stroke-width="1"/>
-        <text x="${padL-8}" y="${gy+4}" text-anchor="end" fill="rgba(255,255,255,.65)" font-size="12">${metric==='elo'?Math.round(v):Math.round(v)+(metric==='finishing'?'':'%')}</text>
-      `);
-    }
+    const poly=points.map((p,i)=>`${xPos(i).toFixed(1)},${yPos(p.value).toFixed(1)}`).join(' ');
+    const grid=[0,.25,.5,.75,1].map(fr=>{
+      const y=top+fr*plotH;
+      const val=maxV-fr*(maxV-minV);
+      return `<line x1="${left}" y1="${y}" x2="${width-right}" y2="${y}" stroke="#2b2b2f" stroke-width="1"/>
+              <text x="${left-8}" y="${y+4}" text-anchor="end" fill="#8d8d95" font-size="11">${percent?Math.round(val)+'%':Math.round(val)}</text>`;
+    }).join('');
 
-    const first=valid[0],last=valid[valid.length-1];
-    const firstDate=first.endedAt?new Date(first.endedAt).toLocaleDateString('cs-CZ'):'';
-    const lastDate=last.endedAt?new Date(last.endedAt).toLocaleDateString('cs-CZ'):'';
+    const dots=points.map((p,i)=>{
+      const cx=xPos(i),cy=yPos(p.value);
+      const label=percent?`${p.value}%`:String(p.value);
+      return `<circle cx="${cx}" cy="${cy}" r="3.5" fill="#d4af37">
+                <title>Zápas ${p.x} • ${label}</title>
+              </circle>`;
+    }).join('');
 
-    return `
-      <div style="overflow-x:auto">
-        <svg viewBox="0 0 ${width} ${height}" style="width:100%;min-width:680px;height:auto;display:block">
-          ${grid.join('')}
-          <polyline fill="none" stroke="currentColor" stroke-width="4" stroke-linejoin="round" stroke-linecap="round" points="${poly}" style="color:var(--gold2)"/>
-          ${valid.map((p,i)=>`<circle cx="${x(i)}" cy="${y(Number(p[metric]))}" r="4" fill="currentColor" style="color:var(--gold2)"><title>Zápas ${p.index}: ${p[metric]}${metric==='elo'||metric==='finishing'?'':'%'}</title></circle>`).join('')}
-          <text x="${padL}" y="${height-12}" fill="rgba(255,255,255,.65)" font-size="12">${esc(firstDate)}</text>
-          <text x="${width-padR}" y="${height-12}" text-anchor="end" fill="rgba(255,255,255,.65)" font-size="12">${esc(lastDate)}</text>
-        </svg>
-      </div>`;
+    return `<svg viewBox="0 0 ${width} ${height}" width="${width}" height="${height}" role="img" aria-label="Vývoj hráče" style="display:block;max-width:none">
+      ${grid}
+      <line x1="${left}" y1="${height-bottom}" x2="${width-right}" y2="${height-bottom}" stroke="#4a4a50"/>
+      <polyline points="${poly}" fill="none" stroke="#d4af37" stroke-width="3" stroke-linejoin="round" stroke-linecap="round"/>
+      ${dots}
+      <text x="${left}" y="${height-12}" fill="#8d8d95" font-size="11">1. zápas</text>
+      <text x="${width-right}" y="${height-12}" text-anchor="end" fill="#8d8d95" font-size="11">${points[points.length-1].x}. zápas</text>
+    </svg>`;
   }
 
-  function renderPlayerPerformance(){
-    const playerId=performancePlayerId;
+  function renderPlayerDevelopment(playerId){
     const p=data.players?.[playerId];
     if(!p)return;
 
-    const eligibility=playerPerformanceEligibility(playerId);
-    const title=$('playerPerformanceTitle');
-    const summary=$('playerPerformanceSummary');
-    const kpis=$('playerPerformanceKpis');
-    const chart=$('playerPerformanceChart');
-    const info=$('playerPerformanceMetricInfo');
-    const notes=$('playerPerformanceNotes');
-    if(!title||!summary||!kpis||!chart||!info||!notes)return;
+    const gate=$('playerDevelopmentGate');
+    const content=$('playerDevelopmentContent');
+    const title=$('playerDevelopmentTitle');
+    const summary=$('playerDevelopmentSummary');
+    const eligibility=playerDevelopmentEligibility(playerId);
 
     title.textContent='VÝVOJ HRÁČE • '+playerDisplayName(p);
-    summary.textContent=`${eligibility.matches} zápasů • ${eligibility.opponents} různých soupeřů`;
+    summary.textContent=`Podmínka: minimálně ${PLAYER_DEVELOPMENT_MIN_MATCHES} zápasů a ${PLAYER_DEVELOPMENT_MIN_OPPONENTS} různých soupeřů.`;
 
     if(!eligibility.eligible){
-      kpis.innerHTML='';
-      chart.innerHTML=`<div class="empty">
-        Výkonnostní graf se odemkne po ${PERFORMANCE_MIN_MATCHES} dokončených zápasech proti alespoň ${PERFORMANCE_MIN_OPPONENTS} různým soupeřům.
-        <div style="margin-top:8px"><strong>Aktuálně:</strong> ${eligibility.matches}/${PERFORMANCE_MIN_MATCHES} zápasů • ${eligibility.opponents}/${PERFORMANCE_MIN_OPPONENTS} soupeřů</div>
+      content.classList.add('hidden');
+      const matchPct=Math.min(100,Math.round(eligibility.matches/PLAYER_DEVELOPMENT_MIN_MATCHES*100));
+      const oppPct=Math.min(100,Math.round(eligibility.opponents/PLAYER_DEVELOPMENT_MIN_OPPONENTS*100));
+      gate.innerHTML=`<div class="subpanel">
+        <strong>VÝKONNOSTNÍ GRAF JEŠTĚ NENÍ ODEMČENÝ</strong>
+        <div class="muted" style="margin-top:7px;line-height:1.55">
+          Aktuálně: <strong>${eligibility.matches}/${PLAYER_DEVELOPMENT_MIN_MATCHES} zápasů</strong> •
+          <strong>${eligibility.opponents}/${PLAYER_DEVELOPMENT_MIN_OPPONENTS} soupeřů</strong>.
+          Graf se zobrazí automaticky po splnění obou podmínek.
+        </div>
+        <div style="margin-top:12px;height:8px;background:#222;border-radius:999px;overflow:hidden">
+          <div style="height:100%;width:${Math.min(matchPct,oppPct)}%;background:var(--gold)"></div>
+        </div>
       </div>`;
-      info.textContent='';
-      notes.textContent='';
       return;
     }
 
-    const all=performanceSeriesForPlayer(playerId);
-    const rangeValue=$('playerPerformanceRange')?.value||'all';
-    const limit=rangeValue==='all'?0:Number(rangeValue||0);
-    const series=limit>0?all.slice(-limit):all;
+    gate.innerHTML='';
+    content.classList.remove('hidden');
+    $('playerDevelopmentMatches').textContent=eligibility.matches;
+    $('playerDevelopmentOpponents').textContent=eligibility.opponents;
 
-    const latest=all[all.length-1];
-    const last10=all.slice(-10);
-    const form=latest?.form??0;
-    const breakPct=latest?.break;
-    const safetyPct=latest?.safety;
-    const finishing=last10.reduce((s,x)=>s+Number(x.finishing||0),0);
+    const eloSeries=playerEloDevelopmentSeries(playerId);
+    $('playerDevelopmentElo').textContent=eloSeries.length?eloSeries[eloSeries.length-1].value:ELO_START;
 
-    kpis.innerHTML=`
-      <div class="subpanel"><div class="muted">ELO</div><strong style="font-size:24px">${latest?.elo??ELO_START}</strong></div>
-      <div class="subpanel"><div class="muted">FORMA • POSL. 10</div><strong style="font-size:24px">${form}%</strong></div>
-      <div class="subpanel"><div class="muted">BREAK • POSL. 10</div><strong style="font-size:24px">${breakPct==null?'—':breakPct+'%'}</strong></div>
-      <div class="subpanel"><div class="muted">SAFETY • POSL. 10</div><strong style="font-size:24px">${safetyPct==null?'—':safetyPct+'%'}</strong></div>
-    `;
+    const metric=$('playerDevelopmentMetric').value||'elo';
+    let points,percent=false,info='';
 
-    const metric=$('playerPerformanceMetric')?.value||'elo';
-    const labels={
-      elo:'ELO po každém dokončeném zápase',
-      form:'Procento výher v klouzavém okně posledních 10 zápasů',
-      break:'Úspěšnost breaku v posledních 10 zápasech • dry break, soft break a faul z breaku se počítají jako neúspěšný break',
-      safety:'Úspěšnost evidovaných safety v posledních 10 zápasech',
-      finishing:'Počet ČISTÝCH HER + DOHRÁVEK v posledních 10 zápasech'
-    };
+    if(metric==='elo'){
+      points=eloSeries;
+      info='ELO po každém dokončeném zápase. Zahrnuje i ručně zapsané turnajové výsledky.';
+    }else if(metric==='form'){
+      points=playerRollingMetricSeries(playerId,'form');
+      percent=true;
+      info='Klouzavá úspěšnost výher za posledních maximálně 10 zápasů.';
+    }else if(metric==='break'){
+      points=playerRollingMetricSeries(playerId,'break');
+      percent=true;
+      info='Úspěšnost rozstřelu za posledních maximálně 10 zápasů. Dry break, soft break a faul z breaku se počítají jako neúspěšný break.';
+    }else if(metric==='clean'){
+      points=playerRollingMetricSeries(playerId,'clean');
+      percent=true;
+      info='Podíl čistých her (Break & Run) ze všech evidovaných breaků v posledních maximálně 10 zápasech.';
+    }else{
+      points=playerRollingMetricSeries(playerId,'safety');
+      percent=true;
+      info='Úspěšnost evidovaných safety za posledních maximálně 10 zápasů.';
+    }
 
-    info.textContent=labels[metric]||'';
-    chart.innerHTML=svgPerformanceChart(series,metric);
-    notes.textContent='Technické metriky (break, safety, čisté hry a dohrávky) se počítají pouze ze zápasů, kde byly akce skutečně evidované v plném počítadle. Ručně zapsaný turnajový výsledek ovlivní formu a ELO, ale nemá detailní technické statistiky.';
+    $('playerDevelopmentMetricInfo').textContent=info;
+    $('playerDevelopmentChart').innerHTML=svgLineChart(points,{percent});
   }
 
-  window.openPlayerPerformance=function(playerId){
-    const e=playerPerformanceEligibility(playerId);
-    if(!e.eligible){
-      toast(`Vývoj hráče se odemkne po ${PERFORMANCE_MIN_MATCHES} zápasech proti alespoň ${PERFORMANCE_MIN_OPPONENTS} soupeřům. Aktuálně ${e.matches}/${PERFORMANCE_MIN_MATCHES} • ${e.opponents}/${PERFORMANCE_MIN_OPPONENTS}.`);
-      return;
-    }
-    performancePlayerId=playerId;
-    if($('playerPerformanceMetric'))$('playerPerformanceMetric').value='elo';
-    if($('playerPerformanceRange'))$('playerPerformanceRange').value='all';
-    renderPlayerPerformance();
-    $('playerPerformanceModal').classList.add('show');
+  window.openPlayerDevelopment=function(playerId){
+    const p=data.players?.[playerId];
+    if(!p)return;
+    $('playerDevelopmentMetric').dataset.playerId=playerId;
+    renderPlayerDevelopment(playerId);
+    $('playerDevelopmentModal').classList.add('show');
   };
 
   function renderPlayers(){
@@ -16596,6 +16585,10 @@ function renderHistory(){
       const wr=s.matches?((s.wins/s.matches)*100).toFixed(1):'0.0';
       const editable=canEditPlayer(p);
       const isMine=!!(currentUserPlayerId && currentUserPlayerId===p.id);
+      const dev=playerDevelopmentEligibility(p.id);
+      const devButton=dev.eligible
+        ? `<button class="btn" onclick="openPlayerDevelopment('${p.id}')">VÝVOJ HRÁČE</button>`
+        : `<button class="btn" disabled title="Odemkne se po ${PLAYER_DEVELOPMENT_MIN_MATCHES} zápasech proti alespoň ${PLAYER_DEVELOPMENT_MIN_OPPONENTS} soupeřům">VÝVOJ ${dev.matches}/${PLAYER_DEVELOPMENT_MIN_MATCHES} • ${dev.opponents}/${PLAYER_DEVELOPMENT_MIN_OPPONENTS}</button>`;
 
       return `<div class="player-item">
         <div class="history-line">
@@ -16626,23 +16619,13 @@ function renderHistory(){
           ${editable
             ? `<button class="btn" onclick="openPlayerProfile('${p.id}')">${isMine?'MŮJ PROFIL':'PROFIL'}</button>
                <button class="btn primary" onclick="openPlayerMatchHistory('${p.id}')">HISTORIE ZÁPASŮ</button>
-               ${(()=>{
-                 const e=playerPerformanceEligibility(p.id);
-                 return e.eligible
-                   ? `<button class="btn primary" onclick="openPlayerPerformance('${p.id}')">VÝVOJ HRÁČE</button>`
-                   : `<button class="btn" disabled title="Odemkne se po ${PERFORMANCE_MIN_MATCHES} zápasech proti ${PERFORMANCE_MIN_OPPONENTS} soupeřům">VÝVOJ ${e.matches}/${PERFORMANCE_MIN_MATCHES} • ${e.opponents}/${PERFORMANCE_MIN_OPPONENTS}</button>`;
-               })()}
+               ${devButton}
                ${p.active===false
                  ? `<button class="btn primary" onclick="reactivatePlayerProfile('${p.id}')">AKTIVOVAT</button>`
                  : `<button class="btn" onclick="deactivatePlayerProfile('${p.id}')">DEAKTIVOVAT</button>`}`
             : `<button class="btn" onclick="openPlayerProfile('${p.id}')" title="Profil je pouze pro čtení">PROFIL</button>
                <button class="btn primary" onclick="openPlayerMatchHistory('${p.id}')">HISTORIE ZÁPASŮ</button>
-               ${(()=>{
-                 const e=playerPerformanceEligibility(p.id);
-                 return e.eligible
-                   ? `<button class="btn primary" onclick="openPlayerPerformance('${p.id}')">VÝVOJ HRÁČE</button>`
-                   : `<button class="btn" disabled title="Odemkne se po ${PERFORMANCE_MIN_MATCHES} zápasech proti ${PERFORMANCE_MIN_OPPONENTS} soupeřům">VÝVOJ ${e.matches}/${PERFORMANCE_MIN_MATCHES} • ${e.opponents}/${PERFORMANCE_MIN_OPPONENTS}</button>`;
-               })()}`}
+               ${devButton}`}
         </div>
       </div>`;
     }).join('');
@@ -16683,9 +16666,13 @@ function renderHistory(){
     },0);
 
     title.textContent='HISTORIE ZÁPASŮ • '+playerDisplayName(p);
-    summary.textContent=facts.length
-      ? `${facts.length} zápasů • ${wins} výher • ${losses} proher • skóre ${racksFor}:${racksAgainst}`
-      : 'Zatím není uložený žádný dokončený zápas.';
+    const dev=playerDevelopmentEligibility(playerId);
+    summary.innerHTML=facts.length
+      ? `${facts.length} zápasů • ${wins} výher • ${losses} proher • skóre ${racksFor}:${racksAgainst}`+
+        `<div style="margin-top:5px">${dev.eligible
+          ? `<button class="btn" style="margin-top:6px" onclick="openPlayerDevelopment('${playerId}')">VÝVOJ HRÁČE</button>`
+          : `Vývoj hráče: ${dev.matches}/${PLAYER_DEVELOPMENT_MIN_MATCHES} zápasů • ${dev.opponents}/${PLAYER_DEVELOPMENT_MIN_OPPONENTS} soupeřů`}</div>`
+      : `Zatím není uložený žádný dokončený zápas.<div style="margin-top:5px">Vývoj hráče: 0/${PLAYER_DEVELOPMENT_MIN_MATCHES} zápasů • 0/${PLAYER_DEVELOPMENT_MIN_OPPONENTS} soupeřů</div>`;
 
     if(!facts.length){
       wrap.innerHTML='<div class="empty">Historie zápasů je zatím prázdná.</div>';
@@ -16786,12 +16773,13 @@ function renderHistory(){
   if($('playerMatchHistoryClose'))$('playerMatchHistoryClose').onclick=()=>{
     $('playerMatchHistoryModal').classList.remove('show');
   };
-  if($('playerPerformanceClose'))$('playerPerformanceClose').onclick=()=>{
-    $('playerPerformanceModal').classList.remove('show');
-    performancePlayerId=null;
+  if($('playerDevelopmentClose'))$('playerDevelopmentClose').onclick=()=>{
+    $('playerDevelopmentModal').classList.remove('show');
   };
-  if($('playerPerformanceMetric'))$('playerPerformanceMetric').onchange=renderPlayerPerformance;
-  if($('playerPerformanceRange'))$('playerPerformanceRange').onchange=renderPlayerPerformance;
+  if($('playerDevelopmentMetric'))$('playerDevelopmentMetric').onchange=()=>{
+    const pid=$('playerDevelopmentMetric').dataset.playerId;
+    if(pid)renderPlayerDevelopment(pid);
+  };
   $('removeProfilePhoto').onclick=()=>{pendingProfilePhoto=''; $('profilePhotoFile').value=''; renderProfilePreview();};
 
   $('profilePhotoFile').addEventListener('change',async e=>{
