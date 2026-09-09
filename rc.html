@@ -3080,6 +3080,54 @@
     },180);
   }
 
+
+  async function saveActiveMatchCloudBackupNow(m=match){
+    if(!m || !m.id || m.endedAt || !cloudUid)return false;
+    if(!editableMatchOwnedByCurrentUser(m))return false;
+
+    const copy=JSON.parse(JSON.stringify(m));
+    copy.endedAt=null;
+    copy.status='playing';
+    copy.winner=null;
+    copy.updatedAt=new Date().toISOString();
+    copy.activeResumeBackup=true;
+
+    try{
+      await secureMatchRequest(copy.id,'PUT',copy);
+      return true;
+    }catch(e){
+      console.warn('Active match cloud backup:',e);
+      return false;
+    }
+  }
+
+  function scheduleActiveMatchCloudBackup(){
+    if(!match || match.endedAt || !cloudUid)return;
+    clearTimeout(activeMatchCloudSaveTimer);
+    activeMatchCloudSaveTimer=setTimeout(()=>{
+      saveActiveMatchCloudBackupNow(match);
+    },420);
+  }
+
+  async function removeActiveMatchCloudBackup(matchId){
+    if(!matchId || !cloudUid)return false;
+    try{
+      const stored=await secureMatchRequest(matchId,'GET');
+      if(!stored)return false;
+
+      // Bezpečnostní pojistka: nikdy nemažeme dokončený / historický zápas jen proto,
+      // že po něm zůstal osiřelý LIVE záznam. Maže se pouze aktivní resume záloha.
+      const activeBackup=!!stored.activeResumeBackup || ['playing','active'].includes(stored.status);
+      if(!activeBackup || stored.endedAt)return false;
+
+      await secureMatchRequest(matchId,'DELETE');
+      return true;
+    }catch(e){
+      console.warn('Active match cloud backup delete:',e);
+      return false;
+    }
+  }
+
   function stopLiveHeartbeat(){
     if(liveHeartbeatTimer){
       clearInterval(liveHeartbeatTimer);
@@ -3122,6 +3170,7 @@
   let liveRefreshTimer=null;
   let cloudLiveMatches=[];
   let liveMatchSendTimer=null;
+  let activeMatchCloudSaveTimer=null;
   let liveMatchLoadInProgress=false;
   let liveLastCloudPollAt=0;
   let liveHeartbeatTimer=null;
@@ -3137,7 +3186,8 @@
     match=JSON.parse(JSON.stringify(data.currentMatch));
     saveDeviceActiveMatch(match);
   }
-  // Aktivní zápas už nikdy necestuje přes společný cloud.
+  // Aktivní zápas necestuje přes společný data.currentMatch sync.
+  // Plný rozehraný stav se ale bezpečně zálohuje do /matches/{id}, aby šel obnovit i na jiném zařízení.
   data.currentMatch=null;
   let timer = null;
   let timerRunning = false;
@@ -3474,9 +3524,10 @@
       // Zápas zůstává v paměti zařízení i při omezeném localStorage.
     }
 
-    // Aktivní zápas zůstává editovatelný jen lokálně,
-    // ale jeho read-only stav se publikuje pro LIVE na ostatních zařízeních.
+    // Read-only stav se publikuje pro LIVE. Plný stav se zároveň bezpečně zálohuje
+    // do vlastního záznamu zápasu, aby šlo pokračovat i po ztrátě lokálního snapshotu.
     scheduleLiveMatchPush();
+    scheduleActiveMatchCloudBackup();
   }
 
   function updateLoggedInUserBadge(){
@@ -7483,20 +7534,24 @@ $('useClock').addEventListener('change',e=>$('clockSettings').classList.toggle('
     finishMatch(winner,true);
   };
 
-  $('cancelMatch').onclick=()=>{
+  $('cancelMatch').onclick=async()=>{
     if(!match) return;
     if(!confirm('Opravdu zrušit rozehraný zápas? Nebude uložen a žádné jeho statistiky se nezapočítají.')) return;
     stopTimer();
     stopLiveHeartbeat();
+    clearTimeout(activeMatchCloudSaveTimer);
     const cancelledLiveId=match.id;
     const hadStream=!!match.streamEnabled;
-    removeLiveMatch(cancelledLiveId);
-    if(hadStream)clearStreamState();
+    await removeLiveMatch(cancelledLiveId);
+    await removeActiveMatchCloudBackup(cancelledLiveId);
+    removeDeviceActiveMatch(cancelledLiveId);
+    if(hadStream)await clearStreamState();
     match=null;
     saveDeviceActiveMatch(null);
     data.currentMatch=null;
     saveData();
     showScreen('setup');
+    renderLive();
     toast('Zápas byl zrušen bez uložení.');
   };
 
@@ -8098,6 +8153,7 @@ $('winnerText').textContent = match.solo14
     showScreen('match');
     renderMatch();
     startLiveHeartbeat();
+    autosaveCurrent();
     toast('Rozehraný zápas byl obnoven.');
   };
 
@@ -8138,6 +8194,9 @@ $('winnerText').textContent = match.solo14
               ? `<button class="btn primary" onclick="resumeLocalMatch('${m.id}')">POKRAČOVAT</button>`
               : ''}
             <button class="btn" onclick="openLiveScore('${m.id}')">LIVESCORE</button>
+            ${editableMatchOwnedByCurrentUser(m)
+              ? `<button class="btn danger" onclick="deleteLiveMatchFromLivescore('${m.id}')">SMAZAT Z LIVE</button>`
+              : ''}
           </div>
         </div>`;
       }).join('');
@@ -8178,6 +8237,61 @@ $('winnerText').textContent = match.solo14
       }).join('');
     }
   }
+
+  window.deleteLiveMatchFromLivescore=async function(matchId){
+    const live=activeLiveMatches().find(x=>x.id===matchId);
+    if(!live){
+      toast('Tento LIVE zápas už není aktivní.');
+      await loadCloudLiveMatches(true);
+      renderLive();
+      return;
+    }
+    if(!editableMatchOwnedByCurrentUser(live)){
+      toast('Tento LIVE zápas nemáš oprávnění smazat.');
+      return;
+    }
+
+    const label=(liveMatchPlayerName(live,0)||'Hráč 1')+' '+liveMatchScore(live,0)+' : '+liveMatchScore(live,1)+' '+(liveMatchPlayerName(live,1)||'Hráč 2');
+    if(!confirm('Opravdu odstranit rozehraný zápas z LIVESCORE?\n\n'+label+'\n\nRozehraný stav bude odstraněn a nepůjde v něm pokračovat.'))return;
+
+    const deletingCurrent=!!(match && match.id===matchId);
+    const hadStream=deletingCurrent && !!match.streamEnabled;
+
+    if(deletingCurrent){
+      if(match.useClock)stopTimer();
+      stopLiveHeartbeat();
+    }
+
+    clearTimeout(activeMatchCloudSaveTimer);
+    removeDeviceActiveMatch(matchId);
+
+    // Pokud už byla plná aktivní záloha načtena v data.matches, odstraníme ji i lokálně.
+    data.matches=(data.matches||[]).filter(m=>!(m?.id===matchId && ['playing','active'].includes(m.status)));
+    try{localStorage.setItem(DB_KEY,JSON.stringify(data));}catch(e){}
+
+    try{await removeLiveMatch(matchId);}catch(e){}
+    await removeActiveMatchCloudBackup(matchId);
+
+    if(deletingCurrent){
+      if(hadStream)try{await clearStreamState();}catch(e){}
+      match=null;
+      data.currentMatch=null;
+      saveDeviceActiveMatch(null);
+    }
+
+    if(liveScoreSelectedId===matchId){
+      $('liveScoreModal')?.classList.remove('show');
+      liveScoreSelectedId=null;
+    }
+
+    await loadCloudLiveMatches(true);
+    try{await loadSecureMatches();}catch(e){}
+    renderLive();
+    renderHistory();
+
+    if(deletingCurrent)showScreen('setup');
+    toast('Rozehraný LIVE zápas byl odstraněn.');
+  };
 
   window.openTournamentFromLive=function(tid){
     openTournamentDetail(tid);
@@ -15751,7 +15865,10 @@ function openMatchStatsCard(m,isCurrent=false){
   }
 
 function renderHistory(){
-    const list=[...data.matches].sort((a,b)=>new Date(b.startedAt)-new Date(a.startedAt));
+    // Rozehrané cloudové zálohy patří do LIVESCORE, ne do historie výsledků.
+    const list=[...data.matches]
+      .filter(m=>m && !['playing','active'].includes(m.status))
+      .sort((a,b)=>new Date(b.startedAt)-new Date(a.startedAt));
     $('historyList').innerHTML = list.length ? list.map(m=>{
       const date=new Date(m.startedAt).toLocaleString('cs-CZ',{dateStyle:'medium',timeStyle:'short'});
       const complete=(m.status||'complete')==='complete';
