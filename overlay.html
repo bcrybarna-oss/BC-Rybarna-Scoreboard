@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>BC Rybárna Overlay • v4.50.79 RC</title>
+<title>BC Rybárna Overlay • v4.50.80 RC</title>
 <style>
   :root{
     --gold:#d4af37;
@@ -91,10 +91,17 @@
 <script>
 const FIREBASE_DB='https://bc-rybarna-scrbrd-default-rtdb.europe-west1.firebasedatabase.app';
 const params=new URLSearchParams(location.search);
-const uidFromUrl=params.get('uid')||'';
+const hashParams=new URLSearchParams((location.hash||'').replace(/^#/,''));
+const uidFromUrl=params.get('uid')||hashParams.get('uid')||'';
 if(uidFromUrl){ try{ localStorage.setItem('bcOverlayUid',uidFromUrl); }catch(e){} }
 let uid=uidFromUrl;
-if(!uid){ try{ uid=localStorage.getItem('bcOverlayUid')||''; }catch(e){} }
+let uidSource=uidFromUrl?'URL/HASH':'';
+if(!uid){
+  try{
+    uid=localStorage.getItem('bcOverlayUid')||'';
+    if(uid)uidSource='LOCAL STORAGE';
+  }catch(e){}
+}
 
 const overlay=document.getElementById('overlay');
 const diag=document.getElementById('diag');
@@ -201,14 +208,33 @@ function render(state){
     ${renderBalls(state)}
   </div>`;
 }
+async function discoverActiveUid(){
+  try{
+    const res=await fetch(`${FIREBASE_DB}/stream/users.json?t=${Date.now()}`,{cache:'no-store'});
+    if(!res.ok)return '';
+    const all=await res.json()||{};
+    const candidates=Object.entries(all)
+      .filter(([id,s])=>id && s && s.active)
+      .sort((a,b)=>Number(b[1]?.updatedAt||0)-Number(a[1]?.updatedAt||0));
+    if(!candidates.length)return '';
+    const found=candidates[0][0];
+    uid=found;
+    uidSource='AUTO • NEJČERSTVĚJŠÍ LIVE';
+    try{ localStorage.setItem('bcOverlayUid',found); }catch(e){}
+    return found;
+  }catch(e){
+    return '';
+  }
+}
+
 async function poll(){
   if(!uid){
-    diag.textContent='OVERLAY NAČTEN • CHYBÍ UID'; diag.classList.add('show');
+    await discoverActiveUid();
+  }
+  if(!uid){
     overlay.className='active';
-    overlay.innerHTML='<div class="offline" style="background:rgba(176,0,32,.92);padding:18px;border-radius:14px">OVERLAY JE NAČTENÝ, ALE CHYBÍ UID</div>';
+    overlay.innerHTML='<div class="offline" style="background:rgba(150,0,25,.86);padding:22px;border-radius:14px">OVERLAY JE NAČTENÝ, ALE NENAŠEL JSEM AKTIVNÍ STREAM</div>';
     return;
-  }else{
-    diag.classList.remove('show');
   }
   try{
     const res=await fetch(`${FIREBASE_DB}/stream/users/${encodeURIComponent(uid)}.json?t=${Date.now()}`,{cache:'no-store'});
@@ -228,7 +254,7 @@ function rerenderForViewport(){
   requestAnimationFrame(()=>{
     if(lastState)render(lastState);
     if(diag){
-      diag.textContent='OVERLAY OK • '+(innerWidth>innerHeight?'LANDSCAPE':'PORTRAIT')+' • '+innerWidth+'×'+innerHeight+' • '+(lastState&&lastState.active?'DATA OK':'BEZ AKTIVNÍCH DAT');
+      diag.textContent='OVERLAY OK • '+(innerWidth>innerHeight?'LANDSCAPE':'PORTRAIT')+' • '+innerWidth+'×'+innerHeight+' • '+(lastState&&lastState.active?'DATA OK':'BEZ AKTIVNÍCH DAT')+' • UID: '+(uidSource||'—');
       diag.classList.add('show');
       clearTimeout(rerenderForViewport._hide);
       rerenderForViewport._hide=setTimeout(()=>diag.classList.remove('show'),5000);
