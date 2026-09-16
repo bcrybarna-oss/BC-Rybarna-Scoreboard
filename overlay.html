@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>BC Rybárna Overlay • v4.50.84 RC</title>
+<title>BC Rybárna Overlay • v4.50.85 RC</title>
 <style>
   :root{
     --gold:#d4af37;
@@ -140,18 +140,18 @@ async function setPauseAudio(shouldPlay){
   if(!pauseAudio)return false;
   if(shouldPlay){
     clearInterval(setPauseAudio._fade);
+    // Pokud skladba už běží, nesahej na currentTime. Firebase polling tak hudbu nerestartuje.
+    if(!pauseAudio.paused && !pauseAudio.ended){
+      try{ pauseAudio.muted=false; pauseAudio.volume=.72; }catch(e){}
+      return true;
+    }
     try{
-      pauseAudio.pause();
       pauseAudio.currentTime=0;
       pauseAudio.muted=true;
       pauseAudio.volume=.72;
       await pauseAudio.play();
-      // Některé iOS WebView povolí start jen ztlumeně. Po spuštění zkusíme zvuk otevřít.
       setTimeout(()=>{
-        try{
-          pauseAudio.muted=false;
-          pauseAudio.volume=.72;
-        }catch(e){}
+        try{ pauseAudio.muted=false; pauseAudio.volume=.72; }catch(e){}
       },120);
       return true;
     }catch(e){
@@ -161,7 +161,11 @@ async function setPauseAudio(shouldPlay){
     }
   }else{
     clearInterval(setPauseAudio._fade);
-    let v=Number(pauseAudio.volume||0);
+    if(pauseAudio.paused){
+      try{ pauseAudio.currentTime=0; pauseAudio.volume=.72; pauseAudio.muted=false; }catch(e){}
+      return true;
+    }
+    let v=Number(pauseAudio.volume||.72);
     setPauseAudio._fade=setInterval(()=>{
       v=Math.max(0,v-.10);
       pauseAudio.volume=v;
@@ -184,8 +188,9 @@ function renderIntermission(mode){
   }[mode];
   if(!content)return false;
   overlay.className='active';
-  overlay.innerHTML=`<div class="intermission"><div class="intermission-card"><div class="intermission-kicker">BC RYBÁRNA</div><div class="intermission-main">${content[0]}</div><div class="intermission-sub">${content[1]}</div>${mode==='pause'?'<div id="pauseAudioStatus" class="audio-status">AUDIO • SPOUŠTÍM…</div>':''}</div></div>`;
-  if(mode==='pause'){
+  const musicMode=(mode==='pause'||mode==='soon');
+  overlay.innerHTML=`<div class="intermission"><div class="intermission-card"><div class="intermission-kicker">BC RYBÁRNA</div><div class="intermission-main">${content[0]}</div><div class="intermission-sub">${content[1]}</div>${musicMode?'<div id="pauseAudioStatus" class="audio-status">AUDIO • SPOUŠTÍM…</div>':''}</div></div>`;
+  if(musicMode){
     setPauseAudio(true).then(ok=>{
       const s=document.getElementById('pauseAudioStatus');
       if(s)s.textContent=ok?'AUDIO • OK':'AUDIO • BLOKOVÁNO WEBVIEW';
@@ -216,12 +221,14 @@ function render(state){
     return;
   }
   const mode=state.streamMode||'live';
+  const wasMusicMode=(lastMode==='pause'||lastMode==='soon');
+  const isMusicMode=(mode==='pause'||mode==='soon');
   if(mode!==lastMode){
-    if(lastMode==='pause' && mode!=='pause')setPauseAudio(false);
+    if(wasMusicMode && !isMusicMode)setPauseAudio(false);
     lastMode=mode;
   }
   if(mode!=='live'){renderIntermission(mode);return;}
-  setPauseAudio(false);
+  if(wasMusicMode)setPauseAudio(false);
   const p1=esc((state.playerNames&&state.playerNames[0])||'Hráč 1');
   const p2=esc((state.playerNames&&state.playerNames[1])||'Hráč 2');
   const sub1=esc((state.playerSubs&&state.playerSubs[0])||'');
