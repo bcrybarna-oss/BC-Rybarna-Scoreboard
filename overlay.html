@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>BC Rybárna Overlay • v4.50.73 RC</title>
+<title>BC Rybárna Overlay • v4.50.75 RC</title>
 <style>
   :root{
     --gold:#d4af37;
@@ -16,9 +16,9 @@
     --accent:#ee3b44;
   }
   *{box-sizing:border-box}
-  html,body{margin:0;padding:0;width:100%;height:100%;background:transparent;color:var(--text);font-family:Arial,Helvetica,sans-serif;overflow:hidden}
-  body{display:flex;align-items:flex-end;justify-content:center;padding:18px}
-  #overlay{width:min(1280px,100%);display:none}
+  html,body{margin:0;padding:0;width:100%;height:100%;min-width:100%;min-height:100%;background:transparent;color:var(--text);font-family:Arial,Helvetica,sans-serif;overflow:hidden}
+  body{position:fixed;inset:0;width:100vw;height:100vh;height:100dvh;padding:0;background:transparent}
+  #overlay{position:fixed;left:0;right:0;bottom:0;width:100%;max-width:none;padding:18px;display:none;z-index:10}
   #overlay.active{display:block}
   .titlebar{display:flex;justify-content:center;align-items:center;margin-bottom:8px}
   .titlepill{max-width:92%;padding:8px 16px;border-radius:999px;background:rgba(0,0,0,.5);border:1px solid rgba(212,175,55,.45);color:var(--gold2);font-size:20px;font-weight:900;letter-spacing:.35px;text-shadow:0 1px 2px rgba(0,0,0,.7);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -63,6 +63,40 @@
   .intermission-main{font-size:clamp(58px,9vw,118px);font-weight:1000;letter-spacing:3px;line-height:.95;text-shadow:0 5px 18px rgba(0,0,0,.52)}
   .intermission-sub{margin-top:24px;font-size:clamp(22px,3vw,38px);font-weight:850;color:#ddd;letter-spacing:.8px}
   .offline{display:flex;align-items:center;justify-content:center;height:100%;font-size:22px;color:#ddd;text-shadow:0 1px 2px rgba(0,0,0,.7)}
+
+  @media (orientation:landscape){
+    #overlay{padding:8px 12px 10px}
+    .titlebar{margin-bottom:5px}
+    .titlepill{padding:5px 12px;font-size:14px}
+    .scoreboard{gap:8px;border-radius:14px;padding:8px 10px}
+    .player{gap:8px;border-radius:12px;padding:7px 10px;min-height:62px}
+    .player.turn::after{top:-7px;right:8px;padding:2px 7px;font-size:8px}
+    .name{font-size:22px}
+    .sub{font-size:11px;margin-top:2px}
+    .score{min-width:48px;font-size:38px}
+    .center{min-width:150px;gap:4px;padding:2px 4px}
+    .maininfo{font-size:15px}
+    .subinfo{font-size:10px}
+    .rack{padding:3px 8px;font-size:10px}
+    .balls-wrap{margin-top:5px;padding:6px 8px;border-radius:12px}
+    .balls-title{font-size:9px;margin-bottom:4px}
+    .balls-row{gap:5px;flex-wrap:nowrap}
+    .ball-slot{width:34px;height:34px}
+    .ball{width:32px;height:32px}
+    .ball span{width:14px;height:14px;font-size:8px}
+    .intermission{padding:12px}
+    .intermission-card{padding:24px 22px;border-radius:20px}
+    .intermission-kicker{font-size:13px;letter-spacing:3px;margin-bottom:10px}
+    .intermission-main{font-size:clamp(40px,10vh,72px)}
+    .intermission-sub{margin-top:12px;font-size:clamp(16px,4vh,26px)}
+  }
+  @media (max-height:420px) and (orientation:landscape){
+    #overlay{padding:5px 8px}
+    .balls-wrap{padding:4px 6px}
+    .ball-slot{width:30px;height:30px}
+    .ball{width:28px;height:28px}
+  }
+
 </style>
 </head>
 <body>
@@ -76,6 +110,7 @@ const overlay=document.getElementById('overlay');
 const pauseAudio=document.getElementById('pauseAudio');
 let lastKey='';
 let lastMode='';
+let lastState=null;
 function esc(s){return String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));}
 function ballClass(n){
   const stripe=n>=9;
@@ -121,6 +156,7 @@ function renderBalls(state){
   return `<div class="balls-wrap"><div class="balls-title">KOULE NA STOLE</div><div class="balls-row">${items.join('')}</div></div>`;
 }
 function render(state){
+  lastState=state||null;
   if(!state || !state.active){
     setPauseAudio(false);
     lastMode='';
@@ -192,6 +228,13 @@ async function poll(){
     overlay.innerHTML='<div class="offline">Overlay se nemůže připojit.</div>';
   }
 }
+function rerenderForViewport(){
+  // Streamlabs Mobile může při otočení změnit velikost webového viewportu bez reloadu.
+  requestAnimationFrame(()=>{ if(lastState)render(lastState); });
+}
+window.addEventListener('resize',rerenderForViewport,{passive:true});
+window.addEventListener('orientationchange',()=>setTimeout(rerenderForViewport,180),{passive:true});
+if(window.visualViewport)window.visualViewport.addEventListener('resize',rerenderForViewport,{passive:true});
 render(null);
 poll();
 setInterval(poll,1000);
