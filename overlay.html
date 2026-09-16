@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>BC Rybárna Overlay • v4.50.78 RC</title>
+<title>BC Rybárna Overlay • v4.50.79 RC</title>
 <style>
   :root{
     --gold:#d4af37;
@@ -152,8 +152,8 @@ function render(state){
   if(!state || !state.active){
     setPauseAudio(false);
     lastMode='';
-    overlay.className='';
-    overlay.innerHTML='<div class="offline">Overlay čeká na aktivní zápas…</div>';
+    overlay.className='active';
+    overlay.innerHTML='<div class="offline" style="background:rgba(0,0,0,.70);padding:18px;border-radius:14px">OVERLAY BĚŽÍ • ČEKÁM NA AKTIVNÍ DATA ZÁPASU</div>';
     return;
   }
   const mode=state.streamMode||'live';
@@ -228,7 +228,7 @@ function rerenderForViewport(){
   requestAnimationFrame(()=>{
     if(lastState)render(lastState);
     if(diag){
-      diag.textContent='OVERLAY OK • '+(innerWidth>innerHeight?'LANDSCAPE':'PORTRAIT')+' • '+innerWidth+'×'+innerHeight;
+      diag.textContent='OVERLAY OK • '+(innerWidth>innerHeight?'LANDSCAPE':'PORTRAIT')+' • '+innerWidth+'×'+innerHeight+' • '+(lastState&&lastState.active?'DATA OK':'BEZ AKTIVNÍCH DAT');
       diag.classList.add('show');
       clearTimeout(rerenderForViewport._hide);
       rerenderForViewport._hide=setTimeout(()=>diag.classList.remove('show'),5000);
