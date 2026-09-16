@@ -1,279 +1,191 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="cs">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-  <title>BC Rybárna Stream Overlay</title>
-  <style>
-    :root{
-      --bg:rgba(8,8,10,.84);
-      --panel:rgba(18,18,22,.92);
-      --gold:#d4af37;
-      --gold2:#f1d67a;
-      --text:#ffffff;
-      --muted:#c8c8c8;
-      --danger:#ff5b5b;
-    }
-    *{box-sizing:border-box}
-    html,body{margin:0;padding:0;background:transparent;font-family:Arial,Helvetica,sans-serif;color:var(--text)}
-    body{overflow:hidden}
-    .wrap{
-      position:fixed;
-      left:50%;
-      bottom:18px;
-      transform:translateX(-50%);
-      width:min(980px,88vw);
-      display:grid;
-      grid-template-columns:1fr auto 1fr;
-      align-items:stretch;
-      gap:0;
-      filter:drop-shadow(0 8px 24px rgba(0,0,0,.45));
-    }
-    .player{
-      position:relative;
-      background:var(--bg);
-      border:1px solid rgba(212,175,55,.28);
-      min-height:68px;
-      display:flex;
-      align-items:center;
-      padding:8px 12px;
-      gap:14px;
-    }
-    .role-badge{
-      position:absolute;
-      top:-10px;
-      left:12px;
-      background:rgba(212,175,55,.96);
-      color:#111;
-      border-radius:999px;
-      padding:3px 8px;
-      font-size:10px;
-      font-weight:950;
-      letter-spacing:.4px;
-      box-shadow:0 4px 10px rgba(0,0,0,.28);
-    }
-    .player.right .role-badge{left:auto;right:12px}
-    .player.left{border-radius:16px 0 0 16px}
-    .player.right{border-radius:0 16px 16px 0;justify-content:flex-end;text-align:right}
-    .turn{
-      box-shadow:inset 0 0 0 2px var(--gold);
-      background:rgba(35,30,10,.92);
-    }
-    .avatar{
-      width:42px;height:42px;border-radius:50%;
-      border:2px solid var(--gold);
-      display:flex;align-items:center;justify-content:center;
-      font-weight:900;color:var(--gold2);background:#111;
-      overflow:hidden;flex:0 0 auto;
-    }
-    .avatar img{width:100%;height:100%;object-fit:cover}
-    .meta{min-width:0}
-    .name{font-size:20px;font-weight:950;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-    .sub{font-size:10px;color:var(--muted);margin-top:3px;font-weight:700}
-    .score{
-      font-size:42px;font-weight:950;line-height:1;color:var(--gold2);
-      min-width:58px;text-align:center;
-    }
-    .center{
-      min-width:220px;
-      background:var(--panel);
-      border-top:1px solid rgba(212,175,55,.38);
-      border-bottom:1px solid rgba(212,175,55,.38);
-      display:flex;flex-direction:column;align-items:center;justify-content:center;
-      padding:7px 12px;
-    }
-    .match-title{font-size:11px;font-weight:900;color:#fff;letter-spacing:.5px;margin-bottom:2px;white-space:nowrap;max-width:220px;overflow:hidden;text-overflow:ellipsis}
-    .discipline{font-size:14px;font-weight:950;letter-spacing:.8px;color:var(--gold2)}
-    .race{font-size:10px;color:var(--muted);margin-top:2px}
-    .ghost-rules{font-size:9px;color:#fff;margin-top:4px;font-weight:800;line-height:1.25;text-align:center;white-space:normal;max-width:230px}
-    .ghost-rules strong{color:var(--gold2)}
-    .clock{
-      margin-top:6px;
-      font-size:22px;font-weight:950;
-      font-variant-numeric:tabular-nums;
-    }
-    .clock.warn{color:#ffd24a}
-    .clock.danger{color:var(--danger)}
-    .status{
-      position:fixed;left:50%;bottom:96px;transform:translateX(-50%);
-      background:rgba(0,0,0,.65);padding:6px 12px;border-radius:999px;
-      font-size:12px;font-weight:800;color:#ddd;
-    }
-    .hidden{display:none!important}
-    @media (max-width:850px){
-      .wrap{width:96vw}
-      .center{min-width:160px}
-      .name{font-size:16px}
-      .score{font-size:34px}
-      .clock{font-size:19px}
-      .avatar{width:36px;height:36px}
-    }
-  </style>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>BC Rybárna Overlay • v4.50.72 RC</title>
+<style>
+  :root{
+    --gold:#d4af37;
+    --gold2:#f1d67a;
+    --bg:rgba(12,12,16,.78);
+    --panel:rgba(22,22,30,.88);
+    --line:rgba(255,255,255,.10);
+    --text:#f7f7fb;
+    --muted:#c9cad4;
+    --accent:#ee3b44;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0;width:100%;height:100%;background:transparent;color:var(--text);font-family:Arial,Helvetica,sans-serif;overflow:hidden}
+  body{display:flex;align-items:flex-end;justify-content:center;padding:18px}
+  #overlay{width:min(1280px,100%);display:none}
+  #overlay.active{display:block}
+  .titlebar{display:flex;justify-content:center;align-items:center;margin-bottom:8px}
+  .titlepill{max-width:92%;padding:8px 16px;border-radius:999px;background:rgba(0,0,0,.5);border:1px solid rgba(212,175,55,.45);color:var(--gold2);font-size:20px;font-weight:900;letter-spacing:.35px;text-shadow:0 1px 2px rgba(0,0,0,.7);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .scoreboard{display:grid;grid-template-columns:1fr auto 1fr;gap:14px;align-items:stretch;background:var(--bg);border:1px solid rgba(255,255,255,.12);border-radius:22px;padding:14px 18px;backdrop-filter:blur(8px);box-shadow:0 16px 48px rgba(0,0,0,.32)}
+  .player{display:flex;align-items:center;gap:14px;background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:14px 18px;min-height:96px;position:relative}
+  .player.turn{outline:2px solid rgba(212,175,55,.85);box-shadow:0 0 0 3px rgba(212,175,55,.18) inset}
+  .player.turn::after{content:'U STOLU';position:absolute;top:-10px;right:14px;background:rgba(212,175,55,.96);color:#111;padding:4px 10px;border-radius:999px;font-size:11px;font-weight:900;letter-spacing:.6px}
+  .player.right{flex-direction:row-reverse;text-align:right}
+  .identity{min-width:0;flex:1}
+  .name{font-size:34px;line-height:1.03;font-weight:950;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-shadow:0 1px 2px rgba(0,0,0,.55)}
+  .sub{font-size:17px;color:var(--muted);margin-top:6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .score{min-width:76px;text-align:center;font-size:56px;font-weight:1000;line-height:1;color:var(--gold2);text-shadow:0 2px 4px rgba(0,0,0,.6)}
+  .center{min-width:230px;display:flex;flex-direction:column;justify-content:center;align-items:center;gap:9px;padding:6px 8px}
+  .maininfo{font-size:24px;font-weight:950;letter-spacing:.4px;text-align:center}
+  .subinfo{font-size:16px;color:var(--muted);text-align:center}
+  .rack{padding:6px 12px;border-radius:999px;background:rgba(255,255,255,.08);font-size:14px;font-weight:800;letter-spacing:.6px}
+  .balls-wrap{margin-top:10px;padding:12px 16px;border-radius:18px;background:rgba(8,8,12,.62);border:1px solid rgba(255,255,255,.10)}
+  .balls-title{font-size:12px;font-weight:900;color:var(--muted);letter-spacing:.8px;margin-bottom:8px;text-align:center}
+  .balls-row{display:flex;justify-content:center;gap:10px;flex-wrap:wrap}
+  .ball-slot{width:44px;height:44px;display:flex;align-items:center;justify-content:center}
+  .ball{width:44px;height:44px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:1000;font-size:18px;color:#111;box-shadow:0 4px 12px rgba(0,0,0,.45), inset 0 2px 0 rgba(255,255,255,.35);border:2px solid rgba(255,255,255,.62);position:relative}
+  .ball.dark{color:#fff}
+  .ball.stripe{background:#fff !important;color:#111;border-color:rgba(255,255,255,.86)}
+  .ball.stripe::before{content:'';position:absolute;left:2px;right:2px;top:50%;height:14px;transform:translateY(-50%);border-radius:10px;background:var(--stripe-color,#f4d000);z-index:0}
+  .ball.stripe span,.ball.solid span{position:relative;z-index:1}
+  .ball.gone{visibility:hidden;opacity:0;transform:scale(.78)}
+  .ball1{background:#f4d000}.ball2{background:#2459ff;color:#fff}.ball3{background:#db2d2d;color:#fff}.ball4{background:#7a39d7;color:#fff}.ball5{background:#f2861b}.ball6{background:#19955d;color:#fff}.ball7{background:#7a1f1f;color:#fff}.ball8{background:#111;color:#fff}
+  .ball9{--stripe-color:#f4d000}.ball10{--stripe-color:#2459ff}.ball11{--stripe-color:#db2d2d}.ball12{--stripe-color:#7a39d7}.ball13{--stripe-color:#f2861b}.ball14{--stripe-color:#19955d}.ball15{--stripe-color:#7a1f1f}
+
+  .intermission{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;padding:28px;background:radial-gradient(circle at 50% 35%,rgba(48,42,24,.94),rgba(5,5,8,.98) 62%);text-align:center}
+  .intermission-card{width:min(980px,92vw);padding:58px 34px;border-radius:30px;border:1px solid rgba(212,175,55,.48);background:rgba(10,10,14,.72);box-shadow:0 30px 90px rgba(0,0,0,.48),inset 0 0 80px rgba(212,175,55,.04)}
+  .intermission-kicker{font-size:20px;letter-spacing:4px;font-weight:900;color:var(--gold2);margin-bottom:18px}
+  .intermission-main{font-size:clamp(58px,9vw,118px);font-weight:1000;letter-spacing:3px;line-height:.95;text-shadow:0 5px 18px rgba(0,0,0,.52)}
+  .intermission-sub{margin-top:24px;font-size:clamp(22px,3vw,38px);font-weight:850;color:#ddd;letter-spacing:.8px}
+  .offline{display:flex;align-items:center;justify-content:center;height:100%;font-size:22px;color:#ddd;text-shadow:0 1px 2px rgba(0,0,0,.7)}
+</style>
 </head>
 <body>
-  <div id="overlay" class="wrap hidden">
-    <div id="p1Box" class="player left">
-      <div id="p1Role" class="role-badge hidden">U STOLU</div>
-      <div id="p1Avatar" class="avatar">P1</div>
-      <div class="meta">
-        <div id="p1Name" class="name">HRÁČ 1</div>
-        <div id="p1Sub" class="sub"></div>
+  <div id="overlay"><div class="offline">Overlay čeká na aktivní zápas…</div></div>
+  <audio id="pauseAudio" src="pause.mp3" preload="auto" loop playsinline></audio>
+<script>
+const FIREBASE_DB='https://bc-rybarna-scrbrd-default-rtdb.europe-west1.firebasedatabase.app';
+const params=new URLSearchParams(location.search);
+const uid=params.get('uid')||'';
+const overlay=document.getElementById('overlay');
+const pauseAudio=document.getElementById('pauseAudio');
+let lastKey='';
+let lastMode='';
+function esc(s){return String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));}
+function ballClass(n){
+  const stripe=n>=9;
+  return `ball ${stripe?'stripe':'solid'} ${n===2||n===3||n===4||n===6||n===7||n===8?'dark':''} ball${n}`;
+}
+function setPauseAudio(shouldPlay){
+  if(!pauseAudio)return;
+  if(shouldPlay){
+    pauseAudio.volume=0;
+    const p=pauseAudio.play();
+    if(p&&typeof p.catch==='function')p.catch(()=>{});
+    let v=0; clearInterval(setPauseAudio._fade);
+    setPauseAudio._fade=setInterval(()=>{v=Math.min(.72,v+.06);pauseAudio.volume=v;if(v>=.72)clearInterval(setPauseAudio._fade);},80);
+  }else{
+    clearInterval(setPauseAudio._fade);
+    let v=Number(pauseAudio.volume||0);
+    setPauseAudio._fade=setInterval(()=>{v=Math.max(0,v-.08);pauseAudio.volume=v;if(v<=0){clearInterval(setPauseAudio._fade);pauseAudio.pause();pauseAudio.currentTime=0;}},70);
+  }
+}
+function renderIntermission(mode){
+  const content={
+    pause:['PAUZA','Za chvíli pokračujeme'],
+    soon:['BRZY ZAČÍNÁME','Přenos začne za chvíli'],
+    end:['KONEC STREAMU','Děkujeme za sledování']
+  }[mode];
+  if(!content)return false;
+  overlay.className='active';
+  overlay.innerHTML=`<div class="intermission"><div class="intermission-card"><div class="intermission-kicker">BC RYBÁRNA</div><div class="intermission-main">${content[0]}</div><div class="intermission-sub">${content[1]}</div></div></div>`;
+  setPauseAudio(mode==='pause');
+  return true;
+}
+
+function renderBalls(state){
+  const max=Number(state.maxBall||0);
+  const remaining=Array.isArray(state.remainingBalls)?state.remainingBalls.map(Number):[];
+  if(!(state.exactRackTracking && (state.discipline==='9-ball' || state.discipline==='10-ball') && max))return '';
+  const set=new Set(remaining);
+  const items=[];
+  for(let n=1;n<=max;n++){
+    const active=set.has(n);
+    items.push(`<div class="ball-slot"><div class="${ballClass(n)} ${active?'':'gone'}"><span>${n}</span></div></div>`);
+  }
+  return `<div class="balls-wrap"><div class="balls-title">KOULE NA STOLE</div><div class="balls-row">${items.join('')}</div></div>`;
+}
+function render(state){
+  if(!state || !state.active){
+    setPauseAudio(false);
+    lastMode='';
+    overlay.className='';
+    overlay.innerHTML='<div class="offline">Overlay čeká na aktivní zápas…</div>';
+    return;
+  }
+  const mode=state.streamMode||'live';
+  if(mode!==lastMode){
+    if(lastMode==='pause' && mode!=='pause')setPauseAudio(false);
+    lastMode=mode;
+  }
+  if(mode!=='live'){renderIntermission(mode);return;}
+  setPauseAudio(false);
+  const p1=esc((state.playerNames&&state.playerNames[0])||'Hráč 1');
+  const p2=esc((state.playerNames&&state.playerNames[1])||'Hráč 2');
+  const sub1=esc((state.playerSubs&&state.playerSubs[0])||'');
+  const sub2=esc((state.playerSubs&&state.playerSubs[1])||'');
+  const title=esc(state.matchTitle||'');
+  const discipline=esc(state.discipline||'');
+  const target=Number(state.target||0);
+  const rackNo=Number(state.rackNumber||1);
+  const score1=Number((state.scores&&state.scores[0])||0);
+  const score2=Number((state.scores&&state.scores[1])||0);
+  const turn=Number(state.turn||0);
+  overlay.className='active';
+  overlay.innerHTML=`
+    ${title?`<div class="titlebar"><div class="titlepill">${title}</div></div>`:''}
+    <div class="scoreboard">
+      <div class="player ${turn===0?'turn':''}">
+        <div class="identity">
+          <div class="name">${p1}</div>
+          ${sub1?`<div class="sub">${sub1}</div>`:''}
+        </div>
+        <div class="score">${score1}</div>
       </div>
-      <div id="p1Score" class="score">0</div>
-    </div>
-
-    <div class="center">
-      <div id="matchTitle" class="match-title">ČPT • 9-BALL</div>
-      <div id="discipline" class="discipline">9-BALL</div>
-      <div id="race" class="race">RACE TO 7</div>
-      <div id="ghostRules" class="ghost-rules hidden"></div>
-      <div id="clock" class="clock">30</div>
-    </div>
-
-    <div id="p2Box" class="player right">
-      <div id="p2Role" class="role-badge hidden">U STOLU</div>
-      <div id="p2Score" class="score">0</div>
-      <div class="meta">
-        <div id="p2Name" class="name">HRÁČ 2</div>
-        <div id="p2Sub" class="sub"></div>
+      <div class="center">
+        <div class="maininfo">${discipline}${target?` • RACE TO ${target}`:''}</div>
+        <div class="rack">RACK ${rackNo}</div>
+        ${state.useClock && Number(state.clockRemaining||0)>0?`<div class="subinfo">SHOT CLOCK: ${Math.max(0,Math.ceil(Number(state.clockRemaining||0)))} s</div>`:`<div class="subinfo">BC RYBÁRNA SCOREBOARD</div>`}
       </div>
-      <div id="p2Avatar" class="avatar">P2</div>
+      <div class="player right ${turn===1?'turn':''}">
+        <div class="identity">
+          <div class="name">${p2}</div>
+          ${sub2?`<div class="sub">${sub2}</div>`:''}
+        </div>
+        <div class="score">${score2}</div>
+      </div>
     </div>
-  </div>
-
-  <div id="status" class="status hidden"></div>
-
-  <script>
-    const $=id=>document.getElementById(id);
-
-    const demoState={
-      matchTitle:'ČPT • 9-BALL',
-      discipline:'9-ball',
-      target:7,
-      scores:[4,3],
-      playerNames:['JARDA','MENCL'],
-      playerSubs:['BC Rybárna',''],
-      playerPhotos:['',''],
-      turn:0,
-      isBreakShot:false,
-      useClock:true,
-      clockRemaining:24,
-      ghostMode:false,
-      solo14:false
-    };
-
-    function initials(name){
-      return (name||'?').trim().split(/\s+/).map(x=>x[0]).join('').slice(0,2).toUpperCase();
+    ${renderBalls(state)}
+  `;
+}
+async function poll(){
+  if(!uid){
+    overlay.className='';
+    overlay.innerHTML='<div class="offline">Chybí parametr uid.</div>';
+    return;
+  }
+  try{
+    const res=await fetch(`${FIREBASE_DB}/stream/users/${encodeURIComponent(uid)}.json?t=${Date.now()}`,{cache:'no-store'});
+    const state=await res.json();
+    const key=JSON.stringify(state||{});
+    if(key!==lastKey){
+      lastKey=key;
+      render(state);
     }
-
-    function setAvatar(el,name,photo){
-      el.innerHTML='';
-      if(photo){
-        const img=document.createElement('img');
-        img.src=photo;
-        img.alt='';
-        el.appendChild(img);
-      }else{
-        el.textContent=initials(name);
-      }
-    }
-
-    function disciplineLabel(s){
-      if(s.discipline==='14.1') return '14.1 NEKONEČNÁ';
-      if(s.ghostMode) return (s.discipline||'').toUpperCase()+' • GHOST';
-      return (s.discipline||'').toUpperCase();
-    }
-
-    function render(state){
-      $('overlay').classList.remove('hidden');
-      const p1=state.playerNames?.[0]||'HRÁČ 1';
-      const p2=state.ghostMode?'GHOST':(state.solo14?'':(state.playerNames?.[1]||'HRÁČ 2'));
-
-      $('p1Name').textContent=p1;
-      $('p2Name').textContent=p2;
-      $('p1Score').textContent=state.scores?.[0]??0;
-      $('p2Score').textContent=state.solo14?'':(state.scores?.[1]??0);
-      $('p1Sub').textContent=state.playerSubs?.[0]||'';
-      $('p2Sub').textContent=state.playerSubs?.[1]||'';
-      $('matchTitle').textContent=state.matchTitle||'';
-      $('matchTitle').classList.toggle('hidden',!state.matchTitle);
-      $('discipline').textContent=disciplineLabel(state);
-
-      if(state.discipline==='14.1'){
-        $('race').textContent='DO '+(state.target||100)+' BODŮ';
-      }else if(state.ghostMode){
-        $('race').textContent='DO '+(state.target||7)+' BODŮ';
-      }else{
-        $('race').textContent='RACE TO '+(state.target||7);
-      }
-
-      if(state.ghostMode){
-        $('ghostRules').innerHTML =
-          '<strong>ČISTÁ 2 B</strong> • <strong>BIH 1 B</strong> • ' +
-          'NEDOHRÁNO = GHOST +1 • DRY BREAK = GHOST +1';
-        $('ghostRules').classList.remove('hidden');
-      }else{
-        $('ghostRules').classList.add('hidden');
-        $('ghostRules').textContent='';
-      }
-
-      $('p1Box').classList.toggle('turn',state.turn===0);
-      $('p2Box').classList.toggle('turn',state.turn===1 && !state.solo14);
-
-      $('p2Box').classList.toggle('hidden',!!state.solo14);
-
-      $('p1Role').classList.add('hidden');
-      $('p2Role').classList.add('hidden');
-      if(state.turn===0){
-        $('p1Role').textContent = state.isBreakShot ? 'ROZSTŘEL' : 'U STOLU';
-        $('p1Role').classList.remove('hidden');
-      }else if(state.turn===1 && !state.solo14){
-        $('p2Role').textContent = state.isBreakShot ? 'ROZSTŘEL' : 'U STOLU';
-        $('p2Role').classList.remove('hidden');
-      }
-
-      setAvatar($('p1Avatar'),p1,state.playerPhotos?.[0]||'');
-      setAvatar($('p2Avatar'),p2,state.playerPhotos?.[1]||'');
-
-      const clock=Number(state.clockRemaining ?? 30);
-      $('clock').classList.toggle('hidden',!state.useClock);
-      $('clock').textContent=clock;
-      $('clock').classList.toggle('warn',clock<=10 && clock>5);
-      $('clock').classList.toggle('danger',clock<=5);
-    }
-
-    const FIREBASE_STREAM_BASE = "https://bc-rybarna-scrbrd-default-rtdb.europe-west1.firebasedatabase.app/stream/users/";
-    const STREAM_UID = new URLSearchParams(location.search).get('uid') || '';
-    const LIVE_URL = STREAM_UID ? FIREBASE_STREAM_BASE + encodeURIComponent(STREAM_UID) + ".json" : "";
-    let lastUpdatedAt=0;
-
-    async function loadLiveState(){
-      if(!LIVE_URL){
-        $('overlay').classList.add('hidden');
-        $('status').classList.add('hidden');
-        return;
-      }
-      try{
-        const r=await fetch(LIVE_URL+'?t='+Date.now(),{cache:'no-store'});
-        if(!r.ok) throw new Error('HTTP '+r.status);
-        const state=await r.json();
-
-        if(state && state.active){
-          render(state);
-          lastUpdatedAt=Number(state.updatedAt||Date.now());
-          $('status').classList.add('hidden');
-        }else{
-          $('overlay').classList.add('hidden');
-          $('status').classList.add('hidden');
-        }
-      }catch(e){
-        $('overlay').classList.add('hidden');
-        $('status').classList.add('hidden');
-      }
-    }
-
-    loadLiveState();
-    setInterval(loadLiveState,500);
-  </script>
+  }catch(e){
+    overlay.className='';
+    overlay.innerHTML='<div class="offline">Overlay se nemůže připojit.</div>';
+  }
+}
+render(null);
+poll();
+setInterval(poll,1000);
+</script>
 </body>
 </html>
