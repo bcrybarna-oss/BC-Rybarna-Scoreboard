@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>BC Rybárna Overlay • v4.50.80 RC</title>
+<title>BC Rybárna Overlay • v4.50.81 RC</title>
 <style>
   :root{
     --gold:#d4af37;
@@ -160,7 +160,7 @@ function render(state){
     setPauseAudio(false);
     lastMode='';
     overlay.className='active';
-    overlay.innerHTML='<div class="offline" style="background:rgba(0,0,0,.70);padding:18px;border-radius:14px">OVERLAY BĚŽÍ • ČEKÁM NA AKTIVNÍ DATA ZÁPASU</div>';
+    overlay.innerHTML='<div class="offline" style="background:rgba(0,0,0,.70);padding:18px;border-radius:14px">OVERLAY BĚŽÍ • HLEDÁM AKTIVNÍ ZÁPAS</div>';
     return;
   }
   const mode=state.streamMode||'live';
@@ -228,23 +228,41 @@ async function discoverActiveUid(){
 }
 
 async function poll(){
-  if(!uid){
-    await discoverActiveUid();
-  }
-  if(!uid){
-    overlay.className='active';
-    overlay.innerHTML='<div class="offline" style="background:rgba(150,0,25,.86);padding:22px;border-radius:14px">OVERLAY JE NAČTENÝ, ALE NENAŠEL JSEM AKTIVNÍ STREAM</div>';
-    return;
-  }
   try{
-    const res=await fetch(`${FIREBASE_DB}/stream/users/${encodeURIComponent(uid)}.json?t=${Date.now()}`,{cache:'no-store'});
-    const state=await res.json();
+    if(!uid){
+      await discoverActiveUid();
+    }
+
+    let state=null;
+    if(uid){
+      const res=await fetch(`${FIREBASE_DB}/stream/users/${encodeURIComponent(uid)}.json?t=${Date.now()}`,{cache:'no-store'});
+      if(res.ok) state=await res.json();
+    }
+
+    // Pokud uložené / URL UID nemá aktivní zápas, zkus automaticky najít
+    // nejčerstvější aktivní stream. To řeší staré URL, jiný účet i ztrátu UID po otočení.
+    if(!state || !state.active){
+      const previousUid=uid;
+      uid='';
+      const found=await discoverActiveUid();
+      if(found){
+        if(found!==previousUid) lastKey='';
+        const res2=await fetch(`${FIREBASE_DB}/stream/users/${encodeURIComponent(found)}.json?t=${Date.now()}`,{cache:'no-store'});
+        if(res2.ok) state=await res2.json();
+      }else{
+        // Když žádný aktivní stream není, vrať původní UID pro další pokus,
+        // pokud nějaké existovalo.
+        uid=previousUid||'';
+      }
+    }
+
     const key=JSON.stringify(state||{});
     if(key!==lastKey){
       lastKey=key;
       render(state);
     }
   }catch(e){
+    lastKey='';
     diag.textContent='OVERLAY NAČTEN • CHYBA DAT'; diag.classList.add('show');
     overlay.className='active';
     overlay.innerHTML='<div class="offline" style="background:rgba(176,0,32,.92);padding:18px;border-radius:14px">OVERLAY NAČTEN • CHYBA PŘIPOJENÍ K DATŮM</div>';
