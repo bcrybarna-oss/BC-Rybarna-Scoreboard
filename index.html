@@ -8059,6 +8059,27 @@ $('useClock').addEventListener('change',e=>$('clockSettings').classList.toggle('
     player=Number(player);
     if(player!==0 && player!==1)return;
 
+    if(type==='clean'){
+      const cleanAllowed =
+        player===Number(match.breaker||0) &&
+        player===Number(match.turn||0) &&
+        match.breakAndRunEligible!==false;
+      if(!cleanAllowed){
+        toast('ČISTÁ je pouze Break & Run hráče, který rozstřeloval. Po dry breaku soupeře použij DOHRÁVKA.');
+        return;
+      }
+    }
+
+    if(type==='runout'){
+      const runoutAllowed =
+        match.runoutEligibleFor===player ||
+        (player!==Number(match.breaker||0) && match.breakAndRunEligible===false);
+      if(!runoutAllowed){
+        toast('DOHRÁVKA je určena pro dohrání stolu po dry breaku nebo jiném předání stolu.');
+        return;
+      }
+    }
+
     const label=type==='clean'?'Čistá hra':(type==='runout'?'Dohrávka':'Vyhrál rack');
     saveManualEntryUndoSnapshot('8-ball • '+label);
 
@@ -8256,6 +8277,33 @@ $('useClock').addEventListener('change',e=>$('clockSettings').classList.toggle('
     if(showEightBallResult){
       if($('eightBallResultName0'))$('eightBallResultName0').textContent=match.playerNames?.[0]||'Hráč 1';
       if($('eightBallResultName1'))$('eightBallResultName1').textContent=match.playerNames?.[1]||'Hráč 2';
+
+      [0,1].forEach(i=>{
+        const cleanBtn=$(i===0?'eightBallClean0':'eightBallClean1');
+        const runoutBtn=$(i===0?'eightBallRunout0':'eightBallRunout1');
+
+        const cleanAllowed =
+          i===Number(match.breaker||0) &&
+          i===Number(match.turn||0) &&
+          match.breakAndRunEligible!==false;
+
+        const runoutAllowed =
+          match.runoutEligibleFor===i ||
+          (i!==Number(match.breaker||0) && match.breakAndRunEligible===false);
+
+        if(cleanBtn){
+          cleanBtn.disabled=!cleanAllowed;
+          cleanBtn.title=cleanAllowed
+            ? 'Break & Run po vlastním rozstřelu'
+            : 'ČISTÁ je možná pouze po vlastním rozstřelu bez předání stolu';
+        }
+        if(runoutBtn){
+          runoutBtn.disabled=!runoutAllowed;
+          runoutBtn.title=runoutAllowed
+            ? 'Dohrání stolu po soupeřově dry breaku / předání stolu'
+            : 'DOHRÁVKA je dostupná po předání stolu';
+        }
+      });
     }
 
 const isFourteen=match.discipline==='14.1' && !simpleCounter;
