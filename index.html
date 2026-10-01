@@ -512,7 +512,7 @@
     }
   
 
-/* === v4.51.27 RC • BUTTON HOTFIX • mobilní herní obrazovka portrait / landscape === */
+/* === v4.51.34 RC • mobilní herní obrazovka portrait / landscape === */
 @media (max-width:700px) and (orientation:portrait){
   #screen-match{margin-top:8px}
   #screen-match>.card{padding:10px;border-radius:14px}
@@ -8409,7 +8409,7 @@ const isFourteen=match.discipline==='14.1' && !simpleCounter;
     const canBreakRun=regularPlay && match.turn===match.breaker && match.breakAndRunEligible!==false;
     const canRunout=regularPlay && match.runoutEligibleFor===match.turn;
     showAction('actionBreakRunBtn',canBreakRun);
-    showAction('actionRunoutBtn',canRunout);
+    showAction('actionRunoutBtn',canRunout && match.discipline!=='8-ball');
 
     // Ruční změna hráče je servisní zásah; při povinném úniku ji schováme, aby nešlo obejít statistiku úniku.
     if($('switchTurnBtn'))$('switchTurnBtn').classList.toggle('hidden',!normalGame || escapeOnly || breakPhase || pushOutDecision);
