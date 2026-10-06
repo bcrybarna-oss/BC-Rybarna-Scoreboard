@@ -17705,15 +17705,38 @@ function renderTournamentDetail(){
       ${canManageSeries(s)?`<h3 style="margin-top:18px">PŘIDAT HISTORICKÝ TURNAJ</h3>
         <div class="subpanel">
           <div class="grid two">
-            <div><label>Název turnaje</label><input id="seriesHistoricalName_${s.id}" placeholder="např. Lounská tour – květen"></div>
-            <div><label>Datum</label><input id="seriesHistoricalDate_${s.id}" type="date"></div>
+            <div><label>Název turnaje</label><input id="seriesHistoricalName_\${s.id}" placeholder="např. Lounská tour – květen"></div>
+            <div><label>Datum</label><input id="seriesHistoricalDate_\${s.id}" type="date"></div>
           </div>
           <div style="margin-top:10px">
-            <label>Konečné pořadí</label>
-            <textarea id="seriesHistoricalResults_${s.id}" rows="9" placeholder="1; Jan Novák&#10;2; Petr Svoboda&#10;3; Karel Dvořák&#10;5; Pavel Nový&#10;5; Aleš Malý"></textarea>
-            <div class="muted" style="margin-top:5px">Jeden hráč na řádek ve formátu <strong>místo; jméno</strong>. Stejné číslo místa znamená dělené pořadí. Existující hráč se podle jména automaticky propojí s profilem, ostatní zůstanou jako hosté.</div>
+            <label>Způsob zadání</label>
+            <select id="seriesHistoricalMode_\${s.id}" onchange="toggleSeriesHistoricalMode('\${s.id}')">
+              <option value="full" selected>Kompletní turnaj – zadat odehrané zápasy</option>
+              <option value="placements">Pouze konečné pořadí – neúplné W/L statistiky</option>
+            </select>
           </div>
-          <div style="display:flex;justify-content:flex-end;margin-top:10px"><button class="btn primary" onclick="addHistoricalTournamentToSeries('${s.id}')">ULOŽIT HISTORICKÝ TURNAJ</button></div>
+
+          <div id="seriesHistoricalFull_\${s.id}" style="margin-top:12px">
+            <label>Odehrané zápasy</label>
+            <textarea id="seriesHistoricalMatches_\${s.id}" rows="12" placeholder="skupina A; Jan Novák; Petr Svoboda; 2:1&#10;skupina A; Jan Novák; Karel Dvořák; 2:0&#10;čtvrtfinále; Jan Novák; Pavel Nový; 2:1&#10;semifinále; Jan Novák; Aleš Malý; 2:0&#10;finále; Jan Novák; Petr Svoboda; 2:1"></textarea>
+            <div class="muted" style="margin-top:5px">
+              Jeden zápas na řádek: <strong>fáze; hráč 1; hráč 2; skóre</strong>.
+              Fáze: <strong>skupina A/B…</strong>, <strong>osmifinále</strong>, <strong>čtvrtfinále</strong>, <strong>semifinále</strong>, <strong>o 3. místo</strong>, <strong>finále</strong>.
+            </div>
+            <div style="margin-top:10px">
+              <label>Volitelné konečné pořadí / ruční oprava</label>
+              <textarea id="seriesHistoricalResults_\${s.id}" rows="7" placeholder="Nech prázdné pro automatický výpočet.&#10;Případně:&#10;1; Jan Novák&#10;2; Petr Svoboda&#10;5; Pavel Nový&#10;5; Aleš Malý"></textarea>
+              <div class="muted" style="margin-top:5px">Použij jen pokud nemáš kompletní pavouk. Stejné číslo místa znamená dělené pořadí.</div>
+            </div>
+          </div>
+
+          <div id="seriesHistoricalPlacements_\${s.id}" class="hidden" style="margin-top:12px">
+            <label>Konečné pořadí</label>
+            <textarea id="seriesHistoricalPlacementsOnly_\${s.id}" rows="9" placeholder="1; Jan Novák&#10;2; Petr Svoboda&#10;3; Karel Dvořák&#10;5; Pavel Nový&#10;5; Aleš Malý"></textarea>
+            <div class="muted" style="margin-top:5px">Tato varianta uloží body za umístění, ale nebude doplňovat výhry/prohry ze zápasů.</div>
+          </div>
+
+          <div style="display:flex;justify-content:flex-end;margin-top:12px"><button class="btn primary" onclick="addHistoricalTournamentToSeries('\${s.id}')">ULOŽIT HISTORICKÝ TURNAJ</button></div>
         </div>
 
         <h3 style="margin-top:18px">PŘIDAT JIŽ ODEHRANÝ TURNAJ Z POČÍTADLA</h3>
