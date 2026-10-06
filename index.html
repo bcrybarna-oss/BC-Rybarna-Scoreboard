@@ -1887,8 +1887,8 @@
 
       <div class="subpanel" style="margin-bottom:14px">
         <div style="display:flex;gap:10px;flex-wrap:wrap">
-          <button id="tournamentCreateTabBtn" class="btn primary big" type="button">+ NOVÝ TURNAJ</button>
-          <button id="tournamentSeriesTabBtn" class="btn big" type="button" onclick="setTournamentTopView('series')">🏆 SÉRIE TURNAJŮ</button>
+          <button id="tournamentCreateTabBtn" class="btn primary big" type="button" onclick="document.getElementById('tournamentSeriesPanel').classList.add('hidden');document.getElementById('tournamentCreatePanel').classList.remove('hidden');this.classList.add('primary');document.getElementById('tournamentSeriesTabBtn').classList.remove('primary')">+ NOVÝ TURNAJ</button>
+          <button id="tournamentSeriesTabBtn" class="btn big" type="button" onclick="document.getElementById('tournamentCreatePanel').classList.add('hidden');document.getElementById('tournamentSeriesPanel').classList.remove('hidden');this.classList.add('primary');document.getElementById('tournamentCreateTabBtn').classList.remove('primary');try{renderSeriesList();}catch(e){}">🏆 SÉRIE TURNAJŮ</button>
         </div>
         <div class="muted" style="margin-top:7px">Nový turnaj a série jsou nyní dostupné hned nahoře. Série obsahují bodování, pořadí a přiřazené turnaje.</div>
       </div>
