@@ -2591,15 +2591,15 @@
       <div class="muted" style="margin-bottom:16px">Vyber, jaké výsledky chceš zobrazit.</div>
 
       <div class="grid three">
-        <button id="resultsMatchesBtn" class="btn primary big" style="min-height:110px;font-size:22px">
+        <button id="resultsMatchesBtn" type="button" onclick="showScreen(&quot;history&quot;);renderHistory()" class="btn primary big" style="min-height:110px;font-size:22px">
           ZÁPASY
           <span class="muted" style="display:block;font-size:13px;margin-top:7px">Historie jednotlivých zápasů</span>
         </button>
-        <button id="resultsTournamentsBtn" class="btn primary big" style="min-height:110px;font-size:22px">
+        <button id="resultsTournamentsBtn" type="button" onclick="showScreen(&quot;results-tournaments&quot;);renderResultsTournaments()" class="btn primary big" style="min-height:110px;font-size:22px">
           TURNAJE
           <span class="muted" style="display:block;font-size:13px;margin-top:7px">Dokončené turnaje a konečné výsledky</span>
         </button>
-        <button id="resultsSeriesBtn" class="btn primary big" style="min-height:110px;font-size:22px">
+        <button id="resultsSeriesBtn" type="button" onclick="showScreen(&quot;results-series&quot;);renderResultsSeries()" class="btn primary big" style="min-height:110px;font-size:22px">
           SÉRIE TURNAJŮ
           <span class="muted" style="display:block;font-size:13px;margin-top:7px">Průběžná i konečná pořadí sérií turnajů</span>
         </button>
