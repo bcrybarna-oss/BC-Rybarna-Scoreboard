@@ -1001,6 +1001,7 @@
       <button id="backToMatchNav" class="hidden">← ZPĚT NA SKÓRE</button>
       <button data-nav="setup">Nový zápas</button>
       <button data-nav="tournament">Nový turnaj</button>
+      <button data-nav="calendar">📅 Kalendář turnajů</button>
       <button data-nav="league">Liga Sever</button>
       <button id="currentTournamentNavBtn" class="hidden">Aktuální turnaj</button>
       <button data-nav="results">Výsledky</button>
@@ -1864,6 +1865,16 @@
       <div id="leagueSchedule"></div>
     </div>
   </section>
+
+  <section id="screen-calendar" class="screen"><div class="card">
+  <div style="display:flex;justify-content:space-between;gap:10px;align-items:center;flex-wrap:wrap"><div><div class="muted" style="font-size:12px">KOMUNITNÍ NÁSTĚNKA</div><h1 class="section-title" style="margin:2px 0">📅 KALENDÁŘ TURNAJŮ</h1></div><button id="calendarRefreshBtn" class="btn">↻ OBNOVIT</button></div>
+  <div class="muted" style="margin:5px 0 14px">Veřejné poolové turnaje v ČR i zahraničí. Turnaj může přidat každý přihlášený registrovaný uživatel.</div>
+  <div class="subpanel"><div style="display:flex;gap:8px;flex-wrap:wrap;align-items:end"><div style="flex:1"><label>Země</label><select id="calendarCountryFilter"><option value="">Všechny země</option><option>Česká republika</option><option>Slovensko</option><option>Německo</option><option>Polsko</option><option>Rakousko</option></select></div><div style="flex:1"><label>Disciplína</label><select id="calendarDisciplineFilter"><option value="">Všechny</option><option>8-ball</option><option>9-ball</option><option>10-ball</option><option>14.1</option><option>Ostatní</option></select></div><button id="calendarAddBtn" class="btn primary">+ PŘIDAT TURNAJ</button></div></div>
+  <div id="calendarForm" class="subpanel hidden" style="margin-top:12px;border-color:rgba(212,175,55,.45)"><h3 id="calendarFormTitle" style="margin-top:0">PŘIDAT TURNAJ</h3><input id="calendarEditId" type="hidden">
+  <div class="grid two"><div><label>Název turnaje</label><input id="calendarName"></div><div><label>Datum a čas</label><input id="calendarDate" type="datetime-local"></div><div><label>Místo / herna</label><input id="calendarVenue"></div><div><label>Město</label><input id="calendarCity"></div><div><label>Země</label><input id="calendarCountry" value="Česká republika"></div><div><label>Disciplína</label><select id="calendarDiscipline"><option>8-ball</option><option selected>9-ball</option><option>10-ball</option><option>14.1</option><option>Ostatní</option></select></div><div><label>Startovné</label><input id="calendarEntryFee" placeholder="např. 500 Kč"></div><div><label>Výhry / prize money</label><input id="calendarPrizes"></div><div><label>Formát</label><input id="calendarFormat" placeholder="např. DKO, Race to 6"></div><div><label>Max. hráčů</label><input id="calendarMaxPlayers" type="number"></div><div><label>Kontakt</label><input id="calendarContact"></div><div><label>Odkaz na registraci / informace</label><input id="calendarLink" placeholder="https://..."></div></div>
+  <div style="margin-top:10px"><label>Flyer / plakát</label><input id="calendarFlyer" type="file" accept="image/*"></div><div style="margin-top:10px"><label>Popis / další informace</label><textarea id="calendarDescription" rows="4"></textarea></div><div style="display:flex;gap:8px;justify-content:flex-end;margin-top:12px"><button id="calendarCancelBtn" class="btn">ZRUŠIT</button><button id="calendarSaveBtn" class="btn primary">ULOŽIT TURNAJ</button></div></div>
+  <h2 class="section-title" style="margin-top:18px">NADCHÁZEJÍCÍ TURNAJE</h2><div id="calendarUpcoming"></div><h2 class="section-title" style="margin-top:22px">PROBĚHLÉ TURNAJE</h2><div id="calendarPast"></div>
+  </div></section>
 
   <section id="screen-tournament-detail" class="screen">
     <div class="card">
@@ -6715,6 +6726,19 @@
     }
   };
 
+  let tournamentCalendarEntries=[];
+  async function calendarRequest(id='',method='GET',body=null){if(!await ensureCloudToken())throw new Error('NO_AUTH');const opts={method,headers:{'Content-Type':'application/json'},cache:'no-store'};if(body!==null)opts.body=JSON.stringify(body);const r=await fetch(cloudUrl('tournamentCalendar'+(id?'/'+id:''))+(method==='GET'?'&t='+Date.now():''),opts);if(!r.ok)throw new Error('CALENDAR_'+r.status);return await r.json();}
+  function calendarAuthorName(e){return e.authorName||organizerNameByUid(e.createdByUid)||'Registrovaný uživatel';}
+  function canEditCalendarEntry(e){return !!e&&(currentUserIsSystemAdmin()||(cloudUid&&e.createdByUid===cloudUid));}
+  function calendarCard(e){const d=e.date?new Date(e.date):null,dl=d&&!Number.isNaN(d.getTime())?d.toLocaleString('cs-CZ',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'}):'Termín neuveden';const link=/^https?:\/\//i.test(String(e.link||''))?'<a class="btn" target="_blank" rel="noopener" href="'+esc(e.link)+'">REGISTRACE / INFO ↗</a>':'';return '<div class="subpanel" style="margin-top:10px"><div class="grid two">'+(e.flyer?'<div><img src="'+esc(e.flyer)+'" style="width:100%;max-height:440px;object-fit:contain;border-radius:12px"></div>':'')+'<div><h2 style="margin:0 0 6px;color:var(--gold2)">'+esc(e.name||'Turnaj')+'</h2><strong>'+esc(dl)+'</strong><div class="muted">'+esc([e.venue,e.city,e.country].filter(Boolean).join(' • '))+'</div><div style="margin-top:10px"><span class="badge gold">🎱 '+esc(e.discipline||'Pool')+'</span></div>'+(e.entryFee?'<div style="margin-top:8px">Startovné: '+esc(e.entryFee)+'</div>':'')+(e.prizes?'<div style="margin-top:8px"><strong>🏆 Výhry:</strong> '+esc(e.prizes)+'</div>':'')+(e.format?'<div style="margin-top:8px"><strong>Formát:</strong> '+esc(e.format)+'</div>':'')+(e.description?'<div style="margin-top:10px;white-space:pre-wrap">'+esc(e.description)+'</div>':'')+(e.contact?'<div class="muted" style="margin-top:8px">Kontakt: '+esc(e.contact)+'</div>':'')+'<div class="muted" style="margin-top:10px;font-size:12px">Přidal: '+esc(calendarAuthorName(e))+'</div><div style="display:flex;gap:7px;flex-wrap:wrap;margin-top:10px">'+link+(canEditCalendarEntry(e)?'<button class="btn" onclick="editCalendarEntry(\''+e.id+'\')">UPRAVIT</button><button class="btn danger" onclick="deleteCalendarEntry(\''+e.id+'\')">SMAZAT</button>':'')+'</div></div></div></div>';}
+  async function loadTournamentCalendar(){try{const raw=await calendarRequest();tournamentCalendarEntries=Object.values(raw||{}).filter(Boolean);}catch(e){console.warn(e);tournamentCalendarEntries=[];}renderTournamentCalendar();}
+  function renderTournamentCalendar(){const up=$('calendarUpcoming'),past=$('calendarPast');if(!up||!past)return;const co=$('calendarCountryFilter')?.value||'',di=$('calendarDisciplineFilter')?.value||'',now=Date.now(),list=tournamentCalendarEntries.filter(e=>(!co||e.country===co)&&(!di||e.discipline===di));const future=list.filter(e=>!e.date||new Date(e.date).getTime()>=now).sort((a,b)=>String(a.date||'9999').localeCompare(String(b.date||'9999'))),old=list.filter(e=>e.date&&new Date(e.date).getTime()<now).sort((a,b)=>String(b.date).localeCompare(String(a.date)));up.innerHTML=future.length?future.map(calendarCard).join(''):'<div class="muted">Žádný nadcházející turnaj.</div>';past.innerHTML=old.length?old.map(calendarCard).join(''):'<div class="muted">Zatím žádný proběhlý turnaj.</div>';}
+  function resetCalendarForm(){['calendarEditId','calendarName','calendarDate','calendarVenue','calendarCity','calendarEntryFee','calendarPrizes','calendarFormat','calendarMaxPlayers','calendarContact','calendarLink','calendarDescription'].forEach(id=>{if($(id))$(id).value='';});$('calendarCountry').value='Česká republika';$('calendarDiscipline').value='9-ball';$('calendarFlyer').value='';$('calendarFormTitle').textContent='PŘIDAT TURNAJ';}
+  function openCalendarForm(){if(!cloudAuthenticated){toast('Pro přidání turnaje se přihlas.');return;}resetCalendarForm();$('calendarForm').classList.remove('hidden');$('calendarForm').scrollIntoView({behavior:'smooth'});}
+  window.editCalendarEntry=function(id){const e=tournamentCalendarEntries.find(x=>x.id===id);if(!canEditCalendarEntry(e))return;resetCalendarForm();for(const [id,key] of [['calendarEditId','id'],['calendarName','name'],['calendarDate','date'],['calendarVenue','venue'],['calendarCity','city'],['calendarCountry','country'],['calendarDiscipline','discipline'],['calendarEntryFee','entryFee'],['calendarPrizes','prizes'],['calendarFormat','format'],['calendarMaxPlayers','maxPlayers'],['calendarContact','contact'],['calendarLink','link'],['calendarDescription','description']])$(id).value=e[key]||'';$('calendarFormTitle').textContent='UPRAVIT TURNAJ';$('calendarForm').classList.remove('hidden');};
+  function calendarFileData(file){return new Promise((resolve,reject)=>{if(!file)return resolve('');const img=new Image(),r=new FileReader();r.onload=()=>img.src=r.result;r.onerror=reject;img.onload=()=>{const s=Math.min(1,1200/Math.max(img.width,img.height)),cv=document.createElement('canvas');cv.width=Math.round(img.width*s);cv.height=Math.round(img.height*s);cv.getContext('2d').drawImage(img,0,0,cv.width,cv.height);resolve(cv.toDataURL('image/jpeg',.78));};r.readAsDataURL(file);});}
+  async function saveCalendarEntry(){if(!cloudAuthenticated)return toast('Pro přidání turnaje se přihlas.');const id=$('calendarEditId').value||('cal_'+Date.now().toString(36)+'_'+Math.random().toString(36).slice(2,7)),old=tournamentCalendarEntries.find(x=>x.id===id),name=$('calendarName').value.trim(),date=$('calendarDate').value;if(!name||!date)return toast('Vyplň název a datum turnaje.');let flyer=old?.flyer||'',file=$('calendarFlyer').files?.[0];if(file)flyer=await calendarFileData(file);const e={id,name,date,venue:$('calendarVenue').value.trim(),city:$('calendarCity').value.trim(),country:$('calendarCountry').value.trim()||'Česká republika',discipline:$('calendarDiscipline').value,entryFee:$('calendarEntryFee').value.trim(),prizes:$('calendarPrizes').value.trim(),format:$('calendarFormat').value.trim(),maxPlayers:Number($('calendarMaxPlayers').value||0),contact:$('calendarContact').value.trim(),link:$('calendarLink').value.trim(),description:$('calendarDescription').value.trim(),flyer,createdByUid:old?.createdByUid||cloudUid,authorName:old?.authorName||organizerNameByUid(cloudUid),createdAt:old?.createdAt||new Date().toISOString(),updatedAt:new Date().toISOString()};try{await calendarRequest(id,'PUT',e);await loadTournamentCalendar();$('calendarForm').classList.add('hidden');toast('Turnaj byl přidán do kalendáře.');}catch(err){toast('Uložení odmítl cloud – je potřeba povolit kalendář ve Firebase pravidlech.');}}
+  window.deleteCalendarEntry=async function(id){const e=tournamentCalendarEntries.find(x=>x.id===id);if(!canEditCalendarEntry(e)||!confirm('Opravdu smazat tento turnaj?'))return;try{await calendarRequest(id,'DELETE');await loadTournamentCalendar();toast('Turnaj byl smazán.');}catch(err){toast('Turnaj se nepodařilo smazat.');}};
   function toast(msg){
     $('toast').textContent = msg; $('toast').classList.add('show');
     setTimeout(()=> $('toast').classList.remove('show'),1800);
@@ -6725,6 +6749,12 @@
     showScreen(btn.dataset.nav);
     if(btn.dataset.nav==='admin'){renderProfileClaimsAdmin();renderRegisteredUsersAdmin(false);}
   }));
+  if($('calendarAddBtn'))$('calendarAddBtn').onclick=openCalendarForm;
+  if($('calendarCancelBtn'))$('calendarCancelBtn').onclick=()=>$('calendarForm').classList.add('hidden');
+  if($('calendarSaveBtn'))$('calendarSaveBtn').onclick=saveCalendarEntry;
+  if($('calendarRefreshBtn'))$('calendarRefreshBtn').onclick=loadTournamentCalendar;
+  if($('calendarCountryFilter'))$('calendarCountryFilter').onchange=renderTournamentCalendar;
+  if($('calendarDisciplineFilter'))$('calendarDisciplineFilter').onchange=renderTournamentCalendar;
   $('backToMatchNav').addEventListener('click',()=>{
     if(match && !editableMatchOwnedByCurrentUser(match)){
       discardForeignLocalActiveMatch();
@@ -6781,6 +6811,7 @@
     if(name==='stats') renderStats();
     if(name==='my-stats') renderMyStats();
     if(name==='tournament') renderTournament();
+    if(name==='calendar') loadTournamentCalendar();
     if(name==='league'){
       renderLeague();
       Promise.allSettled([loadSecureMatches(),loadLeagueCloud()])
