@@ -5616,6 +5616,8 @@
   }
 
   async function deleteSecureMatch(matchId){
+    // Defense in depth: i přímé zavolání funkce z konzole musí projít admin kontrolou.
+    if(!currentUserIsSystemAdmin()) throw new Error('ADMIN_ONLY');
     await secureMatchRequest(matchId,'DELETE');
     data.matches=(data.matches||[]).filter(m=>m.id!==matchId);
     try{localStorage.setItem(DB_KEY,JSON.stringify(data));}catch(e){}
@@ -18486,9 +18488,12 @@ function renderTournamentDetail(){
   
 
   function currentUserIsSystemAdmin(){
+    // Administrátorská práva platí jen pro aktivně přihlášený a ověřený účet.
+    // Nestačí zbytková role nebo e-mail uložený v runtime/localStorage.
+    if(!cloudAuthenticated || !cloudUid || !cloudEmailVerified) return false;
     if(currentUserRole==='system_admin') return true;
-    const email=typeof cloudUserEmail==='string' ? cloudUserEmail : '';
-    return email.toLowerCase()==='bcrybarna@gmail.com';
+    const email=typeof cloudUserEmail==='string' ? cloudUserEmail.trim().toLowerCase() : '';
+    return email===MAIN_ADMIN_EMAIL;
   }
 
   function populateMergePlayerSelectors(){
