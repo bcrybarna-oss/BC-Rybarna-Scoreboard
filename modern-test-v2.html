@@ -2219,7 +2219,7 @@
               </select>
             </div>
           </div>
-          <div class="muted" style="margin-top:7px">Pro Lounskou tour: hráči ve stejné výsledkové fázi (např. last16 / 9.–16.) se seřadí podle skóre, vzájemného zápasu a umístění ve skupině. Skóre = výsledek zápasu, ve kterém hráč v dané fázi vypadl (např. 1:2 je lepší než 0:2). U nepostupujících ze skupin se jako skóre bere rozdíl racků ve skupině. Pokud jsou hráči shodní i po všech kritériích, mají dělené místo (např. 5., 5., 7.).</div>
+          <div class="muted" style="margin-top:7px">Pro Lounskou tour: hráči ve stejné výsledkové fázi (např. last16 / 9.–16.) se seřadí podle skóre, vzájemného zápasu a umístění ve skupině. Pro play-off rozhoduje celkový rozdíl racků ze všech odehraných play-off zápasů hráče. Při shodě rozhodují body/výhry ve skupině a potom vzájemný zápas, pokud se hráči potkali ve stejné skupině. U nepostupujících rozhoduje nejdřív umístění ve skupině, potom body/výhry a případně vzájemný zápas. Pokud jsou hráči stále shodní, mají dělené místo (např. 5., 5., 7.).</div>
           <div id="seriesBandsScoringFields" class="grid two" style="margin-top:10px">
             <div><label>1. / 2. / 3. / 4.</label><input id="seriesPointsTop" value="100,80,65,55"></div>
             <div><label>5–8 / 9–16 / 17–32 / 33–64</label><input id="seriesPointsBands" value="45,25,10,5"></div>
@@ -17099,71 +17099,81 @@ function renderTournamentDetail(){
         for:Number(row.rf||0),
         against:Number(row.ra||0),
         diff:Number(row.diff||0),
+        wins:Number(row.v||0),
+        losses:Number(row.p||0),
         found:true,
         source:'group'
       };
     }
-    return {for:0,against:0,diff:0,found:false,source:'group'};
+    return {for:0,against:0,diff:0,wins:0,losses:0,found:false,source:'group'};
   }
 
-  function seriesCurrentEliminationMatch(t,record){
-    if(!t||!record?.playerId)return null;
-    const pid=record.playerId;
+  function seriesTournamentGroupStats(t,playerId){
+    for(const g of (t?.groups||[])){
+      if(!(g.players||[]).includes(playerId))continue;
+      const raw=rawGroupRows(g).find(r=>r.id===playerId)||{v:0,p:0,rf:0,ra:0,diff:0};
+      const standings=groupStandings(g,t);
+      const idx=standings.findIndex(r=>r.id===playerId);
+      return {
+        groupId:String(g.id||''),
+        place:idx>=0?idx+1:999,
+        wins:Number(raw.v||0),
+        losses:Number(raw.p||0),
+        rf:Number(raw.rf||0),
+        ra:Number(raw.ra||0),
+        diff:Number(raw.diff||0)
+      };
+    }
+    return {groupId:'',place:999,wins:0,losses:0,rf:0,ra:0,diff:0};
+  }
 
-    const playoffMatches=allTournamentMatches(t)
+  function seriesPlayoffScore(t,playerId){
+    let rf=0,ra=0,played=0;
+    allTournamentMatches(t)
       .filter(m=>
         m &&
         !tournamentMatchIsGroupMatch(t,m) &&
         (m.status==='done'||m.winnerId||m.loserId) &&
-        (m.player1Id===pid||m.player2Id===pid)
-      );
-
-    const lost=playoffMatches.filter(m=>{
-      const winner=m.winnerId || (
-        Number(m.score1)>Number(m.score2)?m.player1Id:
-        (Number(m.score2)>Number(m.score1)?m.player2Id:null)
-      );
-      return winner && winner!==pid;
-    });
-
-    if(!lost.length)return null;
-
-    // U SKO je rozhodující poslední prohraný zápas.
-    // U DKO je rozhodující druhá / poslední prohra. Tím se automaticky
-    // respektují i dodatečně opravené historické zápasy.
-    return lost[lost.length-1]||null;
+        m.player1Id && m.player2Id &&
+        (m.player1Id===playerId||m.player2Id===playerId)
+      )
+      .forEach(m=>{
+        const s1=Number(m.score1||0),s2=Number(m.score2||0);
+        if(m.player1Id===playerId){rf+=s1;ra+=s2;}
+        else{rf+=s2;ra+=s1;}
+        played++;
+      });
+    return {for:rf,against:ra,diff:rf-ra,played,found:played>0,source:'playoff'};
   }
 
-  function seriesEliminationMatchScore(t,record){
-    if(!t||!record?.playerId)return {for:0,against:0,diff:0,found:false,matchId:null,source:'match'};
+  function seriesGroupHeadToHeadRanks(t,playerIds){
+    const ids=[...(playerIds||[])];
+    const idSet=new Set(ids);
+    const rows=Object.fromEntries(ids.map(id=>[id,{id,wins:0,losses:0,played:0}]));
 
-    // Primárně vždy vycházíme ze současných odehraných play-off zápasů.
-    // Starý elimination.matchId může po historické opravě turnaje ukazovat
-    // na původní, už neplatný zápas.
-    let m=seriesCurrentEliminationMatch(t,record);
-
-    // Fallback pro starší data, kde nejsou kompletní play-off zápasy.
-    if(!m){
-      const dkoElim=(t.dko?.eliminations||[]).find(e=>e.playerId===record.playerId);
-      const koElim=(t.ko?.eliminations||[]).find(e=>e.playerId===record.playerId);
-      const matchId=dkoElim?.matchId||koElim?.matchId||null;
-      m=matchId?findTournamentMatch(t,matchId):null;
+    for(const g of (t?.groups||[])){
+      const inGroup=ids.filter(id=>(g.players||[]).includes(id));
+      if(inGroup.length<2)continue;
+      const inGroupSet=new Set(inGroup);
+      (g.matches||[])
+        .filter(m=>
+          m &&
+          (m.status==='done'||m.winnerId||m.loserId) &&
+          inGroupSet.has(m.player1Id) &&
+          inGroupSet.has(m.player2Id)
+        )
+        .forEach(m=>{
+          const winnerId=m.winnerId || (
+            Number(m.score1)>Number(m.score2)?m.player1Id:
+            (Number(m.score2)>Number(m.score1)?m.player2Id:null)
+          );
+          if(!winnerId)return;
+          const loserId=winnerId===m.player1Id?m.player2Id:m.player1Id;
+          if(rows[winnerId]){rows[winnerId].wins++;rows[winnerId].played++;}
+          if(rows[loserId]){rows[loserId].losses++;rows[loserId].played++;}
+        });
     }
-
-    if(!m)return {for:0,against:0,diff:0,found:false,matchId:null,source:'match'};
-
-    const playerIs1=m.player1Id===record.playerId;
-    const sf=Number(playerIs1?m.score1:m.score2);
-    const sa=Number(playerIs1?m.score2:m.score1);
-
-    return {
-      for:Number.isFinite(sf)?sf:0,
-      against:Number.isFinite(sa)?sa:0,
-      diff:(Number.isFinite(sf)?sf:0)-(Number.isFinite(sa)?sa:0),
-      found:true,
-      matchId:m.id||null,
-      source:'match'
-    };
+    return rows;
   }
 
   function seriesRefineTournamentPlacements(s,t,records){
@@ -17184,79 +17194,100 @@ function renderTournamentDetail(){
 
       const availablePlaces=cohort.map(r=>Number(r.value||999)).sort((a,b)=>a-b);
       const groupEliminatedIds=new Set((t.groupEliminations||[]).map(e=>e.playerId));
-      const scores=Object.fromEntries(cohort.map(r=>[
-        r.playerId,
-        groupEliminatedIds.has(r.playerId)
-          ? seriesGroupPhaseScore(t,r.playerId)
-          : seriesEliminationMatchScore(t,r)
-      ]));
-      const byScore=new Map();
-
-      cohort.forEach(r=>{
-        const sc=scores[r.playerId]||{diff:0,for:0,against:0,source:'match'};
-        const key=sc.source==='group'
-          ? 'group|'+Number(sc.diff||0)
-          : 'match|'+Number(sc.diff||0)+'|'+Number(sc.for||0)+'|'+Number(sc.against||0);
-        if(!byScore.has(key))byScore.set(key,[]);
-        byScore.get(key).push(r);
-      });
-
+      const groupStats=Object.fromEntries(cohort.map(r=>[r.playerId,seriesTournamentGroupStats(t,r.playerId)]));
+      const playoffScores=Object.fromEntries(cohort.map(r=>[r.playerId,seriesPlayoffScore(t,r.playerId)]));
       const ordered=[];
       const finalRankKeyByPlayer={};
-      [...byScore.keys()]
-        .sort((ka,kb)=>{
-          const a=byScore.get(ka)?.[0], b=byScore.get(kb)?.[0];
-          const sa=scores[a?.playerId]||{}, sb=scores[b?.playerId]||{};
-          if(sa.source==='group' || sb.source==='group'){
-            return Number(sb.diff||0)-Number(sa.diff||0);
-          }
-          return Number(sb.diff||0)-Number(sa.diff||0) ||
-                 Number(sb.for||0)-Number(sa.for||0) ||
-                 Number(sa.against||0)-Number(sb.against||0);
-        })
-        .forEach(scoreKey=>{
-          const scoreCohort=byScore.get(scoreKey);
-          if(scoreCohort.length<=1){
-            scoreCohort.forEach(r=>{
-              finalRankKeyByPlayer[r.playerId]=scoreKey+'|h2h:0|group:'+seriesTournamentGroupPlace(t,r.playerId);
-            });
-            ordered.push(...scoreCohort);
-            return;
-          }
 
-          const h2h=seriesHeadToHeadRanks(t,scoreCohort.map(r=>r.playerId));
-          const byH2H=new Map();
-          scoreCohort.forEach(r=>{
-            const wins=Number(h2h[r.playerId]?.wins||0);
-            if(!byH2H.has(wins))byH2H.set(wins,[]);
-            byH2H.get(wins).push(r);
+      if(cohort.every(r=>groupEliminatedIds.has(r.playerId))){
+        // Nepostupující: umístění ve skupině -> body/výhry -> vzájemný zápas.
+        const byBase=new Map();
+        cohort.forEach(r=>{
+          const gs=groupStats[r.playerId]||{};
+          const key='group|place:'+Number(gs.place||999)+'|wins:'+Number(gs.wins||0);
+          if(!byBase.has(key))byBase.set(key,[]);
+          byBase.get(key).push(r);
+        });
+
+        [...byBase.keys()]
+          .sort((ka,kb)=>{
+            const a=byBase.get(ka)?.[0],b=byBase.get(kb)?.[0];
+            const ga=groupStats[a?.playerId]||{},gb=groupStats[b?.playerId]||{};
+            return Number(ga.place||999)-Number(gb.place||999) ||
+                   Number(gb.wins||0)-Number(ga.wins||0);
+          })
+          .forEach(baseKey=>{
+            const tied=byBase.get(baseKey);
+            const h2h=seriesGroupHeadToHeadRanks(t,tied.map(r=>r.playerId));
+            const byH2H=new Map();
+            tied.forEach(r=>{
+              const wins=Number(h2h[r.playerId]?.wins||0);
+              if(!byH2H.has(wins))byH2H.set(wins,[]);
+              byH2H.get(wins).push(r);
+            });
+            [...byH2H.keys()].sort((a,b)=>b-a).forEach(wins=>{
+              const rows=byH2H.get(wins);
+              rows.sort((a,b)=>String(tournamentPlayerName(a.playerId,t)||'').localeCompare(String(tournamentPlayerName(b.playerId,t)||''),'cs'));
+              rows.forEach(r=>{
+                finalRankKeyByPlayer[r.playerId]=baseKey+'|h2h:'+Number(wins);
+              });
+              ordered.push(...rows);
+            });
+          });
+      }else{
+        // Play-off: dosažená fáze je daná cohortou.
+        // Dále rozhoduje CELKOVÝ rozdíl racků ze všech play-off zápasů,
+        // potom body/výhry ve skupině a pak vzájemný zápas pouze ze skupiny.
+        const byScore=new Map();
+        cohort.forEach(r=>{
+          const sc=playoffScores[r.playerId]||{};
+          const diff=Number(sc.diff||0);
+          if(!byScore.has(diff))byScore.set(diff,[]);
+          byScore.get(diff).push(r);
+        });
+
+        [...byScore.keys()].sort((a,b)=>b-a).forEach(diff=>{
+          const scoreRows=byScore.get(diff);
+          const byGroupWins=new Map();
+          scoreRows.forEach(r=>{
+            const wins=Number(groupStats[r.playerId]?.wins||0);
+            if(!byGroupWins.has(wins))byGroupWins.set(wins,[]);
+            byGroupWins.get(wins).push(r);
           });
 
-          [...byH2H.keys()].sort((a,b)=>b-a).forEach(wins=>{
-            const tied=byH2H.get(wins);
-            tied.sort((a,b)=>
-              seriesTournamentGroupPlace(t,a.playerId)-seriesTournamentGroupPlace(t,b.playerId) ||
-              String(tournamentPlayerName(a.playerId,t)||'').localeCompare(String(tournamentPlayerName(b.playerId,t)||''),'cs')
-            );
+          [...byGroupWins.keys()].sort((a,b)=>b-a).forEach(groupWins=>{
+            const tied=byGroupWins.get(groupWins);
+            const h2h=seriesGroupHeadToHeadRanks(t,tied.map(r=>r.playerId));
+            const byH2H=new Map();
             tied.forEach(r=>{
-              finalRankKeyByPlayer[r.playerId]=scoreKey+'|h2h:'+Number(wins)+'|group:'+seriesTournamentGroupPlace(t,r.playerId);
+              const wins=Number(h2h[r.playerId]?.wins||0);
+              if(!byH2H.has(wins))byH2H.set(wins,[]);
+              byH2H.get(wins).push(r);
             });
-            ordered.push(...tied);
+
+            [...byH2H.keys()].sort((a,b)=>b-a).forEach(h2hWins=>{
+              const rows=byH2H.get(h2hWins);
+              rows.sort((a,b)=>String(tournamentPlayerName(a.playerId,t)||'').localeCompare(String(tournamentPlayerName(b.playerId,t)||''),'cs'));
+              rows.forEach(r=>{
+                finalRankKeyByPlayer[r.playerId]=
+                  'playoff|diff:'+Number(diff)+
+                  '|groupWins:'+Number(groupWins)+
+                  '|h2h:'+Number(h2hWins);
+              });
+              ordered.push(...rows);
+            });
           });
         });
+      }
 
       const rankKeyCounts={};
       const rankKeyFirstIndex={};
-
       ordered.forEach((r,i)=>{
         const key=finalRankKeyByPlayer[r.playerId]||('fallback:'+r.playerId);
         rankKeyCounts[key]=Number(rankKeyCounts[key]||0)+1;
         if(rankKeyFirstIndex[key]===undefined)rankKeyFirstIndex[key]=i;
       });
 
-      // Dělené místo se určuje podle výsledného sportovního klíče, ne podle
-      // pořadí objektů v poli. Stejný rankKey proto vždy dostane jednu
-      // kanonickou pozici a tím pádem i stejné body v sérii.
       const canonicalPlaceByRankKey={};
       Object.keys(rankKeyFirstIndex).forEach(key=>{
         const firstIndex=Number(rankKeyFirstIndex[key]||0);
@@ -17267,22 +17298,25 @@ function renderTournamentDetail(){
         const rankKey=finalRankKeyByPlayer[r.playerId]||('fallback:'+r.playerId);
         const shared=Number(rankKeyCounts[rankKey]||0)>1;
         const canonical=canonicalPlaceByRankKey[rankKey];
+        const gs=groupStats[r.playerId]||{};
+        const ps=playoffScores[r.playerId]||{};
 
         r.value=canonical!=null ? canonical : (availablePlaces[i]??r.value);
         r.sharedPlace=shared;
         r.label=Number(r.value)+'. místo'+(shared?' (dělené)':'');
-
         const stage=seriesPlacementStageInfo(t,r);
         r.seriesTieBreak={
           stage:stage?.label||'',
           sharedPlace:shared,
           rankKey,
           canonicalPlace:Number(r.value),
-          scoreSource:scores[r.playerId]?.source||'match',
-          scoreDiff:Number(scores[r.playerId]?.diff||0),
-          scoreFor:Number(scores[r.playerId]?.for||0),
-          scoreAgainst:Number(scores[r.playerId]?.against||0),
-          groupPlace:seriesTournamentGroupPlace(t,r.playerId)
+          scoreSource:groupEliminatedIds.has(r.playerId)?'group-placement':'playoff-total',
+          scoreDiff:Number(ps.diff||0),
+          scoreFor:Number(ps.for||0),
+          scoreAgainst:Number(ps.against||0),
+          groupPlace:Number(gs.place||999),
+          groupWins:Number(gs.wins||0),
+          groupDiff:Number(gs.diff||0)
         };
       });
     });
