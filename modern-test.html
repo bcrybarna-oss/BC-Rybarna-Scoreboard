@@ -24302,86 +24302,127 @@ function renderStats(){
     var resume=document.getElementById('modernResumeTile');
     var adminTile=document.getElementById('modernAdminTile');
 
-    if(resume){
-      resume.style.opacity=match?1:.52;
-      var sm=resume.querySelector('small');
-      if(sm)sm.textContent=match
-        ? 'Vrátit se ke skóre '+Number((match.scores||[0,0])[0]||0)+':'+Number((match.scores||[0,0])[1]||0)
-        : 'Momentálně není rozehraný zápas';
-    }
-    if(adminTile){
-      try{adminTile.classList.toggle('hidden',!currentUserIsSystemAdmin());}
-      catch(e){adminTile.classList.add('hidden');}
-    }
+    try{
+      if(resume){
+        resume.style.opacity=match?1:.52;
+        var sm=resume.querySelector('small');
+        if(sm)sm.textContent=match
+          ? 'Vrátit se ke skóre '+Number((match.scores||[0,0])[0]||0)+':'+Number((match.scores||[0,0])[1]||0)
+          : 'Momentálně není rozehraný zápas';
+      }
+      if(adminTile){
+        try{adminTile.classList.toggle('hidden',!currentUserIsSystemAdmin());}
+        catch(e){adminTile.classList.add('hidden');}
+      }
+    }catch(e){console.warn('Modern header render:',e);}
 
     if(recent){
-      var rows=(data.matches||[])
-        .filter(function(m){return m && !['playing','active'].includes(m.status);})
-        .slice()
-        .sort(function(a,b){
-          return new Date(b.endedAt||b.startedAt||b.createdAt||0)-new Date(a.endedAt||a.startedAt||a.createdAt||0);
-        })
-        .slice(0,5);
+      try{
+        var rows=(Array.isArray(data.matches)?data.matches:[])
+          .filter(function(m){return m && !['playing','active'].includes(m.status);})
+          .slice()
+          .sort(function(a,b){
+            return new Date(b.endedAt||b.startedAt||b.createdAt||0)-new Date(a.endedAt||a.startedAt||a.createdAt||0);
+          })
+          .slice(0,5);
 
-      recent.innerHTML=rows.length?rows.map(function(m){
-        var n1='',n2='';
-        try{
-          if(m.ghostMode){n1=(m.playerNames||[])[0]||'Hráč';n2='GHOST';}
-          else if(m.solo14){n1=(m.playerNames||[])[0]||'Hráč';n2='SÓLO 14.1';}
-          else if(m.winnerTableMode){n1='VÍTĚZ NA STOLE';n2=m.discipline||'';}
-          else{
-            n1=typeof savedMatchSideDisplayName==='function'?savedMatchSideDisplayName(m,0):((m.playerNames||[])[0]||'Hráč 1');
-            n2=typeof savedMatchSideDisplayName==='function'?savedMatchSideDisplayName(m,1):((m.playerNames||[])[1]||'Hráč 2');
-          }
-        }catch(e){
-          n1=(m.playerNames||[])[0]||'Hráč 1';
-          n2=(m.playerNames||[])[1]||'Hráč 2';
+        if(rows.length){
+          recent.innerHTML=rows.map(function(m){
+            var n1='',n2='';
+            try{
+              if(m.ghostMode){n1=(m.playerNames||[])[0]||'Hráč';n2='GHOST';}
+              else if(m.solo14){n1=(m.playerNames||[])[0]||'Hráč';n2='SÓLO 14.1';}
+              else if(m.winnerTableMode){n1='VÍTĚZ NA STOLE';n2=m.discipline||'';}
+              else{
+                n1=typeof savedMatchSideDisplayName==='function'?savedMatchSideDisplayName(m,0):((m.playerNames||[])[0]||'Hráč 1');
+                n2=typeof savedMatchSideDisplayName==='function'?savedMatchSideDisplayName(m,1):((m.playerNames||[])[1]||'Hráč 2');
+              }
+            }catch(e){
+              n1=(m.playerNames||[])[0]||'Hráč 1';
+              n2=(m.playerNames||[])[1]||'Hráč 2';
+            }
+            var s=Array.isArray(m.scores)?m.scores:[0,0];
+            var id=String(m.id||'');
+            return '<div class="modern-list-row" role="button" tabindex="0" data-modern-match-id="'+modernEsc(id)+'"><div>'+modernEsc(n1)+'</div><div class="modern-score">'+modernEsc(s[0])+' : '+modernEsc(s[1])+'</div><div class="r">'+modernEsc(n2)+'</div></div>';
+          }).join('');
+          recent.querySelectorAll('[data-modern-match-id]').forEach(function(el){
+            el.addEventListener('click',function(){
+              var id=this.getAttribute('data-modern-match-id');
+              try{showSavedMatchStats(id);}catch(e){console.warn('Open match stats:',e);}
+            });
+          });
+        }else{
+          recent.innerHTML=cloudAuthenticated
+            ? '<div class="muted">Nejsou dostupné žádné dokončené zápasy.</div>'
+            : '<div class="muted">Přihlas se do cloudu pro načtení posledních zápasů.</div>';
         }
-        var s=m.scores||[0,0];
-        return '<div class="modern-list-row" role="button" tabindex="0" onclick="showSavedMatchStats(\''+modernEsc(m.id)+'\')"><div>'+modernEsc(n1)+'</div><div class="modern-score">'+modernEsc(s[0])+' : '+modernEsc(s[1])+'</div><div class="r">'+modernEsc(n2)+'</div></div>';
-      }).join(''):'<div class="muted">Zatím nejsou uložené žádné zápasy.</div>';
+      }catch(e){
+        console.warn('Modern recent matches render:',e);
+        recent.innerHTML='<div class="muted">Poslední zápasy se nepodařilo načíst.</div>';
+      }
     }
 
     if(top){
-      var ratings={};
-      try{ratings=calculateEloRatings()||{};}catch(e){console.warn('Modern leaderboard ELO:',e);ratings={};}
-      var players=Object.values(data.players||{})
-        .filter(function(p){return p&&p.active!==false&&p.hiddenFromPlayers!==true;})
-        .map(function(p){
-          var agg={matches:0,wins:0};
-          try{agg=playerAggregate(p.id)||agg;}catch(e){}
-          return {p:p,r:Number(ratings[p.id]??1500),matches:Number(agg.matches||0),wins:Number(agg.wins||0)};
-        })
-        .sort(function(a,b){return b.r-a.r || b.wins-a.wins || b.matches-a.matches || String(a.p.name||'').localeCompare(String(b.p.name||''),'cs');})
-        .slice(0,5);
+      try{
+        var ratings={};
+        try{ratings=calculateEloRatings()||{};}catch(e){console.warn('Modern leaderboard ELO:',e);ratings={};}
+        var playerValues=[];
+        try{playerValues=Object.values(data.players||{});}catch(e){playerValues=[];}
+        var players=playerValues
+          .filter(function(p){return p&&p.active!==false&&p.hiddenFromPlayers!==true;})
+          .map(function(p){
+            var agg={matches:0,wins:0};
+            try{agg=playerAggregate(p.id)||agg;}catch(e){}
+            return {p:p,r:Number(ratings[p.id]??1500),matches:Number(agg.matches||0),wins:Number(agg.wins||0)};
+          })
+          .sort(function(a,b){return b.r-a.r || b.wins-a.wins || b.matches-a.matches || String(a.p.name||'').localeCompare(String(b.p.name||''),'cs');})
+          .slice(0,5);
 
-      top.innerHTML=players.length?players.map(function(x,i){
-        var name='';
-        try{name=playerDisplayName(x.p);}catch(e){name=x.p.name||'Hráč';}
-        return '<div class="modern-rank-row" role="button" tabindex="0" onclick="openPlayerProfile(\''+modernEsc(x.p.id)+'\')"><div class="modern-rank-no">'+(i+1)+'</div><div><div>'+modernEsc(name)+'</div><div class="muted" style="font-size:10px">'+x.matches+' zápasů • '+x.wins+' výher</div></div><div class="modern-rank-points">'+Math.round(x.r)+' b.</div></div>';
-      }).join(''):(cloudAuthenticated
-        ? '<div class="muted">Načítám hráče z cloudu…</div>'
-        : '<div class="muted">Pro zobrazení žebříčku se přihlas do cloudu.</div>');
+        if(players.length){
+          top.innerHTML=players.map(function(x,i){
+            var name='';
+            try{name=playerDisplayName(x.p);}catch(e){name=x.p.name||'Hráč';}
+            return '<div class="modern-rank-row" role="button" tabindex="0" data-modern-player-id="'+modernEsc(x.p.id||'')+'"><div class="modern-rank-no">'+(i+1)+'</div><div><div>'+modernEsc(name)+'</div><div class="muted" style="font-size:10px">'+x.matches+' zápasů • '+x.wins+' výher</div></div><div class="modern-rank-points">'+Math.round(x.r)+' b.</div></div>';
+          }).join('');
+          top.querySelectorAll('[data-modern-player-id]').forEach(function(el){
+            el.addEventListener('click',function(){
+              var id=this.getAttribute('data-modern-player-id');
+              try{openPlayerProfile(id);}catch(e){console.warn('Open player profile:',e);}
+            });
+          });
+        }else{
+          top.innerHTML=cloudAuthenticated
+            ? '<div class="muted">Žádní hráči nejsou momentálně k dispozici.</div>'
+            : '<div class="muted">Přihlas se do cloudu pro zobrazení žebříčku.</div>';
+        }
+      }catch(e){
+        console.warn('Modern leaderboard render:',e);
+        top.innerHTML='<div class="muted">Žebříček se nepodařilo načíst.</div>';
+      }
     }
 
     if(stats){
-      var completed=(data.matches||[]).filter(function(m){return m && !['playing','active'].includes(m.status) && (m.status||'complete')==='complete';});
-      var playersCount=Object.values(data.players||{}).filter(function(p){return p&&p.active!==false&&p.hiddenFromPlayers!==true;}).length;
-      var disciplines={};
-      completed.forEach(function(m){
-        var d=m.discipline||'—';
-        disciplines[d]=(disciplines[d]||0)+1;
-      });
-      var most=Object.entries(disciplines).sort(function(a,b){return b[1]-a[1];})[0];
-      var tournamentCount=(data.tournaments||[]).length;
-      stats.innerHTML=
-        '<div class="modern-stat"><b>'+completed.length+'</b><span>Dokončených zápasů</span></div>'+
-        '<div class="modern-stat"><b>'+playersCount+'</b><span>Aktivních hráčů</span></div>'+
-        '<div class="modern-stat"><b>'+(most?modernEsc(String(most[0]).toUpperCase()):'—')+'</b><span>Nejhranější disciplína</span></div>'+
-        '<div class="modern-stat"><b>'+tournamentCount+'</b><span>Turnajů v databázi</span></div>';
+      try{
+        var completed=(Array.isArray(data.matches)?data.matches:[]).filter(function(m){return m && !['playing','active'].includes(m.status) && (m.status||'complete')==='complete';});
+        var playersCount=Object.values(data.players||{}).filter(function(p){return p&&p.active!==false&&p.hiddenFromPlayers!==true;}).length;
+        var disciplines={};
+        completed.forEach(function(m){
+          var d=m.discipline||'—';
+          disciplines[d]=(disciplines[d]||0)+1;
+        });
+        var most=Object.entries(disciplines).sort(function(a,b){return b[1]-a[1];})[0];
+        var tournamentCount=Array.isArray(data.tournaments)?data.tournaments.length:0;
+        stats.innerHTML=
+          '<div class="modern-stat"><b>'+completed.length+'</b><span>Dokončených zápasů</span></div>'+
+          '<div class="modern-stat"><b>'+playersCount+'</b><span>Aktivních hráčů</span></div>'+
+          '<div class="modern-stat"><b>'+(most?modernEsc(String(most[0]).toUpperCase()):'—')+'</b><span>Nejhranější disciplína</span></div>'+
+          '<div class="modern-stat"><b>'+tournamentCount+'</b><span>Turnajů v databázi</span></div>';
+      }catch(e){
+        console.warn('Modern stats render:',e);
+        stats.innerHTML='<div class="muted">Přehled se nepodařilo načíst.</div>';
+      }
     }
   };
-
   var resume=document.getElementById('modernResumeTile');
   if(resume)resume.addEventListener('click',function(){
     if(match){
