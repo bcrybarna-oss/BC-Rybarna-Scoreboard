@@ -24364,79 +24364,47 @@ function renderStats(){
 
     if(top){
       try{
-        var playerValues=[];
-        try{
-          playerValues=(data && data.players) ? Object.values(data.players) : [];
-        }catch(e){
-          playerValues=[];
-        }
+        var rawPlayers=(data && data.players && typeof data.players==='object') ? data.players : {};
+        var ids=Object.keys(rawPlayers);
+        var rows=[];
 
-        playerValues=playerValues.filter(function(p){
-          return !!(p && p.id && p.active!==false && p.hiddenFromPlayers!==true);
+        ids.forEach(function(id){
+          var p=rawPlayers[id];
+          if(!p || p.active===false || p.hiddenFromPlayers===true)return;
+          var name=String(p.name||p.nickname||id||'Hráč').trim() || 'Hráč';
+          rows.push({id:String(p.id||id),name:name});
         });
 
-        var ratings={};
-        try{
-          ratings=calculateEloRatings()||{};
-        }catch(e){
-          console.warn('Modern leaderboard ELO fallback:',e);
-          ratings={};
-        }
-
-        var players=playerValues.map(function(p){
-          var elo=1500;
-          try{
-            if(Object.prototype.hasOwnProperty.call(ratings,p.id) && Number.isFinite(Number(ratings[p.id]))){
-              elo=Number(ratings[p.id]);
-            }
-          }catch(e){}
-          return {p:p,elo:elo};
+        rows.sort(function(a,b){
+          return a.name.localeCompare(b.name,'cs');
         });
 
-        players.sort(function(a,b){
-          if(b.elo!==a.elo)return b.elo-a.elo;
-          var an=String((a.p&&a.p.name)||'');
-          var bn=String((b.p&&b.p.name)||'');
-          return an>bn?1:(an<bn?-1:0);
-        });
+        rows=rows.slice(0,5);
 
-        players=players.slice(0,5);
+        if(rows.length){
+          top.innerHTML=rows.map(function(x,i){
+            return '<div class="modern-rank-row" role="button" tabindex="0" data-modern-player-id="'+modernEsc(x.id)+'">'+
+              '<div class="modern-rank-no">'+(i+1)+'</div>'+
+              '<div><div>'+modernEsc(x.name)+'</div></div>'+
+              '<div class="modern-rank-points">HRÁČ</div>'+
+            '</div>';
+          }).join('');
 
-        if(players.length){
-          var html=[];
-          players.forEach(function(x,i){
-            var name='';
-            try{
-              name=playerDisplayName(x.p);
-            }catch(e){
-              name=String((x.p&&x.p.name)||'Hráč');
-            }
-            html.push(
-              '<div class="modern-rank-row" role="button" tabindex="0" data-modern-player-id="'+modernEsc(String(x.p.id))+'">'+
-                '<div class="modern-rank-no">'+(i+1)+'</div>'+
-                '<div><div>'+modernEsc(name||'Hráč')+'</div></div>'+
-                '<div class="modern-rank-points">'+Math.round(x.elo)+' ELO</div>'+
-              '</div>'
-            );
-          });
-          top.innerHTML=html.join('');
           top.querySelectorAll('[data-modern-player-id]').forEach(function(el){
             el.addEventListener('click',function(){
               var id=this.getAttribute('data-modern-player-id');
               try{
                 if(typeof openPlayerProfile==='function')openPlayerProfile(id);
-              }catch(e){
-                console.warn('Open player profile:',e);
-              }
+              }catch(e){}
             });
           });
         }else{
           top.innerHTML=cloudAuthenticated
-            ? '<div class="muted">V cloudu nejsou dostupní žádní aktivní hráči.</div>'
-            : '<div class="muted">Přihlas se do cloudu pro zobrazení žebříčku.</div>';
+            ? '<div class="muted">V datech nejsou dostupní žádní aktivní hráči.</div>'
+            : '<div class="muted">Přihlas se do cloudu pro zobrazení hráčů.</div>';
         }
       }catch(e){
-        console.error('Modern leaderboard render failed:',e);
+        console.error('Modern basic leaderboard failed:',e);
         top.innerHTML='<div class="muted">Žebříček se nepodařilo načíst: '+modernEsc((e&&e.message)?e.message:String(e))+'</div>';
       }
     }
