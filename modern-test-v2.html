@@ -17699,6 +17699,7 @@ function renderTournamentDetail(){
             </div>
             ${canManageSeries(s)?`<button class="btn danger" onclick="deleteHistoricalSeriesTournament('${s.id}','${ht.id}')">SMAZAT</button>`:''}
           </div>
+          <div class="muted" style="margin-top:5px">${ht.statsComplete?('Kompletní W/L • '+Number((ht.matches||[]).length)+' zápasů'):'Pouze konečné pořadí • W/L neúplné'}</div>
           <div class="muted" style="margin-top:7px">${(ht.results||[]).slice().sort((a,b)=>Number(a.place)-Number(b.place)).map(r=>esc(String(r.place)+'. '+String(r.displayName||r.name||r.playerId||'Hráč'))).join(' • ')}</div>
         </div>`).join('')}`:''}
 
@@ -24074,6 +24075,52 @@ function renderHistory(){
           value:r.value,
           format:t.format
         });
+      });
+    });
+
+    // Ručně doplněné historické turnaje ze sérií.
+    // Neovlivňují ELO ani detailní herní statistiky, ale doplňují umístění a W/L.
+    const seenHistoricalTournamentIds=new Set();
+    (data.tournamentSeries||[]).forEach(series=>{
+      (series.historicalTournaments||[]).forEach(ht=>{
+        if(!ht?.id||seenHistoricalTournamentIds.has(ht.id))return;
+        seenHistoricalTournamentIds.add(ht.id);
+
+        const seenPlayers=new Set();
+        (ht.results||[]).forEach(r=>{
+          const pid=r.playerId;
+          if(!pid||!data.players?.[pid])return;
+          const st=ensure(pid);
+          if(!seenPlayers.has(pid)){st.tournaments++;seenPlayers.add(pid);}
+          const place=Number(r.place||r.value||999);
+          if(Number.isFinite(place)&&place<999){
+            if(place===1)st.wins++;
+            if(place===2)st.seconds++;
+            if(place===3)st.thirds++;
+            if(place<=3)st.podiums++;
+            if(st.best===null||place<st.best)st.best=place;
+            st.placementSum+=place;
+            st.placementCount++;
+          }
+          st.history.push({
+            tournamentId:ht.id,
+            tournamentName:ht.name||'Historický turnaj',
+            date:ht.date||ht.createdAt||'',
+            discipline:'',
+            label:place<999?(place+'. místo'+(r.sharedPlace?' (dělené)':'')):'—',
+            value:place,
+            historical:true
+          });
+        });
+
+        if(ht.statsComplete){
+          (ht.matches||[]).forEach(m=>{
+            [m.player1Id,m.player2Id].forEach(pid=>{
+              if(pid&&data.players?.[pid])ensure(pid).tournamentMatches++;
+            });
+            if(m.winnerId&&data.players?.[m.winnerId])ensure(m.winnerId).tournamentMatchWins++;
+          });
+        }
       });
     });
 
