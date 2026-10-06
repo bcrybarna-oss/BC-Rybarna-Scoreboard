@@ -24409,6 +24409,7 @@ function renderStats(){
     }
     try{ localStorage.setItem('bcTournamentTopView',showSeries?'series':'create'); }catch(e){}
   }
+  window.setTournamentTopView=setTournamentTopView;
   document.addEventListener('DOMContentLoaded',function(){
     var createBtn=document.getElementById('tournamentCreateTabBtn');
     var seriesBtn=document.getElementById('tournamentSeriesTabBtn');
