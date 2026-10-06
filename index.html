@@ -17402,7 +17402,13 @@ function renderTournamentDetail(){
             <div><label>Název turnaje</label><input id="seriesHistoricalName_${s.id}" placeholder="např. Lounská tour – květen"></div>
             <div><label>Datum</label><input id="seriesHistoricalDate_${s.id}" type="date"></div>
           </div>
-          <input id="seriesHistoricalMode_${s.id}" type="hidden" value="full">
+          <div style="margin-top:10px">
+            <label>Způsob zadání</label>
+            <select id="seriesHistoricalMode_${s.id}" onchange="toggleSeriesHistoricalMode('${s.id}')">
+              <option value="full" selected>Kompletní turnaj – všechny výsledky zápasů</option>
+              <option value="placements">Pouze konečné pořadí – bez výsledků zápasů</option>
+            </select>
+          </div>
 
           <div id="seriesHistoricalFull_${s.id}" style="margin-top:12px">
             <label>Odehrané zápasy</label>
