@@ -16204,9 +16204,45 @@ window.openTournamentDetail=async function(tid){
           ${candidates.map(p=>`<option value="${esc(p.ownerUid)}">${esc(playerSelectionLabel(p))}</option>`).join('')}
         </select>
         <button class="btn" onclick="addTournamentOrganizer('${t.id}')">+ PŘIDAT SPOLUPOŘADATELE</button>
+      </div>
+      <div style="margin-top:12px;padding-top:12px;border-top:1px solid rgba(255,255,255,.08)">
+        <label>Předat hlavní práva pořadatele</label>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:7px">
+          <select id="tournamentOwnerTransferSelect_${t.id}" style="flex:1;min-width:220px">
+            <option value="">— vyber nového hlavního pořadatele —</option>
+            ${organizerCandidates({}).filter(p=>p.ownerUid!==t.createdByUid).map(p=>`<option value="${esc(p.ownerUid)}">${esc(playerSelectionLabel(p))}</option>`).join('')}
+          </select>
+          <button class="btn danger" onclick="transferTournamentOwnership('${t.id}')">PŘEDAT PRÁVA</button>
+        </div>
+        <div class="muted" style="margin-top:5px">Nový pořadatel převezme plnou správu turnaje. Ty zůstaneš jako spolupořadatel, takže turnaj můžeš dál řídit.</div>
       </div>`:''}
     </div>`;
   }
+
+  window.transferTournamentOwnership=async function(tournamentId){
+    const t=(data.tournaments||[]).find(x=>x.id===tournamentId);
+    if(!t||!canManageTournamentOrganizers(t))return;
+    const uid=$('tournamentOwnerTransferSelect_'+t.id)?.value||'';
+    if(!uid || uid===t.createdByUid){ toast('Vyber jiného registrovaného uživatele.'); return; }
+    const previousOwner=t.createdByUid||'';
+    const nextName=organizerNameByUid(uid);
+    if(!confirm('Opravdu předat hlavní práva k turnaji uživateli „'+nextName+'“?'))return;
+    t.managerUids=t.managerUids||{};
+    if(previousOwner)t.managerUids[previousOwner]=true;
+    delete t.managerUids[uid];
+    t.createdByUid=uid;
+    try{
+      await saveSecureTournament(t);
+      renderTournamentDetail();
+      renderTournament();
+      toast('Hlavní práva pořadatele byla předána.');
+    }catch(e){
+      t.createdByUid=previousOwner;
+      delete t.managerUids[previousOwner];
+      t.managerUids[uid]=true;
+      toast('Předání práv se nepodařilo uložit. Zkontroluj Firebase pravidla.');
+    }
+  };
 
   window.addTournamentOrganizer=async function(tournamentId){
     const t=(data.tournaments||[]).find(x=>x.id===tournamentId);
