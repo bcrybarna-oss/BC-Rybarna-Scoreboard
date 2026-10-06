@@ -5590,6 +5590,7 @@
       }
     }
 
+    try{if(typeof window.renderModernHome==='function')window.renderModernHome();}catch(e){}
     return data.tournaments;
   }
 
@@ -5608,6 +5609,7 @@
     else data.tournaments.push(copy);
 
     try{localStorage.setItem(DB_KEY,JSON.stringify(data));}catch(e){}
+    try{if(typeof window.renderModernHome==='function')window.renderModernHome();}catch(e){}
     return copy;
   }
 
@@ -5615,6 +5617,7 @@
     await secureTournamentRequest(tournamentId,'DELETE');
     data.tournaments=(data.tournaments||[]).filter(t=>t.id!==tournamentId);
     try{localStorage.setItem(DB_KEY,JSON.stringify(data));}catch(e){}
+    try{if(typeof window.renderModernHome==='function')window.renderModernHome();}catch(e){}
   }
 
   function matchConfirmationUids(m){
@@ -5861,6 +5864,7 @@
     }
     try{localStorage.setItem(DB_KEY,JSON.stringify(data));}catch(e){}
     setTimeout(maybeShowPendingResultConfirmation,80);
+    try{if(typeof window.renderModernHome==='function')window.renderModernHome();}catch(e){}
     return data.matches;
   }
 
@@ -5876,6 +5880,7 @@
     try{renderHistory();}catch(e){}
     try{renderResultsTournaments();}catch(e){}
     try{renderResultsSeries();}catch(e){}
+    try{if(typeof window.renderModernHome==='function')window.renderModernHome();}catch(e){}
     return copy;
   }
 
@@ -5885,6 +5890,7 @@
     await secureMatchRequest(matchId,'DELETE');
     data.matches=(data.matches||[]).filter(m=>m.id!==matchId);
     try{localStorage.setItem(DB_KEY,JSON.stringify(data));}catch(e){}
+    try{if(typeof window.renderModernHome==='function')window.renderModernHome();}catch(e){}
   }
 
   async function loadSecurePlayers(){
@@ -5893,6 +5899,7 @@
     if(!r.ok) throw new Error('PLAYERS_READ_'+r.status);
     const players=await r.json()||{};
     data.players=players;
+    try{if(typeof window.renderModernHome==='function')window.renderModernHome();}catch(e){}
     return players;
   }
 
@@ -5900,6 +5907,7 @@
     if(!player||!player.id) throw new Error('PLAYER_INVALID');
     await securePlayerRequest(player.id,'PUT',player);
     data.players[player.id]=player;
+    try{if(typeof window.renderModernHome==='function')window.renderModernHome();}catch(e){}
   }
 
   async function clearUserPlayerLink(uid,playerId){
@@ -5923,6 +5931,7 @@
     if(!playerId) return;
     await securePlayerRequest(playerId,'DELETE');
     delete data.players[playerId];
+    try{if(typeof window.renderModernHome==='function')window.renderModernHome();}catch(e){}
   }
 
   async function migratePlayersToSecureBranch(){
@@ -7060,6 +7069,10 @@
         .catch(()=>{});
     }
     if(name==='admin'){populateAdminProfileOwnerSelect();populateMergePlayerSelectors();loadReportsAdmin();}
+    if(name==='home'){
+      try{if(typeof window.renderModernHome==='function')window.renderModernHome();}catch(e){}
+      try{if(typeof window.refreshModernHomeData==='function')window.refreshModernHomeData(false);}catch(e){}
+    }
 
   }
 
@@ -24217,9 +24230,41 @@ function renderStats(){
 (function(){
   document.body.classList.add('modern-test');
 
+  var modernRefreshBusy=false;
+  var modernLastCloudRefresh=0;
+
   function modernEsc(v){
     return String(v==null?'':v).replace(/[&<>"']/g,function(m){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m];});
   }
+  function modernHomeActive(){
+    var el=document.getElementById('screen-home');
+    return !!(el&&el.classList.contains('active'));
+  }
+
+  window.refreshModernHomeData=async function(force){
+    if(modernRefreshBusy)return;
+    if(!cloudAuthenticated){
+      try{renderModernHome();}catch(e){}
+      return;
+    }
+    var now=Date.now();
+    if(!force && now-modernLastCloudRefresh<5000){
+      try{renderModernHome();}catch(e){}
+      return;
+    }
+    modernRefreshBusy=true;
+    modernLastCloudRefresh=now;
+    try{
+      await Promise.allSettled([
+        loadSecurePlayers(),
+        loadSecureMatches(),
+        loadSecureTournaments()
+      ]);
+    }finally{
+      modernRefreshBusy=false;
+      try{renderModernHome();}catch(e){}
+    }
+  };
 
   window.renderModernHome=function(){
     var recent=document.getElementById('modernRecentMatches');
@@ -24230,47 +24275,78 @@ function renderStats(){
 
     if(resume){
       resume.style.opacity=match?1:.52;
-      resume.querySelector('small').textContent=match
-        ? 'Vrátit se ke skóre '+((match.scores||[0,0])[0])+':'+((match.scores||[0,0])[1])
+      var sm=resume.querySelector('small');
+      if(sm)sm.textContent=match
+        ? 'Vrátit se ke skóre '+Number((match.scores||[0,0])[0]||0)+':'+Number((match.scores||[0,0])[1]||0)
         : 'Momentálně není rozehraný zápas';
     }
-    if(adminTile)adminTile.classList.toggle('hidden',!currentUserIsSystemAdmin());
+    if(adminTile){
+      try{adminTile.classList.toggle('hidden',!currentUserIsSystemAdmin());}
+      catch(e){adminTile.classList.add('hidden');}
+    }
 
     if(recent){
-      var rows=(data.matches||[]).slice().sort(function(a,b){
-        return new Date(b.endedAt||b.createdAt||0)-new Date(a.endedAt||a.createdAt||0);
-      }).slice(0,5);
+      var rows=(data.matches||[])
+        .filter(function(m){return m && !['playing','active'].includes(m.status);})
+        .slice()
+        .sort(function(a,b){
+          return new Date(b.endedAt||b.startedAt||b.createdAt||0)-new Date(a.endedAt||a.startedAt||a.createdAt||0);
+        })
+        .slice(0,5);
+
       recent.innerHTML=rows.length?rows.map(function(m){
-        var n=m.playerNames||['Hráč 1','Hráč 2'];
+        var n1='',n2='';
+        try{
+          if(m.ghostMode){n1=(m.playerNames||[])[0]||'Hráč';n2='GHOST';}
+          else if(m.solo14){n1=(m.playerNames||[])[0]||'Hráč';n2='SÓLO 14.1';}
+          else if(m.winnerTableMode){n1='VÍTĚZ NA STOLE';n2=m.discipline||'';}
+          else{
+            n1=typeof savedMatchSideDisplayName==='function'?savedMatchSideDisplayName(m,0):((m.playerNames||[])[0]||'Hráč 1');
+            n2=typeof savedMatchSideDisplayName==='function'?savedMatchSideDisplayName(m,1):((m.playerNames||[])[1]||'Hráč 2');
+          }
+        }catch(e){
+          n1=(m.playerNames||[])[0]||'Hráč 1';
+          n2=(m.playerNames||[])[1]||'Hráč 2';
+        }
         var s=m.scores||[0,0];
-        return '<div class="modern-list-row"><div>'+modernEsc(n[0])+'</div><div class="modern-score">'+modernEsc(s[0])+' : '+modernEsc(s[1])+'</div><div class="r">'+modernEsc(n[1])+'</div></div>';
-      }).join(''):'<div class="muted">Zatím nejsou uložené zápasy.</div>';
+        return '<div class="modern-list-row" role="button" tabindex="0" onclick="showSavedMatchStats(\''+modernEsc(m.id)+'\')"><div>'+modernEsc(n1)+'</div><div class="modern-score">'+modernEsc(s[0])+' : '+modernEsc(s[1])+'</div><div class="r">'+modernEsc(n2)+'</div></div>';
+      }).join(''):'<div class="muted">Zatím nejsou uložené žádné zápasy.</div>';
     }
 
     if(top){
       var ratings={};
-      try{ratings=calculateEloRatings(null)||{};}catch(e){}
-      var players=Object.values(data.players||{}).filter(Boolean).map(function(p){
-        return {p:p,r:Number(ratings[p.id]||1500)};
-      }).sort(function(a,b){return b.r-a.r;}).slice(0,5);
+      try{ratings=calculateEloRatings()||{};}catch(e){ratings={};}
+      var players=Object.values(data.players||{})
+        .filter(function(p){return p&&p.active!==false&&p.hiddenFromPlayers!==true;})
+        .map(function(p){
+          var agg={matches:0,wins:0};
+          try{agg=playerAggregate(p.id)||agg;}catch(e){}
+          return {p:p,r:Number(ratings[p.id]??1500),matches:Number(agg.matches||0),wins:Number(agg.wins||0)};
+        })
+        .sort(function(a,b){return b.r-a.r || b.wins-a.wins || b.matches-a.matches || String(a.p.name||'').localeCompare(String(b.p.name||''),'cs');})
+        .slice(0,5);
+
       top.innerHTML=players.length?players.map(function(x,i){
         var name='';
         try{name=playerDisplayName(x.p);}catch(e){name=x.p.name||'Hráč';}
-        return '<div class="modern-rank-row"><div class="modern-rank-no">'+(i+1)+'</div><div>'+modernEsc(name)+'</div><div class="modern-rank-points">'+Math.round(x.r)+' b.</div></div>';
-      }).join(''):'<div class="muted">Žádní hráči.</div>';
+        return '<div class="modern-rank-row" role="button" tabindex="0" onclick="openPlayerProfile(\''+modernEsc(x.p.id)+'\')"><div class="modern-rank-no">'+(i+1)+'</div><div><div>'+modernEsc(name)+'</div><div class="muted" style="font-size:10px">'+x.matches+' zápasů • '+x.wins+' výher</div></div><div class="modern-rank-points">'+Math.round(x.r)+' b.</div></div>';
+      }).join(''):'<div class="muted">Hráči se načtou po přihlášení a synchronizaci cloudu.</div>';
     }
 
     if(stats){
-      var matches=(data.matches||[]).filter(function(m){return (m.status||'complete')==='complete';});
-      var playersCount=Object.values(data.players||{}).filter(function(p){return p&&p.active!==false;}).length;
+      var completed=(data.matches||[]).filter(function(m){return m && !['playing','active'].includes(m.status) && (m.status||'complete')==='complete';});
+      var playersCount=Object.values(data.players||{}).filter(function(p){return p&&p.active!==false&&p.hiddenFromPlayers!==true;}).length;
       var disciplines={};
-      matches.forEach(function(m){var d=m.discipline||'—';disciplines[d]=(disciplines[d]||0)+1;});
+      completed.forEach(function(m){
+        var d=m.discipline||'—';
+        disciplines[d]=(disciplines[d]||0)+1;
+      });
       var most=Object.entries(disciplines).sort(function(a,b){return b[1]-a[1];})[0];
       var tournamentCount=(data.tournaments||[]).length;
       stats.innerHTML=
-        '<div class="modern-stat"><b>'+matches.length+'</b><span>Odehraných zápasů</span></div>'+
+        '<div class="modern-stat"><b>'+completed.length+'</b><span>Dokončených zápasů</span></div>'+
         '<div class="modern-stat"><b>'+playersCount+'</b><span>Aktivních hráčů</span></div>'+
-        '<div class="modern-stat"><b>'+(most?modernEsc(most[0]):'—')+'</b><span>Nejhranější disciplína</span></div>'+
+        '<div class="modern-stat"><b>'+(most?modernEsc(String(most[0]).toUpperCase()):'—')+'</b><span>Nejhranější disciplína</span></div>'+
         '<div class="modern-stat"><b>'+tournamentCount+'</b><span>Turnajů v databázi</span></div>';
     }
   };
@@ -24286,19 +24362,17 @@ function renderStats(){
     }
   });
 
-  try{
-    var originalShowScreen=showScreen;
-    window.showScreen=function(name){
-      originalShowScreen(name);
-      if(name==='home')try{renderModernHome();}catch(e){}
-    };
-  }catch(e){}
+  // Dashboard se průběžně překreslí i při změnách, které přijdou z cloud pollingu.
+  setInterval(function(){
+    if(modernHomeActive()){
+      try{renderModernHome();}catch(e){}
+    }
+  },2500);
 
-  document.querySelectorAll('[data-nav="home"]').forEach(function(btn){
-    btn.addEventListener('click',function(){showScreen('home');});
-  });
-
-  setTimeout(function(){try{renderModernHome();}catch(e){}},100);
+  setTimeout(function(){
+    try{renderModernHome();}catch(e){}
+    refreshModernHomeData(true);
+  },120);
 })();
 </script>
 </body>
