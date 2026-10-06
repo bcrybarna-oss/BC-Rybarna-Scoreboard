@@ -24263,21 +24263,33 @@ function renderStats(){
         .map(m=>{
           let p1=String(m.playerNames?.[0]||'Hráč 1');
           let p2=String(m.playerNames?.[1]||'Hráč 2');
-          if(m.ghostMode)p2='GHOST';
-          if(m.solo14)p2='SÓLO 14.1';
-          try{
-            if(!m.ghostMode&&!m.solo14&&!m.winnerTableMode){
+          let displayMode='duel';
+
+          if(m.winnerTableMode){
+            displayMode='winner-table';
+            p1='VÍTĚZ NA STOLE';
+            p2=String(m.discipline||'');
+          }else if(m.ghostMode){
+            displayMode='ghost';
+            p2='GHOST';
+          }else if(m.solo14){
+            displayMode='solo14';
+            p2='SÓLO 14.1';
+          }else{
+            try{
               p1=String(savedMatchSideDisplayName(m,0)||p1);
               p2=String(savedMatchSideDisplayName(m,1)||p2);
-            }
-          }catch(e){}
+            }catch(e){}
+          }
+
           return {
             id:String(m.id||''),
             p1:p1,
             p2:p2,
             s1:Number(m.scores?.[0]||0),
             s2:Number(m.scores?.[1]||0),
-            discipline:String(m.discipline||'')
+            discipline:String(m.discipline||''),
+            displayMode:displayMode
           };
         });
 
