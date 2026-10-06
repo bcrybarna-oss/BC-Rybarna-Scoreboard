@@ -1015,6 +1015,12 @@
     background:rgba(216,173,82,.08);
     border-color:rgba(216,173,82,.2);
   }
+  /* Testovací verze: hlavní navigace je na dashboardu, ne dvakrát v horní liště. */
+  body.modern-test header .nav button[data-nav]:not([data-nav="home"]),
+  body.modern-test header .nav #currentTournamentNavBtn,
+  body.modern-test header .nav #adminNavBtn{
+    display:none !important;
+  }
   body.modern-test .modern-home{
     max-width:1500px;
     margin:0 auto;
