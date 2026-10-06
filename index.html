@@ -17044,6 +17044,26 @@ function renderTournamentDetail(){
     return rows;
   }
 
+  function normalizeSeriesHistoricalName(value){
+    return String(value||'')
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g,'')
+      .toLowerCase()
+      .replace(/\s+/g,' ')
+      .trim();
+  }
+
+  function seriesHistoricalPlayerMatch(name){
+    const target=normalizeSeriesHistoricalName(name);
+    if(!target)return null;
+    return Object.values(data.players||{}).find(p=>{
+      const names=[];
+      try{names.push(playerDisplayName(p));}catch(e){}
+      names.push(p?.name||'',p?.nickname||'');
+      return names.some(x=>normalizeSeriesHistoricalName(x)===target);
+    })||null;
+  }
+
   function seriesStandings(s){
     const byPlayer=new Map();
     const tournaments=(s.tournamentIds||[])
@@ -17111,6 +17131,67 @@ function renderTournamentDetail(){
       });
     });
 
+    const historical=Array.isArray(s.historicalTournaments)?s.historicalTournaments:[];
+    historical.forEach(ht=>{
+      (Array.isArray(ht.results)?ht.results:[]).forEach(r=>{
+        const place=Math.max(1,Math.floor(Number(r.place||r.value||999)));
+        if(!Number.isFinite(place)||place>=999)return;
+
+        const registered=!!(r.playerId && data.players?.[r.playerId]);
+        const displayName=registered
+          ? playerSelectionLabel(data.players[r.playerId])
+          : String(r.displayName||r.name||r.playerId||'Host');
+        const playerId=registered ? r.playerId : String(r.playerId||('histguest_'+normalizeSeriesHistoricalName(displayName)));
+        const key=registered
+          ? 'player:'+playerId
+          : 'guest:'+normalizeSeriesHistoricalName(displayName);
+
+        if(!byPlayer.has(key)){
+          byPlayer.set(key,{
+            key,
+            playerId,
+            displayName,
+            club:registered?(data.players[playerId]?.club||''):'',
+            guest:!registered,
+            results:[],
+            wins:0,
+            seconds:0,
+            thirds:0
+          });
+        }
+
+        const row=byPlayer.get(key);
+        if(registered){
+          row.playerId=playerId;
+          row.displayName=playerSelectionLabel(data.players[playerId]);
+          row.club=data.players[playerId]?.club||row.club||'';
+          row.guest=false;
+        }
+
+        const shared=(ht.results||[]).filter(x=>Number(x.place||x.value)===place).length>1;
+        const placementRecord={
+          playerId,
+          value:place,
+          label:place+'. místo'+(shared?' (dělené)':''),
+          sharedPlace:shared
+        };
+        const pts=seriesPointsForPlacement(s,placementRecord,null);
+        row.results.push({
+          tournamentId:ht.id,
+          tournamentName:ht.name||'Historický turnaj',
+          label:placementRecord.label,
+          value:place,
+          points:pts,
+          historical:true,
+          seriesTieBreak:shared?{sharedPlace:true,canonicalPlace:place}:null
+        });
+
+        if(place===1)row.wins++;
+        if(place===2)row.seconds++;
+        if(place===3)row.thirds++;
+      });
+    });
+
     const bestCount=Math.max(0,Number(s.bestCount||0));
     const rows=[...byPlayer.values()].map(r=>{
       const sorted=[...r.results].sort((a,b)=>b.points-a.points||a.value-b.value);
@@ -17142,12 +17223,14 @@ function renderTournamentDetail(){
     }
     wrap.innerHTML=list.map(s=>{
       const included=(s.tournamentIds||[]).map(id=>(data.tournaments||[]).find(t=>t.id===id)).filter(Boolean);
-      const completed=included.filter(t=>t.status==='complete').length;
+      const historical=Array.isArray(s.historicalTournaments)?s.historicalTournaments:[];
+      const completed=included.filter(t=>t.status==='complete').length+historical.length;
+      const total=included.length+historical.length;
       const players=seriesStandings(s).length;
       return `<div class="subpanel" style="margin-bottom:8px">
         <div style="display:flex;justify-content:space-between;gap:10px;align-items:center;flex-wrap:wrap">
           <div><strong style="font-size:18px">${esc(s.name)}</strong>
-            <div class="muted">${esc(s.club||'')}${s.season?' • '+esc(s.season):''} • ${completed}/${included.length} turnajů • ${players} hráčů</div>
+            <div class="muted">${esc(s.club||'')}${s.season?' • '+esc(s.season):''} • ${completed}/${total} turnajů • ${players} hráčů</div>
           </div>
           <button class="btn primary" onclick="openTournamentSeries('${s.id}')">OTEVŘÍT SÉRII</button>
         </div>
@@ -17220,6 +17303,7 @@ function renderTournamentDetail(){
 
     const included=(s.tournamentIds||[]).map(id=>(data.tournaments||[]).find(t=>t.id===id)).filter(Boolean);
     const available=(data.tournaments||[]).filter(t=>t.status==='complete'&&!(s.tournamentIds||[]).includes(t.id));
+    const historical=Array.isArray(s.historicalTournaments)?s.historicalTournaments:[];
     const standings=seriesStandings(s);
 
     body.innerHTML=`
@@ -17298,9 +17382,35 @@ function renderTournamentDetail(){
             ${canManageSeries(s)?`<button class="btn danger" onclick="removeTournamentFromSeries('${s.id}','${t.id}')">ODEBRAT</button>`:''}
           </div>
         </div>
-      </div>`).join(''):'<div class="muted">Zatím žádný turnaj.</div>'}
+      </div>`).join(''):'<div class="muted">Zatím žádný běžný turnaj.</div>'}
 
-      ${canManageSeries(s)?`<h3 style="margin-top:18px">PŘIDAT ODEHRANÝ TURNAJ ZPĚTNĚ</h3>
+      ${historical.length?`<h3 style="margin-top:18px">HISTORICKY ZADANÉ TURNAJE</h3>
+        ${historical.slice().sort((a,b)=>String(b.date||'').localeCompare(String(a.date||''))).map(ht=>`<div class="subpanel" style="margin-top:8px">
+          <div style="display:flex;justify-content:space-between;gap:8px;align-items:center;flex-wrap:wrap">
+            <div>
+              <strong>${esc(ht.name||'Historický turnaj')}</strong>
+              <div class="muted">${ht.date?esc(new Date(ht.date+'T12:00:00').toLocaleDateString('cs-CZ'))+' • ':''}${(ht.results||[]).length} hráčů • ručně zadaný výsledek</div>
+            </div>
+            ${canManageSeries(s)?`<button class="btn danger" onclick="deleteHistoricalSeriesTournament('${s.id}','${ht.id}')">SMAZAT</button>`:''}
+          </div>
+          <div class="muted" style="margin-top:7px">${(ht.results||[]).slice().sort((a,b)=>Number(a.place)-Number(b.place)).map(r=>esc(String(r.place)+'. '+String(r.displayName||r.name||r.playerId||'Hráč'))).join(' • ')}</div>
+        </div>`).join('')}`:''}
+
+      ${canManageSeries(s)?`<h3 style="margin-top:18px">PŘIDAT HISTORICKÝ TURNAJ</h3>
+        <div class="subpanel">
+          <div class="grid two">
+            <div><label>Název turnaje</label><input id="seriesHistoricalName_${s.id}" placeholder="např. Lounská tour – květen"></div>
+            <div><label>Datum</label><input id="seriesHistoricalDate_${s.id}" type="date"></div>
+          </div>
+          <div style="margin-top:10px">
+            <label>Konečné pořadí</label>
+            <textarea id="seriesHistoricalResults_${s.id}" rows="9" placeholder="1; Jan Novák&#10;2; Petr Svoboda&#10;3; Karel Dvořák&#10;5; Pavel Nový&#10;5; Aleš Malý"></textarea>
+            <div class="muted" style="margin-top:5px">Jeden hráč na řádek ve formátu <strong>místo; jméno</strong>. Stejné číslo místa znamená dělené pořadí. Existující hráč se podle jména automaticky propojí s profilem, ostatní zůstanou jako hosté.</div>
+          </div>
+          <div style="display:flex;justify-content:flex-end;margin-top:10px"><button class="btn primary" onclick="addHistoricalTournamentToSeries('${s.id}')">ULOŽIT HISTORICKÝ TURNAJ</button></div>
+        </div>
+
+        <h3 style="margin-top:18px">PŘIDAT JIŽ ODEHRANÝ TURNAJ Z POČÍTADLA</h3>
         ${available.length?`<div class="grid two">${available.map(t=>`<button class="btn" onclick="addTournamentToSeries('${s.id}','${t.id}')">${esc(t.name)} • ${esc(tournamentFormatLabel(t))}</button>`).join('')}</div>`:'<div class="muted">Žádný další dokončený turnaj není k dispozici.</div>'}
         ${canManageSeriesOrganizers(s)?`<div style="margin-top:18px"><button class="btn danger" onclick="deleteTournamentSeries('${s.id}')">SMAZAT SÉRII</button></div>`:''}`:''}
     `;
@@ -17344,6 +17454,73 @@ function renderTournamentDetail(){
     renderSeriesModal();
     renderResultsSeries();
     toast('Nastavení série bylo uloženo.');
+  };
+
+  window.addHistoricalTournamentToSeries=function(seriesId){
+    const s=(data.tournamentSeries||[]).find(x=>x.id===seriesId);
+    if(!s||!canManageSeries(s))return;
+
+    const name=String($('seriesHistoricalName_'+seriesId)?.value||'').trim();
+    const date=String($('seriesHistoricalDate_'+seriesId)?.value||'').trim();
+    const raw=String($('seriesHistoricalResults_'+seriesId)?.value||'').trim();
+    if(!name){toast('Zadej název historického turnaje.');return;}
+    if(!date){toast('Zadej datum historického turnaje.');return;}
+    if(!raw){toast('Zadej konečné pořadí.');return;}
+
+    const parsed=[];
+    const errors=[];
+    raw.split(/\r?\n/).map(x=>x.trim()).filter(Boolean).forEach((line,i)=>{
+      const m=line.match(/^(\d+)\s*(?:;|\||\t|\.\s+|:\s+)\s*(.+)$/);
+      if(!m){errors.push(i+1);return;}
+      const place=Math.max(1,Math.floor(Number(m[1])));
+      const displayName=String(m[2]||'').trim();
+      if(!displayName){errors.push(i+1);return;}
+      const player=seriesHistoricalPlayerMatch(displayName);
+      parsed.push({
+        place,
+        playerId:player?.id||('histguest_'+uid()),
+        displayName:player?playerSelectionLabel(player):displayName
+      });
+    });
+
+    if(errors.length){toast('Zkontroluj řádky '+errors.join(', ')+' – použij formát místo; jméno.');return;}
+    if(parsed.length<2){toast('Historický turnaj musí mít alespoň 2 hráče.');return;}
+    if(!parsed.some(x=>x.place===1)){toast('V pořadí chybí 1. místo.');return;}
+
+    const placeCounts={};
+    parsed.forEach(x=>placeCounts[x.place]=(placeCounts[x.place]||0)+1);
+    parsed.forEach(x=>x.sharedPlace=placeCounts[x.place]>1);
+
+    s.historicalTournaments=Array.isArray(s.historicalTournaments)?s.historicalTournaments:[];
+    s.historicalTournaments.push({
+      id:'hist_'+uid(),
+      name,
+      date,
+      results:parsed,
+      createdAt:new Date().toISOString(),
+      createdByUid:cloudUid||''
+    });
+    s.updatedAt=new Date().toISOString();
+    saveData();
+    renderSeriesList();
+    renderSeriesModal();
+    renderResultsSeries();
+    toast('Historický turnaj byl přidán do série.');
+  };
+
+  window.deleteHistoricalSeriesTournament=function(seriesId,historicalId){
+    const s=(data.tournamentSeries||[]).find(x=>x.id===seriesId);
+    if(!s||!canManageSeries(s))return;
+    const ht=(s.historicalTournaments||[]).find(x=>x.id===historicalId);
+    if(!ht)return;
+    if(!confirm('Opravdu smazat historický turnaj „'+(ht.name||'')+'“ ze série?'))return;
+    s.historicalTournaments=(s.historicalTournaments||[]).filter(x=>x.id!==historicalId);
+    s.updatedAt=new Date().toISOString();
+    saveData();
+    renderSeriesList();
+    renderSeriesModal();
+    renderResultsSeries();
+    toast('Historický turnaj byl ze série odebrán.');
   };
 
   window.addTournamentToSeries=function(seriesId,tournamentId){
@@ -17433,7 +17610,9 @@ function renderTournamentDetail(){
       const tournaments=(s.tournamentIds||[])
         .map(id=>(data.tournaments||[]).find(t=>t.id===id))
         .filter(Boolean);
-      const completed=tournaments.filter(t=>t.status==='complete').length;
+      const historical=Array.isArray(s.historicalTournaments)?s.historicalTournaments:[];
+      const completed=tournaments.filter(t=>t.status==='complete').length+historical.length;
+      const total=tournaments.length+historical.length;
       const standings=seriesStandings(s);
       const leader=standings[0];
       const leaderName=leader?(leader.displayName||leader.playerId):'—';
@@ -17444,7 +17623,7 @@ function renderTournamentDetail(){
           <div style="flex:1;min-width:230px">
             <div style="font-size:22px;font-weight:950">${esc(s.name||'Série')}</div>
             <div class="muted" style="margin-top:5px">
-              ${esc(s.club||'')}${s.season?' • '+esc(s.season):''} • ${completed}/${tournaments.length} odehraných turnajů • ${standings.length} hráčů
+              ${esc(s.club||'')}${s.season?' • '+esc(s.season):''} • ${completed}/${total} odehraných turnajů • ${standings.length} hráčů
             </div>
             <div style="margin-top:7px"><strong>Průběžně vede:</strong> ${esc(leaderName)}${leader?' • '+leaderPts+' bodů':''}</div>
           </div>
