@@ -24364,40 +24364,80 @@ function renderStats(){
 
     if(top){
       try{
-        var ratings={};
-        try{ratings=calculateEloRatings()||{};}catch(e){console.warn('Modern leaderboard ELO:',e);ratings={};}
         var playerValues=[];
-        try{playerValues=Object.values(data.players||{});}catch(e){playerValues=[];}
-        var players=playerValues
-          .filter(function(p){return p&&p.active!==false&&p.hiddenFromPlayers!==true;})
-          .map(function(p){
-            var agg={matches:0,wins:0};
-            try{agg=playerAggregate(p.id)||agg;}catch(e){}
-            return {p:p,r:Number(ratings[p.id]??1500),matches:Number(agg.matches||0),wins:Number(agg.wins||0)};
-          })
-          .sort(function(a,b){return b.r-a.r || b.wins-a.wins || b.matches-a.matches || String(a.p.name||'').localeCompare(String(b.p.name||''),'cs');})
-          .slice(0,5);
+        try{
+          playerValues=(data && data.players) ? Object.values(data.players) : [];
+        }catch(e){
+          playerValues=[];
+        }
+
+        playerValues=playerValues.filter(function(p){
+          return !!(p && p.id && p.active!==false && p.hiddenFromPlayers!==true);
+        });
+
+        var ratings={};
+        try{
+          ratings=calculateEloRatings()||{};
+        }catch(e){
+          console.warn('Modern leaderboard ELO fallback:',e);
+          ratings={};
+        }
+
+        var players=playerValues.map(function(p){
+          var elo=1500;
+          try{
+            if(Object.prototype.hasOwnProperty.call(ratings,p.id) && Number.isFinite(Number(ratings[p.id]))){
+              elo=Number(ratings[p.id]);
+            }
+          }catch(e){}
+          return {p:p,elo:elo};
+        });
+
+        players.sort(function(a,b){
+          if(b.elo!==a.elo)return b.elo-a.elo;
+          var an=String((a.p&&a.p.name)||'');
+          var bn=String((b.p&&b.p.name)||'');
+          return an>bn?1:(an<bn?-1:0);
+        });
+
+        players=players.slice(0,5);
 
         if(players.length){
-          top.innerHTML=players.map(function(x,i){
+          var html=[];
+          players.forEach(function(x,i){
             var name='';
-            try{name=playerDisplayName(x.p);}catch(e){name=x.p.name||'Hráč';}
-            return '<div class="modern-rank-row" role="button" tabindex="0" data-modern-player-id="'+modernEsc(x.p.id||'')+'"><div class="modern-rank-no">'+(i+1)+'</div><div><div>'+modernEsc(name)+'</div><div class="muted" style="font-size:10px">'+x.matches+' zápasů • '+x.wins+' výher</div></div><div class="modern-rank-points">'+Math.round(x.r)+' b.</div></div>';
-          }).join('');
+            try{
+              name=playerDisplayName(x.p);
+            }catch(e){
+              name=String((x.p&&x.p.name)||'Hráč');
+            }
+            html.push(
+              '<div class="modern-rank-row" role="button" tabindex="0" data-modern-player-id="'+modernEsc(String(x.p.id))+'">'+
+                '<div class="modern-rank-no">'+(i+1)+'</div>'+
+                '<div><div>'+modernEsc(name||'Hráč')+'</div></div>'+
+                '<div class="modern-rank-points">'+Math.round(x.elo)+' ELO</div>'+
+              '</div>'
+            );
+          });
+          top.innerHTML=html.join('');
           top.querySelectorAll('[data-modern-player-id]').forEach(function(el){
             el.addEventListener('click',function(){
               var id=this.getAttribute('data-modern-player-id');
-              try{openPlayerProfile(id);}catch(e){console.warn('Open player profile:',e);}
+              try{
+                if(typeof openPlayerProfile==='function')openPlayerProfile(id);
+              }catch(e){
+                console.warn('Open player profile:',e);
+              }
             });
           });
         }else{
           top.innerHTML=cloudAuthenticated
-            ? '<div class="muted">Žádní hráči nejsou momentálně k dispozici.</div>'
+            ? '<div class="muted">V cloudu nejsou dostupní žádní aktivní hráči.</div>'
             : '<div class="muted">Přihlas se do cloudu pro zobrazení žebříčku.</div>';
         }
       }catch(e){
-        console.warn('Modern leaderboard render:',e);
-        top.innerHTML='<div class="muted">Žebříček se nepodařilo načíst.</div>';
+        console.error('Modern leaderboard render failed:',e);
+        top.innerHTML='<div class="muted">Žebříček se nepodařilo načíst: '+modernEsc((e&&e.message)?e.message:String(e))+'</div>';
       }
     }
 
