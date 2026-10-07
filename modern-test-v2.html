@@ -1214,6 +1214,48 @@
     .modern-mobile-nav button span{font-size:20px;color:#cdb36f}
   }
 </style>
+
+<style id="tournament-community-hub-styles">
+  .tournament-hub-intro{margin-bottom:16px}
+  .tournament-hub-title{font-size:clamp(28px,4vw,46px);margin:0 0 7px;letter-spacing:-.035em}
+  .tournament-hub-title span{color:var(--gold2)}
+  .tournament-hub-choice-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin:16px 0}
+  .tournament-hub-choice{
+    border:1px solid #2d2a23;background:linear-gradient(180deg,#171511,#0d0d0d);
+    border-radius:18px;padding:20px;color:#fff;text-align:left;min-height:150px;
+    transition:.18s ease;cursor:pointer
+  }
+  .tournament-hub-choice:hover{transform:translateY(-2px);border-color:rgba(216,177,75,.55);box-shadow:0 14px 34px rgba(0,0,0,.28)}
+  .tournament-hub-choice.primary{background:linear-gradient(145deg,#d8b14b,#6f4e12);color:#120e07;border-color:#f0cf74}
+  .tournament-hub-choice .icon{font-size:30px;display:block;margin-bottom:18px}
+  .tournament-hub-choice strong{display:block;font-size:19px}
+  .tournament-hub-choice small{display:block;margin-top:7px;color:#a8a8a8;line-height:1.45}
+  .tournament-hub-choice.primary small{color:#251c0d}
+  .tournament-calendar-toolbar{display:flex;gap:8px;flex-wrap:wrap;align-items:center;justify-content:space-between;margin-bottom:14px}
+  .tournament-calendar-section{margin-top:18px}
+  .tournament-calendar-section h2{margin:0 0 10px;font-size:21px}
+  .tournament-calendar-list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+  .tournament-public-card{
+    border:1px solid #2e2b24;background:linear-gradient(180deg,#14130f,#0d0d0d);
+    border-radius:17px;padding:17px;min-width:0
+  }
+  .tournament-public-card.past{opacity:.8}
+  .tournament-public-card-head{display:flex;justify-content:space-between;gap:12px;align-items:flex-start}
+  .tournament-public-card h3{margin:0;font-size:20px}
+  .tournament-public-date{color:var(--gold2);font-weight:900;font-size:13px;white-space:nowrap}
+  .tournament-public-meta{display:flex;gap:7px;flex-wrap:wrap;margin:10px 0}
+  .tournament-public-meta span{border:1px solid #34312a;border-radius:999px;padding:5px 8px;color:#c9c3b4;font-size:11px;font-weight:800}
+  .tournament-public-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:13px}
+  .tournament-public-description{color:#aaa;font-size:13px;line-height:1.5}
+  .tournament-reg-count{color:#d9c27d;font-size:12px;font-weight:900}
+  .tournament-calendar-empty{border:1px dashed #39342a;border-radius:16px;padding:24px;color:#8f8f8f;text-align:center}
+  .tournament-public-form{border-color:rgba(216,177,75,.35)!important;background:#100f0c!important}
+  .tournament-public-form textarea{width:100%;min-height:90px;resize:vertical;border:1px solid #393939;background:#0d0d0d;color:var(--text);padding:13px 14px;border-radius:12px;outline:none;font:inherit}
+  .tournament-detail-public{border:1px solid rgba(216,177,75,.3);background:linear-gradient(180deg,rgba(216,177,75,.055),#0e0e0e);border-radius:16px;padding:16px;margin-bottom:14px}
+  @media(max-width:800px){
+    .tournament-hub-choice-grid,.tournament-calendar-list{grid-template-columns:1fr}
+  }
+</style>
 </head>
 <body>
 <div class="app">
@@ -2203,15 +2245,52 @@
 
 <section id="screen-tournament" class="screen">
     <div class="card">
-      <h1 class="section-title">TURNAJE</h1>
+      <div id="tournamentHubPanel" class="tournament-hub-intro">
+        <div class="muted" style="font-size:12px;font-weight:900;letter-spacing:.08em">POOLČÍTADLO · TURN AJE</div>
+        <h1 class="tournament-hub-title">Turnaje pro celou <span>poolovou komunitu</span></h1>
+        <div class="muted" style="max-width:780px;line-height:1.5">Vytvoř vlastní turnaj, sleduj turnajové série nebo procházej kalendář nadcházejících i již odehraných akcí.</div>
 
-      <div class="subpanel" style="margin-bottom:14px">
-        <div style="display:flex;gap:10px;flex-wrap:wrap">
-          <button id="tournamentCreateTabBtn" class="btn primary big" type="button">+ NOVÝ TURNAJ</button>
-          <button id="tournamentSeriesTabBtn" class="btn big" type="button">🏆 SÉRIE TURNAJŮ</button>
+        <div class="tournament-hub-choice-grid">
+          <button id="tournamentHubCreateBtn" class="tournament-hub-choice primary" type="button">
+            <span class="icon">＋</span><strong>Vytvořit turnaj</strong>
+            <small>Nastavit formát, hráče, startovné, ceny a řídit celý turnaj.</small>
+          </button>
+          <button id="tournamentHubCalendarBtn" class="tournament-hub-choice" type="button">
+            <span class="icon">◫</span><strong>Kalendář turnajů</strong>
+            <small>Nadcházející a proběhlé turnaje, informace, registrace a výsledky.</small>
+          </button>
+          <button id="tournamentSeriesTabBtn" class="tournament-hub-choice" type="button">
+            <span class="icon">🏆</span><strong>Série turnajů</strong>
+            <small>Bodování, pořadí hráčů a turnaje spojené do jedné sezóny.</small>
+          </button>
         </div>
-        <div class="muted" style="margin-top:7px">Nový turnaj a série jsou nyní dostupné hned nahoře. Série obsahují bodování, pořadí a přiřazené turnaje.</div>
       </div>
+
+      <div id="tournamentCalendarPanel" class="hidden">
+        <div class="tournament-calendar-toolbar">
+          <div>
+            <h2 style="margin:0">Kalendář turnajů</h2>
+            <div class="muted" style="margin-top:4px">Turnajová nástěnka Poolčítadla.</div>
+          </div>
+          <button id="tournamentCalendarBackBtn" class="btn" type="button">← ZPĚT NA TURN AJE</button>
+        </div>
+        <div class="tournament-calendar-section">
+          <h2>📅 Nadcházející turnaje</h2>
+          <div id="tournamentUpcomingList" class="tournament-calendar-list"></div>
+        </div>
+        <div class="tournament-calendar-section">
+          <h2>✓ Proběhlé turnaje</h2>
+          <div id="tournamentPastList" class="tournament-calendar-list"></div>
+        </div>
+      </div>
+
+      <div id="tournamentWorkPanel" class="hidden">
+        <div class="subpanel" style="margin-bottom:14px">
+          <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center">
+            <button id="tournamentHubBackBtn" class="btn big" type="button">← TURN AJE</button>
+            <button id="tournamentCreateTabBtn" class="btn primary big" type="button">+ NOVÝ TURNAJ</button>
+          </div>
+        </div>
 
       <div id="tournamentSeriesPanel" class="hidden">
       <div class="subpanel">
@@ -2265,7 +2344,28 @@
       </div>
 
       <div id="tournamentCreatePanel">
-        <div style="margin-bottom:14px"><h2 style="margin:0">Vytvořit turnaj</h2><div class="muted">Nastav nový turnaj a rozlosuj ho. Odehrané turnaje najdeš ve VÝSLEDCÍCH.</div></div>
+        <div style="margin-bottom:14px"><h2 style="margin:0">Vytvořit turnaj</h2><div class="muted">Nastav nový turnaj a rozlosuj ho. Veřejné informace se zobrazí v kalendáři turnajů.</div></div>
+
+        <div class="subpanel tournament-public-form" style="margin-bottom:14px">
+          <div style="display:flex;justify-content:space-between;gap:10px;align-items:center;flex-wrap:wrap">
+            <div><strong>VEŘEJNÉ INFORMACE DO KALENDÁŘE</strong><div class="muted" style="margin-top:3px">Tyto údaje uvidí hráči před registrací.</div></div>
+            <span class="badge gold">KALENDÁŘ</span>
+          </div>
+          <div class="grid three" style="margin-top:12px">
+            <div><label>Datum turnaje</label><input id="tournamentPublicDate" type="date"></div>
+            <div><label>Čas začátku</label><input id="tournamentPublicTime" type="time"></div>
+            <div><label>Místo / herna</label><input id="tournamentPublicVenue" placeholder="např. BC Rybárna, Roudnice nad Labem"></div>
+            <div><label>Adresa</label><input id="tournamentPublicAddress" placeholder="ulice, město"></div>
+            <div><label>Kapacita hráčů</label><input id="tournamentPublicCapacity" type="number" min="0" placeholder="např. 32"></div>
+            <div><label>Externí registrace (URL)</label><input id="tournamentPublicRegistrationUrl" type="url" placeholder="https://..."></div>
+          </div>
+          <div class="grid two" style="margin-top:12px">
+            <div><label>Kontakt na pořadatele</label><input id="tournamentPublicContact" placeholder="telefon, e-mail nebo profil"></div>
+            <div><label>Výhry / ceny</label><input id="tournamentPublicPrizes" placeholder="např. 1. místo 5 000 Kč + pohár"></div>
+          </div>
+          <div style="margin-top:12px"><label>Popis turnaje</label><textarea id="tournamentPublicDescription" placeholder="Pravidla, prezence, dress code, občerstvení, další informace…"></textarea></div>
+          <div class="muted" style="font-size:12px;margin-top:8px">Pokud necháš externí registrační odkaz prázdný, hráč s propojeným profilem se může přihlásit přímo přes Poolčítadlo.</div>
+        </div>
         <div class="grid three">
           <div><label>Název turnaje</label><input id="tournamentName" type="text" placeholder="např. BC Rybárna Cup"></div>
           <div><label>Formát</label>
@@ -2525,8 +2625,7 @@
         <div class="muted">Aktuální turnaje, které ještě nejsou dohrané.</div>
       </div>
       <div id="tournamentActiveList"></div>
-
-
+      </div><!-- /tournamentWorkPanel -->
     </div>
   </section>
 
@@ -19840,6 +19939,19 @@ $('createTournamentBtn').onclick=async()=>{
     };
 
 
+    t.publicInfo={
+      date:String($('tournamentPublicDate')?.value||''),
+      time:String($('tournamentPublicTime')?.value||''),
+      venue:String($('tournamentPublicVenue')?.value||'').trim(),
+      address:String($('tournamentPublicAddress')?.value||'').trim(),
+      capacity:Math.max(0,Number($('tournamentPublicCapacity')?.value||0)),
+      registrationUrl:String($('tournamentPublicRegistrationUrl')?.value||'').trim(),
+      contact:String($('tournamentPublicContact')?.value||'').trim(),
+      prizes:String($('tournamentPublicPrizes')?.value||'').trim(),
+      description:String($('tournamentPublicDescription')?.value||'').trim()
+    };
+    if(!Array.isArray(t.registrations))t.registrations=[];
+
     const selectedSeriesId=$('tournamentSeriesSelect')?.value||'';
     // Nejprve vytvořený turnaj držíme lokálně, aby nezmizel z UI.
     const existingIndex=(data.tournaments||[]).findIndex(x=>x.id===t.id);
@@ -25025,6 +25137,158 @@ function renderStats(){
 
   setTimeout(function(){window.renderModernHome();window.refreshModernHomeData();},150);
   setTimeout(function(){window.refreshModernHomeData();},1800);
+})();
+</script>
+
+<script id="tournament-community-hub-script">
+(function(){
+  function q(id){return document.getElementById(id)}
+  function esc2(v){return String(v==null?'':v).replace(/[&<>"']/g,function(m){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]})}
+  function fmtDate(v){
+    if(!v)return 'Datum neuvedeno';
+    var d=new Date(v+'T12:00:00');
+    return isNaN(d)?v:d.toLocaleDateString('cs-CZ',{day:'numeric',month:'long',year:'numeric'});
+  }
+  function tournamentFinished(t){
+    if(!t)return false;
+    if(t.completed===true||t.finished===true||t.status==='complete'||t.status==='finished')return true;
+    if(t.finishedAt||t.completedAt)return true;
+    var pi=t.publicInfo||{};
+    if(pi.date){
+      var end=new Date(pi.date+'T23:59:59').getTime();
+      return Number.isFinite(end)&&end<Date.now();
+    }
+    return false;
+  }
+  function linkedPlayer(){
+    try{
+      if(!cloudUid)return null;
+      return Object.values(data.players||{}).find(function(p){return p&&String(p.ownerUid||'')===String(cloudUid)})||null;
+    }catch(e){return null}
+  }
+  function card(t,past){
+    var pi=t.publicInfo||{};
+    var regs=Array.isArray(t.registrations)?t.registrations:[];
+    var cap=Number(pi.capacity||0);
+    var meta=[];
+    if(t.discipline)meta.push(esc2(String(t.discipline).toUpperCase()));
+    if(pi.venue)meta.push('📍 '+esc2(pi.venue));
+    if(t.checkin&&Number(t.checkin.entryFee||0)>0)meta.push('Startovné '+Number(t.checkin.entryFee).toLocaleString('cs-CZ')+' Kč');
+    if(cap)meta.push('Kapacita '+cap);
+    var action='';
+    if(!past){
+      if(pi.registrationUrl){
+        action='<a class="btn primary" href="'+esc2(pi.registrationUrl)+'" target="_blank" rel="noopener noreferrer">REGISTRACE ↗</a>';
+      }else{
+        var lp=linkedPlayer();
+        var already=lp&&regs.some(function(r){return String(r.playerId||'')===String(lp.id)});
+        action=already
+          ? '<button class="btn" disabled>✓ REGISTROVÁN</button>'
+          : '<button class="btn primary tournament-register-btn" data-tid="'+esc2(t.id)+'">'+(lp?'REGISTROVAT SE':'PŘIHLÁSIT SE PRO REGISTRACI')+'</button>';
+      }
+    }
+    return '<article class="tournament-public-card '+(past?'past':'')+'">'+
+      '<div class="tournament-public-card-head"><div><h3>'+esc2(t.name||'Turnaj')+'</h3><div class="tournament-reg-count">'+regs.length+(cap?' / '+cap:'')+' registrovaných</div></div>'+
+      '<div class="tournament-public-date">'+esc2(fmtDate(pi.date))+(pi.time?' · '+esc2(pi.time):'')+'</div></div>'+
+      '<div class="tournament-public-meta">'+meta.map(function(x){return '<span>'+x+'</span>'}).join('')+'</div>'+
+      (pi.description?'<div class="tournament-public-description">'+esc2(pi.description)+'</div>':'')+
+      (pi.prizes?'<div style="margin-top:9px;color:#d8c27f;font-size:12px"><strong>Výhry:</strong> '+esc2(pi.prizes)+'</div>':'')+
+      (pi.contact?'<div class="muted" style="margin-top:7px;font-size:12px">Kontakt: '+esc2(pi.contact)+'</div>':'')+
+      '<div class="tournament-public-actions">'+
+        '<button class="btn tournament-open-detail-btn" data-tid="'+esc2(t.id)+'">DETAIL / VÝSLEDKY</button>'+action+
+      '</div></article>';
+  }
+  window.renderTournamentCalendar=function(){
+    var up=q('tournamentUpcomingList'),past=q('tournamentPastList');
+    if(!up||!past)return;
+    var arr=(data&&Array.isArray(data.tournaments)?data.tournaments:[]).slice();
+    arr.sort(function(a,b){
+      var ad=String(a?.publicInfo?.date||'9999-12-31'),bd=String(b?.publicInfo?.date||'9999-12-31');
+      return ad.localeCompare(bd);
+    });
+    var upcoming=arr.filter(function(t){return !tournamentFinished(t)});
+    var done=arr.filter(tournamentFinished).reverse();
+    up.innerHTML=upcoming.length?upcoming.map(function(t){return card(t,false)}).join(''):'<div class="tournament-calendar-empty">Zatím nejsou zveřejněné žádné nadcházející turnaje.</div>';
+    past.innerHTML=done.length?done.map(function(t){return card(t,true)}).join(''):'<div class="tournament-calendar-empty">Zatím zde nejsou žádné proběhlé turnaje.</div>';
+
+    document.querySelectorAll('.tournament-open-detail-btn').forEach(function(btn){
+      btn.onclick=function(){
+        var id=this.getAttribute('data-tid');
+        try{openTournamentDetail(id)}catch(e){console.warn(e)}
+      };
+    });
+    document.querySelectorAll('.tournament-register-btn').forEach(function(btn){
+      btn.onclick=async function(){
+        var tid=this.getAttribute('data-tid');
+        var t=(data.tournaments||[]).find(function(x){return x.id===tid});
+        if(!t)return;
+        var p=linkedPlayer();
+        if(!p){
+          try{toast('Pro registraci se přihlas účtem propojeným s hráčským profilem.')}catch(e){}
+          return;
+        }
+        if(!Array.isArray(t.registrations))t.registrations=[];
+        if(t.registrations.some(function(r){return String(r.playerId||'')===String(p.id)}))return;
+        var cap=Number(t.publicInfo?.capacity||0);
+        if(cap&&t.registrations.length>=cap){
+          try{toast('Kapacita turnaje je již naplněna.')}catch(e){}
+          return;
+        }
+        t.registrations.push({playerId:p.id,name:p.name||p.nickname||'Hráč',uid:cloudUid||'',registeredAt:new Date().toISOString()});
+        try{
+          await saveSecureTournament(t);
+          renderTournamentCalendar();
+          toast('Na turnaj jsi byl zaregistrován.');
+        }catch(e){
+          console.error(e);
+          toast('Registraci se nepodařilo uložit.');
+        }
+      };
+    });
+  };
+
+  function showHub(){
+    q('tournamentHubPanel')?.classList.remove('hidden');
+    q('tournamentCalendarPanel')?.classList.add('hidden');
+    q('tournamentWorkPanel')?.classList.add('hidden');
+    q('tournamentSeriesPanel')?.classList.add('hidden');
+    q('tournamentCreatePanel')?.classList.remove('hidden');
+  }
+  function showWork(){
+    q('tournamentHubPanel')?.classList.add('hidden');
+    q('tournamentCalendarPanel')?.classList.add('hidden');
+    q('tournamentWorkPanel')?.classList.remove('hidden');
+    q('tournamentSeriesPanel')?.classList.add('hidden');
+    q('tournamentCreatePanel')?.classList.remove('hidden');
+  }
+  function showCalendar(){
+    q('tournamentHubPanel')?.classList.add('hidden');
+    q('tournamentWorkPanel')?.classList.add('hidden');
+    q('tournamentCalendarPanel')?.classList.remove('hidden');
+    try{renderTournamentCalendar()}catch(e){console.warn(e)}
+  }
+
+  document.addEventListener('DOMContentLoaded',function(){
+    q('tournamentHubCreateBtn')?.addEventListener('click',showWork);
+    q('tournamentHubCalendarBtn')?.addEventListener('click',showCalendar);
+    q('tournamentCalendarBackBtn')?.addEventListener('click',showHub);
+    q('tournamentHubBackBtn')?.addEventListener('click',showHub);
+
+    var series=q('tournamentSeriesTabBtn');
+    if(series)series.addEventListener('click',function(){
+      q('tournamentHubPanel')?.classList.add('hidden');
+      q('tournamentCalendarPanel')?.classList.add('hidden');
+      q('tournamentWorkPanel')?.classList.remove('hidden');
+      q('tournamentCreatePanel')?.classList.add('hidden');
+      q('tournamentSeriesPanel')?.classList.remove('hidden');
+      try{renderSeriesList()}catch(e){}
+    });
+
+    document.querySelectorAll('[data-nav="tournament"]').forEach(function(btn){
+      btn.addEventListener('click',function(){setTimeout(showHub,0)},true);
+    });
+    showHub();
+  });
 })();
 </script>
 </body>
