@@ -1034,6 +1034,41 @@
   body.modern-test header .nav #currentTournamentNavBtn,
   body.modern-test header .nav #adminNavBtn{display:none!important}
 
+
+  .modern-account-strip{
+    margin:10px auto 0;
+    max-width:1500px;
+    display:flex;align-items:center;gap:11px;
+    padding:10px 14px;
+    border:1px solid rgba(216,173,82,.22);
+    border-radius:14px;
+    background:linear-gradient(180deg,rgba(20,18,13,.96),rgba(10,10,10,.96));
+    box-shadow:0 10px 28px rgba(0,0,0,.2);
+  }
+  .modern-account-avatar{
+    width:34px;height:34px;border-radius:50%;display:grid;place-items:center;
+    color:#d8ad52;background:#0b0b0b;border:1px solid rgba(216,173,82,.42);
+    font-size:12px;flex:0 0 auto;
+  }
+  .modern-account-copy{display:flex;flex-direction:column;gap:2px;min-width:0;flex:1}
+  .modern-account-label{
+    color:#8e8777;font-size:9px;font-weight:900;letter-spacing:.12em;
+  }
+  #modernLoggedInUserBadge{
+    color:#f3f3f3;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+  }
+  .modern-account-role{
+    flex:0 0 auto;padding:5px 8px;border-radius:999px;
+    border:1px solid rgba(216,173,82,.3);color:#e2c875;
+    font-size:9px;font-weight:950;letter-spacing:.06em;
+  }
+  @media(max-width:700px){
+    .modern-account-strip{margin-top:8px;padding:9px 11px;border-radius:12px}
+    .modern-account-label{font-size:8px}
+    #modernLoggedInUserBadge{font-size:12px}
+    .modern-account-role{font-size:8px;padding:4px 6px}
+  }
+
   body.modern-test .modern-home{max-width:1500px;margin:0 auto;padding:20px 18px 94px}
   .modern-hero{
     position:relative;overflow:hidden;min-height:430px;
@@ -1345,7 +1380,15 @@
     </div>
   </header>
 
-  
+  <div id="modernAccountStrip" class="modern-account-strip" aria-live="polite">
+    <div class="modern-account-avatar">●</div>
+    <div class="modern-account-copy">
+      <span class="modern-account-label">PŘIHLÁŠENÝ ÚČET</span>
+      <strong id="modernLoggedInUserBadge">Načítám účet…</strong>
+    </div>
+    <span id="modernAccountRole" class="modern-account-role">—</span>
+  </div>
+
 <section id="screen-home" class="screen active">
   <div class="modern-home">
     <div class="modern-hero">
@@ -5196,15 +5239,25 @@
   function updateLoggedInUserBadge(){
     refreshStreamOverlayUrl();
     const el=$('loggedInUserBadge');
-    if(!el)return;
+    const modernEl=$('modernLoggedInUserBadge');
+    const modernRole=$('modernAccountRole');
 
     try{discardForeignLocalActiveMatch();}catch(e){}
 
-    // Identitu zobrazujeme pouze z aktuální cloud session a z playerId uloženého
-    // přímo u přihlášeného uživatele. Nikdy ji nehledáme podle ownerUid v lokálních profilech.
+    const applyBadge=(label,title,role)=>{
+      if(el){
+        el.textContent=label;
+        el.title=title||label;
+      }
+      if(modernEl){
+        modernEl.textContent=label.replace(/^Přihlášen:\s*/,'');
+        modernEl.title=title||label;
+      }
+      if(modernRole) modernRole.textContent=role||'—';
+    };
+
     if(!cloudAuthenticated || !cloudUid){
-      el.textContent='Nepřihlášen';
-      el.title='Není aktivní přihlášení';
+      applyBadge('Nepřihlášen','Není aktivní přihlášení','OFFLINE');
       return;
     }
 
@@ -5218,11 +5271,12 @@
       name=email || 'Přihlášený účet';
     }
 
-    const adminSuffix=currentUserIsSystemAdmin() ? ' ★ ADMIN' : '';
-    el.textContent='Přihlášen: '+name+adminSuffix;
-    el.title=name+adminSuffix;
+    const roleLabel=currentUserRole==='system_admin'
+      ? 'ADMIN'
+      : (currentUserRole==='club_admin' ? 'CLUB ADMIN' : 'HRÁČ');
+    const adminSuffix=currentUserIsSystemAdmin() ? ' ★' : '';
+    applyBadge('Přihlášen: '+name+adminSuffix,name+adminSuffix,roleLabel);
   }
-
 
   function setCloudStatus(label,ok=false){
     const b=$('cloudStatusBtn');
