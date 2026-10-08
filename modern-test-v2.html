@@ -1114,9 +1114,8 @@
     border:1px solid rgba(216,173,82,.24);border-radius:30px;padding:54px;
     display:flex;align-items:center;
     background:
-      radial-gradient(circle at 82% 44%,rgba(216,173,82,.18),transparent 19%),
-      radial-gradient(circle at 73% 85%,rgba(216,173,82,.08),transparent 24%),
-      linear-gradient(112deg,#050505 0 41%,#090909 66%,#11100d 100%);
+      radial-gradient(circle at 18% 12%,rgba(216,173,82,.10),transparent 24%),
+      linear-gradient(112deg,#050505 0 45%,#090909 72%,#11100d 100%);
     box-shadow:0 28px 85px rgba(0,0,0,.48);
   }
   .modern-hero:before{
@@ -1125,7 +1124,7 @@
       linear-gradient(90deg,rgba(0,0,0,.18),transparent 52%),
       radial-gradient(circle at 88% 18%,rgba(255,215,125,.08),transparent 10%);
   }
-  .modern-hero-copy{position:relative;z-index:3;max-width:790px}
+  .modern-hero-copy{position:relative;z-index:3;max-width:1180px;width:100%}
 
   .modern-hero-copy.modern-hero-split{
     display:grid;
@@ -1186,28 +1185,7 @@
   .modern-origin{margin-top:18px;color:#928c7f;font-size:12px;font-weight:800}
   .modern-origin b{color:#dbc377}
 
-  .modern-ball-scene{position:absolute;right:4.8%;bottom:38px;width:410px;height:245px;z-index:2;pointer-events:none}
-  .modern-table-line{
-    position:absolute;left:0;right:0;bottom:24px;height:112px;border-radius:50%;
-    background:radial-gradient(ellipse at center,rgba(216,173,82,.08),rgba(20,18,13,.65) 46%,rgba(0,0,0,0) 73%);
-    filter:blur(.2px);
-  }
-  .modern-ball{
-    position:absolute;border-radius:50%;box-shadow:inset -12px -14px 24px rgba(0,0,0,.74),inset 7px 6px 15px rgba(255,255,255,.11),0 18px 25px rgba(0,0,0,.45);
-    background:#090909;border:1px solid rgba(216,173,82,.38);
-  }
-  .modern-ball.big{width:122px;height:122px;right:76px;bottom:52px}
-  .modern-ball.big:after{
-    content:"8";position:absolute;width:48px;height:48px;border-radius:50%;left:36px;top:34px;
-    background:#eee5cf;color:#090909;display:grid;place-items:center;font-weight:950;font-size:24px;
-  }
-  .modern-ball.b2{width:72px;height:72px;right:184px;bottom:48px;background:#2a2111}
-  .modern-ball.b3{width:58px;height:58px;right:18px;bottom:48px;background:#17130d}
-  .modern-ball.b4{width:46px;height:46px;right:240px;bottom:44px;background:#0b0b0b}
-  .modern-ball-glow{
-    position:absolute;width:220px;height:90px;right:45px;bottom:18px;
-    background:radial-gradient(ellipse,rgba(216,173,82,.18),transparent 65%);filter:blur(18px);
-  }
+
 
   .modern-metrics{
     margin-top:14px;border:1px solid rgba(216,173,82,.16);border-radius:20px;
@@ -1286,7 +1264,6 @@
 
   @media(max-width:1000px){
     .modern-hero{min-height:390px;padding:42px 36px}
-    .modern-ball-scene{opacity:.56;right:-40px}
     .modern-title{max-width:75%}
     .modern-subtitle{max-width:65%}
     .modern-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
@@ -1327,12 +1304,6 @@
     .modern-hero{min-height:410px;padding:28px 22px;border-radius:21px;align-items:flex-start}
     .modern-title{font-size:46px;max-width:100%}
     .modern-subtitle{font-size:14px;max-width:100%}
-    .modern-ball-scene{width:260px;height:160px;right:-24px;bottom:8px;opacity:.42}
-    .modern-ball.big{width:86px;height:86px;right:52px;bottom:35px}
-    .modern-ball.big:after{width:34px;height:34px;left:25px;top:24px;font-size:18px}
-    .modern-ball.b2{width:52px;height:52px;right:130px;bottom:31px}
-    .modern-ball.b3{width:42px;height:42px;right:10px;bottom:31px}
-    .modern-ball.b4{width:34px;height:34px;right:170px;bottom:30px}
     .modern-origin{max-width:75%;line-height:1.4}
     .modern-stat-grid{grid-template-columns:1fr 1fr}
     .modern-grid{grid-template-columns:1fr 1fr;gap:9px}
@@ -1545,14 +1516,6 @@
           <div class="modern-subtitle compact">Zápasy, statistiky, hráči a turnaje na jednom místě.</div>
         </div>
         
-      </div>
-      <div class="modern-ball-scene" aria-hidden="true">
-        <div class="modern-ball-glow"></div>
-        <div class="modern-table-line"></div>
-        <div class="modern-ball b4"></div>
-        <div class="modern-ball b2"></div>
-        <div class="modern-ball big"></div>
-        <div class="modern-ball b3"></div>
       </div>
     </div>
 
