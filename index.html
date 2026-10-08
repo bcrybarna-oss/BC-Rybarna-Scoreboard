@@ -1415,11 +1415,19 @@
     body.modern-test header .nav #cloudStatusBtn,
     body.modern-test header .nav #logoutBtn{
       align-items:center;justify-content:center;
-      padding:0 9px;font-size:10px;
+      padding:0;font-size:10px;
+      width:38px;min-width:38px;flex:0 0 38px;
     }
-    .modern-account-inline{max-width:none;flex:1}
-    #modernLoggedInUserBadge{font-size:11px}
-    .modern-account-role{font-size:8px}
+    body.modern-test header .nav #logoutBtn span{display:none}
+    .modern-account-inline{
+      max-width:none;flex:1 1 auto;min-width:0;
+      padding:0 9px;gap:7px;
+    }
+    .modern-account-role{display:none!important}
+    #modernLoggedInUserBadge{
+      font-size:11px;flex:1 1 auto;min-width:0;
+      overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+    }
 
     body.modern-test header{position:sticky}
     body.modern-test .modern-home{padding:10px 10px 92px}
