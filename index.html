@@ -2170,6 +2170,44 @@ html[data-theme="light"] #leagueSchedule .history-item .muted{
   }
 </style>
 
+
+<style id="scheduled-home-empty-state">
+  .modern-scheduled-empty{
+    display:grid;
+    grid-template-columns:auto minmax(0,1fr) auto;
+    gap:14px;
+    align-items:center;
+    padding:14px 16px;
+    border:1px dashed rgba(216,173,82,.28);
+    border-radius:16px;
+    background:rgba(216,173,82,.035);
+  }
+  .modern-scheduled-empty-icon{
+    width:44px;height:44px;border-radius:14px;
+    display:grid;place-items:center;
+    border:1px solid rgba(216,173,82,.28);
+    color:var(--modern-gold2);
+    font-size:22px;font-weight:950;
+    background:rgba(216,173,82,.06);
+  }
+  .modern-scheduled-empty strong{display:block;font-size:14px}
+  .modern-scheduled-empty span{display:block;margin-top:4px;color:#aaa;font-size:12px;line-height:1.45}
+  html[data-theme="light"] .modern-scheduled-empty{
+    background:#fbf7ed;
+    border-color:#d5c39b;
+  }
+  html[data-theme="light"] .modern-scheduled-empty-icon{
+    background:#fff8e5;
+    color:#8f650f;
+    border-color:#d2b76e;
+  }
+  html[data-theme="light"] .modern-scheduled-empty span{color:#6b645a}
+  @media(max-width:700px){
+    .modern-scheduled-empty{grid-template-columns:auto 1fr}
+    .modern-scheduled-empty .btn{grid-column:1/-1;width:100%}
+  }
+</style>
+
 </head>
 <body>
 <div class="app">
@@ -26603,16 +26641,28 @@ function renderStats(){
     var own=nextAccepted();
     var pub=publicUpcomingChallenges().slice(0,4);
     if(!panel)return;
-    panel.classList.toggle('hidden',!own&&!pub.length);
-    if(!own&&!pub.length)return;
+
+    /* Tento blok zůstává na homepage viditelný vždy.
+       I bez domluveného zápasu tak nový uživatel okamžitě vidí,
+       že Poolčítadlo umí výzvy a plánování zápasů. */
+    panel.classList.remove('hidden');
 
     if(own){
       if(title)title.textContent='Tvůj nejbližší domluvený zápas';
       var rest=pub.filter(function(x){return x.id!==own.id}).slice(0,3);
       if(body)body.innerHTML=publicProgramRow(own,true)+(rest.length?'<div class="modern-scheduled-program-label">DALŠÍ VEŘEJNĚ DOMLUVENÉ ZÁPASY</div>'+rest.map(function(x){return publicProgramRow(x,false)}).join(''):'');
-    }else{
+    }else if(pub.length){
       if(title)title.textContent='Nadcházející domluvené zápasy';
       if(body)body.innerHTML=pub.map(function(x){return publicProgramRow(x,false)}).join('');
+    }else{
+      if(title)title.textContent='Nadcházející domluvené zápasy';
+      if(body)body.innerHTML=
+        '<div class="modern-scheduled-empty">'+
+          '<div class="modern-scheduled-empty-icon">⚔</div>'+
+          '<div><strong>Domluv si zápas přímo v Poolčítadle</strong>'+
+          '<span>Vyber soupeře, disciplínu, Race to a termín. Soupeř může výzvu přijmout nebo navrhnout jiný čas.</span></div>'+
+          '<button type="button" class="btn primary" data-nav="challenges">DOMLUVIT ZÁPAS</button>'+
+        '</div>';
     }
   }
 
