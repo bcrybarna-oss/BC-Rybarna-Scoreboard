@@ -1587,18 +1587,15 @@
 </style>
 
 <style id="poolcitadlo-theme-logo-switch">
-  .poolcitadlo-logo-light{display:none!important}
-  html[data-theme="light"] .poolcitadlo-logo-dark{display:none!important}
-  html[data-theme="light"] .poolcitadlo-logo-light{
-    display:block!important;
-    border-radius:18px;
-    filter:drop-shadow(0 12px 22px rgba(70,52,18,.10));
-  }
   html[data-theme="light"] .poolcitadlo-hero-logo-block{
-    background:transparent!important;
-    border:0!important;
-    box-shadow:none!important;
-    padding:0!important;
+    background:linear-gradient(145deg,#11100e,#050505);
+    border:1px solid rgba(155,110,22,.25);
+    border-radius:22px;
+    padding:12px 16px;
+    box-shadow:0 12px 28px rgba(70,52,18,.12);
+  }
+  html[data-theme="light"] .poolcitadlo-hero-logo-block .poolcitadlo-exact-logo{
+    filter:drop-shadow(0 10px 18px rgba(0,0,0,.22));
   }
 </style>
 
@@ -1746,8 +1743,7 @@
     <div class="modern-hero">
       <div class="modern-hero-copy modern-hero-split">
         <div class="poolcitadlo-hero-logo-block" aria-label="Poolčítadlo by BC Rybárna">
-          <img class="poolcitadlo-exact-logo poolcitadlo-logo-dark" src="assets/poolcitadlo-logo.webp" alt="Poolčítadlo by BC Rybárna">
-          <img class="poolcitadlo-exact-logo poolcitadlo-logo-light" src="assets/poolcitadlo-logo-light.svg" alt="Poolčítadlo by BC Rybárna">
+          <img class="poolcitadlo-exact-logo" src="assets/poolcitadlo-logo.webp" alt="Poolčítadlo by BC Rybárna">
         </div>
         <div class="modern-hero-text-block">
           <div class="modern-kicker">POOL · STATISTIKY · TURNAJE · KOMUNITA</div>
