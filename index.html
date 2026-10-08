@@ -4293,6 +4293,16 @@ html[data-theme="light"] #leagueSchedule .history-item .muted{
     
       <div class="hr"></div>
       <div class="subpanel">
+        <h2 style="margin:0 0 6px">Záloha dat</h2>
+        <div class="muted">Servisní nástroje pro ruční zálohu nebo obnovu dat aplikace. Tyto funkce jsou dostupné pouze v administraci.</div>
+        <div class="grid two" style="margin-top:12px">
+          <button id="exportBtn" class="btn">EXPORT DAT (JSON)</button>
+          <label class="btn" style="text-align:center">IMPORT DAT (JSON)<input id="importFile" type="file" accept=".json,application/json" style="display:none"></label>
+        </div>
+      </div>
+
+      <div class="hr"></div>
+      <div class="subpanel">
         <h2 style="margin:0 0 6px">Migrace databáze</h2>
         <div class="muted">
           Hráčské profily už aplikace načítá a ukládá pouze přes <strong>/players/{playerId}</strong>. Starý <strong>/appData.players</strong> je od aplikace odpojený a nebude se dál synchronizovat.
@@ -4437,11 +4447,6 @@ html[data-theme="light"] #leagueSchedule .history-item .muted{
       </div>
       <div id="h2hView" style="margin-top:14px"></div>
 
-      <div class="hr"></div>
-      <div class="grid two">
-        <button id="exportBtn" class="btn">EXPORT DAT (JSON)</button>
-        <label class="btn" style="text-align:center">IMPORT DAT (JSON)<input id="importFile" type="file" accept=".json,application/json" style="display:none"></label>
-      </div>
     </div>
   
         <div class="hr"></div>
