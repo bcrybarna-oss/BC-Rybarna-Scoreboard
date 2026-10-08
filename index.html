@@ -522,7 +522,7 @@
     }
   
 
-/* === v4.51.66 RC • mobilní herní obrazovka portrait / landscape === */
+/* === v4.51.67 RC • mobilní herní obrazovka portrait / landscape === */
 @media (max-width:700px) and (orientation:portrait){
   #screen-match{margin-top:8px}
   #screen-match>.card{padding:10px;border-radius:14px}
@@ -2118,6 +2118,11 @@ html[data-theme="light"] #leagueSchedule .history-item .muted{
   .modern-scheduled-head h3{margin:3px 0 0;font-size:22px}
   .modern-scheduled-kicker{color:var(--modern-gold2);font-weight:950;font-size:10px;letter-spacing:.1em}
   .modern-scheduled-body{display:grid;grid-template-columns:minmax(0,1.4fr) repeat(3,minmax(120px,.6fr)) auto;gap:12px;align-items:center;margin-top:14px}
+  .modern-scheduled-program-row{display:grid;grid-template-columns:minmax(0,1.4fr) minmax(0,1fr) auto;gap:14px;align-items:center;padding:12px 0;border-top:1px solid rgba(216,173,82,.14)}
+  .modern-scheduled-program-row:first-child{margin-top:8px;border-top:0}
+  .modern-scheduled-program-row>div strong{display:block;font-size:14px}
+  .modern-scheduled-program-row>div span{display:block;color:#aaa;font-size:11px;margin-top:3px}
+  .modern-scheduled-program-label{margin-top:10px;padding-top:10px;border-top:1px solid rgba(216,173,82,.18);color:var(--modern-gold2);font-size:9px;font-weight:950;letter-spacing:.09em}
   .modern-scheduled-vs{font-size:18px;font-weight:950}
   .modern-scheduled-meta strong{display:block;font-size:12px}
   .modern-scheduled-meta span{display:block;color:#aaa;font-size:11px;margin-top:3px}
@@ -2150,14 +2155,18 @@ html[data-theme="light"] #leagueSchedule .history-item .muted{
     background:linear-gradient(180deg,#fff,#f7f3ea)!important;color:#171717!important;border-color:#d1c9ba!important
   }
   html[data-theme="light"] .match-challenge-meta span{background:#faf7ef;color:#5f584c;border-color:#d7cfbf}
-  html[data-theme="light"] .modern-scheduled-meta span{color:#6b645a}
+  html[data-theme="light"] .modern-scheduled-meta span,
+  html[data-theme="light"] .modern-scheduled-program-row>div span{color:#6b645a}
+  html[data-theme="light"] .modern-scheduled-program-row{border-color:#e0d7c7}
   @media(max-width:900px){
     .match-challenge-layout{grid-template-columns:1fr}
     .modern-scheduled-body{grid-template-columns:1fr 1fr}
+    .modern-scheduled-program-row{grid-template-columns:1fr auto}
   }
   @media(max-width:620px){
     .match-challenge-summary{grid-template-columns:1fr 1fr 1fr}
     .modern-scheduled-body{grid-template-columns:1fr}
+    .modern-scheduled-program-row{grid-template-columns:1fr}
   }
 </style>
 
@@ -2176,7 +2185,7 @@ html[data-theme="light"] #leagueSchedule .history-item .muted{
           <span class="by">by</span>
           <span class="club">BC Rybárna</span>
         </div>
-        <small class="modern-brand-version">v4.51.66 RC</small>
+        <small class="modern-brand-version">v4.51.67 RC</small>
       </div>
     </div>
     <div class="nav">
@@ -2677,7 +2686,7 @@ html[data-theme="light"] #leagueSchedule .history-item .muted{
         </div>
         <div class="subpanel" style="min-width:210px;text-align:center;margin:0">
           <div class="muted" style="font-size:10px;font-weight:950;letter-spacing:1px">AKTUÁLNÍ VERZE</div>
-          <div style="font-size:22px;font-weight:950;color:var(--gold2);margin-top:5px">v4.51.66 RC</div>
+          <div style="font-size:22px;font-weight:950;color:var(--gold2);margin-top:5px">v4.51.67 RC</div>
         </div>
       </div>
     </div>
@@ -6459,7 +6468,7 @@ html[data-theme="light"] #leagueSchedule .history-item .muted{
     const btn=$('submitReportBtn');if(btn)btn.disabled=true;
     try{
       const id=uid(),p=currentUserPlayerId?data.players?.[currentUserPlayerId]:null;
-      const report={id,createdByUid:cloudUid,createdByPlayerId:currentUserPlayerId||'',createdByName:p?playerSelectionLabel(p):(cloudUserEmail||'Uživatel'),email:cloudUserEmail||'',type,area,description,appVersion:'v4.51.66 RC',createdAt:new Date().toISOString(),updatedAt:new Date().toISOString(),status:'new',adminNote:''};
+      const report={id,createdByUid:cloudUid,createdByPlayerId:currentUserPlayerId||'',createdByName:p?playerSelectionLabel(p):(cloudUserEmail||'Uživatel'),email:cloudUserEmail||'',type,area,description,appVersion:'v4.51.67 RC',createdAt:new Date().toISOString(),updatedAt:new Date().toISOString(),status:'new',adminNote:''};
       await reportRequest(id,'PUT',report);
       try{
         await writeReportUserMirror(report);
@@ -26384,19 +26393,25 @@ function renderStats(){
     return b;
   }
 
-  function rebuildFromPlayers(){
-    var mineId=String(currentUserPlayerId||'');
-    var mineUid=currentUid();
+  function allChallengesFromPlayers(){
     var rows=[];
     Object.values(data.players||{}).forEach(function(sender){
       challengeObjects(sender?.matchChallengesSent).forEach(function(base){
         if(!base||!base.id)return;
-        if(String(base.senderUid||'')!==mineUid && String(base.recipientUid||'')!==mineUid &&
-           String(base.senderPlayerId||'')!==mineId && String(base.recipientPlayerId||'')!==mineId)return;
         var recipient=data.players?.[base.recipientPlayerId];
         var response=recipient?.matchChallengeResponses?.[base.id]||null;
         rows.push(mergedChallenge(base,response));
       });
+    });
+    return rows;
+  }
+
+  function rebuildFromPlayers(){
+    var mineId=String(currentUserPlayerId||'');
+    var mineUid=currentUid();
+    var rows=allChallengesFromPlayers().filter(function(ch){
+      return String(ch.senderUid||'')===mineUid || String(ch.recipientUid||'')===mineUid ||
+        String(ch.senderPlayerId||'')===mineId || String(ch.recipientPlayerId||'')===mineId;
     });
     rows.sort(function(a,b){return new Date(b.updatedAt||b.responseUpdatedAt||b.createdAt||0)-new Date(a.updatedAt||a.responseUpdatedAt||a.createdAt||0)});
     cache=rows;
@@ -26503,6 +26518,30 @@ function renderStats(){
     return rows[0]||null;
   }
 
+  function publicUpcomingChallenges(){
+    if(!cloudAuthenticated)return [];
+    var now=Date.now();
+    return allChallengesFromPlayers().filter(function(ch){
+      if(!ch||ch.status!=='accepted'||ch.isPublic!==true)return false;
+      if(ch.flexibleTime||!ch.date)return true;
+      var ts=new Date(ch.date+'T'+(ch.time||'23:59')).getTime();
+      return !Number.isFinite(ts)||ts>=now-(6*60*60*1000);
+    }).sort(function(a,b){
+      var ax=a.flexibleTime?'9999-12-31T23:59':String(a.date||'9999-12-31')+'T'+String(a.time||'23:59');
+      var bx=b.flexibleTime?'9999-12-31T23:59':String(b.date||'9999-12-31')+'T'+String(b.time||'23:59');
+      return ax.localeCompare(bx);
+    });
+  }
+
+  function publicProgramRow(ch,own){
+    return '<div class="modern-scheduled-program-row">'+
+      '<div><strong>'+esc2(playerNameById(ch.senderPlayerId))+' × '+esc2(playerNameById(ch.recipientPlayerId))+'</strong>'+
+      '<span>'+esc2(String(ch.discipline||'').toUpperCase())+' · Race to '+Number(ch.raceTo||1)+'</span></div>'+
+      '<div><strong>'+esc2(formatDate(ch))+'</strong><span>'+esc2(ch.venue||'Místo neuvedeno')+'</span></div>'+
+      (own?'<button class="btn primary" type="button" onclick="startScheduledMatch(\''+ch.id+'\')">▶ SPUSTIT</button>':'')+
+    '</div>';
+  }
+
   function renderHome(){
     var tileText=q('modernChallengeTileText'),badge=q('modernChallengeBadge'),panel=q('modernScheduledMatchPanel'),body=q('modernScheduledMatchBody'),title=q('modernScheduledMatchTitle');
     var incoming=cache.filter(function(ch){
@@ -26517,19 +26556,21 @@ function renderStats(){
         tileText.textContent=acceptedCount?(acceptedCount===1?'1 domluvený zápas':acceptedCount+' domluvené zápasy'):'Výzvy a domluvené zápasy';
       }
     }
-    var ch=nextAccepted();
+
+    var own=nextAccepted();
+    var pub=publicUpcomingChallenges().slice(0,4);
     if(!panel)return;
-    panel.classList.toggle('hidden',!ch);
-    if(!ch)return;
-    var opponent=playerNameById(otherPlayerId(ch));
-    if(title)title.textContent='Ty × '+opponent;
-    if(body)body.innerHTML='<div class="modern-scheduled-body">'+
-      '<div class="modern-scheduled-vs">'+esc2(playerNameById(ch.senderPlayerId))+' × '+esc2(playerNameById(ch.recipientPlayerId))+'</div>'+
-      '<div class="modern-scheduled-meta"><strong>'+esc2(String(ch.discipline||'').toUpperCase())+'</strong><span>Race to '+Number(ch.raceTo||1)+'</span></div>'+
-      '<div class="modern-scheduled-meta"><strong>'+esc2(formatDate(ch))+'</strong><span>Termín</span></div>'+
-      '<div class="modern-scheduled-meta"><strong>'+esc2(ch.venue||'Místo neuvedeno')+'</strong><span>Místo</span></div>'+
-      '<button class="btn primary" type="button" onclick="startScheduledMatch(\''+ch.id+'\')">▶ SPUSTIT</button>'+
-    '</div>';
+    panel.classList.toggle('hidden',!own&&!pub.length);
+    if(!own&&!pub.length)return;
+
+    if(own){
+      if(title)title.textContent='Tvůj nejbližší domluvený zápas';
+      var rest=pub.filter(function(x){return x.id!==own.id}).slice(0,3);
+      if(body)body.innerHTML=publicProgramRow(own,true)+(rest.length?'<div class="modern-scheduled-program-label">DALŠÍ VEŘEJNĚ DOMLUVENÉ ZÁPASY</div>'+rest.map(function(x){return publicProgramRow(x,false)}).join(''):'');
+    }else{
+      if(title)title.textContent='Nadcházející domluvené zápasy';
+      if(body)body.innerHTML=pub.map(function(x){return publicProgramRow(x,false)}).join('');
+    }
   }
 
   async function persist(ch){
