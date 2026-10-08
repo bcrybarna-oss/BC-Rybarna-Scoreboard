@@ -25,6 +25,16 @@
     body{min-height:100vh}
     button,input,select{font:inherit}
     button{cursor:pointer}
+
+    /* Critical CSS pro ostrou moderní hlavičku.
+       Je v prvním <style>, takže staré menu neproblikne ani před načtením moderního dashboardu. */
+    header .nav button[data-nav]:not([data-nav="home"]),
+    header .nav #currentTournamentNavBtn,
+    header .nav #adminNavBtn,
+    header .nav #loggedInUserBadge{
+      display:none!important;
+    }
+
     .app{width:100%;max-width:1180px;margin-left:auto;margin-right:auto;padding:18px;min-width:0}
     .brand{
       display:flex;align-items:center;justify-content:space-between;gap:16px;
