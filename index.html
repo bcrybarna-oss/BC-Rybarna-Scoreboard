@@ -522,7 +522,7 @@
     }
   
 
-/* === v4.51.56 RC • mobilní herní obrazovka portrait / landscape === */
+/* === v4.51.57 RC • mobilní herní obrazovka portrait / landscape === */
 @media (max-width:700px) and (orientation:portrait){
   #screen-match{margin-top:8px}
   #screen-match>.card{padding:10px;border-radius:14px}
@@ -1586,6 +1586,20 @@
   html[data-theme="light"] body.modern-test .modern-mobile-nav button span{color:#9a6d18}
 </style>
 
+<style id="poolcitadlo-theme-logo-switch">
+  .poolcitadlo-logo-light{display:none!important}
+  html[data-theme="light"] .poolcitadlo-logo-dark{display:none!important}
+  html[data-theme="light"] .poolcitadlo-logo-light{
+    display:block!important;
+    filter:drop-shadow(0 7px 14px rgba(70,52,18,.13));
+  }
+  html[data-theme="light"] .poolcitadlo-hero-logo-block{
+    background:transparent!important;
+    border:0!important;
+    box-shadow:none!important;
+  }
+</style>
+
 <style id="poolcitadlo-logo-mobile-fix">
 @media(max-width:900px){
   .modern-hero-copy.modern-hero-split{grid-template-columns:1fr!important}
@@ -1677,7 +1691,7 @@
           <span class="by">by</span>
           <span class="club">BC Rybárna</span>
         </div>
-        <small class="modern-brand-version">v4.51.56 RC</small>
+        <small class="modern-brand-version">v4.51.57 RC</small>
       </div>
     </div>
     <div class="nav">
@@ -1730,7 +1744,8 @@
     <div class="modern-hero">
       <div class="modern-hero-copy modern-hero-split">
         <div class="poolcitadlo-hero-logo-block" aria-label="Poolčítadlo by BC Rybárna">
-          <img class="poolcitadlo-exact-logo" src="assets/poolcitadlo-logo.webp" alt="Poolčítadlo by BC Rybárna">
+          <img class="poolcitadlo-exact-logo poolcitadlo-logo-dark" src="assets/poolcitadlo-logo.webp" alt="Poolčítadlo by BC Rybárna">
+          <img class="poolcitadlo-exact-logo poolcitadlo-logo-light" src="assets/poolcitadlo-logo-light.svg" alt="Poolčítadlo by BC Rybárna">
         </div>
         <div class="modern-hero-text-block">
           <div class="modern-kicker">POOL · STATISTIKY · TURNAJE · KOMUNITA</div>
@@ -2066,7 +2081,7 @@
         </div>
         <div class="subpanel" style="min-width:210px;text-align:center;margin:0">
           <div class="muted" style="font-size:10px;font-weight:950;letter-spacing:1px">AKTUÁLNÍ VERZE</div>
-          <div style="font-size:22px;font-weight:950;color:var(--gold2);margin-top:5px">v4.51.56 RC</div>
+          <div style="font-size:22px;font-weight:950;color:var(--gold2);margin-top:5px">v4.51.57 RC</div>
         </div>
       </div>
     </div>
@@ -5823,7 +5838,7 @@
     const btn=$('submitReportBtn');if(btn)btn.disabled=true;
     try{
       const id=uid(),p=currentUserPlayerId?data.players?.[currentUserPlayerId]:null;
-      const report={id,createdByUid:cloudUid,createdByPlayerId:currentUserPlayerId||'',createdByName:p?playerSelectionLabel(p):(cloudUserEmail||'Uživatel'),email:cloudUserEmail||'',type,area,description,appVersion:'v4.51.56 RC',createdAt:new Date().toISOString(),updatedAt:new Date().toISOString(),status:'new',adminNote:''};
+      const report={id,createdByUid:cloudUid,createdByPlayerId:currentUserPlayerId||'',createdByName:p?playerSelectionLabel(p):(cloudUserEmail||'Uživatel'),email:cloudUserEmail||'',type,area,description,appVersion:'v4.51.57 RC',createdAt:new Date().toISOString(),updatedAt:new Date().toISOString(),status:'new',adminNote:''};
       await reportRequest(id,'PUT',report);
       try{
         await writeReportUserMirror(report);
