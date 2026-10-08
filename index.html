@@ -1456,6 +1456,136 @@
   }
 </style>
 
+<style id="modern-light-mode-fix">
+  html[data-theme="light"] body.modern-test{
+    background:
+      radial-gradient(circle at 78% -10%,rgba(216,173,82,.10),transparent 28%),
+      radial-gradient(circle at 8% 28%,rgba(216,173,82,.05),transparent 26%),
+      linear-gradient(180deg,#f7f4eb 0,#ece8de 100%);
+    color:#1b1b1b;
+  }
+  html[data-theme="light"] body.modern-test header{
+    background:rgba(255,255,255,.94);
+    border-color:rgba(155,110,22,.22);
+    box-shadow:0 14px 36px rgba(64,52,24,.12);
+  }
+  html[data-theme="light"] body.modern-test .modern-brand-name .pool{color:#171717}
+  html[data-theme="light"] body.modern-test .modern-brand-name .by{color:#777064}
+  html[data-theme="light"] body.modern-test .modern-brand-name .club{color:#8f650f}
+  html[data-theme="light"] body.modern-test .modern-brand-version{color:#8b8374}
+
+  html[data-theme="light"] body.modern-test .modern-account-inline,
+  html[data-theme="light"] body.modern-test header .nav .modern-nav-icon-btn,
+  html[data-theme="light"] body.modern-test header .nav .modern-cloud-btn,
+  html[data-theme="light"] body.modern-test header .nav .modern-logout-btn{
+    background:rgba(255,255,255,.72);
+    color:#242424;
+    border-color:rgba(155,110,22,.24);
+  }
+  html[data-theme="light"] body.modern-test header .nav button:hover{
+    background:rgba(216,173,82,.11);
+    border-color:rgba(155,110,22,.34);
+  }
+
+  html[data-theme="light"] body.modern-test .modern-hero{
+    background:
+      radial-gradient(circle at 82% 15%,rgba(216,173,82,.16),transparent 30%),
+      linear-gradient(145deg,#fffdf7,#f1eadc);
+    border-color:rgba(155,110,22,.20);
+    box-shadow:0 18px 42px rgba(70,55,20,.10);
+  }
+  html[data-theme="light"] body.modern-test .modern-kicker{color:#9a6d18}
+  html[data-theme="light"] body.modern-test .modern-title{color:#171717}
+  html[data-theme="light"] body.modern-test .modern-title span{color:#9a6d18}
+  html[data-theme="light"] body.modern-test .modern-subtitle,
+  html[data-theme="light"] body.modern-test .modern-origin{color:#625d54}
+
+  html[data-theme="light"] body.modern-test .modern-metrics{
+    background:rgba(255,255,255,.64);
+    border-color:rgba(155,110,22,.18);
+  }
+  html[data-theme="light"] body.modern-test .modern-stat{
+    background:linear-gradient(180deg,#ffffff,#f5f0e5);
+    border-color:rgba(155,110,22,.18);
+  }
+  html[data-theme="light"] body.modern-test .modern-stat b,
+  html[data-theme="light"] body.modern-test .modern-section-title,
+  html[data-theme="light"] body.modern-test .modern-card h3,
+  html[data-theme="light"] body.modern-test .modern-leaderboard-head h3{
+    color:#181818;
+  }
+  html[data-theme="light"] body.modern-test .modern-stat span,
+  html[data-theme="light"] body.modern-test .modern-section-title .muted{color:#6d685f}
+
+  html[data-theme="light"] body.modern-test .modern-tile{
+    background:linear-gradient(180deg,#ffffff,#f4efe4);
+    color:#191919;
+    border-color:rgba(100,85,52,.16);
+    box-shadow:0 8px 24px rgba(54,43,18,.06);
+  }
+  html[data-theme="light"] body.modern-test .modern-tile:hover{
+    border-color:rgba(155,110,22,.42);
+    box-shadow:0 14px 30px rgba(65,50,18,.12);
+  }
+  html[data-theme="light"] body.modern-test .modern-tile small{color:#6c675e}
+  html[data-theme="light"] body.modern-test .modern-tile-icon,
+  html[data-theme="light"] body.modern-test .modern-rank-points,
+  html[data-theme="light"] body.modern-test .modern-leaderboard-head button{color:#9a6d18}
+  html[data-theme="light"] body.modern-test .modern-tile.primary{
+    background:linear-gradient(145deg,#e5c66e,#b48224 88%);
+    color:#171109;
+    border-color:#b48528;
+  }
+  html[data-theme="light"] body.modern-test .modern-tile.primary small,
+  html[data-theme="light"] body.modern-test .modern-tile.primary .modern-tile-icon{color:#21180b}
+
+  html[data-theme="light"] body.modern-test .modern-leaderboard,
+  html[data-theme="light"] body.modern-test .modern-card{
+    background:linear-gradient(180deg,#ffffff,#f5f0e5);
+    border-color:rgba(155,110,22,.19);
+    color:#1c1c1c;
+  }
+  html[data-theme="light"] body.modern-test .modern-list-row,
+  html[data-theme="light"] body.modern-test .modern-rank-row{border-bottom-color:rgba(74,65,45,.11)}
+  html[data-theme="light"] body.modern-test .modern-score{
+    color:#8a6114;
+    background:#fff9ea;
+    border-color:rgba(155,110,22,.28);
+  }
+  html[data-theme="light"] body.modern-test .modern-rank-no{
+    background:#eee8db;
+    color:#3a362e;
+  }
+
+  html[data-theme="light"] .tournament-hub-title{color:#171717}
+  html[data-theme="light"] .tournament-hub-title span{color:#9a6d18}
+  html[data-theme="light"] .tournament-hub-choice,
+  html[data-theme="light"] .tournament-public-card,
+  html[data-theme="light"] .tournament-detail-public{
+    background:linear-gradient(180deg,#ffffff,#f5f0e5);
+    color:#1b1b1b;
+    border-color:#d3c9b4;
+  }
+  html[data-theme="light"] .tournament-hub-choice small,
+  html[data-theme="light"] .tournament-public-description{color:#6b665d}
+  html[data-theme="light"] .tournament-public-meta span{
+    color:#5f584c;
+    border-color:#d7cfbf;
+    background:#faf7ef;
+  }
+  html[data-theme="light"] .tournament-public-form{background:#fffaf0!important}
+  html[data-theme="light"] .tournament-public-form textarea{background:#fff;color:#171717;border-color:#bbb3a3}
+  html[data-theme="light"] .tournament-calendar-empty{color:#716b60;border-color:#cfc6b5}
+
+  html[data-theme="light"] body.modern-test .modern-mobile-nav{
+    background:rgba(255,255,255,.96);
+    border-top-color:rgba(155,110,22,.22);
+    box-shadow:0 -8px 24px rgba(55,45,24,.08);
+  }
+  html[data-theme="light"] body.modern-test .modern-mobile-nav button{color:#686257}
+  html[data-theme="light"] body.modern-test .modern-mobile-nav button span{color:#9a6d18}
+</style>
+
 <style id="poolcitadlo-logo-mobile-fix">
 @media(max-width:900px){
   .modern-hero-copy.modern-hero-split{grid-template-columns:1fr!important}
