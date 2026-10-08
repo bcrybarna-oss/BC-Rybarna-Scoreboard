@@ -4419,7 +4419,10 @@ html[data-theme="light"] #leagueSchedule .history-item .muted{
 
   <section id="screen-stats" class="screen">
     <div class="card">
-      <h1 class="section-title">Statistický přehled hráčů</h1>
+      <div style="display:flex;justify-content:space-between;gap:12px;align-items:flex-start;flex-wrap:wrap">
+        <h1 class="section-title">Statistický přehled hráčů</h1>
+        <button id="statsPdfBtn" class="btn primary">PDF REPORT</button>
+      </div>
       <div id="statsView"></div>
 
       <div class="hr"></div>
@@ -4464,7 +4467,10 @@ html[data-theme="light"] #leagueSchedule .history-item .muted{
           <h1 class="section-title" style="margin-bottom:4px">Moje statistiky</h1>
           <div class="muted">Osobní přehled přihlášeného hráče z již uložených zápasů a statistik.</div>
         </div>
-        <button id="myStatsDevelopmentBtn" class="btn hidden">VÝVOJ HRÁČE</button>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end">
+          <button id="myStatsDevelopmentBtn" class="btn hidden">VÝVOJ HRÁČE</button>
+          <button id="myStatsPdfBtn" class="btn primary">PDF REPORT</button>
+        </div>
       </div>
       <div id="myStatsView" style="margin-top:14px"></div>
     </div>
@@ -23582,6 +23588,145 @@ function openMatchStatsCard(m,isCurrent=false){
       if(btn){btn.disabled=false;btn.textContent=oldLabel||'PDF REPORT';}
     }
   }
+
+  async function createStatisticsSectionPdfBlob(kind){
+    if(!window.html2canvas || !window.jspdf || !window.jspdf.jsPDF){
+      throw new Error('PDF knihovny se nenačetly. Zkontroluj internet a zkus to znovu.');
+    }
+
+    const host=$('pdfReportHost');
+    const isClub=kind==='stats';
+    const source=isClub?$('screen-stats'):$('myStatsView');
+    if(!source) throw new Error('Statistiky nejsou dostupné.');
+
+    const content=document.createElement('div');
+    if(isClub){
+      const main=$('statsView');
+      const h2h=$('h2hView');
+      const tournament=$('tournamentStatsPanel');
+      if(main) content.appendChild(main.cloneNode(true));
+
+      const h2h1=$('h2hPlayer1'),h2h2=$('h2hPlayer2'),h2hd=$('h2hDiscipline');
+      if(h2h && h2h.textContent.trim()){
+        const h=document.createElement('div');
+        h.innerHTML='<div style="margin-top:22px;border-top:1px solid #38383c;padding-top:16px">'+
+          '<div style="font-size:18px;font-weight:950;color:#f1d67a">VZÁJEMNÉ ZÁPASY</div>'+
+          '<div style="font-size:12px;color:#bcbcbc;margin-top:4px">'+
+          esc(h2h1?.selectedOptions?.[0]?.textContent||'')+' × '+esc(h2h2?.selectedOptions?.[0]?.textContent||'')+
+          ' • '+esc(h2hd?.selectedOptions?.[0]?.textContent||'')+'</div></div>';
+        content.appendChild(h);
+        content.appendChild(h2h.cloneNode(true));
+      }
+      if(tournament){
+        const tc=tournament.cloneNode(true);
+        tc.querySelectorAll('button,input,select').forEach(el=>el.remove());
+        content.appendChild(tc);
+      }
+    }else{
+      content.appendChild(source.cloneNode(true));
+    }
+
+    content.querySelectorAll('button,input,select').forEach(el=>el.remove());
+    content.querySelectorAll('[onclick]').forEach(el=>el.removeAttribute('onclick'));
+
+    const player=currentUserPlayerId?data.players?.[currentUserPlayerId]:null;
+    const discipline=typeof myStatsDiscipline!=='undefined'?myStatsDiscipline:'all';
+    const reportTitle=isClub?'STATISTICKÝ PŘEHLED HRÁČŮ':'MOJE STATISTIKY';
+    const reportSub=isClub
+      ? 'Souhrnný přehled hráčů, vzájemných zápasů a turnajových statistik'
+      : (playerDisplayName(player||{})||'Hráč')+' • '+(discipline==='all'?'CELKEM':String(discipline).toUpperCase());
+
+    const root=document.createElement('div');
+    root.id='sectionPdfReportRoot';
+    root.style.cssText='width:'+(isClub?'1380px':'794px')+';background:#09090b;color:#f4f4f4;padding:30px;font-family:Inter,Segoe UI,Arial,sans-serif;box-sizing:border-box;';
+    root.innerHTML=
+      '<div style="display:flex;justify-content:space-between;align-items:flex-end;gap:20px;border-bottom:2px solid #d4af37;padding-bottom:15px;margin-bottom:20px">'+
+        '<div><div style="font-size:12px;color:#d4af37;font-weight:950;letter-spacing:1.1px">POOLČÍTADLO • BC RYBÁRNA</div>'+
+        '<div style="font-size:30px;font-weight:950;margin-top:5px">'+esc(reportTitle)+'</div>'+
+        '<div style="font-size:13px;color:#bcbcbc;margin-top:5px">'+esc(reportSub)+'</div></div>'+
+        '<div style="font-size:11px;color:#8f8f93;text-align:right">Vygenerováno<br>'+esc(new Date().toLocaleString('cs-CZ'))+'</div>'+
+      '</div>';
+    root.appendChild(content);
+
+    root.querySelectorAll('.card,.subpanel').forEach(el=>{
+      el.style.background='#101012';
+      el.style.borderColor='#333338';
+      el.style.boxShadow='none';
+    });
+    root.querySelectorAll('.stats-table').forEach(table=>{
+      table.style.fontSize=isClub?'10px':'12px';
+      table.style.width='100%';
+    });
+    root.querySelectorAll('.stats-table th,.stats-table td').forEach(cell=>{
+      cell.style.padding=isClub?'6px 4px':'8px 6px';
+    });
+
+    host.style.width=isClub?'1380px':'794px';
+    host.innerHTML='';
+    host.appendChild(root);
+    await new Promise(resolve=>setTimeout(resolve,120));
+
+    const canvas=await html2canvas(root,{backgroundColor:'#09090b',scale:isClub?1.5:2,useCORS:true,logging:false});
+    const {jsPDF}=window.jspdf;
+    const orientation=isClub?'landscape':'portrait';
+    const pdf=new jsPDF({orientation,unit:'mm',format:'a4',compress:true});
+    const pageW=orientation==='landscape'?297:210;
+    const pageH=orientation==='landscape'?210:297;
+    const margin=7,usableW=pageW-margin*2,usableH=pageH-margin*2;
+    const slicePx=Math.floor(canvas.width*(usableH/usableW));
+    let y=0,page=0;
+    while(y<canvas.height){
+      const h=Math.min(slicePx,canvas.height-y);
+      const slice=document.createElement('canvas');
+      slice.width=canvas.width;slice.height=h;
+      slice.getContext('2d').drawImage(canvas,0,y,canvas.width,h,0,0,canvas.width,h);
+      const img=slice.toDataURL('image/jpeg',0.92);
+      const imgH=usableW*(h/canvas.width);
+      if(page>0)pdf.addPage();
+      pdf.addImage(img,'JPEG',margin,margin,usableW,imgH,undefined,'FAST');
+      y+=h;page++;
+    }
+    host.innerHTML='';
+    host.style.width='794px';
+    return pdf.output('blob');
+  }
+
+  async function generateStatisticsSectionPdf(kind){
+    const isClub=kind==='stats';
+    const btn=$(isClub?'statsPdfBtn':'myStatsPdfBtn');
+    const oldLabel=btn?.textContent||'PDF REPORT';
+    if(btn){btn.disabled=true;btn.textContent='GENERUJI PDF…';}
+    try{
+      if(!isClub && (!cloudAuthenticated || !currentUserPlayerId)){
+        toast('Pro vytvoření osobního PDF reportu musí být účet propojený s hráčským profilem.');
+        return;
+      }
+      const blob=await createStatisticsSectionPdfBlob(kind);
+      const player=currentUserPlayerId?data.players?.[currentUserPlayerId]:null;
+      const date=new Date().toISOString().slice(0,10);
+      const filename=isClub
+        ? 'Poolcitadlo_statistiky_'+date+'.pdf'
+        : 'Poolcitadlo_moje_statistiky_'+pdfSafeName(playerDisplayName(player||{})||'hrac')+'_'+date+'.pdf';
+      const file=new File([blob],filename,{type:'application/pdf'});
+      if(navigator.share && navigator.canShare && navigator.canShare({files:[file]})){
+        await navigator.share({title:isClub?'Poolčítadlo - statistiky':'Poolčítadlo - moje statistiky',text:'PDF report statistik',files:[file]});
+      }else{
+        const url=URL.createObjectURL(blob),a=document.createElement('a');
+        a.href=url;a.download=filename;document.body.appendChild(a);a.click();a.remove();
+        setTimeout(()=>URL.revokeObjectURL(url),5000);
+        toast('PDF report stažen.');
+      }
+    }catch(e){
+      if(e?.name==='AbortError')return;
+      console.warn('Statistics PDF report:',e);
+      toast(String(e?.message||'PDF se nepodařilo vytvořit.'));
+    }finally{
+      if(btn){btn.disabled=false;btn.textContent=oldLabel;}
+    }
+  }
+
+  $('statsPdfBtn')?.addEventListener('click',()=>generateStatisticsSectionPdf('stats'));
+  $('myStatsPdfBtn')?.addEventListener('click',()=>generateStatisticsSectionPdf('my-stats'));
 
   window.generateSavedMatchPdf=function(id){
     const m=data.matches.find(x=>x.id===id);
