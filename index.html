@@ -522,7 +522,7 @@
     }
   
 
-/* === v4.51.65 RC • mobilní herní obrazovka portrait / landscape === */
+/* === v4.51.66 RC • mobilní herní obrazovka portrait / landscape === */
 @media (max-width:700px) and (orientation:portrait){
   #screen-match{margin-top:8px}
   #screen-match>.card{padding:10px;border-radius:14px}
@@ -2176,7 +2176,7 @@ html[data-theme="light"] #leagueSchedule .history-item .muted{
           <span class="by">by</span>
           <span class="club">BC Rybárna</span>
         </div>
-        <small class="modern-brand-version">v4.51.65 RC</small>
+        <small class="modern-brand-version">v4.51.66 RC</small>
       </div>
     </div>
     <div class="nav">
@@ -2677,7 +2677,7 @@ html[data-theme="light"] #leagueSchedule .history-item .muted{
         </div>
         <div class="subpanel" style="min-width:210px;text-align:center;margin:0">
           <div class="muted" style="font-size:10px;font-weight:950;letter-spacing:1px">AKTUÁLNÍ VERZE</div>
-          <div style="font-size:22px;font-weight:950;color:var(--gold2);margin-top:5px">v4.51.65 RC</div>
+          <div style="font-size:22px;font-weight:950;color:var(--gold2);margin-top:5px">v4.51.66 RC</div>
         </div>
       </div>
     </div>
@@ -6459,7 +6459,7 @@ html[data-theme="light"] #leagueSchedule .history-item .muted{
     const btn=$('submitReportBtn');if(btn)btn.disabled=true;
     try{
       const id=uid(),p=currentUserPlayerId?data.players?.[currentUserPlayerId]:null;
-      const report={id,createdByUid:cloudUid,createdByPlayerId:currentUserPlayerId||'',createdByName:p?playerSelectionLabel(p):(cloudUserEmail||'Uživatel'),email:cloudUserEmail||'',type,area,description,appVersion:'v4.51.65 RC',createdAt:new Date().toISOString(),updatedAt:new Date().toISOString(),status:'new',adminNote:''};
+      const report={id,createdByUid:cloudUid,createdByPlayerId:currentUserPlayerId||'',createdByName:p?playerSelectionLabel(p):(cloudUserEmail||'Uživatel'),email:cloudUserEmail||'',type,area,description,appVersion:'v4.51.66 RC',createdAt:new Date().toISOString(),updatedAt:new Date().toISOString(),status:'new',adminNote:''};
       await reportRequest(id,'PUT',report);
       try{
         await writeReportUserMirror(report);
@@ -26367,35 +26367,55 @@ function renderStats(){
     }catch(e){}
   }
 
-  async function request(id,method,body){
-    if(!await ensureCloudToken())throw new Error('NO_AUTH');
-    var opts={method:method,headers:{'Content-Type':'application/json'},cache:'no-store'};
-    if(body!==undefined)opts.body=JSON.stringify(body);
-    var r=await fetch(cloudUrl('matchChallenges/'+encodeURIComponent(id)),opts);
-    if(!r.ok)throw new Error('MATCH_CHALLENGE_'+r.status);
-    return await r.json();
+  function challengeObjects(obj){
+    return obj&&typeof obj==='object'&&!Array.isArray(obj)?Object.values(obj).filter(Boolean):[];
+  }
+
+  function mergedChallenge(base,response){
+    var b=JSON.parse(JSON.stringify(base||{}));
+    if(!response)return b;
+    var bt=new Date(b.updatedAt||b.createdAt||0).getTime()||0;
+    var rt=new Date(response.updatedAt||0).getTime()||0;
+    if(rt<bt)return b;
+    ['status','flexibleTime','date','time','venue','note','counterByUid','acceptedAt','playedMatchId','playedAt'].forEach(function(k){
+      if(response[k]!==undefined)b[k]=response[k];
+    });
+    b.responseUpdatedAt=response.updatedAt||'';
+    return b;
+  }
+
+  function rebuildFromPlayers(){
+    var mineId=String(currentUserPlayerId||'');
+    var mineUid=currentUid();
+    var rows=[];
+    Object.values(data.players||{}).forEach(function(sender){
+      challengeObjects(sender?.matchChallengesSent).forEach(function(base){
+        if(!base||!base.id)return;
+        if(String(base.senderUid||'')!==mineUid && String(base.recipientUid||'')!==mineUid &&
+           String(base.senderPlayerId||'')!==mineId && String(base.recipientPlayerId||'')!==mineId)return;
+        var recipient=data.players?.[base.recipientPlayerId];
+        var response=recipient?.matchChallengeResponses?.[base.id]||null;
+        rows.push(mergedChallenge(base,response));
+      });
+    });
+    rows.sort(function(a,b){return new Date(b.updatedAt||b.responseUpdatedAt||b.createdAt||0)-new Date(a.updatedAt||a.responseUpdatedAt||a.createdAt||0)});
+    cache=rows;
+    cacheSave();
+    return cache;
   }
 
   async function load(force){
     cacheLoad();
     if(!cloudAuthenticated||!cloudUid){
-      render();
-      renderHome();
-      return cache;
+      render();renderHome();return cache;
     }
     try{
-      if(!await ensureCloudToken())throw new Error('NO_AUTH');
-      var r=await fetch(cloudUrl('matchChallenges')+'&t='+Date.now(),{cache:'no-store'});
-      if(!r.ok)throw new Error('MATCH_CHALLENGES_READ_'+r.status);
-      var raw=await r.json()||{};
-      cache=Object.values(raw).filter(function(ch){return ch&&isMine(ch)});
-      cache.sort(function(a,b){return new Date(b.updatedAt||b.createdAt||0)-new Date(a.updatedAt||a.createdAt||0)});
-      cacheSave();
+      if(force)await loadSecurePlayers();
+      rebuildFromPlayers();
     }catch(e){
       console.warn('Match challenges load:',e);
     }
-    render();
-    renderHome();
+    render();renderHome();
     return cache;
   }
 
@@ -26417,7 +26437,8 @@ function renderStats(){
   }
 
   function challengeCard(ch){
-    var incoming=ch.recipientUid===currentUid()&&(ch.status==='pending'||ch.status==='countered');
+    var incoming=(ch.status==='pending'&&ch.recipientUid===currentUid()) ||
+      (ch.status==='countered'&&ch.counterByUid&&ch.counterByUid!==currentUid()&&isMine(ch));
     var opponent=playerNameById(otherPlayerId(ch));
     var actions='';
     if(incoming){
@@ -26451,7 +26472,10 @@ function renderStats(){
     if(!ready)return;
     populateOpponents(q('matchChallengeOpponent')?.value||'');
 
-    var incoming=cache.filter(function(ch){return ch.recipientUid===currentUid()&&(ch.status==='pending'||ch.status==='countered')});
+    var incoming=cache.filter(function(ch){
+      return (ch.status==='pending'&&ch.recipientUid===currentUid()) ||
+        (ch.status==='countered'&&ch.counterByUid&&ch.counterByUid!==currentUid()&&isMine(ch));
+    });
     var accepted=cache.filter(function(ch){return ch.status==='accepted'}).sort(function(a,b){
       return String(a.date||'9999-12-31').localeCompare(String(b.date||'9999-12-31'))||String(a.time||'').localeCompare(String(b.time||''));
     });
@@ -26460,7 +26484,9 @@ function renderStats(){
     if(sum)sum.innerHTML=
       '<div class="match-challenge-stat"><strong>'+incoming.length+'</strong><span>Čeká na tebe</span></div>'+
       '<div class="match-challenge-stat"><strong>'+accepted.length+'</strong><span>Domluveno</span></div>'+
-      '<div class="match-challenge-stat"><strong>'+cache.filter(function(x){return x.senderUid===currentUid()&&(x.status==='pending'||x.status==='countered')}).length+'</strong><span>Čeká na soupeře</span></div>';
+      '<div class="match-challenge-stat"><strong>'+cache.filter(function(x){
+        return x.senderUid===currentUid() && (x.status==='pending'||(x.status==='countered'&&x.counterByUid===currentUid()));
+      }).length+'</strong><span>Čeká na soupeře</span></div>';
     if(q('matchChallengeIncomingCount'))q('matchChallengeIncomingCount').textContent=String(incoming.length);
     if(q('matchChallengeIncomingList'))q('matchChallengeIncomingList').innerHTML=incoming.length?incoming.map(challengeCard).join(''):'<div class="empty">Žádná nová výzva.</div>';
     if(q('matchChallengeAcceptedList'))q('matchChallengeAcceptedList').innerHTML=accepted.length?accepted.map(challengeCard).join(''):'<div class="empty">Nemáš žádný domluvený zápas.</div>';
@@ -26479,7 +26505,10 @@ function renderStats(){
 
   function renderHome(){
     var tileText=q('modernChallengeTileText'),badge=q('modernChallengeBadge'),panel=q('modernScheduledMatchPanel'),body=q('modernScheduledMatchBody'),title=q('modernScheduledMatchTitle');
-    var incoming=cache.filter(function(ch){return ch.recipientUid===currentUid()&&(ch.status==='pending'||ch.status==='countered')}).length;
+    var incoming=cache.filter(function(ch){
+      return (ch.status==='pending'&&ch.recipientUid===currentUid()) ||
+        (ch.status==='countered'&&ch.counterByUid&&ch.counterByUid!==currentUid()&&isMine(ch));
+    }).length;
     if(badge){badge.textContent=String(incoming);badge.classList.toggle('hidden',!incoming);}
     if(tileText){
       if(incoming)tileText.textContent=incoming===1?'1 nová příchozí výzva':incoming+' nové příchozí výzvy';
@@ -26504,13 +26533,33 @@ function renderStats(){
   }
 
   async function persist(ch){
-    ch.updatedAt=nowIso();
-    await request(ch.id,'PUT',ch);
-    var i=cache.findIndex(function(x){return x.id===ch.id});
-    if(i>=0)cache[i]=ch;else cache.unshift(ch);
-    cacheSave();render();renderHome();
+    if(!ch||!ch.id)throw new Error('CHALLENGE_INVALID');
+    var me=myPlayer();
+    if(!me||!currentUid())throw new Error('NO_LINKED_PLAYER');
+    var stamp=nowIso();
+
+    if(ch.senderUid===currentUid()){
+      me.matchChallengesSent=(me.matchChallengesSent&&typeof me.matchChallengesSent==='object'&&!Array.isArray(me.matchChallengesSent))?me.matchChallengesSent:{};
+      var copy=JSON.parse(JSON.stringify(ch));
+      copy.updatedAt=stamp;
+      delete copy.responseUpdatedAt;
+      me.matchChallengesSent[ch.id]=copy;
+    }else if(ch.recipientUid===currentUid()){
+      me.matchChallengeResponses=(me.matchChallengeResponses&&typeof me.matchChallengeResponses==='object'&&!Array.isArray(me.matchChallengeResponses))?me.matchChallengeResponses:{};
+      me.matchChallengeResponses[ch.id]={
+        id:ch.id,status:ch.status,flexibleTime:!!ch.flexibleTime,date:ch.date||'',time:ch.time||'',
+        venue:ch.venue||'',note:ch.note||'',counterByUid:ch.counterByUid||'',acceptedAt:ch.acceptedAt||'',
+        playedMatchId:ch.playedMatchId||'',playedAt:ch.playedAt||'',updatedAt:stamp
+      };
+    }else{
+      throw new Error('NOT_PARTICIPANT');
+    }
+
+    await saveSecurePlayer(me);
+    rebuildFromPlayers();
+    render();renderHome();
     try{window.renderModernHome&&window.renderModernHome()}catch(e){}
-    return ch;
+    return cache.find(function(x){return x.id===ch.id})||ch;
   }
 
   window.sendMatchChallenge=async function(){
@@ -26541,20 +26590,25 @@ function renderStats(){
     }catch(e){
       console.error(e);
       var msg=String(e?.message||e);
-      if(msg.includes('401')||msg.includes('403'))toast('Cloud zatím nepovoluje ukládání výzev. Je potřeba doplnit pravidla databáze.');
-      else toast('Výzvu se nepodařilo uložit.');
+      toast(msg.includes('401')||msg.includes('403')?'Nemáš oprávnění uložit výzvu do svého profilu. Zkus se znovu přihlásit.':'Výzvu se nepodařilo uložit.');
     }finally{if(btn)btn.disabled=false;}
   };
 
+  function canAnswerChallenge(ch){
+    if(!ch||!isMine(ch))return false;
+    if(ch.status==='pending')return ch.recipientUid===currentUid();
+    if(ch.status==='countered')return !!ch.counterByUid&&ch.counterByUid!==currentUid();
+    return false;
+  }
   window.acceptMatchChallenge=async function(id){
-    var ch=cache.find(function(x){return x.id===id});if(!ch||ch.recipientUid!==currentUid())return;
+    var ch=cache.find(function(x){return x.id===id});if(!canAnswerChallenge(ch))return;
     ch.status='accepted';ch.acceptedAt=nowIso();ch.counterByUid='';
-    try{await persist(ch);toast('Zápas je domluvený.');}catch(e){toast('Výzvu se nepodařilo přijmout.');}
+    try{await persist(ch);toast('Zápas je domluvený.');}catch(e){console.error(e);toast('Výzvu se nepodařilo přijmout.');}
   };
   window.declineMatchChallenge=async function(id){
-    var ch=cache.find(function(x){return x.id===id});if(!ch||ch.recipientUid!==currentUid())return;
+    var ch=cache.find(function(x){return x.id===id});if(!canAnswerChallenge(ch))return;
     ch.status='declined';
-    try{await persist(ch);toast('Výzva byla odmítnuta.');}catch(e){toast('Změnu se nepodařilo uložit.');}
+    try{await persist(ch);toast('Výzva byla odmítnuta.');}catch(e){console.error(e);toast('Změnu se nepodařilo uložit.');}
   };
   window.cancelMatchChallenge=async function(id){
     var ch=cache.find(function(x){return x.id===id});if(!ch||!isMine(ch))return;
@@ -26633,7 +26687,10 @@ function renderStats(){
   q('profileChallengeBtn')?.addEventListener('click',function(){window.openChallengeForPlayer(this.dataset.playerId||'')});
 
   cacheLoad();renderHome();
-  setTimeout(function(){load(false)},1200);
+  setTimeout(function(){
+    if(cloudAuthenticated)loadSecurePlayers().then(function(){load(false)}).catch(function(){load(false)});
+    else load(false);
+  },1200);
   setInterval(function(){if(!document.hidden&&cloudAuthenticated)load(false)},30000);
 })();
 
