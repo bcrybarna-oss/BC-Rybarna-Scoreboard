@@ -5515,6 +5515,10 @@ html[data-theme="light"] #leagueSchedule .history-item .muted{
   const CLOUD_LOCAL_TS_KEY = 'bc_rybarna_cloud_local_updated_at';
   const CLOUD_REFRESH_KEY = 'bc_rybarna_cloud_refresh_token';
   const CLOUD_EMAIL_KEY = 'bc_rybarna_cloud_email';
+  // SYSTEM ADMIN session se z bezpečnostních důvodů neukládá trvale.
+  // sessionStorage přežije reload stejné karty, ale ne zavření prohlížeče/karty.
+  const CLOUD_ADMIN_SESSION_REFRESH_KEY = 'bc_rybarna_admin_session_refresh_token';
+  const CLOUD_ADMIN_SESSION_EMAIL_KEY = 'bc_rybarna_admin_session_email';
   const CLOUD_BACKUP_KEY = 'bc_rybarna_local_backup_v1';
   const LOCAL_ACTIVE_MATCH_KEY = 'bc_rybarna_device_active_match_v1';
   const LOCAL_ACTIVE_MATCHES_KEY = 'bc_rybarna_device_active_matches_v2';
@@ -6753,7 +6757,9 @@ html[data-theme="light"] #leagueSchedule .history-item .muted{
     if(forceRefresh){
       let refresh=cloudRefreshToken;
       if(!refresh){
-        try{refresh=localStorage.getItem(CLOUD_REFRESH_KEY)||'';}catch(e){}
+        const saved=persistedCloudSession();
+        refresh=saved.refresh||'';
+        if(!cloudUserEmail)cloudUserEmail=saved.email||'';
       }
       if(!refresh)return '';
       await firebaseRefreshAuth(refresh);
@@ -6860,6 +6866,58 @@ html[data-theme="light"] #leagueSchedule .history-item .muted{
     return true;
   }
 
+  function isMainAdminEmail(email){
+    return String(email||'').trim().toLowerCase()===MAIN_ADMIN_EMAIL;
+  }
+
+  function persistCloudSession(email,refreshToken,forceSessionOnly=false){
+    const sessionOnly=forceSessionOnly || currentUserRole==='system_admin' || isMainAdminEmail(email);
+    try{
+      if(sessionOnly){
+        sessionStorage.setItem(CLOUD_ADMIN_SESSION_REFRESH_KEY,refreshToken||'');
+        sessionStorage.setItem(CLOUD_ADMIN_SESSION_EMAIL_KEY,email||'');
+        localStorage.removeItem(CLOUD_REFRESH_KEY);
+        localStorage.removeItem(CLOUD_EMAIL_KEY);
+      }else{
+        localStorage.setItem(CLOUD_REFRESH_KEY,refreshToken||'');
+        localStorage.setItem(CLOUD_EMAIL_KEY,email||'');
+        sessionStorage.removeItem(CLOUD_ADMIN_SESSION_REFRESH_KEY);
+        sessionStorage.removeItem(CLOUD_ADMIN_SESSION_EMAIL_KEY);
+      }
+    }catch(e){}
+  }
+
+  function persistedCloudSession(){
+    let sessionEmail='',sessionRefresh='',localEmail='',localRefresh='';
+    try{
+      sessionEmail=sessionStorage.getItem(CLOUD_ADMIN_SESSION_EMAIL_KEY)||'';
+      sessionRefresh=sessionStorage.getItem(CLOUD_ADMIN_SESSION_REFRESH_KEY)||'';
+      localEmail=localStorage.getItem(CLOUD_EMAIL_KEY)||'';
+      localRefresh=localStorage.getItem(CLOUD_REFRESH_KEY)||'';
+    }catch(e){}
+
+    if(sessionRefresh){
+      return {email:sessionEmail,refresh:sessionRefresh,sessionOnly:true};
+    }
+
+    // Migrace starého chování: hlavní admin nesmí být automaticky obnoven
+    // z dlouhodobého localStorage tokenu.
+    if(localRefresh && isMainAdminEmail(localEmail)){
+      try{
+        localStorage.removeItem(CLOUD_REFRESH_KEY);
+        localStorage.removeItem(CLOUD_EMAIL_KEY);
+      }catch(e){}
+      return {email:localEmail,refresh:'',sessionOnly:true,expiredAdminPersistence:true};
+    }
+
+    return {email:localEmail,refresh:localRefresh,sessionOnly:false};
+  }
+
+  function enforceAdminSessionPersistence(){
+    if(currentUserRole!=='system_admin' || !cloudRefreshToken)return;
+    persistCloudSession(cloudUserEmail,cloudRefreshToken,true);
+  }
+
   async function firebaseRegister(email,password){
     const r=await fetch(
       'https://identitytoolkit.googleapis.com/v1/accounts:signUp?key='+encodeURIComponent(FIREBASE_API_KEY),
@@ -6879,10 +6937,7 @@ html[data-theme="light"] #leagueSchedule .history-item .muted{
     cloudTokenExpiresAt=Date.now()+(Number(j.expiresIn||3600)*1000)-60000;
     cloudAuthenticated=true;
 
-    try{
-      localStorage.setItem(CLOUD_REFRESH_KEY,cloudRefreshToken);
-      localStorage.setItem(CLOUD_EMAIL_KEY,email);
-    }catch(e){}
+    persistCloudSession(email,cloudRefreshToken,isMainAdminEmail(email));
 
     // Do Realtime Database ještě nezapisujeme. Bezpečnostní Rules povolují
     // zápisy až po ověření e-mailu; uživatelský záznam vznikne po ověření.
@@ -6911,10 +6966,7 @@ html[data-theme="light"] #leagueSchedule .history-item .muted{
     cloudAuthenticated=true;
     cloudLastError='';
 
-    try{
-      localStorage.setItem(CLOUD_REFRESH_KEY,cloudRefreshToken);
-      localStorage.setItem(CLOUD_EMAIL_KEY,email);
-    }catch(e){}
+    persistCloudSession(email,cloudRefreshToken,isMainAdminEmail(email));
     setCloudStatus('ONLINE • AUTO',true);
     startCloudAutoSync();
     return true;
@@ -6940,7 +6992,7 @@ html[data-theme="light"] #leagueSchedule .history-item .muted{
     cloudTokenExpiresAt=Date.now()+(Number(j.expires_in||3600)*1000)-60000;
     cloudAuthenticated=true;
     cloudLastError='';
-    try{ localStorage.setItem(CLOUD_REFRESH_KEY,cloudRefreshToken); }catch(e){}
+    persistCloudSession(cloudUserEmail,cloudRefreshToken,currentUserRole==='system_admin' || isMainAdminEmail(cloudUserEmail));
     setCloudStatus('ONLINE • AUTO',true);
     startCloudAutoSync();
     return true;
@@ -7828,6 +7880,8 @@ html[data-theme="light"] #leagueSchedule .history-item .muted{
         currentUserPlayerId=rec.playerId||null;
         currentUserClubId=rec.clubId||null;
         if(!cloudUserEmail) cloudUserEmail=rec.email||'';
+        // Jakmile se potvrdí role SYSTEM ADMIN, token se smí držet jen v sessionStorage.
+        enforceAdminSessionPersistence();
       }
       refreshAccountUI();
       return rec;
@@ -7921,7 +7975,9 @@ html[data-theme="light"] #leagueSchedule .history-item .muted{
 
     let refresh=cloudRefreshToken;
     if(!refresh){
-      try{refresh=localStorage.getItem(CLOUD_REFRESH_KEY)||'';}catch(e){}
+      const saved=persistedCloudSession();
+      refresh=saved.refresh||'';
+      if(!cloudUserEmail)cloudUserEmail=saved.email||'';
     }
     if(!refresh) return false;
 
@@ -7930,7 +7986,12 @@ html[data-theme="light"] #leagueSchedule .history-item .muted{
       return true;
     }catch(e){
       cloudRefreshToken='';
-      try{localStorage.removeItem(CLOUD_REFRESH_KEY);}catch(err){}
+      try{
+        localStorage.removeItem(CLOUD_REFRESH_KEY);
+        localStorage.removeItem(CLOUD_EMAIL_KEY);
+        sessionStorage.removeItem(CLOUD_ADMIN_SESSION_REFRESH_KEY);
+        sessionStorage.removeItem(CLOUD_ADMIN_SESSION_EMAIL_KEY);
+      }catch(err){}
       clearRuntimeCloudIdentity();
       setCloudStatus('OFFLINE',false);
       return false;
@@ -8194,14 +8255,15 @@ html[data-theme="light"] #leagueSchedule .history-item .muted{
   async function autoCloudInit(){
     setCloudStatus('PŘIPOJUJI…',false);
 
-    let savedEmail='';
-    let savedRefresh='';
-    try{
-      savedEmail=localStorage.getItem(CLOUD_EMAIL_KEY)||'';
-      savedRefresh=localStorage.getItem(CLOUD_REFRESH_KEY)||'';
-    }catch(e){}
+    const persisted=persistedCloudSession();
+    let savedEmail=persisted.email||'';
+    let savedRefresh=persisted.refresh||'';
 
     $('cloudEmail').value=savedEmail;
+
+    if(persisted.expiredAdminPersistence){
+      $('cloudLoginMessage').textContent='Admin účet byl z bezpečnostních důvodů odhlášen. Přihlas se znovu.';
+    }
 
     if(savedRefresh){
       try{
@@ -8339,6 +8401,8 @@ html[data-theme="light"] #leagueSchedule .history-item .muted{
     try{
       localStorage.removeItem(CLOUD_REFRESH_KEY);
       localStorage.removeItem(CLOUD_EMAIL_KEY);
+      sessionStorage.removeItem(CLOUD_ADMIN_SESSION_REFRESH_KEY);
+      sessionStorage.removeItem(CLOUD_ADMIN_SESSION_EMAIL_KEY);
     }catch(e){}
 
     setCloudStatus('OFFLINE',false);
