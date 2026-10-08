@@ -1029,6 +1029,11 @@
   body.modern-test header .nav button{
     border-radius:12px;border-color:transparent;background:transparent;padding:10px 12px;
   }
+  body.modern-test header .nav .modern-nav-icon-btn,
+  body.modern-test header .nav .modern-cloud-btn,
+  body.modern-test header .nav .modern-logout-btn{
+    border-color:rgba(216,173,82,.22);
+  }
   body.modern-test header .nav button:hover{
     background:rgba(216,173,82,.075);border-color:rgba(216,173,82,.18);
   }
@@ -1038,30 +1043,70 @@
   body.modern-test header .nav #loggedInUserBadge{display:none!important}
 
 
+  .modern-account-inline,
+  body.modern-test header .nav .modern-nav-icon-btn,
+  body.modern-test header .nav .modern-cloud-btn,
+  body.modern-test header .nav .modern-logout-btn{
+    min-height:38px;
+    border:1px solid rgba(216,173,82,.22);
+    background:rgba(255,255,255,.025);
+    border-radius:12px;
+    color:#f2f2f2;
+  }
+  body.modern-test header .nav .modern-nav-icon-btn,
+  body.modern-test header .nav .modern-cloud-btn{
+    width:40px;padding:0;display:grid;place-items:center;flex:0 0 40px;
+  }
+  body.modern-test header .nav .modern-nav-icon-btn svg,
+  body.modern-test header .nav .modern-logout-btn svg{
+    width:17px;height:17px;fill:none;stroke:currentColor;stroke-width:1.8;
+    stroke-linecap:round;stroke-linejoin:round;
+  }
+  body.modern-test header .nav .modern-nav-icon-btn:hover,
+  body.modern-test header .nav .modern-cloud-btn:hover,
+  body.modern-test header .nav .modern-logout-btn:hover{
+    border-color:rgba(216,173,82,.5);
+    background:rgba(216,173,82,.075);
+  }
   .modern-account-inline{
-    display:flex;align-items:center;gap:9px;
-    min-width:0;max-width:320px;
-    padding:7px 10px;
-    border:1px solid rgba(216,173,82,.28);
-    border-radius:13px;
-    background:linear-gradient(180deg,rgba(216,173,82,.08),rgba(255,255,255,.015));
+    display:flex;align-items:center;gap:8px;
+    min-width:0;max-width:290px;
+    padding:0 10px;
   }
-  .modern-account-avatar{
-    width:29px;height:29px;border-radius:50%;display:grid;place-items:center;
-    color:#d8ad52;background:#0b0b0b;border:1px solid rgba(216,173,82,.42);
-    font-size:10px;flex:0 0 auto;
+  .modern-account-user-icon{
+    width:22px;height:22px;display:grid;place-items:center;flex:0 0 22px;color:#d8ad52;
   }
-  .modern-account-copy{display:flex;flex-direction:column;gap:1px;min-width:0;flex:1}
-  .modern-account-label{
-    color:#8e8777;font-size:8px;font-weight:900;letter-spacing:.12em;
+  .modern-account-user-icon svg{
+    width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:1.7;
+    stroke-linecap:round;stroke-linejoin:round;
   }
   #modernLoggedInUserBadge{
-    color:#f3f3f3;font-size:11px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+    color:#f3f3f3;font-size:11px;font-weight:850;
+    white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0;
   }
   .modern-account-role{
-    flex:0 0 auto;padding:4px 6px;border-radius:999px;
-    border:1px solid rgba(216,173,82,.3);color:#e2c875;
-    font-size:8px;font-weight:950;letter-spacing:.05em;
+    flex:0 0 auto;padding-left:8px;border-left:1px solid rgba(216,173,82,.22);
+    color:#d9bd6d;font-size:8px;font-weight:950;letter-spacing:.05em;
+  }
+  body.modern-test header .nav .modern-cloud-btn{
+    position:relative;
+  }
+  .modern-cloud-dot{
+    width:10px;height:10px;border-radius:50%;
+    background:#777;box-shadow:0 0 0 4px rgba(255,255,255,.025);
+    transition:.2s ease;
+  }
+  .modern-cloud-dot.online{
+    background:#47d16c;
+    box-shadow:0 0 0 4px rgba(71,209,108,.09),0 0 10px rgba(71,209,108,.55);
+  }
+  .modern-cloud-dot.busy{
+    background:#d8ad52;
+    box-shadow:0 0 0 4px rgba(216,173,82,.09),0 0 10px rgba(216,173,82,.4);
+  }
+  body.modern-test header .nav .modern-logout-btn{
+    display:flex;align-items:center;gap:7px;padding:0 11px;
+    font-size:10px;font-weight:850;
   }
   body.modern-test .modern-home{max-width:1500px;margin:0 auto;padding:20px 18px 94px}
   .modern-hero{
@@ -1264,13 +1309,14 @@
       gap:6px;
     }
     body.modern-test header .nav > *{display:none!important}
+    body.modern-test header .nav .modern-home-btn{display:grid!important}
     body.modern-test header .nav #modernAccountInline,
     body.modern-test header .nav #cloudStatusBtn,
     body.modern-test header .nav #logoutBtn{display:flex!important}
     body.modern-test header .nav #cloudStatusBtn,
     body.modern-test header .nav #logoutBtn{
       align-items:center;justify-content:center;
-      padding:8px 9px;font-size:10px;
+      padding:0 9px;font-size:10px;
     }
     .modern-account-inline{max-width:none;flex:1}
     #modernLoggedInUserBadge{font-size:11px}
@@ -1416,7 +1462,13 @@
       </div>
     </div>
     <div class="nav">
-      <button data-nav="home">Domů</button>\n      <button id="backToMatchNav" class="hidden">← ZPĚT NA SKÓRE</button>
+      <button data-nav="home" class="modern-nav-icon-btn modern-home-btn" type="button" title="Domů" aria-label="Domů">
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M3.5 10.5 12 3l8.5 7.5"></path>
+          <path d="M5.5 9.5V21h5v-6h3v6h5V9.5"></path>
+        </svg>
+      </button>
+      <button id="backToMatchNav" class="hidden">← ZPĚT NA SKÓRE</button>
       <button data-nav="setup">Nový zápas</button>
       <button data-nav="tournament">Nový turnaj</button>
       <button data-nav="league">Liga Sever</button>
@@ -1431,16 +1483,27 @@
       <button data-nav="about">O aplikaci</button>
       <button id="adminNavBtn" data-nav="admin" class="hidden">Admin</button>
       <div id="loggedInUserBadge" class="badge gold" style="max-width:360px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="">Přihlášen: —</div>
-      <div id="modernAccountInline" class="modern-account-inline" aria-live="polite">
-        <div class="modern-account-avatar">●</div>
-        <div class="modern-account-copy">
-          <span class="modern-account-label">PŘIHLÁŠEN</span>
-          <strong id="modernLoggedInUserBadge">Načítám účet…</strong>
-        </div>
+      <div id="modernAccountInline" class="modern-account-inline" aria-live="polite" title="Přihlášený účet">
+        <span class="modern-account-user-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24">
+            <circle cx="12" cy="8" r="3.25"></circle>
+            <path d="M5.5 20c.7-4.1 3-6.1 6.5-6.1s5.8 2 6.5 6.1"></path>
+          </svg>
+        </span>
+        <strong id="modernLoggedInUserBadge">Načítám účet…</strong>
         <span id="modernAccountRole" class="modern-account-role">—</span>
       </div>
-      <button id="cloudStatusBtn" type="button">☁ CLOUD</button>
-      <button id="logoutBtn" type="button">ODHLÁSIT</button>
+      <button id="cloudStatusBtn" class="modern-cloud-btn" type="button" title="Stav cloudu" aria-label="Stav cloudu">
+        <span id="modernCloudDot" class="modern-cloud-dot"></span>
+      </button>
+      <button id="logoutBtn" class="modern-logout-btn" type="button" title="Odhlásit">
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M10 5H5v14h5"></path>
+          <path d="M13 8l4 4-4 4"></path>
+          <path d="M8 12h9"></path>
+        </svg>
+        <span>Odhlásit</span>
+      </button>
     </div>
   </header>
 <section id="screen-home" class="screen active">
@@ -5357,10 +5420,17 @@
 
   function setCloudStatus(label,ok=false){
     const b=$('cloudStatusBtn');
+    const dot=$('modernCloudDot');
+    const raw=String(label||'').trim();
+    const upper=raw.toUpperCase();
     if(b){
-      b.textContent='☁ '+label;
-      b.style.borderColor=ok?'rgba(212,175,55,.75)':'';
-      b.style.color=ok?'var(--gold2)':'';
+      b.title='Cloud: '+(raw||'stav neznámý');
+      b.setAttribute('aria-label','Cloud: '+(raw||'stav neznámý'));
+    }
+    if(dot){
+      dot.classList.remove('online','busy');
+      if(ok || upper.includes('ONLINE') || upper.includes('AUTO')) dot.classList.add('online');
+      else if(upper.includes('PŘIPOJUJI') || upper.includes('SYNC') || upper.includes('NAČÍT')) dot.classList.add('busy');
     }
     try{updateLoggedInUserBadge();}catch(e){}
   }
