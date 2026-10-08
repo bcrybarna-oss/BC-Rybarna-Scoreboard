@@ -1447,6 +1447,32 @@
   }
 </style>
 
+
+<style id="league-hub-styles">
+  .league-hub-grid{
+    display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;
+  }
+  .league-hub-card{
+    min-height:155px;border:1px solid rgba(216,173,82,.3);
+    border-radius:18px;padding:20px;text-align:left;color:#fff;
+    background:linear-gradient(145deg,rgba(216,173,82,.11),#0d0d0d 68%);
+    display:flex;flex-direction:column;justify-content:space-between;
+    cursor:pointer;transition:.18s ease;
+  }
+  .league-hub-card:hover{
+    transform:translateY(-2px);
+    border-color:rgba(216,173,82,.58);
+    box-shadow:0 14px 34px rgba(0,0,0,.28);
+  }
+  .league-hub-icon{font-size:30px;color:var(--gold2)}
+  .league-hub-card strong{display:block;font-size:20px;margin-top:18px}
+  .league-hub-card small{display:block;color:#aaa;font-size:12px;line-height:1.5;margin-top:6px}
+  @media(max-width:700px){
+    .league-hub-grid{grid-template-columns:1fr}
+    .league-hub-card{min-height:125px}
+  }
+</style>
+
 </head>
 <body>
 <div class="app">
@@ -1552,7 +1578,7 @@
     <div class="modern-more-grid">
       <button id="modernResumeTile" class="modern-tile" type="button"><span class="modern-tile-icon">▶</span><span><strong>Pokračovat</strong><small>Vrátit se k rozehranému zápasu</small></span></button>
       <button class="modern-tile" data-nav="live"><span class="modern-tile-icon">◉</span><span><strong>Livescore</strong><small>Živé zápasy a stream</small></span></button>
-      <button class="modern-tile" data-nav="results"><span class="modern-tile-icon">☷</span><span><strong>Výsledky</strong><small>Zápasy, turnaje, série a Liga Sever</small></span></button>
+      <button class="modern-tile" data-nav="results"><span class="modern-tile-icon">☷</span><span><strong>Výsledky</strong><small>Zápasy, turnaje, série a ligové soutěže</small></span></button>
       <button class="modern-tile" data-nav="my-stats"><span class="modern-tile-icon">◎</span><span><strong>Moje statistiky</strong><small>Osobní přehled výkonu</small></span></button>
       <button class="modern-tile" data-nav="support"><span class="modern-tile-icon">?</span><span><strong>Nápověda a podpora</strong><small>Návod, hlášení problémů a informace o projektu</small></span></button>
       <button id="modernAdminTile" class="modern-tile hidden" data-nav="admin"><span class="modern-tile-icon">⚙</span><span><strong>Administrace</strong><small>Správa systému a uživatelů</small></span></button>
@@ -2358,7 +2384,10 @@
           <h1 class="section-title" style="margin-top:3px">POOL LIGA SEVER 2026</h1>
           <div class="muted">Termíny jsou na dohodě týmů. Rozlosování určuje pouze domácí / hosty.</div>
         </div>
-        <button id="leagueRefreshBtn" class="btn">↻ OBNOVIT</button>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <button class="btn" data-nav="results-leagues">← LIGY</button>
+          <button id="leagueRefreshBtn" class="btn">↻ OBNOVIT</button>
+        </div>
       </div>
 
       <div id="leagueCloudStatus" class="subpanel" style="margin-top:12px">
@@ -3248,10 +3277,32 @@
           SÉRIE TURNAJŮ
           <span class="muted">Průběžná i konečná pořadí sérií</span>
         </button>
-        <button class="btn big results-hub-card" data-nav="league">
+        <button class="btn big results-hub-card" data-nav="results-leagues">
           <span class="results-hub-icon">◈</span>
-          LIGA SEVER
-          <span class="muted">Tabulka, výsledky a statistiky ligy</span>
+          LIGY
+          <span class="muted">Ligové soutěže, tabulky a výsledky</span>
+        </button>
+      </div>
+    </div>
+  </section>
+
+  <section id="screen-results-leagues" class="screen">
+    <div class="card">
+      <div style="display:flex;justify-content:space-between;gap:10px;align-items:center;flex-wrap:wrap">
+        <div>
+          <h1 class="section-title" style="margin-bottom:4px">LIGY</h1>
+          <div class="muted">Vyber ligovou soutěž.</div>
+        </div>
+        <button class="btn resultsBackBtn">← VÝSLEDKY</button>
+      </div>
+
+      <div class="league-hub-grid" style="margin-top:16px">
+        <button class="league-hub-card" data-nav="league">
+          <span class="league-hub-icon">◈</span>
+          <span>
+            <strong>Liga Sever</strong>
+            <small>Tabulka, výsledky utkání, statistiky hráčů a správa soutěže.</small>
+          </span>
         </button>
       </div>
     </div>
