@@ -1229,6 +1229,38 @@
   .modern-more-grid .modern-tile strong{font-size:15px;margin-top:10px}
   .modern-more-grid .modern-tile small{font-size:11px}
 
+  /* LIVE indikátor na dlaždici Livescore na hlavní stránce */
+  #modernLiveTile .modern-live-light{
+    position:absolute;
+    top:14px;
+    right:14px;
+    width:12px;
+    height:12px;
+    border-radius:50%;
+    background:#e23b3b;
+    border:2px solid rgba(255,255,255,.9);
+    box-shadow:0 0 0 0 rgba(226,59,59,.72),0 0 14px rgba(226,59,59,.85);
+    opacity:0;
+    transform:scale(.78);
+    pointer-events:none;
+    transition:opacity .2s ease,transform .2s ease;
+    z-index:3;
+  }
+  #modernLiveTile.live-active{
+    border-color:rgba(226,59,59,.58);
+    box-shadow:inset 0 0 0 1px rgba(226,59,59,.08),0 0 24px rgba(226,59,59,.09);
+  }
+  #modernLiveTile.live-active .modern-live-light{
+    opacity:1;
+    transform:scale(1);
+    animation:modernLivePulse 1.15s ease-out infinite;
+  }
+  @keyframes modernLivePulse{
+    0%{box-shadow:0 0 0 0 rgba(226,59,59,.72),0 0 12px rgba(226,59,59,.88)}
+    70%{box-shadow:0 0 0 11px rgba(226,59,59,0),0 0 18px rgba(226,59,59,.72)}
+    100%{box-shadow:0 0 0 0 rgba(226,59,59,0),0 0 12px rgba(226,59,59,.55)}
+  }
+
   .modern-leaderboard{
     margin-top:14px;border:1px solid rgba(216,173,82,.22);
     background:linear-gradient(180deg,rgba(216,173,82,.055),#0b0b0b);border-radius:20px;padding:17px;
@@ -1540,7 +1572,7 @@
     </div>
     <div class="modern-more-grid">
       <button id="modernResumeTile" class="modern-tile" type="button"><span class="modern-tile-icon">▶</span><span><strong>Pokračovat</strong><small>Vrátit se k rozehranému zápasu</small></span></button>
-      <button class="modern-tile" data-nav="live"><span class="modern-tile-icon">◉</span><span><strong>Livescore</strong><small>Živé zápasy a stream</small></span></button>
+      <button id="modernLiveTile" class="modern-tile" data-nav="live"><span class="modern-live-light" aria-hidden="true"></span><span class="modern-tile-icon">◉</span><span><strong>Livescore</strong><small id="modernLiveTileText">Živé zápasy a stream</small></span></button>
       <button class="modern-tile" data-nav="results"><span class="modern-tile-icon">☷</span><span><strong>Výsledky</strong><small>Zápasy, turnaje, série a ligové soutěže</small></span></button>
       <button class="modern-tile" data-nav="my-stats"><span class="modern-tile-icon">◎</span><span><strong>Moje statistiky</strong><small>Osobní přehled výkonu</small></span></button>
       <button class="modern-tile" data-nav="support"><span class="modern-tile-icon">?</span><span><strong>Nápověda a podpora</strong><small>Návod, hlášení problémů a informace o projektu</small></span></button>
@@ -11981,15 +12013,32 @@ $('winnerText').textContent = match.solo14
 
   function updateLiveNavStatus(){
     const btn=$('liveNavBtn');
-    if(!btn)return;
+    const modernTile=$('modernLiveTile');
+    const modernText=$('modernLiveTileText');
     const count=activeLiveMatches().length;
-    btn.classList.toggle('live-active',count>0);
-    btn.innerHTML=count>0
-      ? '<span class="live-nav-dot"></span>LIVESCORE • '+count+' LIVE'
-      : 'Livescore';
-    btn.title=count>0
+    const isLive=count>0;
+    const liveTitle=isLive
       ? ('Právě probíhá '+count+' '+(count===1?'zápas':count<5?'zápasy':'zápasů'))
       : 'Momentálně není evidovaný žádný LIVE zápas';
+
+    if(btn){
+      btn.classList.toggle('live-active',isLive);
+      btn.innerHTML=isLive
+        ? '<span class="live-nav-dot"></span>LIVESCORE • '+count+' LIVE'
+        : 'Livescore';
+      btn.title=liveTitle;
+    }
+
+    if(modernTile){
+      modernTile.classList.toggle('live-active',isLive);
+      modernTile.title=liveTitle;
+      modernTile.setAttribute('aria-label',isLive ? ('Livescore, '+count+' LIVE') : 'Livescore');
+    }
+    if(modernText){
+      modernText.textContent=isLive
+        ? (count===1 ? 'Právě probíhá 1 zápas LIVE' : 'Právě probíhají '+count+' zápasy LIVE')
+        : 'Živé zápasy a stream';
+    }
   }
 
   function hiddenLiveIdSet(){
