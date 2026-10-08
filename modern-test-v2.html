@@ -1364,6 +1364,44 @@
 }
 </style>
 
+
+<style id="modern-hub-cleanup-styles">
+  .results-hub-grid{
+    display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;
+  }
+  .results-hub-card{
+    min-height:138px!important;font-size:18px!important;
+    display:flex!important;flex-direction:column;align-items:flex-start!important;justify-content:center!important;
+    text-align:left!important;gap:7px!important;padding:18px!important;
+  }
+  .results-hub-card .muted{display:block;font-size:12px;line-height:1.4;font-weight:700}
+  .results-hub-icon{font-size:25px;line-height:1;color:var(--gold2)}
+  .support-hub-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+  .support-hub-card{
+    min-height:170px;border:1px solid #302c23;border-radius:18px;
+    background:linear-gradient(180deg,#161512,#0d0d0d);color:#fff;
+    padding:20px;text-align:left;display:flex;flex-direction:column;justify-content:space-between;
+    cursor:pointer;transition:.18s ease;
+  }
+  .support-hub-card:hover{transform:translateY(-2px);border-color:rgba(216,173,82,.5)}
+  .support-hub-card.primary{
+    background:linear-gradient(145deg,#d8ad52,#745113);color:#120e08;border-color:#f1d17a
+  }
+  .support-hub-card.primary small{color:#2b2111}
+  .support-hub-icon{font-size:30px;color:var(--gold2)}
+  .support-hub-card.primary .support-hub-icon{color:#17120a}
+  .support-hub-card strong{display:block;font-size:20px;margin-top:16px}
+  .support-hub-card small{display:block;color:#a7a7a7;font-size:12px;line-height:1.5;margin-top:7px}
+  @media(max-width:900px){
+    .results-hub-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+  }
+  @media(max-width:700px){
+    .results-hub-grid,.support-hub-grid{grid-template-columns:1fr}
+    .results-hub-card{min-height:112px!important}
+    .support-hub-card{min-height:135px}
+  }
+</style>
+
 </head>
 <body>
 <div class="app">
@@ -1456,12 +1494,9 @@
     <div class="modern-more-grid">
       <button id="modernResumeTile" class="modern-tile" type="button"><span class="modern-tile-icon">▶</span><span><strong>Pokračovat</strong><small>Vrátit se k rozehranému zápasu</small></span></button>
       <button class="modern-tile" data-nav="live"><span class="modern-tile-icon">◉</span><span><strong>Livescore</strong><small>Živé zápasy a stream</small></span></button>
-      <button class="modern-tile" data-nav="results"><span class="modern-tile-icon">☷</span><span><strong>Výsledky</strong><small>Zápasy, turnaje a série</small></span></button>
-      <button class="modern-tile" data-nav="league"><span class="modern-tile-icon">◆</span><span><strong>Liga Sever</strong><small>Tabulky a výsledky ligy</small></span></button>
+      <button class="modern-tile" data-nav="results"><span class="modern-tile-icon">☷</span><span><strong>Výsledky</strong><small>Zápasy, turnaje, série a Liga Sever</small></span></button>
       <button class="modern-tile" data-nav="my-stats"><span class="modern-tile-icon">◎</span><span><strong>Moje statistiky</strong><small>Osobní přehled výkonu</small></span></button>
-      <button class="modern-tile" data-nav="help"><span class="modern-tile-icon">?</span><span><strong>Návod</strong><small>Jak Poolčítadlo používat</small></span></button>
-      <button class="modern-tile" data-nav="reports"><span class="modern-tile-icon">✎</span><span><strong>Nahlásit problém</strong><small>Chyby, návrhy a připomínky</small></span></button>
-      <button class="modern-tile" data-nav="about"><span class="modern-tile-icon">ⓘ</span><span><strong>O Poolčítadle</strong><small>Projekt vytvořený BC Rybárna</small></span></button>
+      <button class="modern-tile" data-nav="support"><span class="modern-tile-icon">?</span><span><strong>Nápověda a podpora</strong><small>Návod, hlášení problémů a informace o projektu</small></span></button>
       <button id="modernAdminTile" class="modern-tile hidden" data-nav="admin"><span class="modern-tile-icon">⚙</span><span><strong>Administrace</strong><small>Správa systému a uživatelů</small></span></button>
     </div>
 
@@ -1874,6 +1909,28 @@
     </div>
   </section>
 
+
+  <section id="screen-support" class="screen">
+    <div class="card support-hub">
+      <div class="muted" style="font-size:12px;font-weight:950;letter-spacing:1px;color:var(--gold2)">POOLČÍTADLO</div>
+      <h1 class="section-title" style="margin-top:5px">NÁPOVĚDA A PODPORA</h1>
+      <div class="muted" style="margin-bottom:18px">Všechno kolem používání aplikace, podpory a informací o projektu na jednom místě.</div>
+      <div class="support-hub-grid">
+        <button class="support-hub-card primary" data-nav="help">
+          <span class="support-hub-icon">?</span>
+          <span><strong>Návod</strong><small>Jak používat zápasy, statistiky, turnaje, stream a další funkce.</small></span>
+        </button>
+        <button class="support-hub-card" data-nav="reports">
+          <span class="support-hub-icon">✎</span>
+          <span><strong>Nahlásit problém</strong><small>Chyba, návrh na zlepšení, problém s daty nebo účtem.</small></span>
+        </button>
+        <button class="support-hub-card" data-nav="about">
+          <span class="support-hub-icon">ⓘ</span>
+          <span><strong>O Poolčítadle</strong><small>Informace o projektu, funkcích a BC Rybárna.</small></span>
+        </button>
+      </div>
+    </div>
+  </section>
 
   <section id="screen-help" class="screen">
     <div class="card">
@@ -3117,18 +3174,26 @@
       <h1 class="section-title">VÝSLEDKY</h1>
       <div class="muted" style="margin-bottom:16px">Vyber, jaké výsledky chceš zobrazit.</div>
 
-      <div class="grid three">
-        <button id="resultsMatchesBtn" class="btn primary big" style="min-height:110px;font-size:22px">
+      <div class="results-hub-grid">
+        <button id="resultsMatchesBtn" class="btn primary big results-hub-card">
+          <span class="results-hub-icon">☷</span>
           ZÁPASY
-          <span class="muted" style="display:block;font-size:13px;margin-top:7px">Historie jednotlivých zápasů</span>
+          <span class="muted">Historie jednotlivých zápasů</span>
         </button>
-        <button id="resultsTournamentsBtn" class="btn primary big" style="min-height:110px;font-size:22px">
+        <button id="resultsTournamentsBtn" class="btn primary big results-hub-card">
+          <span class="results-hub-icon">🏆</span>
           TURNAJE
-          <span class="muted" style="display:block;font-size:13px;margin-top:7px">Dokončené turnaje a konečné výsledky</span>
+          <span class="muted">Dokončené turnaje a konečné výsledky</span>
         </button>
-        <button id="resultsSeriesBtn" class="btn primary big" style="min-height:110px;font-size:22px">
+        <button id="resultsSeriesBtn" class="btn primary big results-hub-card">
+          <span class="results-hub-icon">◆</span>
           SÉRIE TURNAJŮ
-          <span class="muted" style="display:block;font-size:13px;margin-top:7px">Průběžná i konečná pořadí sérií turnajů</span>
+          <span class="muted">Průběžná i konečná pořadí sérií</span>
+        </button>
+        <button class="btn big results-hub-card" data-nav="league">
+          <span class="results-hub-icon">◈</span>
+          LIGA SEVER
+          <span class="muted">Tabulka, výsledky a statistiky ligy</span>
         </button>
       </div>
     </div>
