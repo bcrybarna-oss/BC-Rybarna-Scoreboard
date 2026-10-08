@@ -522,7 +522,7 @@
     }
   
 
-/* === v4.51.64 RC • mobilní herní obrazovka portrait / landscape === */
+/* === v4.51.65 RC • mobilní herní obrazovka portrait / landscape === */
 @media (max-width:700px) and (orientation:portrait){
   #screen-match{margin-top:8px}
   #screen-match>.card{padding:10px;border-radius:14px}
@@ -2101,6 +2101,66 @@ html[data-theme="light"] #leagueSchedule .history-item .muted{
   }
 </style>
 
+
+<style id="match-challenge-styles">
+  .match-challenge-badge{
+    position:absolute;top:9px;right:9px;min-width:23px;height:23px;padding:0 7px;border-radius:999px;
+    display:flex;align-items:center;justify-content:center;background:#d84d4d;color:#fff;font-size:11px;font-weight:950;
+    box-shadow:0 0 0 4px rgba(216,77,77,.12)
+  }
+  .modern-tile{position:relative}
+  .modern-scheduled-panel{
+    margin-top:18px;padding:18px 20px;border:1px solid rgba(216,173,82,.34);border-radius:20px;
+    background:linear-gradient(145deg,rgba(216,173,82,.09),rgba(255,255,255,.018));
+    box-shadow:0 14px 34px rgba(0,0,0,.16)
+  }
+  .modern-scheduled-head{display:flex;justify-content:space-between;gap:12px;align-items:center;flex-wrap:wrap}
+  .modern-scheduled-head h3{margin:3px 0 0;font-size:22px}
+  .modern-scheduled-kicker{color:var(--modern-gold2);font-weight:950;font-size:10px;letter-spacing:.1em}
+  .modern-scheduled-body{display:grid;grid-template-columns:minmax(0,1.4fr) repeat(3,minmax(120px,.6fr)) auto;gap:12px;align-items:center;margin-top:14px}
+  .modern-scheduled-vs{font-size:18px;font-weight:950}
+  .modern-scheduled-meta strong{display:block;font-size:12px}
+  .modern-scheduled-meta span{display:block;color:#aaa;font-size:11px;margin-top:3px}
+  .match-challenge-header,.match-challenge-section-head{display:flex;justify-content:space-between;gap:12px;align-items:flex-start;flex-wrap:wrap}
+  .match-challenge-section-head{align-items:center;margin-bottom:9px}
+  .match-challenge-section-head h2{margin:0;font-size:18px}
+  .match-challenge-layout{display:grid;grid-template-columns:minmax(0,1.45fr) minmax(320px,.75fr);gap:18px;margin-top:16px}
+  .match-challenge-summary{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin-top:14px}
+  .match-challenge-stat{background:#0e0e0f;border:1px solid #303034;border-radius:14px;padding:12px;text-align:center}
+  .match-challenge-stat strong{display:block;color:var(--gold2);font-size:24px}
+  .match-challenge-stat span{font-size:11px;color:var(--muted)}
+  .match-challenge-card{border:1px solid #303034;border-radius:16px;background:#0d0d0f;padding:14px;margin-bottom:10px}
+  .match-challenge-card.accepted{border-color:rgba(63,166,105,.5)}
+  .match-challenge-card.incoming{border-color:rgba(216,173,82,.48)}
+  .match-challenge-card-head{display:flex;justify-content:space-between;gap:10px;align-items:flex-start}
+  .match-challenge-card-title{font-weight:950;font-size:17px}
+  .match-challenge-meta{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
+  .match-challenge-meta span{border:1px solid #353535;border-radius:999px;padding:5px 8px;font-size:10px;font-weight:850;color:#c7c1b4}
+  .match-challenge-actions{display:flex;gap:7px;flex-wrap:wrap;margin-top:12px}
+  .match-challenge-status{font-size:10px;font-weight:950;letter-spacing:.05em;border-radius:999px;padding:5px 8px}
+  .match-challenge-status.pending{background:#2b230f;color:#f1d47b}
+  .match-challenge-status.accepted{background:#10271a;color:#8dd2a7}
+  .match-challenge-status.declined,.match-challenge-status.cancelled{background:#2a1313;color:#efa1a1}
+  .match-challenge-status.countered{background:#15233a;color:#9fc4ff}
+  .match-challenge-status.played{background:#202020;color:#aaa}
+  html[data-theme="light"] .modern-scheduled-panel,
+  html[data-theme="light"] .match-challenge-stat,
+  html[data-theme="light"] .match-challenge-card,
+  html[data-theme="light"] .match-challenge-create{
+    background:linear-gradient(180deg,#fff,#f7f3ea)!important;color:#171717!important;border-color:#d1c9ba!important
+  }
+  html[data-theme="light"] .match-challenge-meta span{background:#faf7ef;color:#5f584c;border-color:#d7cfbf}
+  html[data-theme="light"] .modern-scheduled-meta span{color:#6b645a}
+  @media(max-width:900px){
+    .match-challenge-layout{grid-template-columns:1fr}
+    .modern-scheduled-body{grid-template-columns:1fr 1fr}
+  }
+  @media(max-width:620px){
+    .match-challenge-summary{grid-template-columns:1fr 1fr 1fr}
+    .modern-scheduled-body{grid-template-columns:1fr}
+  }
+</style>
+
 </head>
 <body>
 <div class="app">
@@ -2116,7 +2176,7 @@ html[data-theme="light"] #leagueSchedule .history-item .muted{
           <span class="by">by</span>
           <span class="club">BC Rybárna</span>
         </div>
-        <small class="modern-brand-version">v4.51.64 RC</small>
+        <small class="modern-brand-version">v4.51.65 RC</small>
       </div>
     </div>
     <div class="nav">
@@ -2201,11 +2261,27 @@ html[data-theme="light"] #leagueSchedule .history-item .muted{
     </div>
     <div class="modern-more-grid">
       <button id="modernResumeTile" class="modern-tile" type="button"><span class="modern-tile-icon">▶</span><span><strong>Pokračovat</strong><small>Vrátit se k rozehranému zápasu</small></span></button>
+      <button id="modernChallengeTile" class="modern-tile" data-nav="challenges" type="button">
+        <span id="modernChallengeBadge" class="match-challenge-badge hidden">0</span>
+        <span class="modern-tile-icon">⚔</span>
+        <span><strong>Domluvit zápas</strong><small id="modernChallengeTileText">Výzvy a domluvené zápasy</small></span>
+      </button>
       <button id="modernLiveTile" class="modern-tile" data-nav="live"><span class="modern-live-light" aria-hidden="true"></span><span class="modern-tile-icon">◉</span><span><strong>Livescore</strong><small id="modernLiveTileText">Živé zápasy a stream</small></span></button>
       <button class="modern-tile" data-nav="results"><span class="modern-tile-icon">☷</span><span><strong>Výsledky</strong><small>Historie zápasů, dokončené turnaje a série</small></span></button>
       <button class="modern-tile" data-nav="my-stats"><span class="modern-tile-icon">◎</span><span><strong>Moje statistiky</strong><small>Osobní přehled výkonu</small></span></button>
       <button class="modern-tile" data-nav="support"><span class="modern-tile-icon">?</span><span><strong>Nápověda a podpora</strong><small>Návod, hlášení problémů a informace o projektu</small></span></button>
       <button id="modernAdminTile" class="modern-tile hidden" data-nav="admin"><span class="modern-tile-icon">⚙</span><span><strong>Administrace</strong><small>Správa systému a uživatelů</small></span></button>
+    </div>
+
+    <div id="modernScheduledMatchPanel" class="modern-scheduled-panel hidden">
+      <div class="modern-scheduled-head">
+        <div>
+          <div class="modern-scheduled-kicker">NADCHÁZEJÍCÍ ZÁPAS</div>
+          <h3 id="modernScheduledMatchTitle">Domluvený zápas</h3>
+        </div>
+        <button type="button" class="btn" data-nav="challenges">VŠECHNY VÝZVY</button>
+      </div>
+      <div id="modernScheduledMatchBody"></div>
     </div>
 
     <div class="modern-leaderboard">
@@ -2241,6 +2317,102 @@ html[data-theme="light"] #leagueSchedule .history-item .muted{
   <button data-nav="tournament"><span>🏆</span>Soutěže</button>
   <button data-nav="results"><span>•••</span>Více</button>
 </nav>
+
+<section id="screen-challenges" class="screen">
+  <div class="card">
+    <div class="match-challenge-header">
+      <div>
+        <div class="muted" style="font-size:11px;font-weight:900;letter-spacing:.08em">POOLČÍTADLO · VÝZVY</div>
+        <h1 class="section-title" style="margin:4px 0 0">Domluva zápasů</h1>
+        <div class="muted" style="margin-top:5px">Pošli výzvu hráči, domluvte termín a pak zápas jedním kliknutím spusť.</div>
+      </div>
+      <button id="matchChallengesRefreshBtn" class="btn" type="button">↻ OBNOVIT</button>
+    </div>
+
+    <div id="matchChallengesLoginNotice" class="subpanel hidden" style="margin-top:14px">
+      Pro domlouvání zápasů musíš být přihlášený a mít účet propojený s hráčským profilem.
+    </div>
+
+    <div id="matchChallengesContent">
+      <div class="match-challenge-summary" id="matchChallengeSummary"></div>
+
+      <div class="match-challenge-layout">
+        <div>
+          <div class="match-challenge-section-head">
+            <h2>Příchozí výzvy</h2>
+            <span id="matchChallengeIncomingCount" class="badge gold">0</span>
+          </div>
+          <div id="matchChallengeIncomingList"></div>
+
+          <div class="match-challenge-section-head" style="margin-top:18px">
+            <h2>Domluvené zápasy</h2>
+          </div>
+          <div id="matchChallengeAcceptedList"></div>
+
+          <div class="match-challenge-section-head" style="margin-top:18px">
+            <h2>Odeslané a ostatní</h2>
+          </div>
+          <div id="matchChallengeOtherList"></div>
+        </div>
+
+        <div>
+          <div class="subpanel match-challenge-create" style="margin-top:0">
+            <div class="muted" style="font-size:11px;font-weight:900;letter-spacing:.08em">NOVÁ VÝZVA</div>
+            <h2 style="margin:4px 0 14px">Vyzvat hráče</h2>
+
+            <label>Soupeř</label>
+            <select id="matchChallengeOpponent"></select>
+            <div id="matchChallengeOpponentHelp" class="muted" style="margin-top:5px;font-size:12px">Zobrazují se pouze hráči s propojeným účtem.</div>
+
+            <div class="grid two" style="margin-top:12px">
+              <div>
+                <label>Disciplína</label>
+                <select id="matchChallengeDiscipline">
+                  <option value="9-ball" selected>9-ball</option>
+                  <option value="8-ball">8-ball</option>
+                  <option value="10-ball">10-ball</option>
+                  <option value="14.1">14.1 nekonečná</option>
+                </select>
+              </div>
+              <div>
+                <label>Race to</label>
+                <input id="matchChallengeRaceTo" type="number" min="1" value="7">
+              </div>
+            </div>
+
+            <label class="toggle-row" style="margin-top:12px">
+              <span><strong>Termín domluvíme později</strong><span class="muted" style="display:block;margin-top:3px">Výzvu lze přijmout i bez konkrétního data.</span></span>
+              <span class="switch"><input id="matchChallengeFlexibleTime" type="checkbox"><span class="slider"></span></span>
+            </label>
+
+            <div id="matchChallengeDateTimeFields" class="grid two" style="margin-top:12px">
+              <div><label>Datum</label><input id="matchChallengeDate" type="date"></div>
+              <div><label>Čas</label><input id="matchChallengeTime" type="time"></div>
+            </div>
+
+            <div style="margin-top:12px">
+              <label>Místo</label>
+              <input id="matchChallengeVenue" placeholder="např. BC Rybárna">
+            </div>
+
+            <div style="margin-top:12px">
+              <label>Krátká zpráva <span class="muted">(volitelné)</span></label>
+              <textarea id="matchChallengeNote" rows="3" maxlength="300" placeholder="Např. dáme tréninkový race to 9?"></textarea>
+            </div>
+
+            <label class="toggle-row" style="margin-top:12px">
+              <span><strong>Zobrazit zápas veřejně</strong><span class="muted" style="display:block;margin-top:3px">Po přijetí může být vidět v programu nadcházejících zápasů.</span></span>
+              <span class="switch"><input id="matchChallengePublic" type="checkbox" checked><span class="slider"></span></span>
+            </label>
+
+            <button id="matchChallengeSendBtn" class="btn primary big" style="width:100%;margin-top:14px" type="button">ODESLAT VÝZVU</button>
+            <div id="matchChallengeSaveInfo" class="muted" style="margin-top:7px;font-size:12px"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
 
 <section id="screen-setup" class="screen">
     <div class="card">
@@ -2505,7 +2677,7 @@ html[data-theme="light"] #leagueSchedule .history-item .muted{
         </div>
         <div class="subpanel" style="min-width:210px;text-align:center;margin:0">
           <div class="muted" style="font-size:10px;font-weight:950;letter-spacing:1px">AKTUÁLNÍ VERZE</div>
-          <div style="font-size:22px;font-weight:950;color:var(--gold2);margin-top:5px">v4.51.64 RC</div>
+          <div style="font-size:22px;font-weight:950;color:var(--gold2);margin-top:5px">v4.51.65 RC</div>
         </div>
       </div>
     </div>
@@ -4499,6 +4671,10 @@ html[data-theme="light"] #leagueSchedule .history-item .muted{
       <div class="muted" style="margin-top:6px">Fotka se automaticky zmenší a uloží přímo do aplikace.</div>
     </div>
 
+    <div id="profileChallengeAction" class="subpanel hidden" style="margin-top:14px;text-align:center">
+      <div class="muted" style="font-size:11px;font-weight:900">CHCEŠ SI ZAHRÁT?</div>
+      <button id="profileChallengeBtn" class="btn primary" type="button" style="margin-top:8px">⚔ VYZVAT K ZÁPASU</button>
+    </div>
     <div class="modal-actions">
       <button id="removeProfilePhoto" class="btn ghost">Odstranit fotku</button>
       <button id="closeProfile" class="btn">Zavřít</button>
@@ -4506,6 +4682,27 @@ html[data-theme="light"] #leagueSchedule .history-item .muted{
     </div>
     <div class="danger-zone">
       <button id="deletePlayer" class="btn danger" style="width:100%">SMAZAT / DEAKTIVOVAT PROFIL</button>
+    </div>
+  </div>
+</div>
+
+<div id="matchChallengeCounterModal" class="modal">
+  <div class="modal-card" style="max-width:620px;text-align:left">
+    <h2 style="margin-bottom:4px">NAVRHNOUT JINÝ TERMÍN</h2>
+    <div id="matchChallengeCounterTitle" class="muted"></div>
+    <label class="toggle-row" style="margin-top:14px">
+      <span><strong>Termín domluvíme později</strong></span>
+      <span class="switch"><input id="matchChallengeCounterFlexible" type="checkbox"><span class="slider"></span></span>
+    </label>
+    <div id="matchChallengeCounterDateTime" class="grid two" style="margin-top:12px">
+      <div><label>Datum</label><input id="matchChallengeCounterDate" type="date"></div>
+      <div><label>Čas</label><input id="matchChallengeCounterTime" type="time"></div>
+    </div>
+    <div style="margin-top:12px"><label>Místo</label><input id="matchChallengeCounterVenue"></div>
+    <div style="margin-top:12px"><label>Zpráva <span class="muted">(volitelné)</span></label><textarea id="matchChallengeCounterNote" rows="3" maxlength="300"></textarea></div>
+    <div class="modal-actions">
+      <button id="matchChallengeCounterCancel" class="btn">ZRUŠIT</button>
+      <button id="matchChallengeCounterSave" class="btn primary">ODESLAT NOVÝ NÁVRH</button>
     </div>
   </div>
 </div>
@@ -6262,7 +6459,7 @@ html[data-theme="light"] #leagueSchedule .history-item .muted{
     const btn=$('submitReportBtn');if(btn)btn.disabled=true;
     try{
       const id=uid(),p=currentUserPlayerId?data.players?.[currentUserPlayerId]:null;
-      const report={id,createdByUid:cloudUid,createdByPlayerId:currentUserPlayerId||'',createdByName:p?playerSelectionLabel(p):(cloudUserEmail||'Uživatel'),email:cloudUserEmail||'',type,area,description,appVersion:'v4.51.64 RC',createdAt:new Date().toISOString(),updatedAt:new Date().toISOString(),status:'new',adminNote:''};
+      const report={id,createdByUid:cloudUid,createdByPlayerId:currentUserPlayerId||'',createdByName:p?playerSelectionLabel(p):(cloudUserEmail||'Uživatel'),email:cloudUserEmail||'',type,area,description,appVersion:'v4.51.65 RC',createdAt:new Date().toISOString(),updatedAt:new Date().toISOString(),status:'new',adminNote:''};
       await reportRequest(id,'PUT',report);
       try{
         await writeReportUserMirror(report);
@@ -6969,6 +7166,7 @@ html[data-theme="light"] #leagueSchedule .history-item .muted{
     try{renderResultsTournaments();}catch(e){}
     try{renderResultsSeries();}catch(e){}
     try{if(typeof window.renderModernHome==='function')window.renderModernHome();}catch(e){}
+    try{if(typeof window.completeScheduledChallengeForMatch==='function')window.completeScheduledChallengeForMatch(copy);}catch(e){console.warn('Challenge completion:',e);}
     return copy;
   }
 
@@ -8141,6 +8339,9 @@ html[data-theme="light"] #leagueSchedule .history-item .muted{
     }
     if(name==='stats') renderStats();
     if(name==='my-stats') renderMyStats();
+    if(name==='challenges'){
+      try{if(typeof window.openMatchChallengesScreen==='function')window.openMatchChallengesScreen();}catch(e){console.warn('Challenges screen:',e);}
+    }
     if(name==='tournament') renderTournament();
     if(name==='league'){
       renderLeague();
@@ -8756,6 +8957,8 @@ $('useClock').addEventListener('change',e=>$('clockSettings').classList.toggle('
   function startMatch(){
     try{
     if(!pendingTournamentLink)forcedTournamentReturnId=null;
+    const scheduledChallenge=window.pendingScheduledChallenge ? JSON.parse(JSON.stringify(window.pendingScheduledChallenge)) : null;
+    window.pendingScheduledChallenge=null;
     const discipline=$('discipline').value;
     const counterMode=$('counterMode')?.value||'full';
     const simpleCounter=counterMode==='simple';
@@ -8874,6 +9077,8 @@ $('useClock').addEventListener('change',e=>$('clockSettings').classList.toggle('
       streamEnabled:$('streamEnabled').checked,
       streamMode:'live',
       streamMatchTitle:$('streamMatchTitle').value.trim(),
+      scheduledChallengeId:scheduledChallenge?.id||null,
+      scheduledChallengePublic:scheduledChallenge?.isPublic===true,
       tournamentLink:pendingTournamentLink ? JSON.parse(JSON.stringify(pendingTournamentLink)) : null,
       leagueLink:pendingLeagueLink ? JSON.parse(JSON.stringify(pendingLeagueLink)) : null,
       isBreakShot:true,
@@ -24964,6 +25169,15 @@ function renderHistory(){
       $('deletePlayer').disabled=readOnly;
     }
 
+    const challengeAction=$('profileChallengeAction');
+    const challengeBtn=$('profileChallengeBtn');
+    const canChallenge=!!(cloudAuthenticated && currentUserPlayerId && p.ownerUid && String(p.id)!==String(currentUserPlayerId) && String(p.ownerUid)!==String(cloudUid));
+    if(challengeAction)challengeAction.classList.toggle('hidden',!canChallenge);
+    if(challengeBtn){
+      challengeBtn.dataset.playerId=p.id||id;
+      challengeBtn.disabled=!canChallenge;
+    }
+
     renderProfilePreview();
     $('profileModal').classList.add('show');
   };
@@ -26107,7 +26321,9 @@ function renderStats(){
   };
   window.refreshModernDashboardCloud=async function(){
     if(!cloudAuthenticated)return window.getModernDashboardSnapshot();
-    await Promise.allSettled([loadSecurePlayers(),loadSecureMatches(),loadSecureTournaments()]);
+    const jobs=[loadSecurePlayers(),loadSecureMatches(),loadSecureTournaments()];
+    if(typeof window.refreshMatchChallenges==='function')jobs.push(window.refreshMatchChallenges(false));
+    await Promise.allSettled(jobs);
     return window.getModernDashboardSnapshot();
   };
 
@@ -26259,6 +26475,7 @@ function renderStats(){
         '<div class="modern-stat"><b>'+esc(String(x.mostPlayedDiscipline||'—').toUpperCase())+'</b><span>Nejhranější disciplína</span></div>'+
         '<div class="modern-stat"><b>'+Number(x.tournaments||0)+'</b><span>Turnajů v databázi</span></div>';
     }
+    try{if(typeof window.renderMatchChallengeHome==='function')window.renderMatchChallengeHome();}catch(e){}
   };
 
   window.refreshModernHomeData=async function(){
@@ -26460,6 +26677,312 @@ function renderStats(){
   });
 })();
 </script>
+
+<script id="match-challenges-script">
+(function(){
+  var cache=[];
+  var counterChallengeId=null;
+  var LOCAL_KEY='poolcitadlo_match_challenges_cache_v1';
+
+  function q(id){return document.getElementById(id)}
+  function esc2(v){return String(v==null?'':v).replace(/[&<>"']/g,function(m){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]})}
+  function nowIso(){return new Date().toISOString()}
+  function myPlayer(){return currentUserPlayerId?data.players?.[currentUserPlayerId]:null}
+  function playerNameById(id){var p=data.players?.[id];return p?playerSelectionLabel(p):'Hráč'}
+  function currentUid(){return String(cloudUid||'')}
+  function isMine(ch){var u=currentUid();return !!u&&(ch.senderUid===u||ch.recipientUid===u)}
+  function otherPlayerId(ch){return ch.senderUid===currentUid()?ch.recipientPlayerId:ch.senderPlayerId}
+  function statusLabel(s){
+    return {pending:'ČEKÁ NA ODPOVĚĎ',countered:'NAVRŽEN JINÝ TERMÍN',accepted:'DOMLUVENO',declined:'ODMÍTNUTO',cancelled:'ZRUŠENO',played:'ODEHRÁNO'}[s]||String(s||'');
+  }
+  function formatDate(ch){
+    if(ch.flexibleTime)return 'Termín domluvíme později';
+    if(!ch.date)return 'Termín neuveden';
+    var d=new Date(ch.date+'T12:00:00');
+    var txt=isNaN(d)?ch.date:d.toLocaleDateString('cs-CZ',{day:'numeric',month:'numeric',year:'numeric'});
+    return txt+(ch.time?' · '+ch.time:'');
+  }
+  function cacheSave(){
+    try{localStorage.setItem(LOCAL_KEY,JSON.stringify(cache.filter(isMine)));}catch(e){}
+  }
+  function cacheLoad(){
+    try{
+      var x=JSON.parse(localStorage.getItem(LOCAL_KEY)||'[]');
+      if(Array.isArray(x))cache=x.filter(Boolean);
+    }catch(e){}
+  }
+
+  async function request(id,method,body){
+    if(!await ensureCloudToken())throw new Error('NO_AUTH');
+    var opts={method:method,headers:{'Content-Type':'application/json'},cache:'no-store'};
+    if(body!==undefined)opts.body=JSON.stringify(body);
+    var r=await fetch(cloudUrl('matchChallenges/'+encodeURIComponent(id)),opts);
+    if(!r.ok)throw new Error('MATCH_CHALLENGE_'+r.status);
+    return await r.json();
+  }
+
+  async function load(force){
+    cacheLoad();
+    if(!cloudAuthenticated||!cloudUid){
+      render();
+      renderHome();
+      return cache;
+    }
+    try{
+      if(!await ensureCloudToken())throw new Error('NO_AUTH');
+      var r=await fetch(cloudUrl('matchChallenges')+'&t='+Date.now(),{cache:'no-store'});
+      if(!r.ok)throw new Error('MATCH_CHALLENGES_READ_'+r.status);
+      var raw=await r.json()||{};
+      cache=Object.values(raw).filter(function(ch){return ch&&isMine(ch)});
+      cache.sort(function(a,b){return new Date(b.updatedAt||b.createdAt||0)-new Date(a.updatedAt||a.createdAt||0)});
+      cacheSave();
+    }catch(e){
+      console.warn('Match challenges load:',e);
+    }
+    render();
+    renderHome();
+    return cache;
+  }
+
+  function linkedOpponents(){
+    var mine=myPlayer();
+    return Object.values(data.players||{}).filter(function(p){
+      return p&&p.active!==false&&p.hiddenFromPlayers!==true&&p.ownerUid&&mine&&p.id!==mine.id&&String(p.ownerUid)!==String(cloudUid);
+    }).sort(function(a,b){return playerSelectionLabel(a).localeCompare(playerSelectionLabel(b),'cs')});
+  }
+
+  function populateOpponents(selected){
+    var sel=q('matchChallengeOpponent');if(!sel)return;
+    var arr=linkedOpponents();
+    sel.innerHTML='<option value="">— vyber soupeře —</option>'+arr.map(function(p){
+      return '<option value="'+esc2(p.id)+'" '+(selected===p.id?'selected':'')+'>'+esc2(playerSelectionLabel(p))+'</option>';
+    }).join('');
+    var help=q('matchChallengeOpponentHelp');
+    if(help)help.textContent=arr.length?'Zobrazují se pouze hráči s propojeným účtem.':'Zatím není k dispozici žádný další hráč s propojeným účtem.';
+  }
+
+  function challengeCard(ch){
+    var incoming=ch.recipientUid===currentUid()&&(ch.status==='pending'||ch.status==='countered');
+    var opponent=playerNameById(otherPlayerId(ch));
+    var actions='';
+    if(incoming){
+      actions='<button class="btn primary" onclick="acceptMatchChallenge(\''+ch.id+'\')">PŘIJMOUT</button>'+
+        '<button class="btn" onclick="counterMatchChallenge(\''+ch.id+'\')">JINÝ TERMÍN</button>'+
+        '<button class="btn danger" onclick="declineMatchChallenge(\''+ch.id+'\')">ODMÍTNOUT</button>';
+    }else if(ch.status==='accepted'){
+      actions='<button class="btn primary" onclick="startScheduledMatch(\''+ch.id+'\')">▶ SPUSTIT ZÁPAS</button>'+
+        '<button class="btn" onclick="counterMatchChallenge(\''+ch.id+'\')">ZMĚNIT TERMÍN</button>'+
+        '<button class="btn danger" onclick="cancelMatchChallenge(\''+ch.id+'\')">ZRUŠIT</button>';
+    }else if((ch.status==='pending'||ch.status==='countered')&&ch.senderUid===currentUid()){
+      actions='<button class="btn" onclick="counterMatchChallenge(\''+ch.id+'\')">UPRAVIT NÁVRH</button>'+
+        '<button class="btn danger" onclick="cancelMatchChallenge(\''+ch.id+'\')">ZRUŠIT VÝZVU</button>';
+    }
+    return '<div class="match-challenge-card '+(incoming?'incoming ':'')+(ch.status==='accepted'?'accepted':'')+'">'+
+      '<div class="match-challenge-card-head"><div><div class="match-challenge-card-title">'+esc2(playerNameById(ch.senderPlayerId))+' × '+esc2(playerNameById(ch.recipientPlayerId))+'</div>'+
+      '<div class="muted" style="margin-top:4px">'+esc2(formatDate(ch))+(ch.venue?' · '+esc2(ch.venue):'')+'</div></div>'+
+      '<span class="match-challenge-status '+esc2(ch.status)+'">'+esc2(statusLabel(ch.status))+'</span></div>'+
+      '<div class="match-challenge-meta"><span>'+esc2(String(ch.discipline||'').toUpperCase())+'</span><span>Race to '+Number(ch.raceTo||1)+'</span><span>'+(ch.isPublic?'VEŘEJNÝ':'SOUKROMÝ')+'</span></div>'+
+      (ch.note?'<div style="margin-top:10px;line-height:1.45">'+esc2(ch.note)+'</div>':'')+
+      (ch.counterByUid?'<div class="muted" style="margin-top:7px;font-size:11px">Poslední změnu termínu navrhl '+(ch.counterByUid===currentUid()?'ty':'soupeř')+'.</div>':'')+
+      (actions?'<div class="match-challenge-actions">'+actions+'</div>':'')+
+    '</div>';
+  }
+
+  function render(){
+    var content=q('matchChallengesContent'),notice=q('matchChallengesLoginNotice');
+    var ready=!!(cloudAuthenticated&&cloudUid&&currentUserPlayerId&&myPlayer());
+    if(content)content.classList.toggle('hidden',!ready);
+    if(notice)notice.classList.toggle('hidden',ready);
+    if(!ready)return;
+    populateOpponents(q('matchChallengeOpponent')?.value||'');
+
+    var incoming=cache.filter(function(ch){return ch.recipientUid===currentUid()&&(ch.status==='pending'||ch.status==='countered')});
+    var accepted=cache.filter(function(ch){return ch.status==='accepted'}).sort(function(a,b){
+      return String(a.date||'9999-12-31').localeCompare(String(b.date||'9999-12-31'))||String(a.time||'').localeCompare(String(b.time||''));
+    });
+    var other=cache.filter(function(ch){return !incoming.includes(ch)&&!accepted.includes(ch)});
+    var sum=q('matchChallengeSummary');
+    if(sum)sum.innerHTML=
+      '<div class="match-challenge-stat"><strong>'+incoming.length+'</strong><span>Čeká na tebe</span></div>'+
+      '<div class="match-challenge-stat"><strong>'+accepted.length+'</strong><span>Domluveno</span></div>'+
+      '<div class="match-challenge-stat"><strong>'+cache.filter(function(x){return x.senderUid===currentUid()&&(x.status==='pending'||x.status==='countered')}).length+'</strong><span>Čeká na soupeře</span></div>';
+    if(q('matchChallengeIncomingCount'))q('matchChallengeIncomingCount').textContent=String(incoming.length);
+    if(q('matchChallengeIncomingList'))q('matchChallengeIncomingList').innerHTML=incoming.length?incoming.map(challengeCard).join(''):'<div class="empty">Žádná nová výzva.</div>';
+    if(q('matchChallengeAcceptedList'))q('matchChallengeAcceptedList').innerHTML=accepted.length?accepted.map(challengeCard).join(''):'<div class="empty">Nemáš žádný domluvený zápas.</div>';
+    if(q('matchChallengeOtherList'))q('matchChallengeOtherList').innerHTML=other.length?other.map(challengeCard).join(''):'<div class="empty">Žádné další výzvy.</div>';
+  }
+
+  function nextAccepted(){
+    var rows=cache.filter(function(ch){return ch.status==='accepted'});
+    rows.sort(function(a,b){
+      var ax=a.flexibleTime?'9999-12-31T23:59':String(a.date||'9999-12-31')+'T'+String(a.time||'23:59');
+      var bx=b.flexibleTime?'9999-12-31T23:59':String(b.date||'9999-12-31')+'T'+String(b.time||'23:59');
+      return ax.localeCompare(bx);
+    });
+    return rows[0]||null;
+  }
+
+  function renderHome(){
+    var tileText=q('modernChallengeTileText'),badge=q('modernChallengeBadge'),panel=q('modernScheduledMatchPanel'),body=q('modernScheduledMatchBody'),title=q('modernScheduledMatchTitle');
+    var incoming=cache.filter(function(ch){return ch.recipientUid===currentUid()&&(ch.status==='pending'||ch.status==='countered')}).length;
+    if(badge){badge.textContent=String(incoming);badge.classList.toggle('hidden',!incoming);}
+    if(tileText){
+      if(incoming)tileText.textContent=incoming===1?'1 nová příchozí výzva':incoming+' nové příchozí výzvy';
+      else{
+        var acceptedCount=cache.filter(function(ch){return ch.status==='accepted'}).length;
+        tileText.textContent=acceptedCount?(acceptedCount===1?'1 domluvený zápas':acceptedCount+' domluvené zápasy'):'Výzvy a domluvené zápasy';
+      }
+    }
+    var ch=nextAccepted();
+    if(!panel)return;
+    panel.classList.toggle('hidden',!ch);
+    if(!ch)return;
+    var opponent=playerNameById(otherPlayerId(ch));
+    if(title)title.textContent='Ty × '+opponent;
+    if(body)body.innerHTML='<div class="modern-scheduled-body">'+
+      '<div class="modern-scheduled-vs">'+esc2(playerNameById(ch.senderPlayerId))+' × '+esc2(playerNameById(ch.recipientPlayerId))+'</div>'+
+      '<div class="modern-scheduled-meta"><strong>'+esc2(String(ch.discipline||'').toUpperCase())+'</strong><span>Race to '+Number(ch.raceTo||1)+'</span></div>'+
+      '<div class="modern-scheduled-meta"><strong>'+esc2(formatDate(ch))+'</strong><span>Termín</span></div>'+
+      '<div class="modern-scheduled-meta"><strong>'+esc2(ch.venue||'Místo neuvedeno')+'</strong><span>Místo</span></div>'+
+      '<button class="btn primary" type="button" onclick="startScheduledMatch(\''+ch.id+'\')">▶ SPUSTIT</button>'+
+    '</div>';
+  }
+
+  async function persist(ch){
+    ch.updatedAt=nowIso();
+    await request(ch.id,'PUT',ch);
+    var i=cache.findIndex(function(x){return x.id===ch.id});
+    if(i>=0)cache[i]=ch;else cache.unshift(ch);
+    cacheSave();render();renderHome();
+    try{window.renderModernHome&&window.renderModernHome()}catch(e){}
+    return ch;
+  }
+
+  window.sendMatchChallenge=async function(){
+    var mine=myPlayer(),opId=q('matchChallengeOpponent')?.value||'',op=data.players?.[opId];
+    if(!mine||!cloudUid){toast('Nejdřív se přihlas účtem propojeným s hráčským profilem.');return;}
+    if(!op||!op.ownerUid){toast('Vyber hráče s propojeným účtem.');return;}
+    var flexible=!!q('matchChallengeFlexibleTime')?.checked;
+    var date=String(q('matchChallengeDate')?.value||''),time=String(q('matchChallengeTime')?.value||'');
+    if(!flexible&&!date){toast('Vyber datum, nebo zapni „Termín domluvíme později“.');return;}
+    var btn=q('matchChallengeSendBtn');if(btn)btn.disabled=true;
+    try{
+      var ch={
+        id:'challenge_'+(crypto?.randomUUID?crypto.randomUUID():Date.now().toString(36)+Math.random().toString(36).slice(2)),
+        senderUid:String(cloudUid),senderPlayerId:mine.id,
+        recipientUid:String(op.ownerUid),recipientPlayerId:op.id,
+        discipline:q('matchChallengeDiscipline')?.value||'9-ball',
+        raceTo:Math.max(1,Math.floor(Number(q('matchChallengeRaceTo')?.value||7))),
+        flexibleTime:flexible,date:flexible?'':date,time:flexible?'':time,
+        venue:String(q('matchChallengeVenue')?.value||'').trim(),
+        note:String(q('matchChallengeNote')?.value||'').trim(),
+        isPublic:!!q('matchChallengePublic')?.checked,
+        status:'pending',createdAt:nowIso(),updatedAt:nowIso(),acceptedAt:'',playedMatchId:''
+      };
+      await persist(ch);
+      q('matchChallengeNote').value='';
+      if(q('matchChallengeSaveInfo'))q('matchChallengeSaveInfo').textContent='Výzva byla odeslána hráči '+playerSelectionLabel(op)+'.';
+      toast('Výzva k zápasu byla odeslána.');
+    }catch(e){
+      console.error(e);
+      var msg=String(e?.message||e);
+      if(msg.includes('401')||msg.includes('403'))toast('Cloud zatím nepovoluje ukládání výzev. Je potřeba doplnit pravidla databáze.');
+      else toast('Výzvu se nepodařilo uložit.');
+    }finally{if(btn)btn.disabled=false;}
+  };
+
+  window.acceptMatchChallenge=async function(id){
+    var ch=cache.find(function(x){return x.id===id});if(!ch||ch.recipientUid!==currentUid())return;
+    ch.status='accepted';ch.acceptedAt=nowIso();ch.counterByUid='';
+    try{await persist(ch);toast('Zápas je domluvený.');}catch(e){toast('Výzvu se nepodařilo přijmout.');}
+  };
+  window.declineMatchChallenge=async function(id){
+    var ch=cache.find(function(x){return x.id===id});if(!ch||ch.recipientUid!==currentUid())return;
+    ch.status='declined';
+    try{await persist(ch);toast('Výzva byla odmítnuta.');}catch(e){toast('Změnu se nepodařilo uložit.');}
+  };
+  window.cancelMatchChallenge=async function(id){
+    var ch=cache.find(function(x){return x.id===id});if(!ch||!isMine(ch))return;
+    if(!confirm('Opravdu tuto domluvu zrušit?'))return;
+    ch.status='cancelled';
+    try{await persist(ch);toast('Domluva byla zrušena.');}catch(e){toast('Změnu se nepodařilo uložit.');}
+  };
+  window.counterMatchChallenge=function(id){
+    var ch=cache.find(function(x){return x.id===id});if(!ch||!isMine(ch))return;
+    counterChallengeId=id;
+    q('matchChallengeCounterTitle').textContent=playerNameById(ch.senderPlayerId)+' × '+playerNameById(ch.recipientPlayerId);
+    q('matchChallengeCounterFlexible').checked=!!ch.flexibleTime;
+    q('matchChallengeCounterDate').value=ch.date||'';
+    q('matchChallengeCounterTime').value=ch.time||'';
+    q('matchChallengeCounterVenue').value=ch.venue||'';
+    q('matchChallengeCounterNote').value='';
+    q('matchChallengeCounterDateTime').classList.toggle('hidden',!!ch.flexibleTime);
+    q('matchChallengeCounterModal').classList.add('show');
+  };
+  window.saveMatchChallengeCounter=async function(){
+    var ch=cache.find(function(x){return x.id===counterChallengeId});if(!ch)return;
+    var flexible=!!q('matchChallengeCounterFlexible').checked;
+    var date=String(q('matchChallengeCounterDate').value||''),time=String(q('matchChallengeCounterTime').value||'');
+    if(!flexible&&!date){toast('Zadej datum, nebo zvol domluvu termínu později.');return;}
+    ch.flexibleTime=flexible;ch.date=flexible?'':date;ch.time=flexible?'':time;ch.venue=String(q('matchChallengeCounterVenue').value||'').trim();
+    var note=String(q('matchChallengeCounterNote').value||'').trim();if(note)ch.note=note;
+    ch.status='countered';ch.counterByUid=currentUid();ch.acceptedAt='';
+    try{await persist(ch);q('matchChallengeCounterModal').classList.remove('show');counterChallengeId=null;toast('Nový termín byl odeslán.');}catch(e){toast('Nový návrh se nepodařilo uložit.');}
+  };
+
+  window.startScheduledMatch=function(id){
+    var ch=cache.find(function(x){return x.id===id});if(!ch||ch.status!=='accepted'||!isMine(ch))return;
+    var me=myPlayer(),opp=data.players?.[otherPlayerId(ch)];
+    if(!me||!opp){toast('Hráčský profil se nepodařilo načíst.');return;}
+    window.pendingScheduledChallenge=JSON.parse(JSON.stringify(ch));
+    q('p1Name').value=me.name||playerDisplayName(me);
+    q('p2Name').value=opp.name||playerDisplayName(opp);
+    q('discipline').value=ch.discipline||'9-ball';
+    q('raceTo').value=String(Math.max(1,Number(ch.raceTo||7)));
+    if(q('streamMatchTitle'))q('streamMatchTitle').value='Domluvený zápas • '+playerDisplayName(me)+' × '+playerDisplayName(opp);
+    q('discipline').dispatchEvent(new Event('change',{bubbles:true}));
+    showScreen('setup');
+    toast('Zápas je předvyplněný. Zkontroluj nastavení a zahaj ho.');
+  };
+
+  window.completeScheduledChallengeForMatch=async function(m){
+    if(!m?.scheduledChallengeId||!m?.endedAt)return;
+    var ch=cache.find(function(x){return x.id===m.scheduledChallengeId});
+    if(!ch||ch.status==='played')return;
+    ch.status='played';ch.playedMatchId=m.id;ch.playedAt=m.endedAt||nowIso();
+    try{await persist(ch);}catch(e){console.warn('Complete challenge:',e);}
+  };
+
+  window.openMatchChallengesScreen=function(){
+    render();
+    populateOpponents();
+    load(true);
+  };
+  window.refreshMatchChallenges=function(force){return load(!!force)};
+  window.renderMatchChallengeHome=renderHome;
+  window.openChallengeForPlayer=function(playerId){
+    var p=data.players?.[playerId];
+    if(!p||!p.ownerUid){toast('Tento hráč nemá propojený účet.');return;}
+    if(String(playerId)===String(currentUserPlayerId)){toast('Nemůžeš vyzvat sám sebe.');return;}
+    q('profileModal')?.classList.remove('show');
+    showScreen('challenges');
+    setTimeout(function(){populateOpponents(playerId);q('matchChallengeOpponent').value=playerId;},0);
+  };
+
+  q('matchChallengeSendBtn')?.addEventListener('click',window.sendMatchChallenge);
+  q('matchChallengesRefreshBtn')?.addEventListener('click',function(){load(true)});
+  q('matchChallengeFlexibleTime')?.addEventListener('change',function(){q('matchChallengeDateTimeFields')?.classList.toggle('hidden',this.checked)});
+  q('matchChallengeCounterFlexible')?.addEventListener('change',function(){q('matchChallengeCounterDateTime')?.classList.toggle('hidden',this.checked)});
+  q('matchChallengeCounterCancel')?.addEventListener('click',function(){q('matchChallengeCounterModal')?.classList.remove('show');counterChallengeId=null});
+  q('matchChallengeCounterSave')?.addEventListener('click',window.saveMatchChallengeCounter);
+  q('profileChallengeBtn')?.addEventListener('click',function(){window.openChallengeForPlayer(this.dataset.playerId||'')});
+
+  cacheLoad();renderHome();
+  setTimeout(function(){load(false)},1200);
+  setInterval(function(){if(!document.hidden&&cloudAuthenticated)load(false)},30000);
+})();
+</script>
+
 </body>
 
 </html>
