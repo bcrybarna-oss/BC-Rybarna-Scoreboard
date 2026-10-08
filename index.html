@@ -522,7 +522,7 @@
     }
   
 
-/* === v4.51.63 RC • mobilní herní obrazovka portrait / landscape === */
+/* === v4.51.64 RC • mobilní herní obrazovka portrait / landscape === */
 @media (max-width:700px) and (orientation:portrait){
   #screen-match{margin-top:8px}
   #screen-match>.card{padding:10px;border-radius:14px}
@@ -2090,6 +2090,17 @@ html[data-theme="light"] #leagueSchedule .history-item .muted{
   }
 </style>
 
+
+<style id="resume-tile-disabled-fix">
+  #modernResumeTile:disabled,
+  #modernResumeTile.is-disabled{
+    cursor:not-allowed!important;
+    pointer-events:none!important;
+    opacity:.52!important;
+    filter:grayscale(.2);
+  }
+</style>
+
 </head>
 <body>
 <div class="app">
@@ -2105,7 +2116,7 @@ html[data-theme="light"] #leagueSchedule .history-item .muted{
           <span class="by">by</span>
           <span class="club">BC Rybárna</span>
         </div>
-        <small class="modern-brand-version">v4.51.63 RC</small>
+        <small class="modern-brand-version">v4.51.64 RC</small>
       </div>
     </div>
     <div class="nav">
@@ -2494,7 +2505,7 @@ html[data-theme="light"] #leagueSchedule .history-item .muted{
         </div>
         <div class="subpanel" style="min-width:210px;text-align:center;margin:0">
           <div class="muted" style="font-size:10px;font-weight:950;letter-spacing:1px">AKTUÁLNÍ VERZE</div>
-          <div style="font-size:22px;font-weight:950;color:var(--gold2);margin-top:5px">v4.51.63 RC</div>
+          <div style="font-size:22px;font-weight:950;color:var(--gold2);margin-top:5px">v4.51.64 RC</div>
         </div>
       </div>
     </div>
@@ -6251,7 +6262,7 @@ html[data-theme="light"] #leagueSchedule .history-item .muted{
     const btn=$('submitReportBtn');if(btn)btn.disabled=true;
     try{
       const id=uid(),p=currentUserPlayerId?data.players?.[currentUserPlayerId]:null;
-      const report={id,createdByUid:cloudUid,createdByPlayerId:currentUserPlayerId||'',createdByName:p?playerSelectionLabel(p):(cloudUserEmail||'Uživatel'),email:cloudUserEmail||'',type,area,description,appVersion:'v4.51.63 RC',createdAt:new Date().toISOString(),updatedAt:new Date().toISOString(),status:'new',adminNote:''};
+      const report={id,createdByUid:cloudUid,createdByPlayerId:currentUserPlayerId||'',createdByName:p?playerSelectionLabel(p):(cloudUserEmail||'Uživatel'),email:cloudUserEmail||'',type,area,description,appVersion:'v4.51.64 RC',createdAt:new Date().toISOString(),updatedAt:new Date().toISOString(),status:'new',adminNote:''};
       await reportRequest(id,'PUT',report);
       try{
         await writeReportUserMirror(report);
@@ -26179,9 +26190,13 @@ function renderStats(){
     }
 
     if(resume){
-      resume.style.opacity=s.activeMatch?1:.52;
+      var hasActiveMatch=!!s.activeMatch;
+      resume.style.opacity=hasActiveMatch?1:.52;
+      resume.disabled=!hasActiveMatch;
+      resume.setAttribute('aria-disabled',hasActiveMatch?'false':'true');
+      resume.classList.toggle('is-disabled',!hasActiveMatch);
       var sm=resume.querySelector('small');
-      if(sm)sm.textContent=s.activeMatch
+      if(sm)sm.textContent=hasActiveMatch
         ? 'Vrátit se ke skóre '+s.activeMatch.score1+':'+s.activeMatch.score2
         : 'Momentálně není rozehraný zápas';
     }
@@ -26259,14 +26274,21 @@ function renderStats(){
 
   var resume=document.getElementById('modernResumeTile');
   if(resume){
-    resume.addEventListener('click',function(){
-      var btn=document.querySelector('header .nav button[data-nav="setup"]');
+    resume.addEventListener('click',function(e){
       var s=snapshot();
-      if(s&&s.activeMatch){
-        var back=document.getElementById('backToMatchNav');
-        if(back&&!back.classList.contains('hidden')){back.click();return;}
+      if(!s||!s.activeMatch){
+        e.preventDefault();
+        e.stopPropagation();
+        return;
       }
-      if(btn)btn.click();
+      var back=document.getElementById('backToMatchNav');
+      if(back&&!back.classList.contains('hidden')){
+        back.click();
+        return;
+      }
+      if(typeof window.showScreen==='function'){
+        try{ window.showScreen('match'); return; }catch(err){}
+      }
     });
   }
 
