@@ -522,7 +522,7 @@
     }
   
 
-/* === v4.51.69 RC • mobilní herní obrazovka portrait / landscape === */
+/* === v4.51.70 RC • mobilní herní obrazovka portrait / landscape === */
 @media (max-width:700px) and (orientation:portrait){
   #screen-match{margin-top:8px}
   #screen-match>.card{padding:10px;border-radius:14px}
@@ -2208,6 +2208,23 @@ html[data-theme="light"] #leagueSchedule .history-item .muted{
   }
 </style>
 
+
+<style id="mobile-nav-match-screen-visibility-fix">
+  /* Spodní mobilní navigace se při nastavování a hraní zápasu schovává,
+     aby nezabírala místo ani nepřekážela ovládacím prvkům. */
+  @media(max-width:700px){
+    body.modern-test:has(#screen-setup.active) .modern-mobile-nav,
+    body.modern-test:has(#screen-match.active) .modern-mobile-nav{
+      display:none!important;
+    }
+
+    body.modern-test:has(#screen-setup.active) .app,
+    body.modern-test:has(#screen-match.active) .app{
+      padding-bottom:calc(14px + env(safe-area-inset-bottom))!important;
+    }
+  }
+</style>
+
 </head>
 <body>
 <div class="app">
@@ -2223,7 +2240,7 @@ html[data-theme="light"] #leagueSchedule .history-item .muted{
           <span class="by">by</span>
           <span class="club">BC Rybárna</span>
         </div>
-        <small class="modern-brand-version">v4.51.69 RC</small>
+        <small class="modern-brand-version">v4.51.70 RC</small>
       </div>
     </div>
     <div class="nav">
@@ -2724,7 +2741,7 @@ html[data-theme="light"] #leagueSchedule .history-item .muted{
         </div>
         <div class="subpanel" style="min-width:210px;text-align:center;margin:0">
           <div class="muted" style="font-size:10px;font-weight:950;letter-spacing:1px">AKTUÁLNÍ VERZE</div>
-          <div style="font-size:22px;font-weight:950;color:var(--gold2);margin-top:5px">v4.51.69 RC</div>
+          <div style="font-size:22px;font-weight:950;color:var(--gold2);margin-top:5px">v4.51.70 RC</div>
         </div>
       </div>
     </div>
@@ -6549,7 +6566,7 @@ html[data-theme="light"] #leagueSchedule .history-item .muted{
     const btn=$('submitReportBtn');if(btn)btn.disabled=true;
     try{
       const id=uid(),p=currentUserPlayerId?data.players?.[currentUserPlayerId]:null;
-      const report={id,createdByUid:cloudUid,createdByPlayerId:currentUserPlayerId||'',createdByName:p?playerSelectionLabel(p):(cloudUserEmail||'Uživatel'),email:cloudUserEmail||'',type,area,description,appVersion:'v4.51.69 RC',createdAt:new Date().toISOString(),updatedAt:new Date().toISOString(),status:'new',adminNote:''};
+      const report={id,createdByUid:cloudUid,createdByPlayerId:currentUserPlayerId||'',createdByName:p?playerSelectionLabel(p):(cloudUserEmail||'Uživatel'),email:cloudUserEmail||'',type,area,description,appVersion:'v4.51.70 RC',createdAt:new Date().toISOString(),updatedAt:new Date().toISOString(),status:'new',adminNote:''};
       await reportRequest(id,'PUT',report);
       try{
         await writeReportUserMirror(report);
