@@ -522,7 +522,7 @@
     }
   
 
-/* === v4.51.62 RC • mobilní herní obrazovka portrait / landscape === */
+/* === v4.51.63 RC • mobilní herní obrazovka portrait / landscape === */
 @media (max-width:700px) and (orientation:portrait){
   #screen-match{margin-top:8px}
   #screen-match>.card{padding:10px;border-radius:14px}
@@ -2068,6 +2068,28 @@ html[data-theme="light"] #leagueSchedule .history-item .muted{
 }
 </style>
 
+
+<style id="historical-structured-entry-styles">
+  .historical-entry-list{display:grid;gap:8px}
+  .historical-placement-grid{
+    display:grid;grid-template-columns:110px minmax(220px,1fr) auto;gap:10px;align-items:end
+  }
+  .historical-match-grid{
+    display:grid;grid-template-columns:150px minmax(180px,1fr) 150px minmax(180px,1fr) auto;
+    gap:10px;align-items:end
+  }
+  .historical-row-remove{display:flex;align-items:flex-end}
+  .historical-row-remove .btn{white-space:nowrap}
+  @media(max-width:900px){
+    .historical-match-grid{grid-template-columns:1fr 1fr}
+    .historical-match-grid .historical-row-remove{grid-column:1/-1}
+  }
+  @media(max-width:620px){
+    .historical-placement-grid,.historical-match-grid{grid-template-columns:1fr}
+    .historical-match-grid .historical-row-remove{grid-column:auto}
+  }
+</style>
+
 </head>
 <body>
 <div class="app">
@@ -2083,7 +2105,7 @@ html[data-theme="light"] #leagueSchedule .history-item .muted{
           <span class="by">by</span>
           <span class="club">BC Rybárna</span>
         </div>
-        <small class="modern-brand-version">v4.51.62 RC</small>
+        <small class="modern-brand-version">v4.51.63 RC</small>
       </div>
     </div>
     <div class="nav">
@@ -2472,7 +2494,7 @@ html[data-theme="light"] #leagueSchedule .history-item .muted{
         </div>
         <div class="subpanel" style="min-width:210px;text-align:center;margin:0">
           <div class="muted" style="font-size:10px;font-weight:950;letter-spacing:1px">AKTUÁLNÍ VERZE</div>
-          <div style="font-size:22px;font-weight:950;color:var(--gold2);margin-top:5px">v4.51.62 RC</div>
+          <div style="font-size:22px;font-weight:950;color:var(--gold2);margin-top:5px">v4.51.63 RC</div>
         </div>
       </div>
     </div>
@@ -6229,7 +6251,7 @@ html[data-theme="light"] #leagueSchedule .history-item .muted{
     const btn=$('submitReportBtn');if(btn)btn.disabled=true;
     try{
       const id=uid(),p=currentUserPlayerId?data.players?.[currentUserPlayerId]:null;
-      const report={id,createdByUid:cloudUid,createdByPlayerId:currentUserPlayerId||'',createdByName:p?playerSelectionLabel(p):(cloudUserEmail||'Uživatel'),email:cloudUserEmail||'',type,area,description,appVersion:'v4.51.62 RC',createdAt:new Date().toISOString(),updatedAt:new Date().toISOString(),status:'new',adminNote:''};
+      const report={id,createdByUid:cloudUid,createdByPlayerId:currentUserPlayerId||'',createdByName:p?playerSelectionLabel(p):(cloudUserEmail||'Uživatel'),email:cloudUserEmail||'',type,area,description,appVersion:'v4.51.63 RC',createdAt:new Date().toISOString(),updatedAt:new Date().toISOString(),status:'new',adminNote:''};
       await reportRequest(id,'PUT',report);
       try{
         await writeReportUserMirror(report);
@@ -18761,23 +18783,51 @@ function renderTournamentDetail(){
           </div>
 
           <div id="seriesHistoricalFull_${s.id}" style="margin-top:12px">
-            <label>Odehrané zápasy</label>
-            <textarea id="seriesHistoricalMatches_${s.id}" rows="12" placeholder="skupina A; Jan Novák; Petr Svoboda; 2:1&#10;skupina A; Jan Novák; Karel Dvořák; 2:0&#10;čtvrtfinále; Jan Novák; Pavel Nový; 2:1&#10;semifinále; Jan Novák; Aleš Malý; 2:0&#10;finále; Jan Novák; Petr Svoboda; 2:1"></textarea>
-            <div class="muted" style="margin-top:5px">
-              Jeden zápas na řádek: <strong>fáze; hráč 1; hráč 2; skóre</strong>.
-              Fáze: <strong>skupina A/B…</strong>, <strong>osmifinále</strong>, <strong>čtvrtfinále</strong>, <strong>semifinále</strong>, <strong>o 3. místo</strong>, <strong>finále</strong>.
+            <div style="display:flex;justify-content:space-between;gap:10px;align-items:center;flex-wrap:wrap">
+              <div>
+                <label style="margin-bottom:3px">Odehrané zápasy</label>
+                <div class="muted">Každý zápas zadej do samostatného řádku.</div>
+              </div>
+              <button class="btn" type="button" onclick="addHistoricalMatchRow('${s.id}')">+ PŘIDAT ZÁPAS</button>
             </div>
-            <div style="margin-top:10px">
-              <label>Volitelné konečné pořadí / ruční oprava</label>
-              <textarea id="seriesHistoricalResults_${s.id}" rows="7" placeholder="Nech prázdné pro automatický výpočet.&#10;Případně:&#10;1; Jan Novák&#10;2; Petr Svoboda&#10;5; Pavel Nový&#10;5; Aleš Malý"></textarea>
-              <div class="muted" style="margin-top:5px">Použij jen pokud nemáš kompletní pavouk. Stejné číslo místa znamená dělené pořadí.</div>
+            <div id="seriesHistoricalMatchRows_${s.id}" class="historical-entry-list" style="margin-top:10px"></div>
+
+            <label style="display:flex;align-items:center;gap:8px;margin-top:14px">
+              <input id="seriesHistoricalManualPlacement_${s.id}" type="checkbox" style="width:auto" onchange="toggleHistoricalManualPlacement('${s.id}')">
+              Chci konečné pořadí zadat ručně
+            </label>
+            <div id="seriesHistoricalManualPlacementBox_${s.id}" class="hidden" style="margin-top:10px">
+              <div style="display:flex;justify-content:space-between;gap:10px;align-items:center;flex-wrap:wrap">
+                <div class="muted">Použij, pokud nemáš kompletní pavouk nebo chceš pořadí ručně opravit.</div>
+                <button class="btn" type="button" onclick="addHistoricalPlacementRow('${s.id}','manual')">+ PŘIDAT HRÁČE</button>
+              </div>
+              <div id="seriesHistoricalManualPlacementRows_${s.id}" class="historical-entry-list" style="margin-top:10px"></div>
             </div>
+
+            <details style="margin-top:14px">
+              <summary style="cursor:pointer;font-weight:900">Pokročilé: vložit zápasy z textu</summary>
+              <div style="margin-top:10px">
+                <textarea id="seriesHistoricalMatches_${s.id}" rows="7" placeholder="skupina A; Jan Novák; Petr Svoboda; 2:1"></textarea>
+                <div class="muted" style="margin-top:5px">Původní import zůstává jako záložní možnost. Pokud vyplníš řádky výše, mají přednost.</div>
+                <textarea id="seriesHistoricalResults_${s.id}" rows="5" style="margin-top:8px" placeholder="Volitelné pořadí: 1; Jan Novák"></textarea>
+              </div>
+            </details>
           </div>
 
           <div id="seriesHistoricalPlacements_${s.id}" class="hidden" style="margin-top:12px">
-            <label>Konečné pořadí</label>
-            <textarea id="seriesHistoricalPlacementsOnly_${s.id}" rows="9" placeholder="1; Jan Novák&#10;2; Petr Svoboda&#10;3; Karel Dvořák&#10;5; Pavel Nový&#10;5; Aleš Malý"></textarea>
-            <div class="muted" style="margin-top:5px">Tato varianta uloží body za umístění, ale nebude doplňovat výhry/prohry ze zápasů.</div>
+            <div style="display:flex;justify-content:space-between;gap:10px;align-items:center;flex-wrap:wrap">
+              <div>
+                <label style="margin-bottom:3px">Konečné pořadí</label>
+                <div class="muted">Stejné číslo místa znamená dělené pořadí.</div>
+              </div>
+              <button class="btn" type="button" onclick="addHistoricalPlacementRow('${s.id}','placements')">+ PŘIDAT HRÁČE</button>
+            </div>
+            <div id="seriesHistoricalPlacementRows_${s.id}" class="historical-entry-list" style="margin-top:10px"></div>
+            <details style="margin-top:14px">
+              <summary style="cursor:pointer;font-weight:900">Pokročilé: vložit pořadí z textu</summary>
+              <textarea id="seriesHistoricalPlacementsOnly_${s.id}" rows="6" style="margin-top:10px" placeholder="1; Jan Novák&#10;2; Petr Svoboda"></textarea>
+            </details>
+            <div class="muted" style="margin-top:8px">Tato varianta uloží body za umístění, ale nebude doplňovat výhry/prohry ze zápasů.</div>
           </div>
 
           <div style="display:flex;justify-content:flex-end;margin-top:12px"><button class="btn primary" onclick="addHistoricalTournamentToSeries('${s.id}')">ULOŽIT HISTORICKÝ TURNAJ</button></div>
@@ -18788,6 +18838,16 @@ function renderTournamentDetail(){
         ${canManageSeriesOrganizers(s)?`<div style="margin-top:18px"><button class="btn danger" onclick="deleteTournamentSeries('${s.id}')">SMAZAT SÉRII</button></div>`:''}`:''}
     `;
   }
+
+
+  document.addEventListener('click',function(e){
+    if(e.target?.closest?.('[onclick*="openSeries"]')||e.target?.closest?.('[onclick*="renderSeriesModal"]')){
+      setTimeout(()=>{
+        const s=(data.tournamentSeries||[]).find(x=>x.id===selectedSeriesId);
+        if(s)ensureHistoricalInitialRows(s.id);
+      },0);
+    }
+  },true);
 
   window.toggleSeriesEditScoring=function(seriesId){
     const custom=$('seriesEditScoringMode_'+seriesId)?.value==='custom';
@@ -18829,10 +18889,138 @@ function renderTournamentDetail(){
     toast('Nastavení série bylo uloženo.');
   };
 
+
+  function historicalPlayerOptionsHtml(selected=''){
+    const players=Object.values(data.players||{})
+      .filter(p=>p && p.active!==false && p.hiddenFromPlayers!==true)
+      .sort((a,b)=>playerSelectionLabel(a).localeCompare(playerSelectionLabel(b),'cs'));
+    return '<option value="">— vyber hráče —</option>'+
+      players.map(p=>'<option value="'+esc(p.id)+'" '+(selected===p.id?'selected':'')+'>'+esc(playerSelectionLabel(p))+'</option>').join('')+
+      '<option value="__guest__">Jiný hráč / host…</option>';
+  }
+
+  function historicalPlayerControlHtml(seriesId,rowId,side){
+    return '<div class="historical-player-control" style="min-width:0">'+
+      '<select class="historical-player-select" data-series="'+esc(seriesId)+'" data-row="'+esc(rowId)+'" data-side="'+esc(side)+'" onchange="historicalPlayerChoiceChanged(this)">'+historicalPlayerOptionsHtml()+'</select>'+
+      '<input class="historical-guest-name hidden" data-side="'+esc(side)+'" placeholder="Jméno hosta" style="margin-top:6px">'+
+    '</div>';
+  }
+
+  window.historicalPlayerChoiceChanged=function(sel){
+    const wrap=sel?.closest('.historical-player-control');
+    const input=wrap?.querySelector('.historical-guest-name');
+    if(input)input.classList.toggle('hidden',sel.value!=='__guest__');
+    if(input && sel.value==='__guest__')input.focus();
+  };
+
+  window.addHistoricalPlacementRow=function(seriesId,target='placements',place=''){
+    const wrap=$(target==='manual'?'seriesHistoricalManualPlacementRows_'+seriesId:'seriesHistoricalPlacementRows_'+seriesId);
+    if(!wrap)return;
+    const rowId='hpr_'+uid();
+    const row=document.createElement('div');
+    row.className='historical-placement-row subpanel';
+    row.dataset.rowId=rowId;
+    row.style.margin='8px 0 0';
+    row.innerHTML='<div class="historical-placement-grid">'+
+      '<div><label>Místo</label><input class="historical-place" type="number" min="1" value="'+esc(String(place||''))+'" placeholder="1"></div>'+
+      '<div><label>Hráč</label>'+historicalPlayerControlHtml(seriesId,rowId,'player')+'</div>'+
+      '<div class="historical-row-remove"><button class="btn danger" type="button" onclick="this.closest(\'.historical-placement-row\').remove()">ODEBRAT</button></div>'+
+    '</div>';
+    wrap.appendChild(row);
+  };
+
+  window.addHistoricalMatchRow=function(seriesId){
+    const wrap=$('seriesHistoricalMatchRows_'+seriesId);if(!wrap)return;
+    const rowId='hmr_'+uid(),row=document.createElement('div');
+    row.className='historical-match-row subpanel';
+    row.dataset.rowId=rowId;
+    row.style.margin='8px 0 0';
+    row.innerHTML='<div class="historical-match-grid">'+
+      '<div><label>Fáze</label><select class="historical-stage" onchange="historicalStageChanged(this)">'+
+        '<option value="group">Skupina</option><option value="r32">Last 32</option><option value="r16">Osmifinále</option>'+
+        '<option value="quarter">Čtvrtfinále</option><option value="semi">Semifinále</option><option value="third">O 3. místo</option><option value="final">Finále</option>'+
+      '</select><input class="historical-group" value="A" placeholder="Skupina A" style="margin-top:6px"></div>'+
+      '<div><label>Hráč 1</label>'+historicalPlayerControlHtml(seriesId,rowId,'p1')+'</div>'+
+      '<div><label>Skóre</label><div style="display:grid;grid-template-columns:1fr auto 1fr;gap:6px;align-items:center"><input class="historical-score1" type="number" min="0" value="0"><strong>:</strong><input class="historical-score2" type="number" min="0" value="0"></div></div>'+
+      '<div><label>Hráč 2</label>'+historicalPlayerControlHtml(seriesId,rowId,'p2')+'</div>'+
+      '<div class="historical-row-remove"><button class="btn danger" type="button" onclick="this.closest(\'.historical-match-row\').remove()">ODEBRAT</button></div>'+
+    '</div>';
+    wrap.appendChild(row);
+  };
+
+  window.historicalStageChanged=function(sel){
+    const row=sel?.closest('.historical-match-row'),group=row?.querySelector('.historical-group');
+    if(group)group.classList.toggle('hidden',sel.value!=='group');
+  };
+
+  window.toggleHistoricalManualPlacement=function(seriesId){
+    const on=$('seriesHistoricalManualPlacement_'+seriesId)?.checked===true;
+    const box=$('seriesHistoricalManualPlacementBox_'+seriesId);
+    box?.classList.toggle('hidden',!on);
+    const rows=$('seriesHistoricalManualPlacementRows_'+seriesId);
+    if(on && rows && !rows.children.length){
+      addHistoricalPlacementRow(seriesId,'manual',1);
+      addHistoricalPlacementRow(seriesId,'manual',2);
+    }
+  };
+
+  function historicalStructuredPlayer(control){
+    const sel=control?.querySelector('.historical-player-select');
+    if(!sel||!sel.value)return null;
+    if(sel.value==='__guest__'){
+      const name=String(control.querySelector('.historical-guest-name')?.value||'').trim();
+      if(!name)return null;
+      return {id:'histguest_'+uid(),displayName:name,guest:true};
+    }
+    const p=data.players?.[sel.value];
+    return p?{id:p.id,displayName:playerSelectionLabel(p),guest:false}:null;
+  }
+
+  function collectHistoricalPlacementRows(seriesId,target){
+    const wrap=$(target==='manual'?'seriesHistoricalManualPlacementRows_'+seriesId:'seriesHistoricalPlacementRows_'+seriesId);
+    const rows=[...(wrap?.querySelectorAll('.historical-placement-row')||[])];
+    return rows.map((row,i)=>{
+      const place=Math.floor(Number(row.querySelector('.historical-place')?.value||0));
+      const player=historicalStructuredPlayer(row.querySelector('.historical-player-control'));
+      if(place<1)throw new Error('Zkontroluj místo na řádku '+(i+1)+'.');
+      if(!player)throw new Error('Vyber hráče na řádku '+(i+1)+'.');
+      return {place,player};
+    });
+  }
+
+  function collectHistoricalMatchRows(seriesId){
+    const wrap=$('seriesHistoricalMatchRows_'+seriesId);
+    const rows=[...(wrap?.querySelectorAll('.historical-match-row')||[])];
+    return rows.map((row,i)=>{
+      const stage=row.querySelector('.historical-stage')?.value||'';
+      const group=stage==='group'?String(row.querySelector('.historical-group')?.value||'A').trim():'';
+      const controls=row.querySelectorAll('.historical-player-control');
+      const p1=historicalStructuredPlayer(controls[0]),p2=historicalStructuredPlayer(controls[1]);
+      const score1=Math.max(0,Math.floor(Number(row.querySelector('.historical-score1')?.value||0)));
+      const score2=Math.max(0,Math.floor(Number(row.querySelector('.historical-score2')?.value||0)));
+      if(!p1||!p2)throw new Error('Vyber oba hráče u zápasu '+(i+1)+'.');
+      if(normalizeSeriesHistoricalName(p1.displayName)===normalizeSeriesHistoricalName(p2.displayName))throw new Error('V zápasu '+(i+1)+' je stejný hráč na obou stranách.');
+      if(score1===score2)throw new Error('Zápas '+(i+1)+' nemůže skončit remízou.');
+      return {stage,group,p1,p2,score1,score2};
+    });
+  }
+
+  function ensureHistoricalInitialRows(seriesId){
+    const matchWrap=$('seriesHistoricalMatchRows_'+seriesId);
+    if(matchWrap && !matchWrap.children.length)addHistoricalMatchRow(seriesId);
+    const placementWrap=$('seriesHistoricalPlacementRows_'+seriesId);
+    if(placementWrap && !placementWrap.children.length){
+      addHistoricalPlacementRow(seriesId,'placements',1);
+      addHistoricalPlacementRow(seriesId,'placements',2);
+      addHistoricalPlacementRow(seriesId,'placements',3);
+    }
+  }
+
   window.toggleSeriesHistoricalMode=function(seriesId){
     const mode=$('seriesHistoricalMode_'+seriesId)?.value||'full';
     $('seriesHistoricalFull_'+seriesId)?.classList.toggle('hidden',mode!=='full');
     $('seriesHistoricalPlacements_'+seriesId)?.classList.toggle('hidden',mode==='full');
+    ensureHistoricalInitialRows(seriesId);
   };
 
   function parseHistoricalPlacementRows(raw,resolver){
@@ -19026,32 +19214,74 @@ function renderTournamentDetail(){
     try{
       let results=[],matches=[],statsComplete=false,manualPlacement=false;
       if(mode==='placements'){
+        const structured=collectHistoricalPlacementRows(seriesId,'placements');
         const raw=String($('seriesHistoricalPlacementsOnly_'+seriesId)?.value||'').trim();
-        if(!raw)throw new Error('Zadej konečné pořadí.');
-        results=parseHistoricalPlacementRows(raw,resolve);
-      }else{
-        const raw=String($('seriesHistoricalMatches_'+seriesId)?.value||'').trim();
-        if(!raw)throw new Error('Zadej odehrané zápasy.');
-        const errors=[];
-        raw.split(/\r?\n/).map(x=>x.trim()).filter(Boolean).forEach((line,i)=>{
-          const parts=line.split(';').map(x=>x.trim());
-          if(parts.length<4){errors.push(i+1);return;}
-          const st=historicalStageInfo(parts[0]),p1=resolve(parts[1]),p2=resolve(parts[2]);
-          const sm=parts.slice(3).join(';').trim().match(/^(\d+)\s*[:\-]\s*(\d+)$/);
-          if(!st||!p1.displayName||!p2.displayName||!sm){errors.push(i+1);return;}
-          const score1=Number(sm[1]),score2=Number(sm[2]);
-          if(score1===score2){errors.push(i+1);return;}
-          matches.push({
-            id:'histmatch_'+uid(),stage:st.stage,stageLabel:st.label,group:st.group||'',
-            player1Id:p1.id,player2Id:p2.id,player1Name:p1.displayName,player2Name:p2.displayName,
-            score1,score2,winnerId:score1>score2?p1.id:p2.id,loserId:score1>score2?p2.id:p1.id
+        if(structured.length){
+          const seen=new Set();
+          results=structured.map(({place,player})=>{
+            const key=normalizeSeriesHistoricalName(player.displayName);
+            if(seen.has(key))throw new Error('Hráč „'+player.displayName+'“ je v pořadí zadaný vícekrát.');
+            seen.add(key);
+            byId.set(player.id,player);
+            return {place,playerId:player.id,displayName:player.displayName};
           });
-        });
-        if(errors.length)throw new Error('Zkontroluj zápasy na řádcích '+errors.join(', ')+'. Formát: fáze; hráč 1; hráč 2; 2:1.');
+          const counts={};results.forEach(x=>counts[x.place]=(counts[x.place]||0)+1);
+          results.forEach(x=>x.sharedPlace=counts[x.place]>1);
+        }else if(raw){
+          results=parseHistoricalPlacementRows(raw,resolve);
+        }else throw new Error('Přidej alespoň dva hráče do konečného pořadí.');
+      }else{
+        const structured=collectHistoricalMatchRows(seriesId);
+        const raw=String($('seriesHistoricalMatches_'+seriesId)?.value||'').trim();
 
+        if(structured.length){
+          structured.forEach((m,i)=>{
+            const p1=m.p1,p2=m.p2;
+            byId.set(p1.id,p1);byId.set(p2.id,p2);
+            const stageLabel=m.stage==='group'?'skupina '+(m.group||'A'):
+              ({r32:'Last 32',r16:'osmifinále',quarter:'čtvrtfinále',semi:'semifinále',third:'o 3. místo',final:'finále'}[m.stage]||m.stage);
+            matches.push({
+              id:'histmatch_'+uid(),stage:m.stage,stageLabel,group:m.group||'',
+              player1Id:p1.id,player2Id:p2.id,player1Name:p1.displayName,player2Name:p2.displayName,
+              score1:m.score1,score2:m.score2,winnerId:m.score1>m.score2?p1.id:p2.id,loserId:m.score1>m.score2?p2.id:p1.id
+            });
+          });
+        }else if(raw){
+          const errors=[];
+          raw.split(/\r?\n/).map(x=>x.trim()).filter(Boolean).forEach((line,i)=>{
+            const parts=line.split(';').map(x=>x.trim());
+            if(parts.length<4){errors.push(i+1);return;}
+            const st=historicalStageInfo(parts[0]),p1=resolve(parts[1]),p2=resolve(parts[2]);
+            const sm=parts.slice(3).join(';').trim().match(/^(\d+)\s*[:\-]\s*(\d+)$/);
+            if(!st||!p1.displayName||!p2.displayName||!sm){errors.push(i+1);return;}
+            const score1=Number(sm[1]),score2=Number(sm[2]);
+            if(score1===score2){errors.push(i+1);return;}
+            matches.push({
+              id:'histmatch_'+uid(),stage:st.stage,stageLabel:st.label,group:st.group||'',
+              player1Id:p1.id,player2Id:p2.id,player1Name:p1.displayName,player2Name:p2.displayName,
+              score1,score2,winnerId:score1>score2?p1.id:p2.id,loserId:score1>score2?p2.id:p1.id
+            });
+          });
+          if(errors.length)throw new Error('Zkontroluj zápasy na řádcích '+errors.join(', ')+'.');
+        }else throw new Error('Přidej alespoň jeden odehraný zápas.');
+
+        const manualOn=$('seriesHistoricalManualPlacement_'+seriesId)?.checked===true;
+        const manualRows=manualOn?collectHistoricalPlacementRows(seriesId,'manual'):[];
         const override=String($('seriesHistoricalResults_'+seriesId)?.value||'').trim();
-        if(override){results=parseHistoricalPlacementRows(override,resolve);manualPlacement=true;}
-        else results=historicalAutoPlacements(matches,byId);
+        if(manualRows.length){
+          const seen=new Set();
+          results=manualRows.map(({place,player})=>{
+            const key=normalizeSeriesHistoricalName(player.displayName);
+            if(seen.has(key))throw new Error('Hráč „'+player.displayName+'“ je v pořadí zadaný vícekrát.');
+            seen.add(key);byId.set(player.id,player);
+            return {place,playerId:player.id,displayName:player.displayName};
+          });
+          const counts={};results.forEach(x=>counts[x.place]=(counts[x.place]||0)+1);
+          results.forEach(x=>x.sharedPlace=counts[x.place]>1);
+          manualPlacement=true;
+        }else if(override){
+          results=parseHistoricalPlacementRows(override,resolve);manualPlacement=true;
+        }else results=historicalAutoPlacements(matches,byId);
         statsComplete=true;
       }
 
