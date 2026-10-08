@@ -522,7 +522,7 @@
     }
   
 
-/* === v4.51.60 RC • mobilní herní obrazovka portrait / landscape === */
+/* === v4.51.61 RC • mobilní herní obrazovka portrait / landscape === */
 @media (max-width:700px) and (orientation:portrait){
   #screen-match{margin-top:8px}
   #screen-match>.card{padding:10px;border-radius:14px}
@@ -1699,6 +1699,290 @@
   }
 </style>
 
+
+<style id="global-light-mode-completion">
+/* Kompletní světlý režim celé aplikace.
+   Jediná záměrně tmavá výjimka je hero karta na hlavní stránce. */
+html[data-theme="light"]{
+  --bg:#f2f0e9;
+  --panel:#ffffff;
+  --panel2:#f6f3ea;
+  --text:#171717;
+  --muted:#676157;
+  --border:#d1c9ba;
+  --shadow:0 10px 28px rgba(52,42,20,.10);
+}
+
+html[data-theme="light"] body,
+html[data-theme="light"] body.modern-test{
+  color:#171717;
+  background:linear-gradient(180deg,#f7f4eb 0,#ece8de 100%);
+}
+
+/* Obecné kontejnery a panely */
+html[data-theme="light"] .card,
+html[data-theme="light"] .subpanel,
+html[data-theme="light"] .player,
+html[data-theme="light"] .modal-card,
+html[data-theme="light"] .help-card,
+html[data-theme="light"] .league-kpi,
+html[data-theme="light"] .league-fixture,
+html[data-theme="light"] .league-hub-card,
+html[data-theme="light"] .results-hub-card,
+html[data-theme="light"] .support-hub-card,
+html[data-theme="light"] .tournament-hub-choice,
+html[data-theme="light"] .tournament-public-card,
+html[data-theme="light"] .tournament-detail-public,
+html[data-theme="light"] .bracket-section,
+html[data-theme="light"] .bracket-match,
+html[data-theme="light"] .eightball-result-side{
+  background:linear-gradient(180deg,#ffffff,#f7f3ea)!important;
+  color:#171717!important;
+  border-color:#d1c9ba!important;
+  box-shadow:none;
+}
+
+/* Zlaté primární karty zůstávají zlaté */
+html[data-theme="light"] .btn.primary,
+html[data-theme="light"] .support-hub-card.primary,
+html[data-theme="light"] .tournament-hub-choice.primary,
+html[data-theme="light"] .modern-tile.primary{
+  background:linear-gradient(145deg,#e4c568,#b98627)!important;
+  color:#17110a!important;
+  border-color:#b88628!important;
+}
+html[data-theme="light"] .support-hub-card.primary *,
+html[data-theme="light"] .tournament-hub-choice.primary *,
+html[data-theme="light"] .modern-tile.primary *{
+  color:#21180b!important;
+}
+
+/* Liga Sever */
+html[data-theme="light"] .league-kpi{
+  background:#fff!important;
+}
+html[data-theme="light"] .league-fixture{
+  background:#fff!important;
+}
+html[data-theme="light"] .league-fixture.done{
+  border-color:#79a98a!important;
+  background:#f7fcf8!important;
+}
+html[data-theme="light"] .league-fixture.playing{
+  border-color:#c7a34a!important;
+  background:#fffaf0!important;
+}
+html[data-theme="light"] .league-leg{
+  border-bottom-color:#e1dbcf!important;
+}
+html[data-theme="light"] .league-team-score,
+html[data-theme="light"] .league-standing-lead,
+html[data-theme="light"] .league-kpi strong,
+html[data-theme="light"] .league-hub-icon{
+  color:#8f650f!important;
+}
+html[data-theme="light"] .league-hub-card small{
+  color:#6a645b!important;
+}
+
+/* Turnaje / výsledky / podpora */
+html[data-theme="light"] .results-hub-icon,
+html[data-theme="light"] .support-hub-icon,
+html[data-theme="light"] .tournament-hub-choice .icon,
+html[data-theme="light"] .tournament-public-date,
+html[data-theme="light"] .tournament-reg-count{
+  color:#946816!important;
+}
+html[data-theme="light"] .results-hub-card .muted,
+html[data-theme="light"] .support-hub-card small,
+html[data-theme="light"] .tournament-hub-choice small,
+html[data-theme="light"] .tournament-public-description{
+  color:#6a645b!important;
+}
+html[data-theme="light"] .tournament-public-meta span{
+  background:#faf7ef!important;
+  color:#5f584c!important;
+  border-color:#d7cfbf!important;
+}
+html[data-theme="light"] .tournament-calendar-empty{
+  background:#fbf8f1!important;
+  color:#716b60!important;
+  border-color:#cbc1ae!important;
+}
+html[data-theme="light"] .tournament-public-form{
+  background:#fffaf0!important;
+  border-color:#d4bd84!important;
+}
+
+/* Pavouky */
+html[data-theme="light"] .bracket-section{
+  background:#fbf8f1!important;
+  border-color:#d8c794!important;
+}
+html[data-theme="light"] .bracket-match{
+  background:#fff!important;
+  border-color:#d6cfc2!important;
+}
+html[data-theme="light"] .bracket-match.done{
+  border-color:#b58a23!important;
+}
+html[data-theme="light"] .bracket-match-head,
+html[data-theme="light"] .bracket-player+.bracket-player{
+  border-color:#e4ded2!important;
+}
+html[data-theme="light"] .bracket-round h4,
+html[data-theme="light"] .bracket-player.winner{
+  color:#8f650f!important;
+}
+html[data-theme="light"] .bracket-bye{
+  background:#fbf8f1!important;
+  border-color:#cfc7b8!important;
+  color:#6a645b!important;
+}
+html[data-theme="light"] .bracket-note{
+  background:#fff7df!important;
+  border-color:#d6bd77!important;
+  color:#625945!important;
+}
+
+/* Zápasová obrazovka a akční panely */
+html[data-theme="light"] .player{
+  background:#fff!important;
+}
+html[data-theme="light"] .player.on-turn{
+  border-color:#b78a29!important;
+  box-shadow:0 0 0 1px rgba(183,138,41,.20),0 8px 24px rgba(76,58,20,.08)!important;
+}
+html[data-theme="light"] .eightball-result-side{
+  background:#fff!important;
+}
+html[data-theme="light"] .event-log{
+  background:#f8f5ee!important;
+  color:#272727!important;
+  border:1px solid #d7d0c3!important;
+}
+html[data-theme="light"] .clock{
+  background:#f7f3ea!important;
+  color:#171717!important;
+  border-color:#bdb5a6!important;
+}
+html[data-theme="light"] .clock.warning{
+  background:#fff8df!important;
+  color:#7b5900!important;
+  border-color:#b88c25!important;
+}
+html[data-theme="light"] .clock.danger{
+  background:#fff0f0!important;
+  color:#9b2525!important;
+  border-color:#c66c6c!important;
+}
+
+/* Formuláře */
+html[data-theme="light"] input,
+html[data-theme="light"] select,
+html[data-theme="light"] textarea,
+html[data-theme="light"] .profile-form textarea,
+html[data-theme="light"] .tournament-public-form textarea{
+  background:#fff!important;
+  color:#171717!important;
+  border-color:#bdb5a6!important;
+}
+html[data-theme="light"] input::placeholder,
+html[data-theme="light"] textarea::placeholder{
+  color:#8b857a!important;
+}
+html[data-theme="light"] input:focus,
+html[data-theme="light"] select:focus,
+html[data-theme="light"] textarea:focus{
+  border-color:#a77a20!important;
+}
+
+/* Tlačítka */
+html[data-theme="light"] .btn:not(.primary):not(.danger),
+html[data-theme="light"] .nav button{
+  background:#f8f5ee!important;
+  color:#1d1d1d!important;
+  border-color:#c7c0b3!important;
+}
+html[data-theme="light"] .btn:not(.primary):not(.danger):hover,
+html[data-theme="light"] .nav button:hover{
+  background:#efe9dc!important;
+  border-color:#a69d8d!important;
+}
+html[data-theme="light"] .btn.ghost{
+  background:transparent!important;
+}
+html[data-theme="light"] .btn.danger{
+  background:#fff0f0!important;
+  color:#8b1717!important;
+  border-color:#d59a9a!important;
+}
+
+/* Tabulky */
+html[data-theme="light"] table{
+  color:#171717!important;
+}
+html[data-theme="light"] th{
+  background:#f2ede3!important;
+  color:#292929!important;
+  border-color:#d5cec0!important;
+}
+html[data-theme="light"] td{
+  background:#fff!important;
+  color:#202020!important;
+  border-color:#e1dbcf!important;
+}
+html[data-theme="light"] tr:nth-child(even) td{
+  background:#fbf8f1!important;
+}
+
+/* Badge / drobné prvky */
+html[data-theme="light"] .badge{
+  background:#f8f5ec!important;
+  color:#292929!important;
+  border-color:#bdb8ab!important;
+}
+html[data-theme="light"] .badge.gold{
+  background:#fff5d8!important;
+  color:#6c4d00!important;
+  border-color:#bf9633!important;
+}
+html[data-theme="light"] .badge.warn{
+  background:#fff0bd!important;
+  color:#694900!important;
+  border-color:#bc9130!important;
+}
+html[data-theme="light"] .muted{
+  color:#676157!important;
+}
+html[data-theme="light"] .hr{
+  border-color:#d8d1c4!important;
+}
+
+/* Výjimka: homepage hero zůstává záměrně tmavý */
+html[data-theme="light"] body.modern-test .modern-hero{
+  background:
+    radial-gradient(circle at 78% 10%,rgba(216,173,82,.13),transparent 30%),
+    radial-gradient(circle at 10% 85%,rgba(216,173,82,.06),transparent 28%),
+    linear-gradient(145deg,#121213,#090909)!important;
+  border-color:rgba(216,173,82,.24)!important;
+  color:#f5f2ea!important;
+}
+html[data-theme="light"] body.modern-test .modern-hero .modern-kicker{
+  color:#d7b15c!important;
+}
+html[data-theme="light"] body.modern-test .modern-hero .modern-title{
+  color:#f5f2ea!important;
+}
+html[data-theme="light"] body.modern-test .modern-hero .modern-title span{
+  color:var(--modern-gold2)!important;
+}
+html[data-theme="light"] body.modern-test .modern-hero .modern-subtitle,
+html[data-theme="light"] body.modern-test .modern-hero .modern-origin{
+  color:#bdb5a6!important;
+}
+</style>
+
 </head>
 <body>
 <div class="app">
@@ -1714,7 +1998,7 @@
           <span class="by">by</span>
           <span class="club">BC Rybárna</span>
         </div>
-        <small class="modern-brand-version">v4.51.60 RC</small>
+        <small class="modern-brand-version">v4.51.61 RC</small>
       </div>
     </div>
     <div class="nav">
@@ -2103,7 +2387,7 @@
         </div>
         <div class="subpanel" style="min-width:210px;text-align:center;margin:0">
           <div class="muted" style="font-size:10px;font-weight:950;letter-spacing:1px">AKTUÁLNÍ VERZE</div>
-          <div style="font-size:22px;font-weight:950;color:var(--gold2);margin-top:5px">v4.51.60 RC</div>
+          <div style="font-size:22px;font-weight:950;color:var(--gold2);margin-top:5px">v4.51.61 RC</div>
         </div>
       </div>
     </div>
@@ -5860,7 +6144,7 @@
     const btn=$('submitReportBtn');if(btn)btn.disabled=true;
     try{
       const id=uid(),p=currentUserPlayerId?data.players?.[currentUserPlayerId]:null;
-      const report={id,createdByUid:cloudUid,createdByPlayerId:currentUserPlayerId||'',createdByName:p?playerSelectionLabel(p):(cloudUserEmail||'Uživatel'),email:cloudUserEmail||'',type,area,description,appVersion:'v4.51.60 RC',createdAt:new Date().toISOString(),updatedAt:new Date().toISOString(),status:'new',adminNote:''};
+      const report={id,createdByUid:cloudUid,createdByPlayerId:currentUserPlayerId||'',createdByName:p?playerSelectionLabel(p):(cloudUserEmail||'Uživatel'),email:cloudUserEmail||'',type,area,description,appVersion:'v4.51.61 RC',createdAt:new Date().toISOString(),updatedAt:new Date().toISOString(),status:'new',adminNote:''};
       await reportRequest(id,'PUT',report);
       try{
         await writeReportUserMirror(report);
