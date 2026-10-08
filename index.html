@@ -1164,7 +1164,40 @@
     display:flex;align-items:center;gap:7px;padding:0 11px;
     font-size:10px;font-weight:850;
   }
-  body.modern-test .modern-home{max-width:1500px;margin:0 auto;padding:20px 18px 94px}
+  .notification-center{position:relative;flex:0 0 auto}
+  body.modern-test header .nav .notification-bell-btn{
+    position:relative;width:40px;min-height:38px;padding:0;display:grid;place-items:center;flex:0 0 40px;
+    border:1px solid rgba(216,173,82,.22);background:rgba(255,255,255,.025);border-radius:12px;color:#f2f2f2;
+  }
+  .notification-bell-btn svg{width:19px;height:19px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+  .notification-bell-btn.has-unread{color:#f4d77f;border-color:rgba(216,173,82,.55);background:rgba(216,173,82,.08)}
+  .notification-count{
+    position:absolute;right:-5px;top:-6px;min-width:18px;height:18px;padding:0 5px;border-radius:999px;
+    display:flex;align-items:center;justify-content:center;background:#d8ad52;color:#090909;
+    border:2px solid #090909;font-size:9px;font-weight:950;line-height:1;
+  }
+  .notification-panel{
+    position:absolute;right:0;top:48px;width:min(390px,calc(100vw - 28px));max-height:min(560px,72vh);overflow:auto;
+    background:#0b0b0d;border:1px solid rgba(216,173,82,.32);border-radius:18px;
+    box-shadow:0 24px 70px rgba(0,0,0,.62);z-index:180;padding:10px;
+  }
+  .notification-panel-head{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:7px 7px 10px}
+  .notification-panel-head strong{font-size:15px}
+  .notification-mark-all{border:0!important;background:transparent!important;color:#d8ad52!important;padding:5px!important;font-size:10px;font-weight:900}
+  .notification-item{
+    width:100%;display:block;text-align:left;border:1px solid #252527!important;background:#111114!important;
+    border-radius:14px!important;padding:12px!important;margin:0 0 7px!important;color:#f2f2f2!important;
+  }
+  .notification-item.unread{border-color:rgba(216,173,82,.44)!important;background:linear-gradient(135deg,rgba(216,173,82,.11),#111114)!important}
+  .notification-item-title{font-size:12px;font-weight:900;line-height:1.35}
+  .notification-item-meta{font-size:10px;color:#9e9ea3;margin-top:5px;line-height:1.4}
+  .notification-empty{padding:24px 12px;text-align:center;color:#87878c;font-size:12px}
+  @media(max-width:700px){
+    body.modern-test header .nav #notificationCenter{display:block!important}
+    .notification-panel{position:fixed;right:8px;left:8px;top:96px;width:auto;max-height:65vh}
+  }
+
+    body.modern-test .modern-home{max-width:1500px;margin:0 auto;padding:20px 18px 94px}
   .modern-hero{
     position:relative;overflow:hidden;min-height:430px;
     border:1px solid rgba(216,173,82,.24);border-radius:30px;padding:54px;
@@ -1376,6 +1409,7 @@
     body.modern-test header .nav > *{display:none!important}
     body.modern-test header .nav .modern-home-btn{display:grid!important}
     body.modern-test header .nav #modernAccountInline,
+    body.modern-test header .nav #notificationCenter,
     body.modern-test header .nav #cloudStatusBtn,
     body.modern-test header .nav #logoutBtn{display:flex!important}
     body.modern-test header .nav #cloudStatusBtn,
@@ -2274,6 +2308,22 @@ html[data-theme="light"] #leagueSchedule .history-item .muted{
         </span>
         <strong id="modernLoggedInUserBadge">Načítám účet…</strong>
         <span id="modernAccountRole" class="modern-account-role">—</span>
+      </div>
+      <div id="notificationCenter" class="notification-center">
+        <button id="notificationBellBtn" class="notification-bell-btn" type="button" title="Upozornění" aria-label="Upozornění" aria-expanded="false">
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9"></path>
+            <path d="M10 21h4"></path>
+          </svg>
+          <span id="notificationCount" class="notification-count hidden">0</span>
+        </button>
+        <div id="notificationPanel" class="notification-panel hidden">
+          <div class="notification-panel-head">
+            <strong>Upozornění</strong>
+            <button id="notificationMarkAllBtn" class="notification-mark-all" type="button">OZNAČIT VŠE PŘEČTENÉ</button>
+          </div>
+          <div id="notificationList"></div>
+        </div>
       </div>
       <button id="cloudStatusBtn" class="modern-cloud-btn" type="button" title="Stav cloudu" aria-label="Stav cloudu">
         <span id="modernCloudDot" class="modern-cloud-dot"></span>
@@ -26903,6 +26953,7 @@ function renderStats(){
           '<button type="button" class="btn primary" data-nav="challenges">DOMLUVIT ZÁPAS</button>'+
         '</div>';
     }
+    try{renderNotificationCenter();}catch(e){}
   }
 
   async function persist(ch){
@@ -27035,6 +27086,142 @@ function renderStats(){
     try{await persist(ch);}catch(e){console.warn('Complete challenge:',e);}
   };
 
+  const NOTIFICATION_READ_KEY='poolcitadlo_notification_read_v1';
+
+  function notificationReadMap(){
+    var uid=currentUid();
+    if(!uid)return {};
+    try{
+      var all=JSON.parse(localStorage.getItem(NOTIFICATION_READ_KEY)||'{}');
+      return (all&&typeof all==='object'&&all[uid]&&typeof all[uid]==='object')?all[uid]:{};
+    }catch(e){return {};}
+  }
+
+  function saveNotificationReadMap(map){
+    var uid=currentUid();
+    if(!uid)return;
+    try{
+      var all=JSON.parse(localStorage.getItem(NOTIFICATION_READ_KEY)||'{}');
+      if(!all||typeof all!=='object'||Array.isArray(all))all={};
+      all[uid]=map||{};
+      localStorage.setItem(NOTIFICATION_READ_KEY,JSON.stringify(all));
+    }catch(e){}
+  }
+
+  function notificationEventKey(ch,type){
+    var stamp=ch.responseUpdatedAt||ch.updatedAt||ch.acceptedAt||ch.createdAt||'';
+    return [ch.id,type,stamp].join('|');
+  }
+
+  function notificationEvents(){
+    if(!cloudAuthenticated||!currentUid())return [];
+    var me=currentUid(),rows=[];
+    cache.forEach(function(ch){
+      if(!ch||!isMine(ch))return;
+      var opponent=playerNameById(otherPlayerId(ch));
+      var meta=String(ch.discipline||'').toUpperCase()+' · Race to '+Number(ch.raceTo||1)+(ch.date||ch.flexibleTime?' · '+formatDate(ch):'');
+
+      if(ch.status==='pending'&&ch.recipientUid===me){
+        rows.push({
+          key:notificationEventKey(ch,'challenge_pending'),challengeId:ch.id,
+          title:opponent+' tě vyzval k zápasu',meta:meta,
+          ts:ch.updatedAt||ch.createdAt||''
+        });
+        return;
+      }
+
+      if(ch.status==='countered'&&ch.counterByUid&&ch.counterByUid!==me){
+        rows.push({
+          key:notificationEventKey(ch,'challenge_counter'),challengeId:ch.id,
+          title:opponent+' navrhl jiný termín',meta:meta,
+          ts:ch.responseUpdatedAt||ch.updatedAt||''
+        });
+        return;
+      }
+
+      if(ch.status==='accepted'&&ch.senderUid===me){
+        rows.push({
+          key:notificationEventKey(ch,'challenge_accepted'),challengeId:ch.id,
+          title:opponent+' přijal výzvu k zápasu',meta:meta,
+          ts:ch.acceptedAt||ch.responseUpdatedAt||ch.updatedAt||''
+        });
+        return;
+      }
+
+      if(ch.status==='declined'&&ch.senderUid===me){
+        rows.push({
+          key:notificationEventKey(ch,'challenge_declined'),challengeId:ch.id,
+          title:opponent+' odmítl tvoji výzvu',meta:meta,
+          ts:ch.responseUpdatedAt||ch.updatedAt||''
+        });
+      }
+    });
+    rows.sort(function(a,b){return new Date(b.ts||0)-new Date(a.ts||0)});
+    return rows.slice(0,30);
+  }
+
+  function renderNotificationCenter(){
+    var bell=q('notificationBellBtn'),count=q('notificationCount'),list=q('notificationList');
+    if(!bell||!count||!list)return;
+    if(!cloudAuthenticated||!currentUid()){
+      count.classList.add('hidden');count.textContent='0';bell.classList.remove('has-unread');
+      list.innerHTML='<div class="notification-empty">Po přihlášení se zde zobrazí upozornění.</div>';
+      return;
+    }
+    var read=notificationReadMap(),events=notificationEvents();
+    var unread=events.filter(function(n){return !read[n.key]}).length;
+    count.textContent=unread>99?'99+':String(unread);
+    count.classList.toggle('hidden',!unread);
+    bell.classList.toggle('has-unread',!!unread);
+    list.innerHTML=events.length?events.map(function(n){
+      return '<button type="button" class="notification-item '+(!read[n.key]?'unread':'')+'" data-notification-key="'+esc2(n.key)+'" data-challenge-id="'+esc2(n.challengeId)+'">'+
+        '<div class="notification-item-title">'+esc2(n.title)+'</div>'+
+        '<div class="notification-item-meta">'+esc2(n.meta)+'</div>'+
+      '</button>';
+    }).join(''):'<div class="notification-empty">Nemáš žádná upozornění.</div>';
+
+    list.querySelectorAll('[data-notification-key]').forEach(function(el){
+      el.addEventListener('click',function(){
+        var map=notificationReadMap();
+        map[this.dataset.notificationKey]=Date.now();
+        saveNotificationReadMap(map);
+        renderNotificationCenter();
+        q('notificationPanel')?.classList.add('hidden');
+        q('notificationBellBtn')?.setAttribute('aria-expanded','false');
+        showScreen('challenges');
+        setTimeout(function(){
+          var target=q('matchChallengeIncomingList')||q('matchChallengesContent');
+          target?.scrollIntoView({behavior:'smooth',block:'start'});
+        },100);
+      });
+    });
+  }
+
+  function markAllNotificationsRead(){
+    var map=notificationReadMap();
+    notificationEvents().forEach(function(n){map[n.key]=Date.now()});
+    saveNotificationReadMap(map);
+    renderNotificationCenter();
+  }
+
+  window.renderNotificationCenter=renderNotificationCenter;
+
+  q('notificationBellBtn')?.addEventListener('click',function(e){
+    e.stopPropagation();
+    var panel=q('notificationPanel');
+    if(!panel)return;
+    var opening=panel.classList.contains('hidden');
+    panel.classList.toggle('hidden',!opening);
+    this.setAttribute('aria-expanded',opening?'true':'false');
+    if(opening)renderNotificationCenter();
+  });
+  q('notificationPanel')?.addEventListener('click',function(e){e.stopPropagation()});
+  q('notificationMarkAllBtn')?.addEventListener('click',function(){markAllNotificationsRead()});
+  document.addEventListener('click',function(){
+    q('notificationPanel')?.classList.add('hidden');
+    q('notificationBellBtn')?.setAttribute('aria-expanded','false');
+  });
+
   window.openMatchChallengesScreen=function(){
     render();
     populateOpponents();
@@ -27059,7 +27246,7 @@ function renderStats(){
   q('matchChallengeCounterSave')?.addEventListener('click',window.saveMatchChallengeCounter);
   q('profileChallengeBtn')?.addEventListener('click',function(){window.openChallengeForPlayer(this.dataset.playerId||'')});
 
-  cacheLoad();renderHome();
+  cacheLoad();renderHome();renderNotificationCenter();
   setTimeout(function(){
     if(cloudAuthenticated)loadSecurePlayers().then(function(){load(false)}).catch(function(){load(false)});
     else load(false);
