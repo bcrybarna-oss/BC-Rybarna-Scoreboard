@@ -522,7 +522,7 @@
     }
   
 
-/* === v4.51.67 RC • mobilní herní obrazovka portrait / landscape === */
+/* === v4.51.68 RC • mobilní herní obrazovka portrait / landscape === */
 @media (max-width:700px) and (orientation:portrait){
   #screen-match{margin-top:8px}
   #screen-match>.card{padding:10px;border-radius:14px}
@@ -2185,7 +2185,7 @@ html[data-theme="light"] #leagueSchedule .history-item .muted{
           <span class="by">by</span>
           <span class="club">BC Rybárna</span>
         </div>
-        <small class="modern-brand-version">v4.51.67 RC</small>
+        <small class="modern-brand-version">v4.51.68 RC</small>
       </div>
     </div>
     <div class="nav">
@@ -2686,7 +2686,7 @@ html[data-theme="light"] #leagueSchedule .history-item .muted{
         </div>
         <div class="subpanel" style="min-width:210px;text-align:center;margin:0">
           <div class="muted" style="font-size:10px;font-weight:950;letter-spacing:1px">AKTUÁLNÍ VERZE</div>
-          <div style="font-size:22px;font-weight:950;color:var(--gold2);margin-top:5px">v4.51.67 RC</div>
+          <div style="font-size:22px;font-weight:950;color:var(--gold2);margin-top:5px">v4.51.68 RC</div>
         </div>
       </div>
     </div>
@@ -2825,10 +2825,12 @@ html[data-theme="light"] #leagueSchedule .history-item .muted{
     <div class="card">
       <h1 class="section-title">NÁVOD K APLIKACI</h1>
       <div class="muted">
-        Aktuální návod ke všem hlavním funkcím Scoreboardu, zápasům, statistikám, turnajům, Lize Sever a streamu.
+        Aktuální návod k Poolčítadlu – hlavní stránce, hráčům, domlouvání zápasů, počítadlu, statistikám, turnajům a ligám, Livescore, streamu i cloudu.
       </div>
       <div class="help-toc">
+        <button type="button" onclick="document.getElementById('help-home').scrollIntoView({behavior:'smooth'})">Hlavní stránka</button>
         <button type="button" onclick="document.getElementById('help-start').scrollIntoView({behavior:'smooth'})">Hráči</button>
+        <button type="button" onclick="document.getElementById('help-challenges').scrollIntoView({behavior:'smooth'})">Domluva zápasů</button>
         <button type="button" onclick="document.getElementById('help-match').scrollIntoView({behavior:'smooth'})">Běžný zápas</button>
         <button type="button" onclick="document.getElementById('help-actions').scrollIntoView({behavior:'smooth'})">Akce</button>
         <button type="button" onclick="document.getElementById('help-clock').scrollIntoView({behavior:'smooth'})">Shot clock</button>
@@ -2847,6 +2849,19 @@ html[data-theme="light"] #leagueSchedule .history-item .muted{
 
     <div class="help-grid" style="margin-top:14px">
 
+      <div id="help-home" class="help-card help-section">
+        <h3>Hlavní stránka a orientace v aplikaci</h3>
+        <ul>
+          <li>Hlavní stránka soustřeďuje nejpoužívanější části Poolčítadla: <strong>Spustit zápas, Statistiky, Turnaje a ligy, Hráči, Livescore, Výsledky, Moje statistiky, Domluvit zápas</strong> a podporu.</li>
+          <li>Dlaždice <strong>Pokračovat</strong> je aktivní pouze tehdy, když je na daném zařízení skutečně rozehraný zápas. Pokud žádný není, je záměrně nekliknutelná.</li>
+          <li>U <strong>Domluvit zápas</strong> se může zobrazit počet nových příchozích výzev. Pokud máš potvrzený zápas, hlavní stránka zobrazí i nejbližší domluvené utkání.</li>
+          <li>Veřejně označené domluvené zápasy mohou být součástí přehledu nadcházejících utkání; soukromé domluvy vidí v aplikaci pouze jejich účastníci.</li>
+          <li><strong>Livescore</strong> upozorňuje, když právě probíhá živý zápas.</li>
+          <li>Vzhled lze přepnout mezi <strong>tmavým a světlým režimem</strong>. Ve světlém režimu zůstává záměrně tmavá pouze hlavní brandová hero karta s logem; zbytek aplikace se přepíná do světlého vzhledu.</li>
+          <li>Logo Poolčítadla v hlavičce funguje jako návrat na hlavní stránku.</li>
+        </ul>
+      </div>
+
       <div id="help-start" class="help-card help-section">
         <h3>1. Hráči a profily</h3>
         <ul>
@@ -2863,6 +2878,23 @@ html[data-theme="light"] #leagueSchedule .history-item .muted{
           <li>Hráč může být v databázi i bez vlastního přihlašovacího účtu.</li>
           <li>Přihlášení je potřeba hlavně pro vlastní profil, správu vlastních zápasů, organizování turnajů a další oprávněné změny.</li>
           <li>U hráče se zobrazují dlouhodobé statistiky a ELO z dokončených zápasů, které se do těchto statistik započítávají.</li>
+          <li>Pokud mají oba hráči propojený účet, lze z profilu soupeře rovnou použít tlačítko <strong>VYZVAT K ZÁPASU</strong>.</li>
+        </ul>
+      </div>
+
+      <div id="help-challenges" class="help-card help-section">
+        <h3>Domluva zápasů a výzvy</h3>
+        <ul>
+          <li>Funkce <strong>Domluvit zápas</strong> je určena hráčům s přihlášeným účtem propojeným s hráčským profilem.</li>
+          <li>Novou výzvu lze poslat pouze soupeři, který má také propojený účet.</li>
+          <li>Ve výzvě se nastavuje <strong>disciplína, Race to, datum, čas, místo</strong> a volitelná krátká zpráva.</li>
+          <li>Pokud ještě neznáte konkrétní termín, lze zapnout <strong>Termín domluvíme později</strong>.</li>
+          <li>Příjemce může výzvu <strong>PŘIJMOUT, ODMÍTNOUT</strong> nebo použít <strong>JINÝ TERMÍN</strong> a poslat protinávrh.</li>
+          <li>Po přijetí se výzva přesune mezi <strong>Domluvené zápasy</strong>. Oba hráči mohou termín ještě změnit nebo domluvu zrušit.</li>
+          <li>Výzvu lze označit jako <strong>veřejnou</strong> nebo <strong>soukromou</strong>. Veřejná může být vidět v programu nadcházejících zápasů, soukromá se v tomto veřejném přehledu nezobrazuje.</li>
+          <li>Na hlavní stránce se u přihlášeného hráče zobrazí nové příchozí výzvy a nejbližší potvrzený zápas.</li>
+          <li>Tlačítko <strong>SPUSTIT ZÁPAS</strong> u potvrzené domluvy předvyplní oba hráče, disciplínu a Race to v klasickém počítadle. Před zahájením lze ostatní nastavení ještě zkontrolovat nebo změnit.</li>
+          <li>Po odehrání se domluva propojí se skutečným zápasem; samotná výzva se nikdy nezapočítává do ELO ani statistik jako odehraný výsledek.</li>
         </ul>
       </div>
 
@@ -3028,6 +3060,14 @@ html[data-theme="light"] #leagueSchedule .history-item .muted{
           <li>Po zápase aplikace oznámí postup, přesun na B-side nebo vyřazení.</li>
           <li>Na aktivní kartě turnaje je možné použít <strong>AKTUALIZOVAT</strong> pro načtení aktuálně uložených výsledků a stavu pavouka.</li>
           <li>Tlačítko <strong>UPRAVIT TURNAJ</strong> vidí hlavní admin a další uživatelé, kteří mají oprávnění daný turnaj spravovat.</li>
+          <li>V části <strong>Turnaje a ligy</strong> je oddělený přístup k vytváření turnaje, kalendáři turnajů, sériím a Lize Sever.</li>
+          <li><strong>Kalendář turnajů</strong> slouží jako turnajová nástěnka. Registrovaný uživatel může zveřejnit informace o akci, termín, místo, kapacitu, výhry, kontakt a další informace; u podporovaných turnajů lze využít registraci přímo v aplikaci.</li>
+          <li>Pořadatel může k turnaji přidat dalšího <strong>spolupořadatele</strong> a předat mu právo turnaj řídit.</li>
+          <li>Do <strong>série turnajů</strong> lze přidat běžné dokončené turnaje i historické turnaje odehrané před jejich používáním v Poolčítadle.</li>
+          <li>Historický turnaj se už běžně nezadává pomocí speciálně formátovaného textu. Pro konečné pořadí se používají řádky <strong>místo + hráč</strong>; u kompletního turnaje se každý zápas zadává jako samostatný řádek <strong>fáze + hráč 1 + skóre + hráč 2</strong>.</li>
+          <li>U historického turnaje lze zvolit <strong>pouze konečné pořadí</strong> nebo <strong>kompletní turnaj se zápasy</strong>. Kompletní zadání umožní dopočítat výhry a prohry; samotné pořadí do osobních W/L statistik žádné smyšlené zápasy nevytváří.</li>
+          <li>Stejné číslo umístění znamená <strong>dělené místo</strong>. U kompletního historického turnaje lze konečné pořadí nechat vypočítat, nebo jej ručně opravit.</li>
+          <li>Původní textový import historických výsledků zůstává dostupný pouze jako <strong>pokročilá záložní možnost</strong>.</li>
         </ul>
       </div>
 
@@ -3052,7 +3092,7 @@ html[data-theme="light"] #leagueSchedule .history-item .muted{
           <li>Hraje se šest zápasů 8-ball Race to 3: 1–1, 2–2, 3–3, 1–2, 2–3, 3–1.</li>
           <li>Při stavu 3:3 rozhodují <strong>dvojice</strong> v 9-ball.</li>
           <li>Pro rozhodující 9-ball dvojice se používá Kitchen rule podle nastavení ligy.</li>
-          <li>Dílčí výsledky lze odehrát přes Scoreboard nebo je oprávněný kapitán / správce může zadat ručně.</li>
+          <li>Dílčí výsledky lze odehrát přes Poolčítadlo nebo je oprávněný kapitán / správce může zadat ručně.</li>
           <li>Výsledek týmového utkání musí potvrdit oba kapitáni; administrátor může výsledek spravovat podle svých oprávnění.</li>
           <li>Tabulka ligy se počítá z potvrzených výsledků.</li>
         </ul>
@@ -3062,12 +3102,12 @@ html[data-theme="light"] #leagueSchedule .history-item .muted{
         <h3>13. Stream – jak spustit vysílání</h3>
         <p>Pro stream může hráč použít telefon s aplikací <strong>Streamlabs</strong> nebo jiné vysílací řešení, které umí přidat webový overlay.</p>
 
-        <p><strong>1. Připrav zápas ve Scoreboardu</strong></p>
+        <p><strong>1. Připrav zápas v Poolčítadle</strong></p>
         <ul>
-          <li>Spusť <strong>běžný / klasický zápas</strong>, zápas z turnaje nebo jiný podporovaný aktivní zápas ve Scoreboardu.</li>
+          <li>Spusť <strong>běžný / klasický zápas</strong>, zápas z turnaje nebo jiný podporovaný aktivní zápas v Poolčítadle.</li>
           <li>U běžného zápasu zkontroluj jména hráčů, disciplínu, Race to a případně shot clock.</li>
           <li>U turnajového zápasu se používají údaje nastavené turnajem.</li>
-          <li>Po zahájení aktivního zápasu Scoreboard průběžně posílá jeho stav do streamového overlaye.</li>
+          <li>Po zahájení aktivního zápasu Poolčítadlo průběžně posílá jeho stav do streamového overlaye.</li>
         </ul>
 
         <p style="margin-top:12px"><strong>2. Otevři Streamlabs na telefonu</strong></p>
@@ -3095,7 +3135,7 @@ html[data-theme="light"] #leagueSchedule .history-item .muted{
 
         <p style="margin-top:12px"><strong>4. Spusť stream</strong></p>
         <ul>
-          <li>Nejdřív spusť nebo otevři aktivní zápas ve Scoreboardu.</li>
+          <li>Nejdřív spusť nebo otevři aktivní zápas v Poolčítadle.</li>
           <li>Potom spusť vysílání ve Streamlabs.</li>
           <li>Na overlayi se zobrazují jména, skóre, disciplína a Race to.</li>
           <li>Při zapnutém shot clocku se může zobrazovat i čas hráče.</li>
@@ -3104,14 +3144,14 @@ html[data-theme="light"] #leagueSchedule .history-item .muted{
 
         <p style="margin-top:12px"><strong>5. Během zápasu</strong></p>
         <ul>
-          <li>Skóre a herní akce ovládej normálně ve Scoreboardu.</li>
+          <li>Skóre a herní akce ovládej normálně v Poolčítadle.</li>
           <li>Overlay se aktualizuje automaticky; ve Streamlabs není potřeba skóre přepisovat ručně.</li>
           <li>Pokud běží více stolů nebo více samostatných streamů, každý oprávněný účet používá svůj vlastní streamový kanál / overlay.</li>
         </ul>
 
         <p style="margin-top:12px"><strong>Když overlay neukazuje správná data</strong></p>
         <ul>
-          <li>Zkontroluj, že je Scoreboard přihlášený do cloudu a má internetové připojení.</li>
+          <li>Zkontroluj, že je Poolčítadlo přihlášené do cloudu a má internetové připojení.</li>
           <li>Zkontroluj, že je otevřený správný aktivní zápas.</li>
           <li>Obnov webový overlay ve Streamlabs.</li>
           <li>Nepoužívej adresu overlaye jiného uživatele.</li>
@@ -3122,6 +3162,8 @@ html[data-theme="light"] #leagueSchedule .history-item .muted{
         <h3>14. Cloud, účty a více zařízení</h3>
         <ul>
           <li>Po přihlášení se podporovaná data synchronizují přes cloud mezi zařízeními.</li>
+          <li>Pro <strong>Domluvu zápasů</strong> musí být účet propojený s hráčským profilem. Výzvy, odpovědi a domluvené termíny jsou navázané na konkrétní hráčské účty.</li>
+          <li>Při návratu na hlavní stránku a při otevření Domluvy zápasů aplikace načítá aktuální stav výzev, aby byly nové odpovědi a termíny vidět i z jiného zařízení.</li>
           <li>U rozehrané <strong>14.1 sólo</strong> může hráč přímo z LIVESCORE použít tlačítko <strong>UPRAVIT 14.1 SÓLO</strong> a vrátit se do svého počítadla. Toto tlačítko vidí pouze hráč, který danou sólo hru hraje; samotné admin oprávnění nestačí.</li>
           <li>Účet se při registraci ověřuje e-mailem.</li>
           <li>Aktivní lokální rozpracovaný zápas může být navázán na konkrétní zařízení, zatímco uložené výsledky a podporovaná online data se synchronizují.</li>
@@ -3137,6 +3179,7 @@ html[data-theme="light"] #leagueSchedule .history-item .muted{
           <li>Historie obsahuje dokončené zápasy a jejich zápasové statistiky.</li>
           <li>V sekci Hráči má každý hráč samostatná tlačítka <strong>PROFIL</strong> a <strong>HISTORIE ZÁPASŮ</strong>. Historie je oddělená od profilu a obsahuje všechny dohledatelné dokončené zápasy včetně ručně zapsaných turnajových výsledků.</li>
           <li>Pořadí série zahrnuje všechny hráče z turnajů. Neregistrovaný hráč nově dostane předpřipravený profil bez vlastníka, takže se jeho zápasy, ELO, turnaje a série ukládají pod stejným profilem. Po registraci může požádat o převzetí profilu a uvidí výsledky zpětně. Starší turnajoví hosté se při administrátorském načtení převádějí na tyto profily.</li>
+          <li>Historické turnaje v sérii lze zadat bezpečně přes formulář. Varianta <strong>pouze pořadí</strong> přidá body do série bez falešných W/L; varianta <strong>kompletní turnaj</strong> může evidovat jednotlivé odehrané zápasy.</li>
           <li>U vlastního bodování série se vždy používá přesné individuální pořadí uložené u hráče. I když turnaj zobrazuje skupinu „5.–8. místo“, série rozliší 5., 6., 7. a 8. místo a přidělí body přesně podle vlastní bodovací tabulky.</li>
           <li><strong>PDF REPORT</strong> vytvoří report konkrétního zápasu.</li>
           <li>U nedohraného zápasu lze později pokračovat, pokud má uživatel potřebné oprávnění.</li>
@@ -5310,7 +5353,7 @@ html[data-theme="light"] #leagueSchedule .history-item .muted{
       </div>
 
       <div id="groupPlayoffSeedStatus" class="muted" style="margin-top:12px;min-height:20px"></div>
-      <div class="muted" style="margin-top:4px;font-size:11px">RC v4.50.42</div>
+      <div class="muted" style="margin-top:4px;font-size:11px">RC v4.51.68</div>
       <div class="modal-actions">
         <button id="groupPlayoffSeedApplyBtn" class="btn primary big" type="button">NASADIT DO PLAY-OFF</button>
         <button id="groupPlayoffSeedCancelBtn" class="btn">ZRUŠIT</button>
@@ -6468,7 +6511,7 @@ html[data-theme="light"] #leagueSchedule .history-item .muted{
     const btn=$('submitReportBtn');if(btn)btn.disabled=true;
     try{
       const id=uid(),p=currentUserPlayerId?data.players?.[currentUserPlayerId]:null;
-      const report={id,createdByUid:cloudUid,createdByPlayerId:currentUserPlayerId||'',createdByName:p?playerSelectionLabel(p):(cloudUserEmail||'Uživatel'),email:cloudUserEmail||'',type,area,description,appVersion:'v4.51.67 RC',createdAt:new Date().toISOString(),updatedAt:new Date().toISOString(),status:'new',adminNote:''};
+      const report={id,createdByUid:cloudUid,createdByPlayerId:currentUserPlayerId||'',createdByName:p?playerSelectionLabel(p):(cloudUserEmail||'Uživatel'),email:cloudUserEmail||'',type,area,description,appVersion:'v4.51.68 RC',createdAt:new Date().toISOString(),updatedAt:new Date().toISOString(),status:'new',adminNote:''};
       await reportRequest(id,'PUT',report);
       try{
         await writeReportUserMirror(report);
@@ -6481,7 +6524,7 @@ html[data-theme="light"] #leagueSchedule .history-item .muted{
       const msg=String(e&&e.message||e||'');
       if(msg.includes('REPORT_401')||msg.includes('REPORT_403')){
         toast('Firebase zápis odmítl. Nasad nová Realtime Database Rules.');
-        if($('reportSubmitInfo'))$('reportSubmitInfo').textContent='Firebase nemá povolený zápis do /reports. Nasad pravidla v4.24.1.';
+        if($('reportSubmitInfo'))$('reportSubmitInfo').textContent='Firebase nemá povolený zápis do /reports. Nasad aktuální Realtime Database Rules.';
       }else{
         toast('Hlášení se nepodařilo odeslat.');
         if($('reportSubmitInfo'))$('reportSubmitInfo').textContent='Chyba: '+msg;
@@ -8166,7 +8209,7 @@ html[data-theme="light"] #leagueSchedule .history-item .muted{
       startCloudAutoSync();
       refreshAccountUI();
       renderPlayers();
-      toast('E-mail je ověřen. Vítej ve Scoreboardu.');
+      toast('E-mail je ověřen. Vítej v Poolčítadle.');
     }catch(e){
       $('emailVerifyMessage').textContent='Kontrola se nepodařila: '+String(e.message||e);
     }finally{
