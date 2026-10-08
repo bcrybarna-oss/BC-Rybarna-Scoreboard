@@ -522,7 +522,7 @@
     }
   
 
-/* === v4.51.61 RC • mobilní herní obrazovka portrait / landscape === */
+/* === v4.51.62 RC • mobilní herní obrazovka portrait / landscape === */
 @media (max-width:700px) and (orientation:portrait){
   #screen-match{margin-top:8px}
   #screen-match>.card{padding:10px;border-radius:14px}
@@ -1983,6 +1983,91 @@ html[data-theme="light"] body.modern-test .modern-hero .modern-origin{
 }
 </style>
 
+
+<style id="light-mode-history-and-legacy-panels-fix">
+html[data-theme="light"] .history-item,
+html[data-theme="light"] .player-item,
+html[data-theme="light"] .tournament-match,
+html[data-theme="light"] .tournament-round,
+html[data-theme="light"] .tournament-player-pick,
+html[data-theme="light"] .fourteen-status-card,
+html[data-theme="light"] .fourteen-action-card{
+  background:linear-gradient(180deg,#ffffff,#f7f3ea)!important;
+  color:#171717!important;
+  border-color:#d1c9ba!important;
+  box-shadow:none!important;
+}
+
+html[data-theme="light"] .history-item .history-line,
+html[data-theme="light"] .history-item .history-line *,
+html[data-theme="light"] .player-item,
+html[data-theme="light"] .tournament-match,
+html[data-theme="light"] .tournament-round,
+html[data-theme="light"] .tournament-player-pick{
+  color:#171717;
+}
+
+html[data-theme="light"] .history-score,
+html[data-theme="light"] .tournament-match .tm-score,
+html[data-theme="light"] .tournament-round h4,
+html[data-theme="light"] .standings-pos,
+html[data-theme="light"] .elo-badge{
+  color:#8f650f!important;
+}
+
+html[data-theme="light"] .tournament-badge{
+  background:#f6f1e7!important;
+  color:#615b51!important;
+  border-color:#cfc6b6!important;
+}
+
+html[data-theme="light"] .tournament-badge.gold{
+  background:#fff5d8!important;
+  color:#795600!important;
+  border-color:#bd9433!important;
+}
+
+html[data-theme="light"] .empty{
+  background:#fbf8f1!important;
+  color:#726b60!important;
+  border-color:#c9c0b0!important;
+}
+
+html[data-theme="light"] .history-item .btn:not(.primary):not(.danger){
+  background:#fff!important;
+  color:#1d1d1d!important;
+  border-color:#bdb5a6!important;
+}
+
+html[data-theme="light"] .history-item .btn:not(.primary):not(.danger):hover{
+  background:#f0eadf!important;
+  border-color:#9f9585!important;
+}
+
+html[data-theme="light"] .event{
+  color:#2b2b2b!important;
+  border-bottom-color:#e2dbcf!important;
+}
+
+html[data-theme="light"] .fourteen-status-card,
+html[data-theme="light"] .fourteen-action-card{
+  background:#fff!important;
+}
+
+/* Liga Sever - rozpis a výsledky */
+html[data-theme="light"] #leagueSchedule .history-item{
+  background:linear-gradient(180deg,#ffffff,#f5f0e5)!important;
+  border:1px solid #cec5b5!important;
+  box-shadow:0 7px 20px rgba(58,45,18,.06)!important;
+}
+html[data-theme="light"] #leagueSchedule .history-item .history-score{
+  color:#8a6114!important;
+}
+html[data-theme="light"] #leagueSchedule .history-item .muted{
+  color:#6b645a!important;
+}
+</style>
+
 </head>
 <body>
 <div class="app">
@@ -1998,7 +2083,7 @@ html[data-theme="light"] body.modern-test .modern-hero .modern-origin{
           <span class="by">by</span>
           <span class="club">BC Rybárna</span>
         </div>
-        <small class="modern-brand-version">v4.51.61 RC</small>
+        <small class="modern-brand-version">v4.51.62 RC</small>
       </div>
     </div>
     <div class="nav">
@@ -2387,7 +2472,7 @@ html[data-theme="light"] body.modern-test .modern-hero .modern-origin{
         </div>
         <div class="subpanel" style="min-width:210px;text-align:center;margin:0">
           <div class="muted" style="font-size:10px;font-weight:950;letter-spacing:1px">AKTUÁLNÍ VERZE</div>
-          <div style="font-size:22px;font-weight:950;color:var(--gold2);margin-top:5px">v4.51.61 RC</div>
+          <div style="font-size:22px;font-weight:950;color:var(--gold2);margin-top:5px">v4.51.62 RC</div>
         </div>
       </div>
     </div>
@@ -6144,7 +6229,7 @@ html[data-theme="light"] body.modern-test .modern-hero .modern-origin{
     const btn=$('submitReportBtn');if(btn)btn.disabled=true;
     try{
       const id=uid(),p=currentUserPlayerId?data.players?.[currentUserPlayerId]:null;
-      const report={id,createdByUid:cloudUid,createdByPlayerId:currentUserPlayerId||'',createdByName:p?playerSelectionLabel(p):(cloudUserEmail||'Uživatel'),email:cloudUserEmail||'',type,area,description,appVersion:'v4.51.61 RC',createdAt:new Date().toISOString(),updatedAt:new Date().toISOString(),status:'new',adminNote:''};
+      const report={id,createdByUid:cloudUid,createdByPlayerId:currentUserPlayerId||'',createdByName:p?playerSelectionLabel(p):(cloudUserEmail||'Uživatel'),email:cloudUserEmail||'',type,area,description,appVersion:'v4.51.62 RC',createdAt:new Date().toISOString(),updatedAt:new Date().toISOString(),status:'new',adminNote:''};
       await reportRequest(id,'PUT',report);
       try{
         await writeReportUserMirror(report);
