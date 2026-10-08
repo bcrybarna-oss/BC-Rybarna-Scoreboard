@@ -26334,6 +26334,309 @@ function renderStats(){
     try{showSavedMatchStats(id);}catch(e){console.warn(e);}
   };
 
+(function(){
+  var cache=[];
+  var counterChallengeId=null;
+  var LOCAL_KEY='poolcitadlo_match_challenges_cache_v1';
+
+  function q(id){return document.getElementById(id)}
+  function esc2(v){return String(v==null?'':v).replace(/[&<>"']/g,function(m){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]})}
+  function nowIso(){return new Date().toISOString()}
+  function myPlayer(){return currentUserPlayerId?data.players?.[currentUserPlayerId]:null}
+  function playerNameById(id){var p=data.players?.[id];return p?playerSelectionLabel(p):'Hráč'}
+  function currentUid(){return String(cloudUid||'')}
+  function isMine(ch){var u=currentUid();return !!u&&(ch.senderUid===u||ch.recipientUid===u)}
+  function otherPlayerId(ch){return ch.senderUid===currentUid()?ch.recipientPlayerId:ch.senderPlayerId}
+  function statusLabel(s){
+    return {pending:'ČEKÁ NA ODPOVĚĎ',countered:'NAVRŽEN JINÝ TERMÍN',accepted:'DOMLUVENO',declined:'ODMÍTNUTO',cancelled:'ZRUŠENO',played:'ODEHRÁNO'}[s]||String(s||'');
+  }
+  function formatDate(ch){
+    if(ch.flexibleTime)return 'Termín domluvíme později';
+    if(!ch.date)return 'Termín neuveden';
+    var d=new Date(ch.date+'T12:00:00');
+    var txt=isNaN(d)?ch.date:d.toLocaleDateString('cs-CZ',{day:'numeric',month:'numeric',year:'numeric'});
+    return txt+(ch.time?' · '+ch.time:'');
+  }
+  function cacheSave(){
+    try{localStorage.setItem(LOCAL_KEY,JSON.stringify(cache.filter(isMine)));}catch(e){}
+  }
+  function cacheLoad(){
+    try{
+      var x=JSON.parse(localStorage.getItem(LOCAL_KEY)||'[]');
+      if(Array.isArray(x))cache=x.filter(Boolean);
+    }catch(e){}
+  }
+
+  async function request(id,method,body){
+    if(!await ensureCloudToken())throw new Error('NO_AUTH');
+    var opts={method:method,headers:{'Content-Type':'application/json'},cache:'no-store'};
+    if(body!==undefined)opts.body=JSON.stringify(body);
+    var r=await fetch(cloudUrl('matchChallenges/'+encodeURIComponent(id)),opts);
+    if(!r.ok)throw new Error('MATCH_CHALLENGE_'+r.status);
+    return await r.json();
+  }
+
+  async function load(force){
+    cacheLoad();
+    if(!cloudAuthenticated||!cloudUid){
+      render();
+      renderHome();
+      return cache;
+    }
+    try{
+      if(!await ensureCloudToken())throw new Error('NO_AUTH');
+      var r=await fetch(cloudUrl('matchChallenges')+'&t='+Date.now(),{cache:'no-store'});
+      if(!r.ok)throw new Error('MATCH_CHALLENGES_READ_'+r.status);
+      var raw=await r.json()||{};
+      cache=Object.values(raw).filter(function(ch){return ch&&isMine(ch)});
+      cache.sort(function(a,b){return new Date(b.updatedAt||b.createdAt||0)-new Date(a.updatedAt||a.createdAt||0)});
+      cacheSave();
+    }catch(e){
+      console.warn('Match challenges load:',e);
+    }
+    render();
+    renderHome();
+    return cache;
+  }
+
+  function linkedOpponents(){
+    var mine=myPlayer();
+    return Object.values(data.players||{}).filter(function(p){
+      return p&&p.active!==false&&p.hiddenFromPlayers!==true&&p.ownerUid&&mine&&p.id!==mine.id&&String(p.ownerUid)!==String(cloudUid);
+    }).sort(function(a,b){return playerSelectionLabel(a).localeCompare(playerSelectionLabel(b),'cs')});
+  }
+
+  function populateOpponents(selected){
+    var sel=q('matchChallengeOpponent');if(!sel)return;
+    var arr=linkedOpponents();
+    sel.innerHTML='<option value="">— vyber soupeře —</option>'+arr.map(function(p){
+      return '<option value="'+esc2(p.id)+'" '+(selected===p.id?'selected':'')+'>'+esc2(playerSelectionLabel(p))+'</option>';
+    }).join('');
+    var help=q('matchChallengeOpponentHelp');
+    if(help)help.textContent=arr.length?'Zobrazují se pouze hráči s propojeným účtem.':'Zatím není k dispozici žádný další hráč s propojeným účtem.';
+  }
+
+  function challengeCard(ch){
+    var incoming=ch.recipientUid===currentUid()&&(ch.status==='pending'||ch.status==='countered');
+    var opponent=playerNameById(otherPlayerId(ch));
+    var actions='';
+    if(incoming){
+      actions='<button class="btn primary" onclick="acceptMatchChallenge(\''+ch.id+'\')">PŘIJMOUT</button>'+
+        '<button class="btn" onclick="counterMatchChallenge(\''+ch.id+'\')">JINÝ TERMÍN</button>'+
+        '<button class="btn danger" onclick="declineMatchChallenge(\''+ch.id+'\')">ODMÍTNOUT</button>';
+    }else if(ch.status==='accepted'){
+      actions='<button class="btn primary" onclick="startScheduledMatch(\''+ch.id+'\')">▶ SPUSTIT ZÁPAS</button>'+
+        '<button class="btn" onclick="counterMatchChallenge(\''+ch.id+'\')">ZMĚNIT TERMÍN</button>'+
+        '<button class="btn danger" onclick="cancelMatchChallenge(\''+ch.id+'\')">ZRUŠIT</button>';
+    }else if((ch.status==='pending'||ch.status==='countered')&&ch.senderUid===currentUid()){
+      actions='<button class="btn" onclick="counterMatchChallenge(\''+ch.id+'\')">UPRAVIT NÁVRH</button>'+
+        '<button class="btn danger" onclick="cancelMatchChallenge(\''+ch.id+'\')">ZRUŠIT VÝZVU</button>';
+    }
+    return '<div class="match-challenge-card '+(incoming?'incoming ':'')+(ch.status==='accepted'?'accepted':'')+'">'+
+      '<div class="match-challenge-card-head"><div><div class="match-challenge-card-title">'+esc2(playerNameById(ch.senderPlayerId))+' × '+esc2(playerNameById(ch.recipientPlayerId))+'</div>'+
+      '<div class="muted" style="margin-top:4px">'+esc2(formatDate(ch))+(ch.venue?' · '+esc2(ch.venue):'')+'</div></div>'+
+      '<span class="match-challenge-status '+esc2(ch.status)+'">'+esc2(statusLabel(ch.status))+'</span></div>'+
+      '<div class="match-challenge-meta"><span>'+esc2(String(ch.discipline||'').toUpperCase())+'</span><span>Race to '+Number(ch.raceTo||1)+'</span><span>'+(ch.isPublic?'VEŘEJNÝ':'SOUKROMÝ')+'</span></div>'+
+      (ch.note?'<div style="margin-top:10px;line-height:1.45">'+esc2(ch.note)+'</div>':'')+
+      (ch.counterByUid?'<div class="muted" style="margin-top:7px;font-size:11px">Poslední změnu termínu navrhl '+(ch.counterByUid===currentUid()?'ty':'soupeř')+'.</div>':'')+
+      (actions?'<div class="match-challenge-actions">'+actions+'</div>':'')+
+    '</div>';
+  }
+
+  function render(){
+    var content=q('matchChallengesContent'),notice=q('matchChallengesLoginNotice');
+    var ready=!!(cloudAuthenticated&&cloudUid&&currentUserPlayerId&&myPlayer());
+    if(content)content.classList.toggle('hidden',!ready);
+    if(notice)notice.classList.toggle('hidden',ready);
+    if(!ready)return;
+    populateOpponents(q('matchChallengeOpponent')?.value||'');
+
+    var incoming=cache.filter(function(ch){return ch.recipientUid===currentUid()&&(ch.status==='pending'||ch.status==='countered')});
+    var accepted=cache.filter(function(ch){return ch.status==='accepted'}).sort(function(a,b){
+      return String(a.date||'9999-12-31').localeCompare(String(b.date||'9999-12-31'))||String(a.time||'').localeCompare(String(b.time||''));
+    });
+    var other=cache.filter(function(ch){return !incoming.includes(ch)&&!accepted.includes(ch)});
+    var sum=q('matchChallengeSummary');
+    if(sum)sum.innerHTML=
+      '<div class="match-challenge-stat"><strong>'+incoming.length+'</strong><span>Čeká na tebe</span></div>'+
+      '<div class="match-challenge-stat"><strong>'+accepted.length+'</strong><span>Domluveno</span></div>'+
+      '<div class="match-challenge-stat"><strong>'+cache.filter(function(x){return x.senderUid===currentUid()&&(x.status==='pending'||x.status==='countered')}).length+'</strong><span>Čeká na soupeře</span></div>';
+    if(q('matchChallengeIncomingCount'))q('matchChallengeIncomingCount').textContent=String(incoming.length);
+    if(q('matchChallengeIncomingList'))q('matchChallengeIncomingList').innerHTML=incoming.length?incoming.map(challengeCard).join(''):'<div class="empty">Žádná nová výzva.</div>';
+    if(q('matchChallengeAcceptedList'))q('matchChallengeAcceptedList').innerHTML=accepted.length?accepted.map(challengeCard).join(''):'<div class="empty">Nemáš žádný domluvený zápas.</div>';
+    if(q('matchChallengeOtherList'))q('matchChallengeOtherList').innerHTML=other.length?other.map(challengeCard).join(''):'<div class="empty">Žádné další výzvy.</div>';
+  }
+
+  function nextAccepted(){
+    var rows=cache.filter(function(ch){return ch.status==='accepted'});
+    rows.sort(function(a,b){
+      var ax=a.flexibleTime?'9999-12-31T23:59':String(a.date||'9999-12-31')+'T'+String(a.time||'23:59');
+      var bx=b.flexibleTime?'9999-12-31T23:59':String(b.date||'9999-12-31')+'T'+String(b.time||'23:59');
+      return ax.localeCompare(bx);
+    });
+    return rows[0]||null;
+  }
+
+  function renderHome(){
+    var tileText=q('modernChallengeTileText'),badge=q('modernChallengeBadge'),panel=q('modernScheduledMatchPanel'),body=q('modernScheduledMatchBody'),title=q('modernScheduledMatchTitle');
+    var incoming=cache.filter(function(ch){return ch.recipientUid===currentUid()&&(ch.status==='pending'||ch.status==='countered')}).length;
+    if(badge){badge.textContent=String(incoming);badge.classList.toggle('hidden',!incoming);}
+    if(tileText){
+      if(incoming)tileText.textContent=incoming===1?'1 nová příchozí výzva':incoming+' nové příchozí výzvy';
+      else{
+        var acceptedCount=cache.filter(function(ch){return ch.status==='accepted'}).length;
+        tileText.textContent=acceptedCount?(acceptedCount===1?'1 domluvený zápas':acceptedCount+' domluvené zápasy'):'Výzvy a domluvené zápasy';
+      }
+    }
+    var ch=nextAccepted();
+    if(!panel)return;
+    panel.classList.toggle('hidden',!ch);
+    if(!ch)return;
+    var opponent=playerNameById(otherPlayerId(ch));
+    if(title)title.textContent='Ty × '+opponent;
+    if(body)body.innerHTML='<div class="modern-scheduled-body">'+
+      '<div class="modern-scheduled-vs">'+esc2(playerNameById(ch.senderPlayerId))+' × '+esc2(playerNameById(ch.recipientPlayerId))+'</div>'+
+      '<div class="modern-scheduled-meta"><strong>'+esc2(String(ch.discipline||'').toUpperCase())+'</strong><span>Race to '+Number(ch.raceTo||1)+'</span></div>'+
+      '<div class="modern-scheduled-meta"><strong>'+esc2(formatDate(ch))+'</strong><span>Termín</span></div>'+
+      '<div class="modern-scheduled-meta"><strong>'+esc2(ch.venue||'Místo neuvedeno')+'</strong><span>Místo</span></div>'+
+      '<button class="btn primary" type="button" onclick="startScheduledMatch(\''+ch.id+'\')">▶ SPUSTIT</button>'+
+    '</div>';
+  }
+
+  async function persist(ch){
+    ch.updatedAt=nowIso();
+    await request(ch.id,'PUT',ch);
+    var i=cache.findIndex(function(x){return x.id===ch.id});
+    if(i>=0)cache[i]=ch;else cache.unshift(ch);
+    cacheSave();render();renderHome();
+    try{window.renderModernHome&&window.renderModernHome()}catch(e){}
+    return ch;
+  }
+
+  window.sendMatchChallenge=async function(){
+    var mine=myPlayer(),opId=q('matchChallengeOpponent')?.value||'',op=data.players?.[opId];
+    if(!mine||!cloudUid){toast('Nejdřív se přihlas účtem propojeným s hráčským profilem.');return;}
+    if(!op||!op.ownerUid){toast('Vyber hráče s propojeným účtem.');return;}
+    var flexible=!!q('matchChallengeFlexibleTime')?.checked;
+    var date=String(q('matchChallengeDate')?.value||''),time=String(q('matchChallengeTime')?.value||'');
+    if(!flexible&&!date){toast('Vyber datum, nebo zapni „Termín domluvíme později“.');return;}
+    var btn=q('matchChallengeSendBtn');if(btn)btn.disabled=true;
+    try{
+      var ch={
+        id:'challenge_'+(crypto?.randomUUID?crypto.randomUUID():Date.now().toString(36)+Math.random().toString(36).slice(2)),
+        senderUid:String(cloudUid),senderPlayerId:mine.id,
+        recipientUid:String(op.ownerUid),recipientPlayerId:op.id,
+        discipline:q('matchChallengeDiscipline')?.value||'9-ball',
+        raceTo:Math.max(1,Math.floor(Number(q('matchChallengeRaceTo')?.value||7))),
+        flexibleTime:flexible,date:flexible?'':date,time:flexible?'':time,
+        venue:String(q('matchChallengeVenue')?.value||'').trim(),
+        note:String(q('matchChallengeNote')?.value||'').trim(),
+        isPublic:!!q('matchChallengePublic')?.checked,
+        status:'pending',createdAt:nowIso(),updatedAt:nowIso(),acceptedAt:'',playedMatchId:''
+      };
+      await persist(ch);
+      q('matchChallengeNote').value='';
+      if(q('matchChallengeSaveInfo'))q('matchChallengeSaveInfo').textContent='Výzva byla odeslána hráči '+playerSelectionLabel(op)+'.';
+      toast('Výzva k zápasu byla odeslána.');
+    }catch(e){
+      console.error(e);
+      var msg=String(e?.message||e);
+      if(msg.includes('401')||msg.includes('403'))toast('Cloud zatím nepovoluje ukládání výzev. Je potřeba doplnit pravidla databáze.');
+      else toast('Výzvu se nepodařilo uložit.');
+    }finally{if(btn)btn.disabled=false;}
+  };
+
+  window.acceptMatchChallenge=async function(id){
+    var ch=cache.find(function(x){return x.id===id});if(!ch||ch.recipientUid!==currentUid())return;
+    ch.status='accepted';ch.acceptedAt=nowIso();ch.counterByUid='';
+    try{await persist(ch);toast('Zápas je domluvený.');}catch(e){toast('Výzvu se nepodařilo přijmout.');}
+  };
+  window.declineMatchChallenge=async function(id){
+    var ch=cache.find(function(x){return x.id===id});if(!ch||ch.recipientUid!==currentUid())return;
+    ch.status='declined';
+    try{await persist(ch);toast('Výzva byla odmítnuta.');}catch(e){toast('Změnu se nepodařilo uložit.');}
+  };
+  window.cancelMatchChallenge=async function(id){
+    var ch=cache.find(function(x){return x.id===id});if(!ch||!isMine(ch))return;
+    if(!confirm('Opravdu tuto domluvu zrušit?'))return;
+    ch.status='cancelled';
+    try{await persist(ch);toast('Domluva byla zrušena.');}catch(e){toast('Změnu se nepodařilo uložit.');}
+  };
+  window.counterMatchChallenge=function(id){
+    var ch=cache.find(function(x){return x.id===id});if(!ch||!isMine(ch))return;
+    counterChallengeId=id;
+    q('matchChallengeCounterTitle').textContent=playerNameById(ch.senderPlayerId)+' × '+playerNameById(ch.recipientPlayerId);
+    q('matchChallengeCounterFlexible').checked=!!ch.flexibleTime;
+    q('matchChallengeCounterDate').value=ch.date||'';
+    q('matchChallengeCounterTime').value=ch.time||'';
+    q('matchChallengeCounterVenue').value=ch.venue||'';
+    q('matchChallengeCounterNote').value='';
+    q('matchChallengeCounterDateTime').classList.toggle('hidden',!!ch.flexibleTime);
+    q('matchChallengeCounterModal').classList.add('show');
+  };
+  window.saveMatchChallengeCounter=async function(){
+    var ch=cache.find(function(x){return x.id===counterChallengeId});if(!ch)return;
+    var flexible=!!q('matchChallengeCounterFlexible').checked;
+    var date=String(q('matchChallengeCounterDate').value||''),time=String(q('matchChallengeCounterTime').value||'');
+    if(!flexible&&!date){toast('Zadej datum, nebo zvol domluvu termínu později.');return;}
+    ch.flexibleTime=flexible;ch.date=flexible?'':date;ch.time=flexible?'':time;ch.venue=String(q('matchChallengeCounterVenue').value||'').trim();
+    var note=String(q('matchChallengeCounterNote').value||'').trim();if(note)ch.note=note;
+    ch.status='countered';ch.counterByUid=currentUid();ch.acceptedAt='';
+    try{await persist(ch);q('matchChallengeCounterModal').classList.remove('show');counterChallengeId=null;toast('Nový termín byl odeslán.');}catch(e){toast('Nový návrh se nepodařilo uložit.');}
+  };
+
+  window.startScheduledMatch=function(id){
+    var ch=cache.find(function(x){return x.id===id});if(!ch||ch.status!=='accepted'||!isMine(ch))return;
+    var me=myPlayer(),opp=data.players?.[otherPlayerId(ch)];
+    if(!me||!opp){toast('Hráčský profil se nepodařilo načíst.');return;}
+    window.pendingScheduledChallenge=JSON.parse(JSON.stringify(ch));
+    q('p1Name').value=me.name||playerDisplayName(me);
+    q('p2Name').value=opp.name||playerDisplayName(opp);
+    q('discipline').value=ch.discipline||'9-ball';
+    q('raceTo').value=String(Math.max(1,Number(ch.raceTo||7)));
+    if(q('streamMatchTitle'))q('streamMatchTitle').value='Domluvený zápas • '+playerDisplayName(me)+' × '+playerDisplayName(opp);
+    q('discipline').dispatchEvent(new Event('change',{bubbles:true}));
+    showScreen('setup');
+    toast('Zápas je předvyplněný. Zkontroluj nastavení a zahaj ho.');
+  };
+
+  window.completeScheduledChallengeForMatch=async function(m){
+    if(!m?.scheduledChallengeId||!m?.endedAt)return;
+    var ch=cache.find(function(x){return x.id===m.scheduledChallengeId});
+    if(!ch||ch.status==='played')return;
+    ch.status='played';ch.playedMatchId=m.id;ch.playedAt=m.endedAt||nowIso();
+    try{await persist(ch);}catch(e){console.warn('Complete challenge:',e);}
+  };
+
+  window.openMatchChallengesScreen=function(){
+    render();
+    populateOpponents();
+    load(true);
+  };
+  window.refreshMatchChallenges=function(force){return load(!!force)};
+  window.renderMatchChallengeHome=renderHome;
+  window.openChallengeForPlayer=function(playerId){
+    var p=data.players?.[playerId];
+    if(!p||!p.ownerUid){toast('Tento hráč nemá propojený účet.');return;}
+    if(String(playerId)===String(currentUserPlayerId)){toast('Nemůžeš vyzvat sám sebe.');return;}
+    q('profileModal')?.classList.remove('show');
+    showScreen('challenges');
+    setTimeout(function(){populateOpponents(playerId);q('matchChallengeOpponent').value=playerId;},0);
+  };
+
+  q('matchChallengeSendBtn')?.addEventListener('click',window.sendMatchChallenge);
+  q('matchChallengesRefreshBtn')?.addEventListener('click',function(){load(true)});
+  q('matchChallengeFlexibleTime')?.addEventListener('change',function(){q('matchChallengeDateTimeFields')?.classList.toggle('hidden',this.checked)});
+  q('matchChallengeCounterFlexible')?.addEventListener('change',function(){q('matchChallengeCounterDateTime')?.classList.toggle('hidden',this.checked)});
+  q('matchChallengeCounterCancel')?.addEventListener('click',function(){q('matchChallengeCounterModal')?.classList.remove('show');counterChallengeId=null});
+  q('matchChallengeCounterSave')?.addEventListener('click',window.saveMatchChallengeCounter);
+  q('profileChallengeBtn')?.addEventListener('click',function(){window.openChallengeForPlayer(this.dataset.playerId||'')});
+
+  cacheLoad();renderHome();
+  setTimeout(function(){load(false)},1200);
+  setInterval(function(){if(!document.hidden&&cloudAuthenticated)load(false)},30000);
+})();
+
 })();
 </script>
 
@@ -26678,310 +26981,7 @@ function renderStats(){
 })();
 </script>
 
-<script id="match-challenges-script">
-(function(){
-  var cache=[];
-  var counterChallengeId=null;
-  var LOCAL_KEY='poolcitadlo_match_challenges_cache_v1';
 
-  function q(id){return document.getElementById(id)}
-  function esc2(v){return String(v==null?'':v).replace(/[&<>"']/g,function(m){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]})}
-  function nowIso(){return new Date().toISOString()}
-  function myPlayer(){return currentUserPlayerId?data.players?.[currentUserPlayerId]:null}
-  function playerNameById(id){var p=data.players?.[id];return p?playerSelectionLabel(p):'Hráč'}
-  function currentUid(){return String(cloudUid||'')}
-  function isMine(ch){var u=currentUid();return !!u&&(ch.senderUid===u||ch.recipientUid===u)}
-  function otherPlayerId(ch){return ch.senderUid===currentUid()?ch.recipientPlayerId:ch.senderPlayerId}
-  function statusLabel(s){
-    return {pending:'ČEKÁ NA ODPOVĚĎ',countered:'NAVRŽEN JINÝ TERMÍN',accepted:'DOMLUVENO',declined:'ODMÍTNUTO',cancelled:'ZRUŠENO',played:'ODEHRÁNO'}[s]||String(s||'');
-  }
-  function formatDate(ch){
-    if(ch.flexibleTime)return 'Termín domluvíme později';
-    if(!ch.date)return 'Termín neuveden';
-    var d=new Date(ch.date+'T12:00:00');
-    var txt=isNaN(d)?ch.date:d.toLocaleDateString('cs-CZ',{day:'numeric',month:'numeric',year:'numeric'});
-    return txt+(ch.time?' · '+ch.time:'');
-  }
-  function cacheSave(){
-    try{localStorage.setItem(LOCAL_KEY,JSON.stringify(cache.filter(isMine)));}catch(e){}
-  }
-  function cacheLoad(){
-    try{
-      var x=JSON.parse(localStorage.getItem(LOCAL_KEY)||'[]');
-      if(Array.isArray(x))cache=x.filter(Boolean);
-    }catch(e){}
-  }
-
-  async function request(id,method,body){
-    if(!await ensureCloudToken())throw new Error('NO_AUTH');
-    var opts={method:method,headers:{'Content-Type':'application/json'},cache:'no-store'};
-    if(body!==undefined)opts.body=JSON.stringify(body);
-    var r=await fetch(cloudUrl('matchChallenges/'+encodeURIComponent(id)),opts);
-    if(!r.ok)throw new Error('MATCH_CHALLENGE_'+r.status);
-    return await r.json();
-  }
-
-  async function load(force){
-    cacheLoad();
-    if(!cloudAuthenticated||!cloudUid){
-      render();
-      renderHome();
-      return cache;
-    }
-    try{
-      if(!await ensureCloudToken())throw new Error('NO_AUTH');
-      var r=await fetch(cloudUrl('matchChallenges')+'&t='+Date.now(),{cache:'no-store'});
-      if(!r.ok)throw new Error('MATCH_CHALLENGES_READ_'+r.status);
-      var raw=await r.json()||{};
-      cache=Object.values(raw).filter(function(ch){return ch&&isMine(ch)});
-      cache.sort(function(a,b){return new Date(b.updatedAt||b.createdAt||0)-new Date(a.updatedAt||a.createdAt||0)});
-      cacheSave();
-    }catch(e){
-      console.warn('Match challenges load:',e);
-    }
-    render();
-    renderHome();
-    return cache;
-  }
-
-  function linkedOpponents(){
-    var mine=myPlayer();
-    return Object.values(data.players||{}).filter(function(p){
-      return p&&p.active!==false&&p.hiddenFromPlayers!==true&&p.ownerUid&&mine&&p.id!==mine.id&&String(p.ownerUid)!==String(cloudUid);
-    }).sort(function(a,b){return playerSelectionLabel(a).localeCompare(playerSelectionLabel(b),'cs')});
-  }
-
-  function populateOpponents(selected){
-    var sel=q('matchChallengeOpponent');if(!sel)return;
-    var arr=linkedOpponents();
-    sel.innerHTML='<option value="">— vyber soupeře —</option>'+arr.map(function(p){
-      return '<option value="'+esc2(p.id)+'" '+(selected===p.id?'selected':'')+'>'+esc2(playerSelectionLabel(p))+'</option>';
-    }).join('');
-    var help=q('matchChallengeOpponentHelp');
-    if(help)help.textContent=arr.length?'Zobrazují se pouze hráči s propojeným účtem.':'Zatím není k dispozici žádný další hráč s propojeným účtem.';
-  }
-
-  function challengeCard(ch){
-    var incoming=ch.recipientUid===currentUid()&&(ch.status==='pending'||ch.status==='countered');
-    var opponent=playerNameById(otherPlayerId(ch));
-    var actions='';
-    if(incoming){
-      actions='<button class="btn primary" onclick="acceptMatchChallenge(\''+ch.id+'\')">PŘIJMOUT</button>'+
-        '<button class="btn" onclick="counterMatchChallenge(\''+ch.id+'\')">JINÝ TERMÍN</button>'+
-        '<button class="btn danger" onclick="declineMatchChallenge(\''+ch.id+'\')">ODMÍTNOUT</button>';
-    }else if(ch.status==='accepted'){
-      actions='<button class="btn primary" onclick="startScheduledMatch(\''+ch.id+'\')">▶ SPUSTIT ZÁPAS</button>'+
-        '<button class="btn" onclick="counterMatchChallenge(\''+ch.id+'\')">ZMĚNIT TERMÍN</button>'+
-        '<button class="btn danger" onclick="cancelMatchChallenge(\''+ch.id+'\')">ZRUŠIT</button>';
-    }else if((ch.status==='pending'||ch.status==='countered')&&ch.senderUid===currentUid()){
-      actions='<button class="btn" onclick="counterMatchChallenge(\''+ch.id+'\')">UPRAVIT NÁVRH</button>'+
-        '<button class="btn danger" onclick="cancelMatchChallenge(\''+ch.id+'\')">ZRUŠIT VÝZVU</button>';
-    }
-    return '<div class="match-challenge-card '+(incoming?'incoming ':'')+(ch.status==='accepted'?'accepted':'')+'">'+
-      '<div class="match-challenge-card-head"><div><div class="match-challenge-card-title">'+esc2(playerNameById(ch.senderPlayerId))+' × '+esc2(playerNameById(ch.recipientPlayerId))+'</div>'+
-      '<div class="muted" style="margin-top:4px">'+esc2(formatDate(ch))+(ch.venue?' · '+esc2(ch.venue):'')+'</div></div>'+
-      '<span class="match-challenge-status '+esc2(ch.status)+'">'+esc2(statusLabel(ch.status))+'</span></div>'+
-      '<div class="match-challenge-meta"><span>'+esc2(String(ch.discipline||'').toUpperCase())+'</span><span>Race to '+Number(ch.raceTo||1)+'</span><span>'+(ch.isPublic?'VEŘEJNÝ':'SOUKROMÝ')+'</span></div>'+
-      (ch.note?'<div style="margin-top:10px;line-height:1.45">'+esc2(ch.note)+'</div>':'')+
-      (ch.counterByUid?'<div class="muted" style="margin-top:7px;font-size:11px">Poslední změnu termínu navrhl '+(ch.counterByUid===currentUid()?'ty':'soupeř')+'.</div>':'')+
-      (actions?'<div class="match-challenge-actions">'+actions+'</div>':'')+
-    '</div>';
-  }
-
-  function render(){
-    var content=q('matchChallengesContent'),notice=q('matchChallengesLoginNotice');
-    var ready=!!(cloudAuthenticated&&cloudUid&&currentUserPlayerId&&myPlayer());
-    if(content)content.classList.toggle('hidden',!ready);
-    if(notice)notice.classList.toggle('hidden',ready);
-    if(!ready)return;
-    populateOpponents(q('matchChallengeOpponent')?.value||'');
-
-    var incoming=cache.filter(function(ch){return ch.recipientUid===currentUid()&&(ch.status==='pending'||ch.status==='countered')});
-    var accepted=cache.filter(function(ch){return ch.status==='accepted'}).sort(function(a,b){
-      return String(a.date||'9999-12-31').localeCompare(String(b.date||'9999-12-31'))||String(a.time||'').localeCompare(String(b.time||''));
-    });
-    var other=cache.filter(function(ch){return !incoming.includes(ch)&&!accepted.includes(ch)});
-    var sum=q('matchChallengeSummary');
-    if(sum)sum.innerHTML=
-      '<div class="match-challenge-stat"><strong>'+incoming.length+'</strong><span>Čeká na tebe</span></div>'+
-      '<div class="match-challenge-stat"><strong>'+accepted.length+'</strong><span>Domluveno</span></div>'+
-      '<div class="match-challenge-stat"><strong>'+cache.filter(function(x){return x.senderUid===currentUid()&&(x.status==='pending'||x.status==='countered')}).length+'</strong><span>Čeká na soupeře</span></div>';
-    if(q('matchChallengeIncomingCount'))q('matchChallengeIncomingCount').textContent=String(incoming.length);
-    if(q('matchChallengeIncomingList'))q('matchChallengeIncomingList').innerHTML=incoming.length?incoming.map(challengeCard).join(''):'<div class="empty">Žádná nová výzva.</div>';
-    if(q('matchChallengeAcceptedList'))q('matchChallengeAcceptedList').innerHTML=accepted.length?accepted.map(challengeCard).join(''):'<div class="empty">Nemáš žádný domluvený zápas.</div>';
-    if(q('matchChallengeOtherList'))q('matchChallengeOtherList').innerHTML=other.length?other.map(challengeCard).join(''):'<div class="empty">Žádné další výzvy.</div>';
-  }
-
-  function nextAccepted(){
-    var rows=cache.filter(function(ch){return ch.status==='accepted'});
-    rows.sort(function(a,b){
-      var ax=a.flexibleTime?'9999-12-31T23:59':String(a.date||'9999-12-31')+'T'+String(a.time||'23:59');
-      var bx=b.flexibleTime?'9999-12-31T23:59':String(b.date||'9999-12-31')+'T'+String(b.time||'23:59');
-      return ax.localeCompare(bx);
-    });
-    return rows[0]||null;
-  }
-
-  function renderHome(){
-    var tileText=q('modernChallengeTileText'),badge=q('modernChallengeBadge'),panel=q('modernScheduledMatchPanel'),body=q('modernScheduledMatchBody'),title=q('modernScheduledMatchTitle');
-    var incoming=cache.filter(function(ch){return ch.recipientUid===currentUid()&&(ch.status==='pending'||ch.status==='countered')}).length;
-    if(badge){badge.textContent=String(incoming);badge.classList.toggle('hidden',!incoming);}
-    if(tileText){
-      if(incoming)tileText.textContent=incoming===1?'1 nová příchozí výzva':incoming+' nové příchozí výzvy';
-      else{
-        var acceptedCount=cache.filter(function(ch){return ch.status==='accepted'}).length;
-        tileText.textContent=acceptedCount?(acceptedCount===1?'1 domluvený zápas':acceptedCount+' domluvené zápasy'):'Výzvy a domluvené zápasy';
-      }
-    }
-    var ch=nextAccepted();
-    if(!panel)return;
-    panel.classList.toggle('hidden',!ch);
-    if(!ch)return;
-    var opponent=playerNameById(otherPlayerId(ch));
-    if(title)title.textContent='Ty × '+opponent;
-    if(body)body.innerHTML='<div class="modern-scheduled-body">'+
-      '<div class="modern-scheduled-vs">'+esc2(playerNameById(ch.senderPlayerId))+' × '+esc2(playerNameById(ch.recipientPlayerId))+'</div>'+
-      '<div class="modern-scheduled-meta"><strong>'+esc2(String(ch.discipline||'').toUpperCase())+'</strong><span>Race to '+Number(ch.raceTo||1)+'</span></div>'+
-      '<div class="modern-scheduled-meta"><strong>'+esc2(formatDate(ch))+'</strong><span>Termín</span></div>'+
-      '<div class="modern-scheduled-meta"><strong>'+esc2(ch.venue||'Místo neuvedeno')+'</strong><span>Místo</span></div>'+
-      '<button class="btn primary" type="button" onclick="startScheduledMatch(\''+ch.id+'\')">▶ SPUSTIT</button>'+
-    '</div>';
-  }
-
-  async function persist(ch){
-    ch.updatedAt=nowIso();
-    await request(ch.id,'PUT',ch);
-    var i=cache.findIndex(function(x){return x.id===ch.id});
-    if(i>=0)cache[i]=ch;else cache.unshift(ch);
-    cacheSave();render();renderHome();
-    try{window.renderModernHome&&window.renderModernHome()}catch(e){}
-    return ch;
-  }
-
-  window.sendMatchChallenge=async function(){
-    var mine=myPlayer(),opId=q('matchChallengeOpponent')?.value||'',op=data.players?.[opId];
-    if(!mine||!cloudUid){toast('Nejdřív se přihlas účtem propojeným s hráčským profilem.');return;}
-    if(!op||!op.ownerUid){toast('Vyber hráče s propojeným účtem.');return;}
-    var flexible=!!q('matchChallengeFlexibleTime')?.checked;
-    var date=String(q('matchChallengeDate')?.value||''),time=String(q('matchChallengeTime')?.value||'');
-    if(!flexible&&!date){toast('Vyber datum, nebo zapni „Termín domluvíme později“.');return;}
-    var btn=q('matchChallengeSendBtn');if(btn)btn.disabled=true;
-    try{
-      var ch={
-        id:'challenge_'+(crypto?.randomUUID?crypto.randomUUID():Date.now().toString(36)+Math.random().toString(36).slice(2)),
-        senderUid:String(cloudUid),senderPlayerId:mine.id,
-        recipientUid:String(op.ownerUid),recipientPlayerId:op.id,
-        discipline:q('matchChallengeDiscipline')?.value||'9-ball',
-        raceTo:Math.max(1,Math.floor(Number(q('matchChallengeRaceTo')?.value||7))),
-        flexibleTime:flexible,date:flexible?'':date,time:flexible?'':time,
-        venue:String(q('matchChallengeVenue')?.value||'').trim(),
-        note:String(q('matchChallengeNote')?.value||'').trim(),
-        isPublic:!!q('matchChallengePublic')?.checked,
-        status:'pending',createdAt:nowIso(),updatedAt:nowIso(),acceptedAt:'',playedMatchId:''
-      };
-      await persist(ch);
-      q('matchChallengeNote').value='';
-      if(q('matchChallengeSaveInfo'))q('matchChallengeSaveInfo').textContent='Výzva byla odeslána hráči '+playerSelectionLabel(op)+'.';
-      toast('Výzva k zápasu byla odeslána.');
-    }catch(e){
-      console.error(e);
-      var msg=String(e?.message||e);
-      if(msg.includes('401')||msg.includes('403'))toast('Cloud zatím nepovoluje ukládání výzev. Je potřeba doplnit pravidla databáze.');
-      else toast('Výzvu se nepodařilo uložit.');
-    }finally{if(btn)btn.disabled=false;}
-  };
-
-  window.acceptMatchChallenge=async function(id){
-    var ch=cache.find(function(x){return x.id===id});if(!ch||ch.recipientUid!==currentUid())return;
-    ch.status='accepted';ch.acceptedAt=nowIso();ch.counterByUid='';
-    try{await persist(ch);toast('Zápas je domluvený.');}catch(e){toast('Výzvu se nepodařilo přijmout.');}
-  };
-  window.declineMatchChallenge=async function(id){
-    var ch=cache.find(function(x){return x.id===id});if(!ch||ch.recipientUid!==currentUid())return;
-    ch.status='declined';
-    try{await persist(ch);toast('Výzva byla odmítnuta.');}catch(e){toast('Změnu se nepodařilo uložit.');}
-  };
-  window.cancelMatchChallenge=async function(id){
-    var ch=cache.find(function(x){return x.id===id});if(!ch||!isMine(ch))return;
-    if(!confirm('Opravdu tuto domluvu zrušit?'))return;
-    ch.status='cancelled';
-    try{await persist(ch);toast('Domluva byla zrušena.');}catch(e){toast('Změnu se nepodařilo uložit.');}
-  };
-  window.counterMatchChallenge=function(id){
-    var ch=cache.find(function(x){return x.id===id});if(!ch||!isMine(ch))return;
-    counterChallengeId=id;
-    q('matchChallengeCounterTitle').textContent=playerNameById(ch.senderPlayerId)+' × '+playerNameById(ch.recipientPlayerId);
-    q('matchChallengeCounterFlexible').checked=!!ch.flexibleTime;
-    q('matchChallengeCounterDate').value=ch.date||'';
-    q('matchChallengeCounterTime').value=ch.time||'';
-    q('matchChallengeCounterVenue').value=ch.venue||'';
-    q('matchChallengeCounterNote').value='';
-    q('matchChallengeCounterDateTime').classList.toggle('hidden',!!ch.flexibleTime);
-    q('matchChallengeCounterModal').classList.add('show');
-  };
-  window.saveMatchChallengeCounter=async function(){
-    var ch=cache.find(function(x){return x.id===counterChallengeId});if(!ch)return;
-    var flexible=!!q('matchChallengeCounterFlexible').checked;
-    var date=String(q('matchChallengeCounterDate').value||''),time=String(q('matchChallengeCounterTime').value||'');
-    if(!flexible&&!date){toast('Zadej datum, nebo zvol domluvu termínu později.');return;}
-    ch.flexibleTime=flexible;ch.date=flexible?'':date;ch.time=flexible?'':time;ch.venue=String(q('matchChallengeCounterVenue').value||'').trim();
-    var note=String(q('matchChallengeCounterNote').value||'').trim();if(note)ch.note=note;
-    ch.status='countered';ch.counterByUid=currentUid();ch.acceptedAt='';
-    try{await persist(ch);q('matchChallengeCounterModal').classList.remove('show');counterChallengeId=null;toast('Nový termín byl odeslán.');}catch(e){toast('Nový návrh se nepodařilo uložit.');}
-  };
-
-  window.startScheduledMatch=function(id){
-    var ch=cache.find(function(x){return x.id===id});if(!ch||ch.status!=='accepted'||!isMine(ch))return;
-    var me=myPlayer(),opp=data.players?.[otherPlayerId(ch)];
-    if(!me||!opp){toast('Hráčský profil se nepodařilo načíst.');return;}
-    window.pendingScheduledChallenge=JSON.parse(JSON.stringify(ch));
-    q('p1Name').value=me.name||playerDisplayName(me);
-    q('p2Name').value=opp.name||playerDisplayName(opp);
-    q('discipline').value=ch.discipline||'9-ball';
-    q('raceTo').value=String(Math.max(1,Number(ch.raceTo||7)));
-    if(q('streamMatchTitle'))q('streamMatchTitle').value='Domluvený zápas • '+playerDisplayName(me)+' × '+playerDisplayName(opp);
-    q('discipline').dispatchEvent(new Event('change',{bubbles:true}));
-    showScreen('setup');
-    toast('Zápas je předvyplněný. Zkontroluj nastavení a zahaj ho.');
-  };
-
-  window.completeScheduledChallengeForMatch=async function(m){
-    if(!m?.scheduledChallengeId||!m?.endedAt)return;
-    var ch=cache.find(function(x){return x.id===m.scheduledChallengeId});
-    if(!ch||ch.status==='played')return;
-    ch.status='played';ch.playedMatchId=m.id;ch.playedAt=m.endedAt||nowIso();
-    try{await persist(ch);}catch(e){console.warn('Complete challenge:',e);}
-  };
-
-  window.openMatchChallengesScreen=function(){
-    render();
-    populateOpponents();
-    load(true);
-  };
-  window.refreshMatchChallenges=function(force){return load(!!force)};
-  window.renderMatchChallengeHome=renderHome;
-  window.openChallengeForPlayer=function(playerId){
-    var p=data.players?.[playerId];
-    if(!p||!p.ownerUid){toast('Tento hráč nemá propojený účet.');return;}
-    if(String(playerId)===String(currentUserPlayerId)){toast('Nemůžeš vyzvat sám sebe.');return;}
-    q('profileModal')?.classList.remove('show');
-    showScreen('challenges');
-    setTimeout(function(){populateOpponents(playerId);q('matchChallengeOpponent').value=playerId;},0);
-  };
-
-  q('matchChallengeSendBtn')?.addEventListener('click',window.sendMatchChallenge);
-  q('matchChallengesRefreshBtn')?.addEventListener('click',function(){load(true)});
-  q('matchChallengeFlexibleTime')?.addEventListener('change',function(){q('matchChallengeDateTimeFields')?.classList.toggle('hidden',this.checked)});
-  q('matchChallengeCounterFlexible')?.addEventListener('change',function(){q('matchChallengeCounterDateTime')?.classList.toggle('hidden',this.checked)});
-  q('matchChallengeCounterCancel')?.addEventListener('click',function(){q('matchChallengeCounterModal')?.classList.remove('show');counterChallengeId=null});
-  q('matchChallengeCounterSave')?.addEventListener('click',window.saveMatchChallengeCounter);
-  q('profileChallengeBtn')?.addEventListener('click',function(){window.openChallengeForPlayer(this.dataset.playerId||'')});
-
-  cacheLoad();renderHome();
-  setTimeout(function(){load(false)},1200);
-  setInterval(function(){if(!document.hidden&&cloudAuthenticated)load(false)},30000);
-})();
-</script>
 
 </body>
 
