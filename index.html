@@ -1559,7 +1559,7 @@
       </button>
       <button id="backToMatchNav" class="hidden">← ZPĚT NA SKÓRE</button>
       <button data-nav="setup">Nový zápas</button>
-      <button data-nav="tournament">Nový turnaj</button>
+      <button data-nav="tournament">Turnaje a ligy</button>
       <button data-nav="league">Liga Sever</button>
       <button id="currentTournamentNavBtn" class="hidden">Aktuální turnaj</button>
       <button data-nav="results">Výsledky</button>
@@ -1622,7 +1622,7 @@
     <div class="modern-grid">
       <button class="modern-tile primary" data-nav="setup"><span class="modern-tile-icon">⚔</span><span><strong>Spustit zápas</strong><small>Rychlé a přehledné počítání, historie a detailní výsledky.</small></span></button>
       <button class="modern-tile" data-nav="stats"><span class="modern-tile-icon">▥</span><span><strong>Statistiky</strong><small>Žebříčky, výkonnost, bilance a dlouhodobý vývoj hráčů.</small></span></button>
-      <button class="modern-tile" data-nav="tournament"><span class="modern-tile-icon">🏆</span><span><strong>Turnaje</strong><small>Pavouky, výsledky, série a správa turnajového dění.</small></span></button>
+      <button class="modern-tile" data-nav="tournament"><span class="modern-tile-icon">🏆</span><span><strong>Turnaje a ligy</strong><small>Turnaje, ligové soutěže, série a kalendář akcí.</small></span></button>
       <button class="modern-tile" data-nav="players"><span class="modern-tile-icon">♟</span><span><strong>Hráči</strong><small>Profily, historie zápasů a osobní výkonnost na jednom místě.</small></span></button>
     </div>
 
@@ -1633,7 +1633,7 @@
     <div class="modern-more-grid">
       <button id="modernResumeTile" class="modern-tile" type="button"><span class="modern-tile-icon">▶</span><span><strong>Pokračovat</strong><small>Vrátit se k rozehranému zápasu</small></span></button>
       <button id="modernLiveTile" class="modern-tile" data-nav="live"><span class="modern-live-light" aria-hidden="true"></span><span class="modern-tile-icon">◉</span><span><strong>Livescore</strong><small id="modernLiveTileText">Živé zápasy a stream</small></span></button>
-      <button class="modern-tile" data-nav="results"><span class="modern-tile-icon">☷</span><span><strong>Výsledky</strong><small>Zápasy, turnaje, série a ligové soutěže</small></span></button>
+      <button class="modern-tile" data-nav="results"><span class="modern-tile-icon">☷</span><span><strong>Výsledky</strong><small>Historie zápasů, dokončené turnaje a série</small></span></button>
       <button class="modern-tile" data-nav="my-stats"><span class="modern-tile-icon">◎</span><span><strong>Moje statistiky</strong><small>Osobní přehled výkonu</small></span></button>
       <button class="modern-tile" data-nav="support"><span class="modern-tile-icon">?</span><span><strong>Nápověda a podpora</strong><small>Návod, hlášení problémů a informace o projektu</small></span></button>
       <button id="modernAdminTile" class="modern-tile hidden" data-nav="admin"><span class="modern-tile-icon">⚙</span><span><strong>Administrace</strong><small>Správa systému a uživatelů</small></span></button>
@@ -1669,7 +1669,7 @@
   <button data-nav="home"><span>⌂</span>Domů</button>
   <button data-nav="setup"><span>⚔</span>Zápas</button>
   <button data-nav="players"><span>♟</span>Hráči</button>
-  <button data-nav="tournament"><span>🏆</span>Turnaje</button>
+  <button data-nav="tournament"><span>🏆</span>Soutěže</button>
   <button data-nav="results"><span>•••</span>Více</button>
 </nav>
 
@@ -2564,9 +2564,9 @@
 <section id="screen-tournament" class="screen">
     <div class="card">
       <div id="tournamentHubPanel" class="tournament-hub-intro">
-        <div class="muted" style="font-size:12px;font-weight:900;letter-spacing:.08em">POOLČÍTADLO · TURN AJE</div>
-        <h1 class="tournament-hub-title">Turnaje pro celou <span>poolovou komunitu</span></h1>
-        <div class="muted" style="max-width:780px;line-height:1.5">Vytvoř vlastní turnaj, sleduj turnajové série nebo procházej kalendář nadcházejících i již odehraných akcí.</div>
+        <div class="muted" style="font-size:12px;font-weight:900;letter-spacing:.08em">POOLČÍTADLO · TURNAJE A LIGY</div>
+        <h1 class="tournament-hub-title">Turnaje a ligy pro celou <span>poolovou komunitu</span></h1>
+        <div class="muted" style="max-width:780px;line-height:1.5">Vytvoř vlastní turnaj, sleduj série, procházej kalendář akcí nebo otevři aktuální ligovou soutěž.</div>
 
         <div class="tournament-hub-choice-grid">
           <button id="tournamentHubCreateBtn" class="tournament-hub-choice primary" type="button">
@@ -2581,6 +2581,10 @@
             <span class="icon">🏆</span><strong>Série turnajů</strong>
             <small>Bodování, pořadí hráčů a turnaje spojené do jedné sezóny.</small>
           </button>
+          <button class="tournament-hub-choice" type="button" data-nav="league">
+            <span class="icon">◈</span><strong>Liga Sever</strong>
+            <small>Aktuální tabulka, program, výsledky, statistiky hráčů a správa ligy.</small>
+          </button>
         </div>
       </div>
 
@@ -2590,7 +2594,7 @@
             <h2 style="margin:0">Kalendář turnajů</h2>
             <div class="muted" style="margin-top:4px">Turnajová nástěnka Poolčítadla.</div>
           </div>
-          <button id="tournamentCalendarBackBtn" class="btn" type="button">← ZPĚT NA TURN AJE</button>
+          <button id="tournamentCalendarBackBtn" class="btn" type="button">← ZPĚT NA TURNAJE A LIGY</button>
         </div>
         <div class="tournament-calendar-section">
           <h2>📅 Nadcházející turnaje</h2>
@@ -2605,7 +2609,7 @@
       <div id="tournamentWorkPanel" class="hidden">
         <div class="subpanel" style="margin-bottom:14px">
           <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center">
-            <button id="tournamentHubBackBtn" class="btn big" type="button">← TURNAJE</button>
+            <button id="tournamentHubBackBtn" class="btn big" type="button">← TURNAJE A LIGY</button>
           </div>
         </div>
 
@@ -3330,11 +3334,6 @@
           <span class="results-hub-icon">◆</span>
           SÉRIE TURNAJŮ
           <span class="muted">Průběžná i konečná pořadí sérií</span>
-        </button>
-        <button class="btn big results-hub-card" data-nav="results-leagues">
-          <span class="results-hub-icon">◈</span>
-          LIGY
-          <span class="muted">Ligové soutěže, tabulky a výsledky</span>
         </button>
       </div>
     </div>
