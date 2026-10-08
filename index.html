@@ -522,7 +522,7 @@
     }
   
 
-/* === v4.51.57 RC • mobilní herní obrazovka portrait / landscape === */
+/* === v4.51.58 RC • mobilní herní obrazovka portrait / landscape === */
 @media (max-width:700px) and (orientation:portrait){
   #screen-match{margin-top:8px}
   #screen-match>.card{padding:10px;border-radius:14px}
@@ -1587,16 +1587,36 @@
 </style>
 
 <style id="poolcitadlo-theme-logo-switch">
-  .poolcitadlo-logo-light{display:none!important}
-  html[data-theme="light"] .poolcitadlo-logo-dark{display:none!important}
-  html[data-theme="light"] .poolcitadlo-logo-light{
-    display:block!important;
-    filter:drop-shadow(0 7px 14px rgba(70,52,18,.13));
-  }
+  /* Logo zůstává v obou režimech stejné 1:1. */
   html[data-theme="light"] .poolcitadlo-hero-logo-block{
-    background:transparent!important;
-    border:0!important;
-    box-shadow:none!important;
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    width:fit-content;
+    max-width:100%;
+    padding:12px 14px;
+    border-radius:20px;
+    background:
+      radial-gradient(circle at 18% 12%,rgba(216,173,82,.11),transparent 32%),
+      linear-gradient(145deg,#111112,#090909);
+    border:1px solid rgba(183,133,36,.34);
+    box-shadow:
+      0 16px 34px rgba(72,54,18,.15),
+      inset 0 0 0 1px rgba(255,255,255,.025);
+  }
+  html[data-theme="light"] .poolcitadlo-hero-logo-block .poolcitadlo-exact-logo{
+    display:block!important;
+    border-radius:12px;
+    filter:none!important;
+  }
+  @media(max-width:700px){
+    html[data-theme="light"] .poolcitadlo-hero-logo-block{
+      padding:9px 10px;
+      border-radius:16px;
+    }
+    html[data-theme="light"] .poolcitadlo-hero-logo-block .poolcitadlo-exact-logo{
+      border-radius:9px;
+    }
   }
 </style>
 
@@ -1691,7 +1711,7 @@
           <span class="by">by</span>
           <span class="club">BC Rybárna</span>
         </div>
-        <small class="modern-brand-version">v4.51.57 RC</small>
+        <small class="modern-brand-version">v4.51.58 RC</small>
       </div>
     </div>
     <div class="nav">
@@ -1744,8 +1764,7 @@
     <div class="modern-hero">
       <div class="modern-hero-copy modern-hero-split">
         <div class="poolcitadlo-hero-logo-block" aria-label="Poolčítadlo by BC Rybárna">
-          <img class="poolcitadlo-exact-logo poolcitadlo-logo-dark" src="assets/poolcitadlo-logo.webp" alt="Poolčítadlo by BC Rybárna">
-          <img class="poolcitadlo-exact-logo poolcitadlo-logo-light" src="assets/poolcitadlo-logo-light.svg" alt="Poolčítadlo by BC Rybárna">
+          <img class="poolcitadlo-exact-logo" src="assets/poolcitadlo-logo.webp" alt="Poolčítadlo by BC Rybárna">
         </div>
         <div class="modern-hero-text-block">
           <div class="modern-kicker">POOL · STATISTIKY · TURNAJE · KOMUNITA</div>
@@ -2081,7 +2100,7 @@
         </div>
         <div class="subpanel" style="min-width:210px;text-align:center;margin:0">
           <div class="muted" style="font-size:10px;font-weight:950;letter-spacing:1px">AKTUÁLNÍ VERZE</div>
-          <div style="font-size:22px;font-weight:950;color:var(--gold2);margin-top:5px">v4.51.57 RC</div>
+          <div style="font-size:22px;font-weight:950;color:var(--gold2);margin-top:5px">v4.51.58 RC</div>
         </div>
       </div>
     </div>
@@ -5838,7 +5857,7 @@
     const btn=$('submitReportBtn');if(btn)btn.disabled=true;
     try{
       const id=uid(),p=currentUserPlayerId?data.players?.[currentUserPlayerId]:null;
-      const report={id,createdByUid:cloudUid,createdByPlayerId:currentUserPlayerId||'',createdByName:p?playerSelectionLabel(p):(cloudUserEmail||'Uživatel'),email:cloudUserEmail||'',type,area,description,appVersion:'v4.51.57 RC',createdAt:new Date().toISOString(),updatedAt:new Date().toISOString(),status:'new',adminNote:''};
+      const report={id,createdByUid:cloudUid,createdByPlayerId:currentUserPlayerId||'',createdByName:p?playerSelectionLabel(p):(cloudUserEmail||'Uživatel'),email:cloudUserEmail||'',type,area,description,appVersion:'v4.51.58 RC',createdAt:new Date().toISOString(),updatedAt:new Date().toISOString(),status:'new',adminNote:''};
       await reportRequest(id,'PUT',report);
       try{
         await writeReportUserMirror(report);
