@@ -6951,6 +6951,7 @@ html[data-theme="light"] #leagueSchedule .history-item .muted{
     try{ renderHistory(); }catch(e){}
     try{ renderStats(); }catch(e){}
     try{ renderTournament(); renderSeriesList(); renderTournamentSeriesSelect(); }catch(e){}
+    try{window.renderFederalCup2026?.();}catch(e){}
     updateDisciplineSetup();
     setTimeout(maybeShowPendingResultConfirmation,100);
 
@@ -8726,6 +8727,7 @@ html[data-theme="light"] #leagueSchedule .history-item .muted{
     }
 
     document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+    if(name==='federal-cup-editor' && !currentUserIsSystemAdmin())name='federal-cup-2026';
     $('screen-'+name).classList.add('active');
 
     // Mobilní spodní navigace je užitečná pro běžné sekce,
@@ -8761,8 +8763,11 @@ html[data-theme="light"] #leagueSchedule .history-item .muted{
     }
     if(name==='stats') renderStats();
     if(name==='my-stats') renderMyStats();
-    if(name==='federal-cup-2026'){
+    if(name==='federal-cup-2026' || name==='federal-cup-editor'){
       try{if(typeof window.renderFederalCup2026==='function')window.renderFederalCup2026();}catch(e){console.warn('Federal Cup 2026:',e);}
+      if(name==='federal-cup-2026'){
+        try{window.refreshFederalCupViewer?.();}catch(e){console.warn('Federal Cup viewer refresh:',e);}
+      }
     }
     if(name==='challenges'){
       try{if(typeof window.openMatchChallengesScreen==='function')window.openMatchChallengesScreen();}catch(e){console.warn('Challenges screen:',e);}
