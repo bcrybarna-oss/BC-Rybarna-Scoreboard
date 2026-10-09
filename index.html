@@ -27254,6 +27254,11 @@ function renderStats(){
   q('matchChallengeCounterSave')?.addEventListener('click',window.saveMatchChallengeCounter);
   q('profileChallengeBtn')?.addEventListener('click',function(){window.openChallengeForPlayer(this.dataset.playerId||'')});
 
+  window.poolPresenceContext=async function(){
+    if(!cloudAuthenticated||!cloudUid||!await ensureCloudToken())return null;
+    const p=currentUserPlayerId&&data.players?.[currentUserPlayerId];
+    return {uid:cloudUid,token:cloudIdToken,db:FIREBASE_DB,playerId:currentUserPlayerId||'',name:p?playerDisplayName(p):(cloudUserEmail||'Hráč')};
+  };
   cacheLoad();renderHome();renderNotificationCenter();
   setTimeout(function(){
     if(cloudAuthenticated)loadSecurePlayers().then(function(){load(false)}).catch(function(){load(false)});
@@ -27638,15 +27643,15 @@ function render(){
  function row(r,status){return '<div class="presence-row"><div><strong>'+escName(r.name)+'</strong><div class="muted">'+status+'</div></div><button class="btn" data-presence-player="'+escName(r.playerId||'')+'">VYZVAT</button></div>'}
 }
 async function tick(){
- const u=user();if(!u){rows=null;render();return}
+ const ctx=await window.poolPresenceContext?.();if(!ctx){rows=null;render();return}
  if(!writing){writing=true;try{
- const path='presence/'+encodeURIComponent(u)+'/'+encodeURIComponent(device),age=Date.now()-last;
- const p=typeof currentUserPlayerId!=='undefined'?currentUserPlayerId:'';
- const player=typeof data!=='undefined'&&data.players?data.players[p]:null;
- const body={uid:u,playerId:p||'',name:player&&player.name||'Registrovaný uživatel',updatedAt:Date.now(),lastInputAt:last,visible:visible(),watching:document.hidden};
- await fetch(url(path),{method:(!visible()||age>900000)?'DELETE':'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
+ const path='presence/'+encodeURIComponent(ctx.uid)+'/'+encodeURIComponent(device),age=Date.now()-last;
+ const p=ctx.playerId;
+ const player=null;
+ const body={uid:ctx.uid,playerId:p||'',name:ctx.name,updatedAt:Date.now(),lastInputAt:last,visible:visible(),watching:document.hidden};
+ await fetch(ctx.db+'/'+path+'.json?auth='+encodeURIComponent(ctx.token),{method:(!visible()||age>900000)?'DELETE':'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
  }catch(e){}finally{writing=false}}
- try{const r=await fetch(url('presence'),{cache:'no-store'});if(!r.ok)throw Error('presence');rows=await r.json()||{}}catch(e){rows=null}
+ try{const r=await fetch(ctx.db+'/presence.json?auth='+encodeURIComponent(ctx.token),{cache:'no-store'});if(!r.ok)throw Error('presence');rows=await r.json()||{}}catch(e){rows=null}
  render();
 }
 ['pointerdown','keydown','touchstart'].forEach(n=>document.addEventListener(n,()=>{last=Date.now()},{passive:true}));
