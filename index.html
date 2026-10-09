@@ -2284,6 +2284,23 @@ html[data-theme="light"] #leagueSchedule .history-item .muted{
   .fc26-roster{display:grid;gap:7px}
 
   /* Samostatný divácký pohled Federal Cupu */
+
+  /* Přesné, škálovatelné vlajky Slovenska a Česka – v diváckém pohledu i ve správě */
+  .fc26-flag-svg{display:block;flex:0 0 auto;aspect-ratio:3/2;border:1px solid rgba(255,255,255,.24);border-radius:5px;overflow:hidden;background:#fff;box-shadow:0 5px 16px rgba(0,0,0,.3)}
+  .fc26-flag-large{width:clamp(76px,10vw,110px);height:auto;margin:0 auto 12px;filter:drop-shadow(0 3px 9px rgba(0,0,0,.18))}
+  .fc26-flag-inline{width:clamp(30px,5vw,44px);height:auto;display:inline-block;vertical-align:middle;margin:0 8px}
+  .fc26-flag-admin{width:47px;height:auto;display:inline-block;vertical-align:middle;margin-right:8px}
+  .fc26-flag-roster{width:33px;height:auto;display:inline-block;vertical-align:middle;margin-right:7px}
+  .fc26-title-teams{display:inline-flex;align-items:center;flex-wrap:wrap;gap:3px;vertical-align:middle}
+  .fc26-title-teams .fc26-country-name{white-space:nowrap}
+  .fc26-team-card h3{display:flex;align-items:center;flex-wrap:wrap;gap:5px}
+  @media(max-width:640px){
+    .fc26-flag-large{width:clamp(55px,15vw,86px);margin-bottom:8px}
+    .fc26-flag-inline{width:32px;margin:0 3px}
+    .fc26-flag-admin{width:40px}
+    .fc26-title-teams{column-gap:1px}
+  }
+
   .fc26-view{padding:clamp(14px,3vw,28px)}
   .fc26-view-head{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
   .fc26-view-actions{display:flex;gap:8px;flex-wrap:wrap}
@@ -2355,6 +2372,26 @@ html[data-theme="light"] #leagueSchedule .history-item .muted{
 </style>
 </head>
 <body>
+
+<!-- Vektorové státní vlajky vložené přímo do aplikace: fungují i bez externího serveru. -->
+<svg xmlns="http://www.w3.org/2000/svg" aria-hidden="true" style="position:absolute;width:0;height:0;overflow:hidden;pointer-events:none">
+  <defs>
+    <symbol id="fc26FlagSK" viewBox="0 0 600 400">
+      <rect width="600" height="400" fill="#fff"/>
+      <rect y="133.333" width="600" height="133.334" fill="#0b4ea2"/>
+      <rect y="266.667" width="600" height="133.333" fill="#ee1c25"/>
+      <path d="M126 106 H274 V252 C274 308 231 334 200 350 C169 334 126 308 126 252 Z" fill="#fff"/>
+      <path d="M137 117 H263 V252 C263 298 228 323 200 337 C172 323 137 298 137 252 Z" fill="#ee1c25"/>
+      <path d="M145 283 C157 260 177 260 190 279 C199 256 220 256 231 278 C244 264 255 274 255 283 V296 C244 313 224 328 200 338 C178 328 158 314 145 296 Z" fill="#0b4ea2"/>
+      <path d="M194 163 H206 V198 H239 V212 H206 V234 H249 V248 H206 V293 H194 V248 H151 V234 H194 V212 H161 V198 H194 Z" fill="#fff"/>
+    </symbol>
+    <symbol id="fc26FlagCZ" viewBox="0 0 600 400">
+      <rect width="600" height="200" fill="#fff"/>
+      <rect y="200" width="600" height="200" fill="#d7141a"/>
+      <path d="M0 0 L300 200 L0 400 Z" fill="#11457e"/>
+    </symbol>
+  </defs>
+</svg>
 <div class="app">
   <div class="theme-corner">
     <button id="themeToggleBtn" type="button" class="btn theme-toggle" title="Přepnout světlý / tmavý režim">☀ SVĚTLÝ MÓD</button>
@@ -2874,7 +2911,7 @@ html[data-theme="light"] #leagueSchedule .history-item .muted{
       <div class="fc26-view-head">
         <div>
           <div class="fc26-view-kicker">FEDERAL CUP 2026 • DIVÁCKÝ PŘEHLED</div>
-          <h1 class="fc26-view-title">🇸🇰 Slovensko × Česko 🇨🇿</h1>
+          <h1 class="fc26-view-title"><span class="fc26-title-teams"><svg class="fc26-flag-svg fc26-flag-inline" role="img" aria-label="Vlajka Slovenska" viewBox="0 0 600 400"><use href="#fc26FlagSK"></use></svg><span class="fc26-country-name">Slovensko</span><span aria-hidden="true">×</span><span class="fc26-country-name">Česko</span><svg class="fc26-flag-svg fc26-flag-inline" role="img" aria-label="Vlajka Česka" viewBox="0 0 600 400"><use href="#fc26FlagCZ"></use></svg></span></h1>
           <div class="muted">Hraje se na 11 vyhraných zápasů · nejvýše 21 utkání · 4 bloky</div>
         </div>
         <div class="fc26-view-actions">
@@ -2912,13 +2949,13 @@ html[data-theme="light"] #leagueSchedule .history-item .muted{
 
       <div class="fc26-team-grid" style="margin-top:14px">
         <div class="fc26-team-card">
-          <h3>🇸🇰 SLOVENSKO <span class="muted" style="font-size:12px">• DOMÁCÍ</span></h3>
+          <h3><svg class="fc26-flag-svg fc26-flag-admin" role="img" aria-label="Vlajka Slovenska" viewBox="0 0 600 400"><use href="#fc26FlagSK"></use></svg>SLOVENSKO <span class="muted" style="font-size:12px">• DOMÁCÍ</span></h3>
           <input id="fc26TeamAName" type="text" value="Slovensko" readonly aria-label="Domácí tým">
           <div class="muted" style="font-size:12px;margin-top:10px">Vyplň pět slovenských hráčů. Účet v Poolčítadle není potřeba.</div>
           <div class="fc26-roster" id="fc26RosterA" style="margin-top:10px"></div>
         </div>
         <div class="fc26-team-card">
-          <h3>🇨🇿 ČESKO <span class="muted" style="font-size:12px">• HOSTÉ</span></h3>
+          <h3><svg class="fc26-flag-svg fc26-flag-admin" role="img" aria-label="Vlajka Česka" viewBox="0 0 600 400"><use href="#fc26FlagCZ"></use></svg>ČESKO <span class="muted" style="font-size:12px">• HOSTÉ</span></h3>
           <input id="fc26TeamBName" type="text" value="Česko" readonly aria-label="Hostující tým">
           <div class="muted" style="font-size:12px;margin-top:10px">Vyplň pět českých hráčů. Soupiska je oddělená od profilů.</div>
           <div class="fc26-roster" id="fc26RosterB" style="margin-top:10px"></div>
@@ -27798,16 +27835,16 @@ function renderStats(){
     const a=teamAggregate(0),b=teamAggregate(1);
     const state=raceState(),done=state.played;
     function teamBox(name,flag,place,results,cls){
-      return '<div class="fc26-scoreboard-team '+cls+'"><div style="font-size:29px">'+flag+'</div>'+
+      return '<div class="fc26-scoreboard-team '+cls+'"><svg class="fc26-flag-svg fc26-flag-large" role="img" aria-label="Vlajka '+(flag==='sk'?'Slovenska':'Česka')+'" viewBox="0 0 600 400"><use href="#fc26Flag'+(flag==='sk'?'SK':'CZ')+'"></use></svg>'+
         '<div class="fc26-scoreboard-name">'+name+'</div>'+
         '<div class="fc26-scoreboard-meta">'+place+'</div>'+
         '<div class="fc26-scoreboard-wins">'+results.matchWins+'</div>'+
         '<div class="fc26-scoreboard-meta">VYHRANÉ ZÁPASY · SKÓRE '+results.racksFor+':'+results.racksAgainst+'</div></div>';
     }
     $('fc26ViewerScoreboard').innerHTML='<div class="fc26-scoreboard">'+
-      teamBox('Slovensko','🇸🇰','DOMÁCÍ',a,'home')+
+      teamBox('Slovensko','sk','DOMÁCÍ',a,'home')+
       '<div class="fc26-scoreboard-vs">:</div>'+
-      teamBox('Česko','🇨🇿','HOSTÉ',b,'away')+'</div>'+
+      teamBox('Česko','cz','HOSTÉ',b,'away')+'</div>'+
       (state.decided
         ? '<div class="fc26-winner-banner"><strong>🏆 '+(state.winner==='a'?'Slovensko':'Česko')+' vítězí '+state.winsA+':'+state.winsB+'</strong><span>Utkání rozhodnuto v zápase #'+state.clinchedAt+' · hraje se na 11 vítězných</span></div>'
         : '<div class="fc26-match-status" style="margin-top:12px">Hraje se na 11 vítězných zápasů · Slovensku chybí '+(11-state.winsA)+' výher, Česku '+(11-state.winsB)+'.</div>');
@@ -27862,7 +27899,8 @@ function renderStats(){
       roster(side).map((name,i)=>'<div class="fc26-view-roster-line"><span class="muted">'+(i+1)+'.</span> '+
         esc(String(name||'Bude doplněno'))+'</div>').join('')+'</div>';
     $('fc26ViewerRosters').innerHTML='<div class="fc26-view-rosters">'+
-      rosterHtml('a','🇸🇰 Slovensko · domácí')+rosterHtml('b','🇨🇿 Česko · hosté')+'</div>';
+      rosterHtml('a','<svg class="fc26-flag-svg fc26-flag-roster" aria-hidden="true" viewBox="0 0 600 400"><use href="#fc26FlagSK"></use></svg>Slovensko · domácí')+
+      rosterHtml('b','<svg class="fc26-flag-svg fc26-flag-roster" aria-hidden="true" viewBox="0 0 600 400"><use href="#fc26FlagCZ"></use></svg>Česko · hosté')+'</div>';
   }
   let refreshingSpectator=false;
   async function refreshFederalCupViewer(){
