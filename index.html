@@ -2275,6 +2275,48 @@ html[data-theme="light"] #leagueSchedule .history-item .muted{
   .fc26-team-card,.fc26-summary-card,.fc26-fixture{border:1px solid #303034;border-radius:16px;background:#0d0d0f;padding:14px}
   .fc26-team-card h3,.fc26-summary-card h3{margin:0 0 10px;color:var(--gold2)}
   .fc26-roster{display:grid;gap:7px}
+
+  /* Samostatný divácký pohled Federal Cupu */
+  .fc26-view{padding:clamp(14px,3vw,28px)}
+  .fc26-view-head{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
+  .fc26-view-actions{display:flex;gap:8px;flex-wrap:wrap}
+  .fc26-view-title{font-size:clamp(28px,5vw,48px);font-weight:950;letter-spacing:-.04em;margin:4px 0}
+  .fc26-view-kicker{color:var(--gold2);font-size:11px;font-weight:900;letter-spacing:.12em}
+  .fc26-scoreboard{display:grid;grid-template-columns:minmax(0,1fr) 24px minmax(0,1fr);gap:8px;align-items:stretch;margin:18px 0}
+  .fc26-scoreboard-team{border:1px solid rgba(216,177,75,.32);border-radius:16px;text-align:center;padding:18px 10px;background:#13120f}
+  .fc26-scoreboard-team.away{background:#111216}
+  .fc26-scoreboard-name{font-size:clamp(16px,3vw,27px);font-weight:950}
+  .fc26-scoreboard-wins{font-size:clamp(55px,9vw,92px);font-weight:950;color:var(--gold2);line-height:1.1}
+  .fc26-scoreboard-meta{color:var(--muted);font-size:11px;font-weight:850}
+  .fc26-scoreboard-vs{display:grid;place-items:center;color:var(--muted);font-weight:950;font-size:17px}
+  .fc26-view-progress{display:flex;justify-content:space-between;color:var(--muted);gap:8px;flex-wrap:wrap;font-weight:800}
+  .fc26-view-progress strong{color:var(--gold2)}
+  .fc26-view-progressbar{height:7px;background:#262626;border-radius:99px;overflow:hidden;margin:9px 0 18px}
+  .fc26-view-progressbar>span{display:block;height:100%;background:linear-gradient(90deg,#a47d2b,#f0cf74)}
+  .fc26-view-title2{margin:25px 0 11px;font-size:22px;font-weight:950}
+  .fc26-view-match{display:grid;grid-template-columns:50px minmax(0,1fr) 82px minmax(0,1fr);align-items:center;gap:8px;border:1px solid #2b2b2e;border-radius:13px;padding:12px;margin:8px 0;background:#0e0e10}
+  .fc26-view-match.done{border-color:rgba(216,177,75,.44)}
+  .fc26-view-match-type{color:var(--muted);font-size:11px}
+  .fc26-view-match-type strong{display:block;color:var(--gold2);font-size:14px}
+  .fc26-view-match-side{font-weight:800;overflow-wrap:anywhere}
+  .fc26-view-match-side.right{text-align:right}
+  .fc26-view-match-score{text-align:center;color:var(--gold2);font-weight:950;font-size:22px;white-space:nowrap}
+  .fc26-view-match-status{text-align:center;color:var(--muted);font-size:10px;font-weight:850}
+  .fc26-view-match-detail{grid-column:2 / -1;text-align:center}
+  .fc26-view-rosters{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+  .fc26-view-roster{padding:14px;border:1px solid #2b2b2e;border-radius:14px;background:#0d0d0f}
+  .fc26-view-roster h3{color:var(--gold2);margin:0 0 9px}
+  .fc26-view-roster-line{border-bottom:1px solid #262629;padding:8px 5px}
+  .fc26-view-roster-line:last-child{border-bottom:0}
+  @media(max-width:640px){
+    .fc26-scoreboard{grid-template-columns:minmax(0,1fr) 12px minmax(0,1fr);gap:4px}
+    .fc26-scoreboard-team{padding:12px 6px}
+    .fc26-view-match{grid-template-columns:29px minmax(0,1fr) 54px minmax(0,1fr);padding:9px 6px;gap:5px}
+    .fc26-view-match-side{font-size:12px}
+    .fc26-view-match-score{font-size:16px}
+    .fc26-view-rosters{grid-template-columns:1fr}
+  }
+
   .fc26-roster-entry{display:grid;grid-template-columns:64px minmax(0,1fr);align-items:center;gap:8px;margin:0;font-size:12px;color:var(--muted)}
   .fc26-roster-entry input{min-width:0;width:100%;padding:11px 12px;color:var(--text)}
   .fc26-team-card input[readonly]{opacity:.85;border-color:rgba(216,177,75,.35);font-weight:900}
@@ -2821,7 +2863,35 @@ html[data-theme="light"] #leagueSchedule .history-item .muted{
 
 
   <section id="screen-federal-cup-2026" class="screen">
+    <div class="card fc26-view">
+      <div class="fc26-view-head">
+        <div>
+          <div class="fc26-view-kicker">FEDERAL CUP 2026 • DIVÁCKÝ PŘEHLED</div>
+          <h1 class="fc26-view-title">🇸🇰 Slovensko × Česko 🇨🇿</h1>
+          <div class="muted">Výsledky • čtyři bloky • 21 zápasů • týmové statistiky</div>
+        </div>
+        <div class="fc26-view-actions">
+          <button type="button" class="btn" id="fc26ViewerRefresh">↻ OBNOVIT</button>
+          <button type="button" class="btn primary hidden" id="fc26ViewerEditor">SPRÁVA UTKÁNÍ</button>
+        </div>
+      </div>
+      <div id="fc26ViewerNotice" class="muted" style="margin-top:12px;font-size:12px"></div>
+      <div id="fc26ViewerScoreboard"></div>
+      <div id="fc26ViewerProgress"></div>
+      <h2 class="fc26-view-title2">Program a výsledky</h2>
+      <div id="fc26ViewerSchedule"></div>
+      <h2 class="fc26-view-title2">Statistiky obou týmů</h2>
+      <div id="fc26ViewerStats"></div>
+      <h2 class="fc26-view-title2">Soupisky týmů</h2>
+      <div id="fc26ViewerRosters"></div>
+    </div>
+  </section>
+
+  <section id="screen-federal-cup-editor" class="screen">
     <div class="card">
+      <div style="text-align:right;margin-bottom:12px">
+        <button type="button" class="btn" id="fc26EditorBack">← ZPĚT NA VÝSLEDKY</button>
+      </div>
       <div class="fc26-hero">
         <div class="fc26-kicker">POOLČÍTADLO • SPECIÁLNÍ REŽIM</div>
         <h1 class="fc26-title">FEDERAL CUP 2026</h1>
@@ -6881,6 +6951,7 @@ html[data-theme="light"] #leagueSchedule .history-item .muted{
     try{ renderHistory(); }catch(e){}
     try{ renderStats(); }catch(e){}
     try{ renderTournament(); renderSeriesList(); renderTournamentSeriesSelect(); }catch(e){}
+    try{window.renderFederalCup2026?.();}catch(e){}
     updateDisciplineSetup();
     setTimeout(maybeShowPendingResultConfirmation,100);
 
@@ -8656,6 +8727,7 @@ html[data-theme="light"] #leagueSchedule .history-item .muted{
     }
 
     document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+    if(name==='federal-cup-editor' && !currentUserIsSystemAdmin())name='federal-cup-2026';
     $('screen-'+name).classList.add('active');
 
     // Mobilní spodní navigace je užitečná pro běžné sekce,
@@ -8691,8 +8763,11 @@ html[data-theme="light"] #leagueSchedule .history-item .muted{
     }
     if(name==='stats') renderStats();
     if(name==='my-stats') renderMyStats();
-    if(name==='federal-cup-2026'){
+    if(name==='federal-cup-2026' || name==='federal-cup-editor'){
       try{if(typeof window.renderFederalCup2026==='function')window.renderFederalCup2026();}catch(e){console.warn('Federal Cup 2026:',e);}
+      if(name==='federal-cup-2026'){
+        try{window.refreshFederalCupViewer?.();}catch(e){console.warn('Federal Cup viewer refresh:',e);}
+      }
     }
     if(name==='challenges'){
       try{if(typeof window.openMatchChallengesScreen==='function')window.openMatchChallengesScreen();}catch(e){console.warn('Challenges screen:',e);}
@@ -27644,8 +27719,109 @@ function renderStats(){
       '<div class="fc26-summary-card"><h3>'+esc(cfg().teamBName)+'</h3><div class="fc26-score">'+b.matchWins+' : '+b.matchLosses+'</div><div class="muted" style="text-align:center">zápasy • racky '+b.racksFor+':'+b.racksAgainst+'</div></div>';
   }
 
+
+  // Výhradně čtecí obrazovka; žádný druhý zápis dat ani editace utkání.
+  function renderFederalCupViewer(){
+    if(!$('fc26ViewerScoreboard'))return;
+    const conf=cfg();
+    const admin=canEdit();
+    $('fc26ViewerEditor').classList.toggle('hidden',!admin);
+    $('fc26ViewerNotice').textContent=cloudAuthenticated
+      ? 'Aktuální výsledky se pravidelně obnovují. U odehraných Singles a Doubles lze otevřít detailní statistiky.'
+      : 'Pro aktuální cloudové výsledky je potřeba přihlášení. Zobrazená data mohou být ze zařízení.';
+    const a=teamAggregate(0),b=teamAggregate(1);
+    const done=FIXTURES.filter(f=>f.t==='team'
+      ? conf.teamResults?.[f.n]?.done===true : !!completedMatch(f.n)).length;
+    function teamBox(name,flag,place,results,cls){
+      return '<div class="fc26-scoreboard-team '+cls+'"><div style="font-size:29px">'+flag+'</div>'+
+        '<div class="fc26-scoreboard-name">'+name+'</div>'+
+        '<div class="fc26-scoreboard-meta">'+place+'</div>'+
+        '<div class="fc26-scoreboard-wins">'+results.matchWins+'</div>'+
+        '<div class="fc26-scoreboard-meta">VYHRANÉ ZÁPASY · SKÓRE '+results.racksFor+':'+results.racksAgainst+'</div></div>';
+    }
+    $('fc26ViewerScoreboard').innerHTML='<div class="fc26-scoreboard">'+
+      teamBox('Slovensko','🇸🇰','DOMÁCÍ',a,'home')+
+      '<div class="fc26-scoreboard-vs">:</div>'+
+      teamBox('Česko','🇨🇿','HOSTÉ',b,'away')+'</div>';
+    $('fc26ViewerProgress').innerHTML=
+      '<div class="fc26-view-progress"><span><strong>'+done+' / '+FIXTURES.length+'</strong> odehraných zápasů</span>'+
+      '<span>'+Math.max(0,FIXTURES.length-done)+' zbývá</span></div>'+
+      '<div class="fc26-view-progressbar" role="progressbar" aria-valuemin="0" aria-valuemax="'+FIXTURES.length+
+      '" aria-valuenow="'+done+'"><span style="width:'+(100*done/FIXTURES.length).toFixed(1)+'%"></span></div>';
+
+    function fixture(f){
+      const m=f.t==='team'?null:completedMatch(f.n);
+      const r=f.t==='team'?conf.teamResults?.[f.n]:null;
+      const l=lineup(f.n);
+      const finished=!!m||r?.done===true;
+      const sideName=(side,index)=>m?savedMatchSideDisplayName(m,index):
+        f.t==='team'?(index===0?'Slovensko':'Česko'):
+        (l[side]||[]).slice(0,requiredSlots(f)).filter(Boolean).join(' + ')||'Sestava bude doplněna';
+      const score=finished
+        ? (m?Number(m.scores?.[0]||0)+' : '+Number(m.scores?.[1]||0):
+          Number(r.a||0)+' : '+Number(r.b||0))
+        : '– : –';
+      return '<div class="fc26-view-match '+(finished?'done':'')+'">'+
+        '<div class="fc26-view-match-type"><strong>#'+f.n+'</strong>'+esc(f.label)+'</div>'+
+        '<div class="fc26-view-match-side">'+esc(String(sideName('a',0)))+'</div>'+
+        '<div><div class="fc26-view-match-score">'+score+'</div>'+
+        '<div class="fc26-view-match-status">'+(finished?'DOHRÁNO':'ČEKÁ SE')+'</div></div>'+
+        '<div class="fc26-view-match-side right">'+esc(String(sideName('b',1)))+'</div>'+
+        (m?'<div class="fc26-view-match-detail"><button type="button" class="btn" data-fc26-view-match="'+
+          esc(String(m.id||''))+'">DETAILNÍ STATISTIKY ZÁPASU</button></div>':'')+'</div>';
+    }
+    $('fc26ViewerSchedule').innerHTML=[1,2,3,4].map(block=>
+      '<div class="fc26-block"><div class="fc26-block-head"><h3>Blok '+block+'</h3>'+
+      '<span class="muted">'+FIXTURES.filter(f=>f.b===block&&f.t!=='team').length+' Singles / Doubles</span></div>'+
+      FIXTURES.filter(f=>f.b===block).map(fixture).join('')+'</div>').join('');
+
+    const stats=[
+      ['Vyhrané zápasy','matchWins'],['Prohrané zápasy','matchLosses'],
+      ['Součet skóre +','racksFor'],['Součet skóre −','racksAgainst'],
+      ['Breaky','breaks'],['Dry break','dryBreaks'],['Fauly z breaku','breakFouls'],
+      ['Eso','aces'],['Break & Run','breakAndRun'],['Dohrávky','runouts'],
+      ['Jistoty','safeties'],['Úspěšné jistoty','successfulSafeties'],['MISS','misses']
+    ];
+    $('fc26ViewerStats').innerHTML='<div style="overflow:auto"><table class="fc26-stat-table">'+
+      '<thead><tr><th>Statistika</th><th>🇸🇰 Slovensko</th><th>🇨🇿 Česko</th></tr></thead><tbody>'+
+      stats.map(([label,key])=>'<tr><td>'+esc(label)+'</td><td>'+a[key]+'</td><td>'+b[key]+'</td></tr>').join('')+
+      '</tbody></table></div>'+
+      '<div class="muted" style="font-size:11px;margin-top:9px">Herní statistiky vycházejí ze Singles a Doubles; Team utkání zahrnují výsledek a skóre.</div>';
+    const rosterHtml=(side,title)=>'<div class="fc26-view-roster"><h3>'+title+'</h3>'+
+      roster(side).map((name,i)=>'<div class="fc26-view-roster-line"><span class="muted">'+(i+1)+'.</span> '+
+        esc(String(name||'Bude doplněno'))+'</div>').join('')+'</div>';
+    $('fc26ViewerRosters').innerHTML='<div class="fc26-view-rosters">'+
+      rosterHtml('a','🇸🇰 Slovensko · domácí')+rosterHtml('b','🇨🇿 Česko · hosté')+'</div>';
+  }
+  let refreshingSpectator=false;
+  async function refreshFederalCupViewer(){
+    if(refreshingSpectator)return;
+    if(!cloudAuthenticated){renderFederalCupViewer();return;}
+    refreshingSpectator=true;
+    const btn=$('fc26ViewerRefresh');
+    if(btn)btn.disabled=true;
+    try{await Promise.allSettled([pollCloudData(),loadSecureMatches()]);}
+    catch(e){console.warn('Federal Cup spectator refresh:',e);}
+    finally{
+      refreshingSpectator=false;
+      if(btn)btn.disabled=false;
+      renderFederalCupViewer();
+    }
+  }
+  window.refreshFederalCupViewer=refreshFederalCupViewer;
+  $('fc26ViewerRefresh')?.addEventListener('click',refreshFederalCupViewer);
+  $('fc26ViewerEditor')?.addEventListener('click',()=>{if(canEdit())showScreen('federal-cup-editor')});
+  $('fc26EditorBack')?.addEventListener('click',()=>showScreen('federal-cup-2026'));
+  $('fc26ViewerSchedule')?.addEventListener('click',e=>{
+    const btn=e.target.closest('[data-fc26-view-match]');
+    if(btn?.dataset.fc26ViewMatch)showSavedMatchStats(btn.dataset.fc26ViewMatch);
+  });
+  setInterval(()=>{
+    if(!document.hidden&&$('screen-federal-cup-2026')?.classList.contains('active'))refreshFederalCupViewer();
+  },25000);
+
   function render(){
-    const root=$('screen-federal-cup-2026');if(!root)return;
+    const root=$('screen-federal-cup-editor');if(!root)return;
     const editable=canEdit();
     $('fc26TeamAName').value='Slovensko';
     $('fc26TeamBName').value='Česko';
@@ -27687,6 +27863,7 @@ function renderStats(){
     }
     $('fc26Schedule').innerHTML=html;
     renderStats();
+    renderFederalCupViewer();
   }
 
   $('fc26SaveSettings')?.addEventListener('click',function(){
@@ -27712,7 +27889,7 @@ function renderStats(){
       ? 'Soupisky Slovenska a Česka uloženy.'
       : 'Rozpracované soupisky uloženy. Před zápasem doplň pět hráčů za každý tým.');
   });
-  document.getElementById('screen-federal-cup-2026')?.addEventListener('input',function(e){
+  document.getElementById('screen-federal-cup-editor')?.addEventListener('input',function(e){
     if(e.target?.classList?.contains('fc26-roster-player'))e.target.dataset.dirty='1';
   });
   $('fc26Refresh')?.addEventListener('click',async function(){
