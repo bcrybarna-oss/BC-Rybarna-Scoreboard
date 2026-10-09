@@ -27405,8 +27405,8 @@ function renderStats(){
       stats.innerHTML=
         '<div class="modern-stat"><b>'+Number(x.completedMatches||0)+'</b><span>Dokončených zápasů</span></div>'+
         '<div class="modern-stat"><b>'+Number(x.activePlayers||0)+'</b><span>Aktivních hráčů</span></div>'+
-        '<div class="modern-stat"><b>'+esc(String(x.mostPlayedDiscipline||'—').toUpperCase())+'</b><span>Nejhranější disciplína</span></div>'+
-        '<div class="modern-stat"><b>'+Number(x.tournaments||0)+'</b><span>Turnajů v databázi</span></div>';
+        '<div class="modern-stat"><b>'+Number(x.tournaments||0)+'</b><span>Turnajů v databázi</span></div>'+
+        '<button type="button" class="modern-stat" id="onlineUsersTile" aria-label="Zobrazit aktivní hráče"><b><span class="presence-dot"></span><span id="onlineUsersCount">'+(document.getElementById('onlineUsersCount')?.textContent||'—')+'</span></b><span>Právě online · zobrazit hráče</span></button>';
     }
     try{if(typeof window.renderMatchChallengeHome==='function')window.renderMatchChallengeHome();}catch(e){}
   };
