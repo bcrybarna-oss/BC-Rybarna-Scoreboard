@@ -27623,7 +27623,7 @@ function user(){return typeof cloudUid!=='undefined'&&typeof cloudAuthenticated!
 function url(path){return FIREBASE_DB+'/'+path+'.json?auth='+encodeURIComponent(cloudIdToken)}
 function escName(s){return String(s||'Hráč').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
 function render(){
- const stat=document.querySelector('#modernHomeStats')||document.querySelector('.modern-stats');
+ const stat=document.getElementById('modernClubStats');
  if(stat&&!document.getElementById('onlineUsersTile')){
  const tile=document.createElement('button');tile.type='button';tile.className='modern-stat';tile.id='onlineUsersTile';tile.innerHTML='<b><span class="presence-dot"></span><span id="onlineUsersCount">—</span></b><span>Právě online · zobrazit hráče</span>';stat.appendChild(tile);
  }
