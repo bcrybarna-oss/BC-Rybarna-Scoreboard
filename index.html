@@ -27714,8 +27714,109 @@ function renderStats(){
       '<div class="fc26-summary-card"><h3>'+esc(cfg().teamBName)+'</h3><div class="fc26-score">'+b.matchWins+' : '+b.matchLosses+'</div><div class="muted" style="text-align:center">zápasy • racky '+b.racksFor+':'+b.racksAgainst+'</div></div>';
   }
 
+
+  // Výhradně čtecí obrazovka; žádný druhý zápis dat ani editace utkání.
+  function renderFederalCupViewer(){
+    if(!$('fc26ViewerScoreboard'))return;
+    const conf=cfg();
+    const admin=canEdit();
+    $('fc26ViewerEditor').classList.toggle('hidden',!admin);
+    $('fc26ViewerNotice').textContent=cloudAuthenticated
+      ? 'Aktuální výsledky se pravidelně obnovují. U odehraných Singles a Doubles lze otevřít detailní statistiky.'
+      : 'Pro aktuální cloudové výsledky je potřeba přihlášení. Zobrazená data mohou být ze zařízení.';
+    const a=teamAggregate(0),b=teamAggregate(1);
+    const done=FIXTURES.filter(f=>f.t==='team'
+      ? conf.teamResults?.[f.n]?.done===true : !!completedMatch(f.n)).length;
+    function teamBox(name,flag,place,results,cls){
+      return '<div class="fc26-scoreboard-team '+cls+'"><div style="font-size:29px">'+flag+'</div>'+
+        '<div class="fc26-scoreboard-name">'+name+'</div>'+
+        '<div class="fc26-scoreboard-meta">'+place+'</div>'+
+        '<div class="fc26-scoreboard-wins">'+results.matchWins+'</div>'+
+        '<div class="fc26-scoreboard-meta">VYHRANÉ ZÁPASY · SKÓRE '+results.racksFor+':'+results.racksAgainst+'</div></div>';
+    }
+    $('fc26ViewerScoreboard').innerHTML='<div class="fc26-scoreboard">'+
+      teamBox('Slovensko','🇸🇰','DOMÁCÍ',a,'home')+
+      '<div class="fc26-scoreboard-vs">:</div>'+
+      teamBox('Česko','🇨🇿','HOSTÉ',b,'away')+'</div>';
+    $('fc26ViewerProgress').innerHTML=
+      '<div class="fc26-view-progress"><span><strong>'+done+' / '+FIXTURES.length+'</strong> odehraných zápasů</span>'+
+      '<span>'+Math.max(0,FIXTURES.length-done)+' zbývá</span></div>'+
+      '<div class="fc26-view-progressbar" role="progressbar" aria-valuemin="0" aria-valuemax="'+FIXTURES.length+
+      '" aria-valuenow="'+done+'"><span style="width:'+(100*done/FIXTURES.length).toFixed(1)+'%"></span></div>';
+
+    function fixture(f){
+      const m=f.t==='team'?null:completedMatch(f.n);
+      const r=f.t==='team'?conf.teamResults?.[f.n]:null;
+      const l=lineup(f.n);
+      const finished=!!m||r?.done===true;
+      const sideName=(side,index)=>m?savedMatchSideDisplayName(m,index):
+        f.t==='team'?(index===0?'Slovensko':'Česko'):
+        (l[side]||[]).slice(0,requiredSlots(f)).filter(Boolean).join(' + ')||'Sestava bude doplněna';
+      const score=finished
+        ? (m?Number(m.scores?.[0]||0)+' : '+Number(m.scores?.[1]||0):
+          Number(r.a||0)+' : '+Number(r.b||0))
+        : '– : –';
+      return '<div class="fc26-view-match '+(finished?'done':'')+'">'+
+        '<div class="fc26-view-match-type"><strong>#'+f.n+'</strong>'+esc(f.label)+'</div>'+
+        '<div class="fc26-view-match-side">'+esc(String(sideName('a',0)))+'</div>'+
+        '<div><div class="fc26-view-match-score">'+score+'</div>'+
+        '<div class="fc26-view-match-status">'+(finished?'DOHRÁNO':'ČEKÁ SE')+'</div></div>'+
+        '<div class="fc26-view-match-side right">'+esc(String(sideName('b',1)))+'</div>'+
+        (m?'<div class="fc26-view-match-detail"><button type="button" class="btn" data-fc26-view-match="'+
+          esc(String(m.id||''))+'">DETAILNÍ STATISTIKY ZÁPASU</button></div>':'')+'</div>';
+    }
+    $('fc26ViewerSchedule').innerHTML=[1,2,3,4].map(block=>
+      '<div class="fc26-block"><div class="fc26-block-head"><h3>Blok '+block+'</h3>'+
+      '<span class="muted">'+FIXTURES.filter(f=>f.b===block&&f.t!=='team').length+' Singles / Doubles</span></div>'+
+      FIXTURES.filter(f=>f.b===block).map(fixture).join('')+'</div>').join('');
+
+    const stats=[
+      ['Vyhrané zápasy','matchWins'],['Prohrané zápasy','matchLosses'],
+      ['Součet skóre +','racksFor'],['Součet skóre −','racksAgainst'],
+      ['Breaky','breaks'],['Dry break','dryBreaks'],['Fauly z breaku','breakFouls'],
+      ['Eso','aces'],['Break & Run','breakAndRun'],['Dohrávky','runouts'],
+      ['Jistoty','safeties'],['Úspěšné jistoty','successfulSafeties'],['MISS','misses']
+    ];
+    $('fc26ViewerStats').innerHTML='<div style="overflow:auto"><table class="fc26-stat-table">'+
+      '<thead><tr><th>Statistika</th><th>🇸🇰 Slovensko</th><th>🇨🇿 Česko</th></tr></thead><tbody>'+
+      stats.map(([label,key])=>'<tr><td>'+esc(label)+'</td><td>'+a[key]+'</td><td>'+b[key]+'</td></tr>').join('')+
+      '</tbody></table></div>'+
+      '<div class="muted" style="font-size:11px;margin-top:9px">Herní statistiky vycházejí ze Singles a Doubles; Team utkání zahrnují výsledek a skóre.</div>';
+    const rosterHtml=(side,title)=>'<div class="fc26-view-roster"><h3>'+title+'</h3>'+
+      roster(side).map((name,i)=>'<div class="fc26-view-roster-line"><span class="muted">'+(i+1)+'.</span> '+
+        esc(String(name||'Bude doplněno'))+'</div>').join('')+'</div>';
+    $('fc26ViewerRosters').innerHTML='<div class="fc26-view-rosters">'+
+      rosterHtml('a','🇸🇰 Slovensko · domácí')+rosterHtml('b','🇨🇿 Česko · hosté')+'</div>';
+  }
+  let refreshingSpectator=false;
+  async function refreshFederalCupViewer(){
+    if(refreshingSpectator)return;
+    if(!cloudAuthenticated){renderFederalCupViewer();return;}
+    refreshingSpectator=true;
+    const btn=$('fc26ViewerRefresh');
+    if(btn)btn.disabled=true;
+    try{await Promise.allSettled([pollCloudData(),loadSecureMatches()]);}
+    catch(e){console.warn('Federal Cup spectator refresh:',e);}
+    finally{
+      refreshingSpectator=false;
+      if(btn)btn.disabled=false;
+      renderFederalCupViewer();
+    }
+  }
+  window.refreshFederalCupViewer=refreshFederalCupViewer;
+  $('fc26ViewerRefresh')?.addEventListener('click',refreshFederalCupViewer);
+  $('fc26ViewerEditor')?.addEventListener('click',()=>{if(canEdit())showScreen('federal-cup-editor')});
+  $('fc26EditorBack')?.addEventListener('click',()=>showScreen('federal-cup-2026'));
+  $('fc26ViewerSchedule')?.addEventListener('click',e=>{
+    const btn=e.target.closest('[data-fc26-view-match]');
+    if(btn?.dataset.fc26ViewMatch)showSavedMatchStats(btn.dataset.fc26ViewMatch);
+  });
+  setInterval(()=>{
+    if(!document.hidden&&$('screen-federal-cup-2026')?.classList.contains('active'))refreshFederalCupViewer();
+  },25000);
+
   function render(){
-    const root=$('screen-federal-cup-2026');if(!root)return;
+    const root=$('screen-federal-cup-editor');if(!root)return;
     const editable=canEdit();
     $('fc26TeamAName').value='Slovensko';
     $('fc26TeamBName').value='Česko';
@@ -27757,6 +27858,7 @@ function renderStats(){
     }
     $('fc26Schedule').innerHTML=html;
     renderStats();
+    renderFederalCupViewer();
   }
 
   $('fc26SaveSettings')?.addEventListener('click',function(){
@@ -27782,7 +27884,7 @@ function renderStats(){
       ? 'Soupisky Slovenska a Česka uloženy.'
       : 'Rozpracované soupisky uloženy. Před zápasem doplň pět hráčů za každý tým.');
   });
-  document.getElementById('screen-federal-cup-2026')?.addEventListener('input',function(e){
+  document.getElementById('screen-federal-cup-editor')?.addEventListener('input',function(e){
     if(e.target?.classList?.contains('fc26-roster-player'))e.target.dataset.dirty='1';
   });
   $('fc26Refresh')?.addEventListener('click',async function(){
