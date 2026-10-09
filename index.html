@@ -2275,6 +2275,48 @@ html[data-theme="light"] #leagueSchedule .history-item .muted{
   .fc26-team-card,.fc26-summary-card,.fc26-fixture{border:1px solid #303034;border-radius:16px;background:#0d0d0f;padding:14px}
   .fc26-team-card h3,.fc26-summary-card h3{margin:0 0 10px;color:var(--gold2)}
   .fc26-roster{display:grid;gap:7px}
+
+  /* Samostatný divácký pohled Federal Cupu */
+  .fc26-view{padding:clamp(14px,3vw,28px)}
+  .fc26-view-head{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
+  .fc26-view-actions{display:flex;gap:8px;flex-wrap:wrap}
+  .fc26-view-title{font-size:clamp(28px,5vw,48px);font-weight:950;letter-spacing:-.04em;margin:4px 0}
+  .fc26-view-kicker{color:var(--gold2);font-size:11px;font-weight:900;letter-spacing:.12em}
+  .fc26-scoreboard{display:grid;grid-template-columns:minmax(0,1fr) 24px minmax(0,1fr);gap:8px;align-items:stretch;margin:18px 0}
+  .fc26-scoreboard-team{border:1px solid rgba(216,177,75,.32);border-radius:16px;text-align:center;padding:18px 10px;background:#13120f}
+  .fc26-scoreboard-team.away{background:#111216}
+  .fc26-scoreboard-name{font-size:clamp(16px,3vw,27px);font-weight:950}
+  .fc26-scoreboard-wins{font-size:clamp(55px,9vw,92px);font-weight:950;color:var(--gold2);line-height:1.1}
+  .fc26-scoreboard-meta{color:var(--muted);font-size:11px;font-weight:850}
+  .fc26-scoreboard-vs{display:grid;place-items:center;color:var(--muted);font-weight:950;font-size:17px}
+  .fc26-view-progress{display:flex;justify-content:space-between;color:var(--muted);gap:8px;flex-wrap:wrap;font-weight:800}
+  .fc26-view-progress strong{color:var(--gold2)}
+  .fc26-view-progressbar{height:7px;background:#262626;border-radius:99px;overflow:hidden;margin:9px 0 18px}
+  .fc26-view-progressbar>span{display:block;height:100%;background:linear-gradient(90deg,#a47d2b,#f0cf74)}
+  .fc26-view-title2{margin:25px 0 11px;font-size:22px;font-weight:950}
+  .fc26-view-match{display:grid;grid-template-columns:50px minmax(0,1fr) 82px minmax(0,1fr);align-items:center;gap:8px;border:1px solid #2b2b2e;border-radius:13px;padding:12px;margin:8px 0;background:#0e0e10}
+  .fc26-view-match.done{border-color:rgba(216,177,75,.44)}
+  .fc26-view-match-type{color:var(--muted);font-size:11px}
+  .fc26-view-match-type strong{display:block;color:var(--gold2);font-size:14px}
+  .fc26-view-match-side{font-weight:800;overflow-wrap:anywhere}
+  .fc26-view-match-side.right{text-align:right}
+  .fc26-view-match-score{text-align:center;color:var(--gold2);font-weight:950;font-size:22px;white-space:nowrap}
+  .fc26-view-match-status{text-align:center;color:var(--muted);font-size:10px;font-weight:850}
+  .fc26-view-match-detail{grid-column:2 / -1;text-align:center}
+  .fc26-view-rosters{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+  .fc26-view-roster{padding:14px;border:1px solid #2b2b2e;border-radius:14px;background:#0d0d0f}
+  .fc26-view-roster h3{color:var(--gold2);margin:0 0 9px}
+  .fc26-view-roster-line{border-bottom:1px solid #262629;padding:8px 5px}
+  .fc26-view-roster-line:last-child{border-bottom:0}
+  @media(max-width:640px){
+    .fc26-scoreboard{grid-template-columns:minmax(0,1fr) 12px minmax(0,1fr);gap:4px}
+    .fc26-scoreboard-team{padding:12px 6px}
+    .fc26-view-match{grid-template-columns:29px minmax(0,1fr) 54px minmax(0,1fr);padding:9px 6px;gap:5px}
+    .fc26-view-match-side{font-size:12px}
+    .fc26-view-match-score{font-size:16px}
+    .fc26-view-rosters{grid-template-columns:1fr}
+  }
+
   .fc26-roster-entry{display:grid;grid-template-columns:64px minmax(0,1fr);align-items:center;gap:8px;margin:0;font-size:12px;color:var(--muted)}
   .fc26-roster-entry input{min-width:0;width:100%;padding:11px 12px;color:var(--text)}
   .fc26-team-card input[readonly]{opacity:.85;border-color:rgba(216,177,75,.35);font-weight:900}
@@ -2821,7 +2863,35 @@ html[data-theme="light"] #leagueSchedule .history-item .muted{
 
 
   <section id="screen-federal-cup-2026" class="screen">
+    <div class="card fc26-view">
+      <div class="fc26-view-head">
+        <div>
+          <div class="fc26-view-kicker">FEDERAL CUP 2026 • DIVÁCKÝ PŘEHLED</div>
+          <h1 class="fc26-view-title">🇸🇰 Slovensko × Česko 🇨🇿</h1>
+          <div class="muted">Výsledky • čtyři bloky • 21 zápasů • týmové statistiky</div>
+        </div>
+        <div class="fc26-view-actions">
+          <button type="button" class="btn" id="fc26ViewerRefresh">↻ OBNOVIT</button>
+          <button type="button" class="btn primary hidden" id="fc26ViewerEditor">SPRÁVA UTKÁNÍ</button>
+        </div>
+      </div>
+      <div id="fc26ViewerNotice" class="muted" style="margin-top:12px;font-size:12px"></div>
+      <div id="fc26ViewerScoreboard"></div>
+      <div id="fc26ViewerProgress"></div>
+      <h2 class="fc26-view-title2">Program a výsledky</h2>
+      <div id="fc26ViewerSchedule"></div>
+      <h2 class="fc26-view-title2">Statistiky obou týmů</h2>
+      <div id="fc26ViewerStats"></div>
+      <h2 class="fc26-view-title2">Soupisky týmů</h2>
+      <div id="fc26ViewerRosters"></div>
+    </div>
+  </section>
+
+  <section id="screen-federal-cup-editor" class="screen">
     <div class="card">
+      <div style="text-align:right;margin-bottom:12px">
+        <button type="button" class="btn" id="fc26EditorBack">← ZPĚT NA VÝSLEDKY</button>
+      </div>
       <div class="fc26-hero">
         <div class="fc26-kicker">POOLČÍTADLO • SPECIÁLNÍ REŽIM</div>
         <h1 class="fc26-title">FEDERAL CUP 2026</h1>
