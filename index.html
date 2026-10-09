@@ -27257,7 +27257,7 @@ function renderStats(){
   window.poolPresenceContext=async function(){
     if(!cloudAuthenticated||!cloudUid||!await ensureCloudToken())return null;
     const p=currentUserPlayerId&&data.players?.[currentUserPlayerId];
-    return {uid:cloudUid,token:cloudIdToken,db:FIREBASE_DB,playerId:currentUserPlayerId||'',name:p?playerDisplayName(p):'Registrovaný uživatel'};
+    return {uid:cloudUid,token:cloudIdToken,db:FIREBASE_DB,playerId:currentUserPlayerId||'',name:p?playerDisplayName(p):'Registrovaný uživatel',isAdminAccount:isMainAdminEmail(cloudUserEmail)||currentUserRole==='system_admin'};
   };
   cacheLoad();renderHome();renderNotificationCenter();
   setTimeout(function(){
@@ -27617,11 +27617,11 @@ function renderStats(){
 #onlineUsersTile{cursor:pointer;border-color:#3a694b}.presence-dot{display:inline-block;width:9px;height:9px;border-radius:50%;background:#37a169;margin-right:7px}
 #onlineUsersDialog .presence-row{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px;border-bottom:1px solid #333}
 </style>
-<div id="onlineUsersDialog" class="modal"><div class="modal-card" style="max-width:560px;text-align:left"><h2>Aktivní hráči</h2><label style="display:flex;align-items:center;gap:10px"><input type="checkbox" id="onlineUsersVisible" style="width:auto">Zobrazovat můj online stav</label><div id="onlineUsersList" style="margin-top:14px"></div><button type="button" class="btn" id="onlineUsersClose" style="margin-top:15px">ZAVŘÍT</button></div></div>
+<div id="onlineUsersDialog" class="modal"><div class="modal-card" style="max-width:560px;text-align:left"><h2>Aktivní hráči</h2><label style="display:flex;align-items:center;gap:10px"><input type="checkbox" id="onlineUsersVisible" style="width:auto">Zobrazovat můj online stav</label><div id="onlineUsersAdminNote" class="muted hidden" style="margin-top:6px">Administrátorský účet se mezi online hráči nezobrazuje.</div><div id="onlineUsersList" style="margin-top:14px"></div><button type="button" class="btn" id="onlineUsersClose" style="margin-top:15px">ZAVŘÍT</button></div></div>
 <script>
 (function(){
 const KEY='pool_online_visible', DEVICE='pool_online_device';
-let last=Date.now(),rows=null,writing=false,device='',viewerUid='';
+let last=Date.now(),rows=null,writing=false,device='',viewerUid='',viewerIsAdmin=false;
 try{device=sessionStorage.getItem(DEVICE)||('d'+Math.random().toString(36).slice(2));sessionStorage.setItem(DEVICE,device);}catch(e){device='d'+Math.random().toString(36).slice(2);}
 function visible(){try{return localStorage.getItem(KEY)!=='0'}catch(e){return true}}
 function escName(s){return String(s||'Hráč').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
@@ -27631,9 +27631,10 @@ function render(){
  const tile=document.createElement('button');tile.type='button';tile.className='modern-stat';tile.id='onlineUsersTile';tile.innerHTML='<b><span class="presence-dot"></span><span id="onlineUsersCount">—</span></b><span>Právě online · zobrazit hráče</span>';stat.appendChild(tile);
  }
  const count=document.getElementById('onlineUsersCount'),list=document.getElementById('onlineUsersList'),check=document.getElementById('onlineUsersVisible');
- if(check)check.checked=visible();
+ if(check){check.checked=visible();check.closest('label')?.classList.toggle('hidden',viewerIsAdmin)}
+ document.getElementById('onlineUsersAdminNote')?.classList.toggle('hidden',!viewerIsAdmin);
  const active=[],away=[],now=Date.now();
- if(rows)Object.values(rows).forEach(group=>Object.values(group||{}).forEach(r=>{if(!r||!r.visible||now-Number(r.updatedAt)>90000)return;const age=now-Number(r.lastInputAt);if(age<300000)active.push(r);else if(age<900000)away.push(r)}));
+ if(rows)Object.values(rows).forEach(group=>Object.values(group||{}).forEach(r=>{if(!r||!r.visible||!String(r.playerId||'').trim()||r.isAdminAccount===true||now-Number(r.updatedAt)>90000)return;const age=now-Number(r.lastInputAt);if(age<300000)active.push(r);else if(age<900000)away.push(r)}));
  const unique=arr=>[...new Map(arr.map(r=>[r.uid,r])).values()];
  const a=unique(active),w=unique(away).filter(r=>!a.some(x=>x.uid===r.uid));
  if(count)count.textContent=rows===null?'—':a.length;
@@ -27641,12 +27642,12 @@ function render(){
  function row(r,status){const own=r.uid===viewerUid;const canInvite=!own&&!!r.playerId;return '<div class="presence-row"><div><strong>'+escName(r.name)+(own?' (ty)':'')+'</strong><div class="muted">'+status+'</div></div>'+(canInvite?'<button class="btn" data-presence-player="'+escName(r.playerId)+'">VYZVAT</button>':'')+'</div>'}
 }
 async function tick(){
- const ctx=await window.poolPresenceContext?.();if(!ctx){rows=null;viewerUid='';render();return}viewerUid=ctx.uid;
+ const ctx=await window.poolPresenceContext?.();if(!ctx){rows=null;viewerUid='';viewerIsAdmin=false;render();return}viewerUid=ctx.uid;viewerIsAdmin=!!ctx.isAdminAccount;
  if(!writing){writing=true;try{
  const path='presence/'+encodeURIComponent(ctx.uid)+'/'+encodeURIComponent(device),age=Date.now()-last;
  const p=ctx.playerId;
- const body={uid:ctx.uid,playerId:String(p||''),name:ctx.name,updatedAt:Date.now(),lastInputAt:last,visible:visible(),watching:document.hidden};
- await fetch(ctx.db+'/'+path+'.json?auth='+encodeURIComponent(ctx.token),{method:(!visible()||age>900000)?'DELETE':'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
+ const body={uid:ctx.uid,playerId:String(p||''),name:ctx.name,isAdminAccount:!!ctx.isAdminAccount,updatedAt:Date.now(),lastInputAt:last,visible:visible(),watching:document.hidden};
+ await fetch(ctx.db+'/'+path+'.json?auth='+encodeURIComponent(ctx.token),{method:(ctx.isAdminAccount||!p||!visible()||age>900000)?'DELETE':'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
  }catch(e){}finally{writing=false}}
  try{const r=await fetch(ctx.db+'/presence.json?auth='+encodeURIComponent(ctx.token),{cache:'no-store'});if(!r.ok)throw Error('presence');rows=await r.json()||{}}catch(e){rows=null}
  render();
