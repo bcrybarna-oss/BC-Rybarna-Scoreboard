@@ -2275,6 +2275,9 @@ html[data-theme="light"] #leagueSchedule .history-item .muted{
   .fc26-team-card,.fc26-summary-card,.fc26-fixture{border:1px solid #303034;border-radius:16px;background:#0d0d0f;padding:14px}
   .fc26-team-card h3,.fc26-summary-card h3{margin:0 0 10px;color:var(--gold2)}
   .fc26-roster{display:grid;gap:7px}
+  .fc26-roster-entry{display:grid;grid-template-columns:64px minmax(0,1fr);align-items:center;gap:8px;margin:0;font-size:12px;color:var(--muted)}
+  .fc26-roster-entry input{min-width:0;width:100%;padding:11px 12px;color:var(--text)}
+  .fc26-team-card input[readonly]{opacity:.85;border-color:rgba(216,177,75,.35);font-weight:900}
   .fc26-block{margin-top:18px}
   .fc26-block-head{display:flex;justify-content:space-between;gap:10px;align-items:flex-end;margin-bottom:8px}
   .fc26-block-head h2{margin:0}
@@ -2831,18 +2834,20 @@ html[data-theme="light"] #leagueSchedule .history-item .muted{
 
       <div class="fc26-team-grid" style="margin-top:14px">
         <div class="fc26-team-card">
-          <h3>TÝM A</h3>
-          <input id="fc26TeamAName" type="text" placeholder="Název týmu">
+          <h3>🇸🇰 SLOVENSKO <span class="muted" style="font-size:12px">• DOMÁCÍ</span></h3>
+          <input id="fc26TeamAName" type="text" value="Slovensko" readonly aria-label="Domácí tým">
+          <div class="muted" style="font-size:12px;margin-top:10px">Vyplň pět slovenských hráčů. Účet v Poolčítadle není potřeba.</div>
           <div class="fc26-roster" id="fc26RosterA" style="margin-top:10px"></div>
         </div>
         <div class="fc26-team-card">
-          <h3>TÝM B</h3>
-          <input id="fc26TeamBName" type="text" placeholder="Název týmu">
+          <h3>🇨🇿 ČESKO <span class="muted" style="font-size:12px">• HOSTÉ</span></h3>
+          <input id="fc26TeamBName" type="text" value="Česko" readonly aria-label="Hostující tým">
+          <div class="muted" style="font-size:12px;margin-top:10px">Vyplň pět českých hráčů. Soupiska je oddělená od profilů.</div>
           <div class="fc26-roster" id="fc26RosterB" style="margin-top:10px"></div>
         </div>
       </div>
       <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px">
-        <button id="fc26SaveSettings" class="btn primary">ULOŽIT TÝMY A SOUPISKY</button>
+        <button id="fc26SaveSettings" class="btn primary">ULOŽIT SOUPISKY</button>
         <button id="fc26Refresh" class="btn">↻ OBNOVIT VÝSLEDKY</button>
       </div>
 
@@ -6205,8 +6210,8 @@ html[data-theme="light"] #leagueSchedule .history-item .muted{
   function defaultFederalCup2026(){
     return {
       year:2026,
-      teamAName:'Tým A',
-      teamBName:'Tým B',
+      teamAName:'Slovensko',
+      teamBName:'Česko',
       rosterA:['','','','',''],
       rosterB:['','','','',''],
       lineups:{},
@@ -9340,25 +9345,32 @@ $('useClock').addEventListener('change',e=>$('clockSettings').classList.toggle('
       : (winnerTableMode ? [p1,p2,p3] : (singlePlayer?[p1]:[p1,p2]));
     if(new Set(namesCheck.map(x=>x.toLowerCase())).size!==namesCheck.length){ toast('Hráči musí být různí.'); return; }
 
-    const unavailableSelected=namesCheck.find(name=>playerNameIsUnavailable(name));
+    // Hráči Federal Cupu jsou nezávislí hosté a neblokují je existující/skryté profily.
+    const unavailableSelected=federalCupLink ? null : namesCheck.find(name=>playerNameIsUnavailable(name));
     if(unavailableSelected){
       toast('Hráč „'+unavailableSelected+'“ je neaktivní nebo skrytý a nelze ho vybrat do nového zápasu.');
       refreshPlayerList();
       return;
     }
 
-    const p1obj=(pendingTournamentLink && pendingTournamentLink.p1Guest)
+    function federalCupGuestPlayer(side,name){
+      const names=side==='a'?federalCupLink?.rosterA:federalCupLink?.rosterB;
+      const index=(names||[]).findIndex(n=>String(n||'').trim().toLocaleLowerCase('cs')===String(name||'').trim().toLocaleLowerCase('cs'));
+      if(index<0)throw new Error('Vybraný hráč není na soupisce Federal Cupu: '+name);
+      return {id:'__FC26_2026_'+side+'_'+(index+1)+'__',name,nickname:'',club:'',active:true};
+    }
+    const p1obj=federalCupLink ? federalCupGuestPlayer('a',p1) : ((pendingTournamentLink && pendingTournamentLink.p1Guest)
       ? {id:pendingTournamentLink.p1ParticipantId,name:p1,nickname:'',club:'',showNickname:false}
-      : getOrCreatePlayer(p1);
-    const p2obj=solo14
+      : getOrCreatePlayer(p1));
+    const p2obj=federalCupLink ? federalCupGuestPlayer('b',p2) : (solo14
       ? {id:(solo14GhostMode?'__SOLO14_GHOST__':'__SOLO__'),name:(solo14GhostMode?'GHOST':'Sólo trénink')}
       : (ghostMode
         ? {id:'__GHOST__',name:'GHOST'}
         : ((pendingTournamentLink && pendingTournamentLink.p2Guest)
           ? {id:pendingTournamentLink.p2ParticipantId,name:p2,nickname:'',club:'',showNickname:false}
-          : getOrCreatePlayer(p2)));
-    const p1PartnerObj=doublesMode ? getOrCreatePlayer(p1Partner) : null;
-    const p2PartnerObj=doublesMode ? getOrCreatePlayer(p2Partner) : null;
+          : getOrCreatePlayer(p2))));
+    const p1PartnerObj=doublesMode ? (federalCupLink ? federalCupGuestPlayer('a',p1Partner) : getOrCreatePlayer(p1Partner)) : null;
+    const p2PartnerObj=doublesMode ? (federalCupLink ? federalCupGuestPlayer('b',p2Partner) : getOrCreatePlayer(p2Partner)) : null;
     const p3obj=winnerTableMode ? getOrCreatePlayer(p3) : null;
 
     const side1Name=doublesMode
@@ -27398,16 +27410,35 @@ function renderStats(){
     {n:21,b:4,t:'singles',label:'Singles',note:'výběr kapitána • může nastoupit jakýkoliv hráč ze soupisky'}
   ];
 
-  function cfg(){ return data.federalCup2026||(data.federalCup2026=defaultFederalCup2026()); }
-  function canEdit(){ return currentUserIsSystemAdmin(); }
-  function pName(id){ const p=data.players?.[id]; return p?playerDisplayName(p):''; }
-  function activePlayers(){
-    return Object.values(data.players||{}).filter(p=>p&&p.active!==false&&p.hiddenFromPlayers!==true)
-      .sort((a,b)=>playerDisplayName(a).localeCompare(playerDisplayName(b),'cs'));
+  function cfg(){
+    const c=data.federalCup2026||(data.federalCup2026=defaultFederalCup2026());
+    // Migruj dřívější ID hráčských profilů na samostatná jména jen po jejich načtení.
+    if(c.rosterMode!=='manual'){
+      const a=(c.rosterA||[]).slice(),b=(c.rosterB||[]).slice();
+      const mappedA=a.map(v=>data.players?.[v]?.name||v);
+      const mappedB=b.map(v=>data.players?.[v]?.name||v);
+      const changed=a.some((v,i)=>v&&v!==mappedA[i])||b.some((v,i)=>v&&v!==mappedB[i]);
+      if(changed){
+        Object.values(c.lineups||{}).forEach(l=>{
+          if(!l||typeof l!=='object')return;
+          if(Array.isArray(l.a))l.a=l.a.map(v=>{const i=a.indexOf(v);return i>=0?mappedA[i]:v;});
+          if(Array.isArray(l.b))l.b=l.b.map(v=>{const i=b.indexOf(v);return i>=0?mappedB[i]:v;});
+        });
+        c.rosterA=mappedA;c.rosterB=mappedB;
+      }
+      if(changed||![...a,...b].some(Boolean))c.rosterMode='manual';
+    }
+    // Federal Cup 2026: pořadí zemí je pevné, domácí vlevo.
+    c.teamAName='Slovensko';
+    c.teamBName='Česko';
+    return c;
   }
-  function options(selected){
-    return '<option value="">— vyber hráče —</option>'+activePlayers().map(p=>
-      '<option value="'+esc(p.id)+'" '+(String(selected||'')===String(p.id)?'selected':'')+'>'+esc(playerDisplayName(p))+'</option>'
+  function canEdit(){ return currentUserIsSystemAdmin(); }
+  function normalizedName(s){return String(s||'').replace(/\s+/g,' ').trim();}
+  function roster(side){return side==='a'?cfg().rosterA:cfg().rosterB;}
+  function options(selected,side){
+    return '<option value="">— vyber hráče ze soupisky —</option>'+roster(side).map(normalizedName).filter(Boolean).map(n=>
+      '<option value="'+esc(n)+'" '+(String(selected||'')===n?'selected':'')+'>'+esc(n)+'</option>'
     ).join('');
   }
   function lineup(n){
@@ -27418,10 +27449,9 @@ function renderStats(){
   function pairKey(arr){ return (arr||[]).filter(Boolean).map(String).sort().join('|'); }
   function allChosen(arr,n){return Array.isArray(arr)&&arr.length>=n&&arr.slice(0,n).every(Boolean);}
   function uniqueRoster(side){
-    const r=(side==='a'?cfg().rosterA:cfg().rosterB).filter(Boolean);
-    return r.length===5&&new Set(r).size===5;
+    const r=roster(side).map(normalizedName).filter(Boolean);
+    return r.length===5&&new Set(r.map(x=>x.toLocaleLowerCase('cs'))).size===5;
   }
-  function roster(side){return side==='a'?cfg().rosterA:cfg().rosterB;}
 
   function validateSideFixture(f,side){
     const l=lineup(f.n)[side],need=requiredSlots(f),r=roster(side).filter(Boolean);
@@ -27480,6 +27510,7 @@ function renderStats(){
   }
 
   function saveLineupSelect(n,side,idx,value){
+    if(!canEdit())return toast('Sestavu Federal Cupu může měnit pouze systémový administrátor.');
     const conf=cfg();
     conf.lineups[n]=conf.lineups[n]||{a:[],b:[]};
     conf.lineups[n][side]=Array.isArray(conf.lineups[n][side])?conf.lineups[n][side]:[];
@@ -27494,7 +27525,7 @@ function renderStats(){
     const need=requiredSlots(f),l=lineup(f.n)[side];
     const cls=need===1?'fc26-side-selects single':'fc26-side-selects';
     return '<div class="'+cls+'">'+Array.from({length:need},(_,i)=>
-      '<select onchange="fc26SetLineup('+f.n+',\''+side+'\','+i+',this.value)">'+options(l[i]||'')+'</select>'
+      '<select '+(!canEdit()?'disabled ':'')+'onchange="fc26SetLineup('+f.n+',\''+side+'\','+i+',this.value)">'+options(l[i]||'',side)+'</select>'
     ).join('')+'</div>';
   }
 
@@ -27531,7 +27562,8 @@ function renderStats(){
     const f=FIXTURES.find(x=>x.n===Number(n));if(!f||f.t==='team')return;
     const v=validateFixture(f);if(!v.ok)return toast(v.msg);
     const l=lineup(f.n),a=l.a.slice(0,requiredSlots(f)),bb=l.b.slice(0,requiredSlots(f));
-    const pa=a.map(id=>data.players?.[id]).filter(Boolean),pb=bb.map(id=>data.players?.[id]).filter(Boolean);
+    const pa=a.map(name=>({name:normalizedName(name)})).filter(x=>x.name);
+    const pb=bb.map(name=>({name:normalizedName(name)})).filter(x=>x.name);
     if(pa.length!==requiredSlots(f)||pb.length!==requiredSlots(f))return toast('Sestavu se nepodařilo načíst.');
 
     pendingFederalCupLink={
@@ -27540,15 +27572,15 @@ function renderStats(){
       rosterA:[...cfg().rosterA],rosterB:[...cfg().rosterB],
       lineupA:[...a],lineupB:[...bb]
     };
-    $('p1Name').value=pa[0].name||playerDisplayName(pa[0]);
-    $('p2Name').value=pb[0].name||playerDisplayName(pb[0]);
+    $('p1Name').value=pa[0].name;
+    $('p2Name').value=pb[0].name;
     if($('doublesMode')){
       $('doublesMode').checked=f.t==='doubles';
       $('doublesMode').dispatchEvent(new Event('change',{bubbles:true}));
     }
     if(f.t==='doubles'){
-      $('p1PartnerName').value=pa[1].name||playerDisplayName(pa[1]);
-      $('p2PartnerName').value=pb[1].name||playerDisplayName(pb[1]);
+      $('p1PartnerName').value=pa[1].name;
+      $('p2PartnerName').value=pb[1].name;
     }else{
       if($('p1PartnerName'))$('p1PartnerName').value='';
       if($('p2PartnerName'))$('p2PartnerName').value='';
@@ -27615,17 +27647,27 @@ function renderStats(){
   function render(){
     const root=$('screen-federal-cup-2026');if(!root)return;
     const editable=canEdit();
-    $('fc26TeamAName').value=cfg().teamAName||'Tým A';
-    $('fc26TeamBName').value=cfg().teamBName||'Tým B';
-    $('fc26TeamAName').disabled=!editable;$('fc26TeamBName').disabled=!editable;
+    $('fc26TeamAName').value='Slovensko';
+    $('fc26TeamBName').value='Česko';
     $('fc26SaveSettings').classList.toggle('hidden',!editable);
-    $('fc26EditNotice').textContent=editable?'Máš práva upravovat soupisky, sestavy a výsledky Team utkání.':'Federal Cup je v režimu pouze ke čtení. Soupisky a výsledky spravuje systémový administrátor.';
+    $('fc26EditNotice').textContent=editable
+      ? 'Zadej pět hráčů Slovenska vlevo a pět hráčů Česka vpravo. Hráči nepotřebují registraci v Poolčítadle.'
+      : 'Soupisky může měnit systémový administrátor. Pro zadání jmen se přihlas administrátorským účtem.';
 
     ['A','B'].forEach(side=>{
-      const key=side==='A'?'rosterA':'rosterB';
-      $(side==='A'?'fc26RosterA':'fc26RosterB').innerHTML=Array.from({length:5},(_,i)=>
-        '<select id="fc26'+side+'Player'+i+'" '+(!editable?'disabled':'')+'>'+options(cfg()[key][i]||'')+'</select>'
-      ).join('');
+      const key='roster'+side;
+      const host=$('fc26Roster'+side);
+      if(!host)return;
+      // Při automatické aktualizaci stránky se nesmí ztratit rozepsaná jména.
+      if(host.querySelectorAll('input.fc26-roster-player').length!==5){
+        host.innerHTML=Array.from({length:5},(_,i)=>
+          '<label class="fc26-roster-entry"><span>Hráč '+(i+1)+'</span><input class="fc26-roster-player" type="text" maxlength="100" autocomplete="off" id="fc26'+side+'Player'+i+'" placeholder="Jméno a příjmení" '+(!editable?'disabled':'')+'></label>'
+        ).join('');
+      }
+      Array.from(host.querySelectorAll('input.fc26-roster-player')).forEach((input,i)=>{
+        input.disabled=!editable;
+        if(!input.dataset.dirty&&input!==document.activeElement)input.value=cfg()[key][i]||'';
+      });
     });
 
     $('fc26RuleStatus').innerHTML='<strong>PRAVIDLA ROZPISU</strong><div style="margin-top:6px">'+globalRuleStatus().map(r=>
@@ -27650,15 +27692,28 @@ function renderStats(){
   $('fc26SaveSettings')?.addEventListener('click',function(){
     if(!canEdit())return;
     const conf=cfg();
-    conf.teamAName=$('fc26TeamAName').value.trim()||'Tým A';
-    conf.teamBName=$('fc26TeamBName').value.trim()||'Tým B';
-    conf.rosterA=Array.from({length:5},(_,i)=>$('fc26APlayer'+i)?.value||'');
-    conf.rosterB=Array.from({length:5},(_,i)=>$('fc26BPlayer'+i)?.value||'');
-    if(conf.rosterA.filter(Boolean).length!==5||new Set(conf.rosterA).size!==5||conf.rosterB.filter(Boolean).length!==5||new Set(conf.rosterB).size!==5){
-      toast('Každý tým musí mít 5 různých hráčů.');
+    const rosterA=Array.from({length:5},(_,i)=>normalizedName($('fc26APlayer'+i)?.value));
+    const rosterB=Array.from({length:5},(_,i)=>normalizedName($('fc26BPlayer'+i)?.value));
+    const unique=arr=>new Set(arr.filter(Boolean).map(x=>x.toLocaleLowerCase('cs'))).size===arr.filter(Boolean).length;
+    if(!unique(rosterA)||!unique(rosterB)){
+      toast('Jména v jedné soupisce se nesmí opakovat.');
       return;
     }
-    conf.updatedAt=Date.now();saveData();render();toast('Soupisky Federal Cup 2026 uloženy.');
+    conf.teamAName='Slovensko';conf.teamBName='Česko';
+    conf.rosterA=rosterA;conf.rosterB=rosterB;conf.rosterMode='manual';
+    Object.values(conf.lineups||{}).forEach(l=>{
+      if(!l||typeof l!=='object')return;
+      if(Array.isArray(l.a))l.a=l.a.map(n=>rosterA.includes(n)?n:'');
+      if(Array.isArray(l.b))l.b=l.b.map(n=>rosterB.includes(n)?n:'');
+    });
+    document.querySelectorAll('.fc26-roster-player').forEach(input=>{delete input.dataset.dirty;});
+    conf.updatedAt=Date.now();saveData();render();
+    toast(rosterA.every(Boolean)&&rosterB.every(Boolean)
+      ? 'Soupisky Slovenska a Česka uloženy.'
+      : 'Rozpracované soupisky uloženy. Před zápasem doplň pět hráčů za každý tým.');
+  });
+  document.getElementById('screen-federal-cup-2026')?.addEventListener('input',function(e){
+    if(e.target?.classList?.contains('fc26-roster-player'))e.target.dataset.dirty='1';
   });
   $('fc26Refresh')?.addEventListener('click',async function(){
     try{if(cloudAuthenticated)await loadSecureMatches();}catch(e){}
