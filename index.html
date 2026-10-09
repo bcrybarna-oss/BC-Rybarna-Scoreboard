@@ -27257,7 +27257,7 @@ function renderStats(){
   window.poolPresenceContext=async function(){
     if(!cloudAuthenticated||!cloudUid||!await ensureCloudToken())return null;
     const p=currentUserPlayerId&&data.players?.[currentUserPlayerId];
-    return {uid:cloudUid,token:cloudIdToken,db:FIREBASE_DB,playerId:currentUserPlayerId||'',name:p?playerDisplayName(p):(cloudUserEmail||'Hráč')};
+    return {uid:cloudUid,token:cloudIdToken,db:FIREBASE_DB,playerId:currentUserPlayerId||'',name:p?playerDisplayName(p):'Registrovaný uživatel'};
   };
   cacheLoad();renderHome();renderNotificationCenter();
   setTimeout(function(){
@@ -27621,11 +27621,9 @@ function renderStats(){
 <script>
 (function(){
 const KEY='pool_online_visible', DEVICE='pool_online_device';
-let last=Date.now(),rows=null,writing=false,device='';
+let last=Date.now(),rows=null,writing=false,device='',viewerUid='';
 try{device=sessionStorage.getItem(DEVICE)||('d'+Math.random().toString(36).slice(2));sessionStorage.setItem(DEVICE,device);}catch(e){device='d'+Math.random().toString(36).slice(2);}
 function visible(){try{return localStorage.getItem(KEY)!=='0'}catch(e){return true}}
-function user(){return typeof cloudUid!=='undefined'&&typeof cloudAuthenticated!=='undefined'&&cloudAuthenticated&&cloudUid&&cloudIdToken?cloudUid:null}
-function url(path){return FIREBASE_DB+'/'+path+'.json?auth='+encodeURIComponent(cloudIdToken)}
 function escName(s){return String(s||'Hráč').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
 function render(){
  const stat=document.getElementById('modernClubStats');
@@ -27640,15 +27638,14 @@ function render(){
  const a=unique(active),w=unique(away).filter(r=>!a.some(x=>x.uid===r.uid));
  if(count)count.textContent=rows===null?'—':a.length;
  if(list){list.innerHTML=rows===null?'<p class="muted">Online seznam není dostupný. Zkontrolujte oprávnění Firebase.</p>':(a.map(r=>row(r,'🟢 Online')).join('')+w.map(r=>row(r,'🟡 Pryč')).join('')||'<p class="muted">Nikdo právě není online.</p>')}
- function row(r,status){return '<div class="presence-row"><div><strong>'+escName(r.name)+'</strong><div class="muted">'+status+'</div></div><button class="btn" data-presence-player="'+escName(r.playerId||'')+'">VYZVAT</button></div>'}
+ function row(r,status){const own=r.uid===viewerUid;const canInvite=!own&&!!r.playerId;return '<div class="presence-row"><div><strong>'+escName(r.name)+(own?' (ty)':'')+'</strong><div class="muted">'+status+'</div></div>'+(canInvite?'<button class="btn" data-presence-player="'+escName(r.playerId)+'">VYZVAT</button>':'')+'</div>'}
 }
 async function tick(){
- const ctx=await window.poolPresenceContext?.();if(!ctx){rows=null;render();return}
+ const ctx=await window.poolPresenceContext?.();if(!ctx){rows=null;viewerUid='';render();return}viewerUid=ctx.uid;
  if(!writing){writing=true;try{
  const path='presence/'+encodeURIComponent(ctx.uid)+'/'+encodeURIComponent(device),age=Date.now()-last;
  const p=ctx.playerId;
- const player=null;
- const body={uid:ctx.uid,playerId:p||'',name:ctx.name,updatedAt:Date.now(),lastInputAt:last,visible:visible(),watching:document.hidden};
+ const body={uid:ctx.uid,playerId:String(p||''),name:ctx.name,updatedAt:Date.now(),lastInputAt:last,visible:visible(),watching:document.hidden};
  await fetch(ctx.db+'/'+path+'.json?auth='+encodeURIComponent(ctx.token),{method:(!visible()||age>900000)?'DELETE':'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
  }catch(e){}finally{writing=false}}
  try{const r=await fetch(ctx.db+'/presence.json?auth='+encodeURIComponent(ctx.token),{cache:'no-store'});if(!r.ok)throw Error('presence');rows=await r.json()||{}}catch(e){rows=null}
@@ -27658,7 +27655,7 @@ async function tick(){
 document.addEventListener('click',e=>{
  if(e.target.closest('#onlineUsersTile')){document.getElementById('onlineUsersDialog').classList.add('show');render()}
  if(e.target.closest('#onlineUsersClose'))document.getElementById('onlineUsersDialog').classList.remove('show');
- const b=e.target.closest('[data-presence-player]');if(b){document.getElementById('onlineUsersDialog').classList.remove('show');const nav=document.querySelector('[data-nav="challenges"]');if(nav)nav.click();setTimeout(()=>{const sel=document.getElementById('matchChallengeOpponent');if(sel){sel.value=b.dataset.presencePlayer;sel.dispatchEvent(new Event('change',{bubbles:true}))}},180)}
+ const b=e.target.closest('[data-presence-player]');if(b){document.getElementById('onlineUsersDialog').classList.remove('show');if(typeof window.openChallengeForPlayer==='function')window.openChallengeForPlayer(b.dataset.presencePlayer)}
 });
 document.addEventListener('change',e=>{if(e.target.id==='onlineUsersVisible'){try{localStorage.setItem(KEY,e.target.checked?'1':'0')}catch(x){}tick()}});
 document.addEventListener('visibilitychange',()=>{if(!document.hidden){last=Date.now();tick()}});
