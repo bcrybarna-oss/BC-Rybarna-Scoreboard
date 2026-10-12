@@ -2370,6 +2370,50 @@ html[data-theme="light"] #leagueSchedule .history-item .muted{
     .fc26-side-selects{grid-template-columns:1fr}
   }
 </style>
+<style>
+#setupModeChoice{display:flex;flex-wrap:wrap;gap:10px;margin:12px 0}
+#setupModeChoice button{flex:1;min-width:145px}
+#screen-setup.setup-compact:not(.setup-expanded) #counterModeHelp,
+#screen-setup.setup-compact:not(.setup-expanded) #handicapMatchRow,
+#screen-setup.setup-compact:not(.setup-expanded) #handicapMatchFields,
+#screen-setup.setup-compact:not(.setup-expanded) #nineBallBreakRuleField,
+#screen-setup.setup-compact:not(.setup-expanded) #tenBallRuleField,
+#screen-setup.setup-compact:not(.setup-expanded) #lagRow,
+#screen-setup.setup-compact:not(.setup-expanded) #threeFoulRow,
+#screen-setup.setup-compact:not(.setup-expanded) #shotClockRow,
+#screen-setup.setup-compact:not(.setup-expanded) #clockSettings,
+#screen-setup.setup-compact:not(.setup-expanded) #streamEnabled,
+#screen-setup.setup-compact:not(.setup-expanded) #streamMatchTitle,
+#screen-setup.setup-compact:not(.setup-expanded) #winnerTableRow,
+#screen-setup.setup-compact:not(.setup-expanded) #doublesRow,
+#screen-setup.setup-compact:not(.setup-expanded) #solo14Row,
+#screen-setup.setup-compact:not(.setup-expanded) #solo14GhostRow,
+#screen-setup.setup-compact:not(.setup-expanded) #solo14GhostSettings,
+#screen-setup.setup-compact:not(.setup-expanded) #ghostRow{display:none!important}
+#screen-setup.setup-ghost #p2SetupField,
+#screen-setup.setup-ghost #p2PartnerField,
+#screen-setup.setup-ghost #p1PartnerField,
+#screen-setup.setup-ghost #p3SetupField,
+#screen-setup.setup-ghost #breakModeField,
+#screen-setup.setup-ghost #counterMode,
+#screen-setup.setup-ghost #counterModeHelp,
+#screen-setup.setup-ghost #winnerTableRow,
+#screen-setup.setup-ghost #doublesRow,
+#screen-setup.setup-ghost #ghostRow,
+#screen-setup.setup-ghost #solo14Row,
+#screen-setup.setup-ghost #solo14GhostRow,
+#screen-setup.setup-ghost #solo14GhostSettings,
+#screen-setup.setup-ghost #handicapMatchRow,
+#screen-setup.setup-ghost #handicapMatchFields,
+#screen-setup.setup-ghost #lagRow,
+#screen-setup.setup-ghost #threeFoulRow,
+#screen-setup.setup-ghost #shotClockRow,
+#screen-setup.setup-ghost #clockSettings,
+#screen-setup.setup-ghost #nineBallBreakRuleField,
+#screen-setup.setup-ghost #tenBallRuleField,
+#screen-setup.setup-ghost #fourteenBreakInfo{display:none!important}
+#screen-setup.setup-ghost #setupMoreBtn{display:none!important}
+</style>
 </head>
 <body>
 
@@ -2663,7 +2707,13 @@ html[data-theme="light"] #leagueSchedule .history-item .muted{
 
 <section id="screen-setup" class="screen">
     <div class="card">
-      <h1 class="section-title">Nový zápas</h1>
+      <h1 class="section-title" id="setupMainTitle">Nový zápas</h1>
+      <div class="setup-mode-choice" id="setupModeChoice" aria-label="Typ zápasu">
+        <button type="button" class="btn primary" id="setupStandardBtn" aria-pressed="true">⚔ Klasický zápas</button>
+        <button type="button" class="btn" id="setupGhostBtn" aria-pressed="false">🎱 Ghost trénink</button>
+      </div>
+      <p id="setupModeHint" class="muted" style="margin:10px 0 16px">Zápas dvou hráčů. Další možnosti najdeš v pokročilém nastavení.</p>
+      <button type="button" id="setupMoreBtn" class="btn" aria-expanded="false" style="margin:4px 0 12px">⚙ Další nastavení ▾</button>
       <div class="grid two">
         <div>
           <label id="p1Label">Hráč 1</label>
@@ -28408,6 +28458,65 @@ document.addEventListener('click',e=>{
 document.addEventListener('change',e=>{if(e.target.id==='onlineUsersVisible'){try{localStorage.setItem(KEY,e.target.checked?'1':'0')}catch(x){}tick()}});
 document.addEventListener('visibilitychange',()=>{if(!document.hidden){last=Date.now();tick()}});
 setInterval(tick,30000);setInterval(render,5000);setTimeout(tick,5000);
+})();
+</script>
+<script>
+/* Separate setup UI; the existing scoring and statistics engine stays unchanged. */
+(function(){
+  const $id=id=>document.getElementById(id);
+  const screen=$id('screen-setup');
+  if(!screen||!$id('setupGhostBtn'))return;
+  let mode='standard';
+  const setMode=(next)=>{
+    mode=next;
+    const ghost=next==='ghost';
+    screen.classList.toggle('setup-ghost',ghost);
+    screen.classList.toggle('setup-compact',!ghost);
+    screen.classList.remove('setup-expanded');
+    $id('setupMoreBtn').setAttribute('aria-expanded','false');
+    $id('setupMoreBtn').textContent='⚙ Další nastavení ▾';
+    $id('setupStandardBtn').classList.toggle('primary',!ghost);
+    $id('setupGhostBtn').classList.toggle('primary',ghost);
+    $id('setupStandardBtn').setAttribute('aria-pressed',String(!ghost));
+    $id('setupGhostBtn').setAttribute('aria-pressed',String(ghost));
+    $id('setupMainTitle').textContent=ghost?'Ghost trénink':'Nový zápas';
+    $id('setupModeHint').textContent=ghost?'Trénink jednoho hráče proti Ghostovi. Výsledky se vedou odděleně od klasických zápasů.':'Zápas dvou hráčů. Další možnosti najdeš v pokročilém nastavení.';
+    $id('p1Label').textContent=ghost?'Hráč':'Hráč 1';
+    if(ghost){
+      if($id('counterMode').value!=='full'){$id('counterMode').value='full';$id('counterMode').dispatchEvent(new Event('change',{bubbles:true}));}
+      if($id('discipline').value==='14.1')$id('discipline').value='9-ball';
+      $id('discipline').dispatchEvent(new Event('change',{bubbles:true}));
+      $id('ghostMode').checked=true;
+      $id('ghostMode').dispatchEvent(new Event('change',{bubbles:true}));
+      $id('p2Name').value='';
+      $id('useLag').checked=false;
+    }else{
+      $id('ghostMode').checked=false;
+      $id('ghostMode').dispatchEvent(new Event('change',{bubbles:true}));
+      if($id('solo14GhostMode'))$id('solo14GhostMode').checked=false;
+    }
+  };
+  $id('setupStandardBtn').addEventListener('click',()=>setMode('standard'));
+  $id('setupGhostBtn').addEventListener('click',()=>setMode('ghost'));
+  $id('setupMoreBtn').addEventListener('click',()=>{
+    const open=screen.classList.toggle('setup-expanded');
+    $id('setupMoreBtn').setAttribute('aria-expanded',String(open));
+    $id('setupMoreBtn').textContent=open?'⚙ Skrýt další nastavení ▴':'⚙ Další nastavení ▾';
+  });
+  $id('discipline').addEventListener('change',()=>{
+    if(mode==='ghost' && $id('discipline').value==='14.1'){
+      $id('discipline').value='9-ball';
+      $id('discipline').dispatchEvent(new Event('change',{bubbles:true}));
+    }
+  });
+  // Tournament-linked matches must retain the original setup and its constraints.
+  document.addEventListener('click',e=>{
+    const nav=e.target.closest('[data-nav="setup"]');
+    if(nav && !screen.classList.contains('setup-ghost')) {
+      screen.classList.add('setup-compact');
+    }
+  });
+  screen.classList.add('setup-compact');
 })();
 </script>
 </body>
