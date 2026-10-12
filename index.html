@@ -9635,6 +9635,16 @@ $('useClock').addEventListener('change',e=>$('clockSettings').classList.toggle('
     const p1PartnerObj=doublesMode ? (federalCupLink ? federalCupGuestPlayer('a',p1Partner) : getOrCreatePlayer(p1Partner,p1PartnerId)) : null;
     const p2PartnerObj=doublesMode ? (federalCupLink ? federalCupGuestPlayer('b',p2Partner) : getOrCreatePlayer(p2Partner,p2PartnerId)) : null;
     const p3obj=winnerTableMode ? getOrCreatePlayer(p3,p3Id) : null;
+    // Textové jméno a vybrané ID mohou vypadat různě, proto kontrolujeme
+    // i výsledné identity. Jeden profil nesmí hrát současně za obě strany.
+    const resolvedIds=doublesMode
+      ? [p1obj.id,p1PartnerObj.id,p2obj.id,p2PartnerObj.id]
+      : (winnerTableMode ? [p1obj.id,p2obj.id,p3obj.id]
+                         : (singlePlayer ? [p1obj.id] : [p1obj.id,p2obj.id]));
+    if(new Set(resolvedIds).size!==resolvedIds.length){
+      toast('Stejný hráč nemůže být v zápasu vícekrát. Vyber rozdílné profily.');
+      return;
+    }
 
     const side1Name=doublesMode
       ? playerDisplayName(p1obj)+' + '+playerDisplayName(p1PartnerObj)
@@ -14449,7 +14459,7 @@ $('liveScoreClose').onclick=()=>{
     if(!select)return;
 
     const players=Object.values(data.players||{})
-      .filter(p=>p.hiddenFromPlayers!==true)
+      .filter(p=>p && p.active!==false && p.hiddenFromPlayers!==true)
       .sort((a,b)=>{
         const ap=currentUserPlayerPriority(a)?0:1;
         const bp=currentUserPlayerPriority(b)?0:1;
