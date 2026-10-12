@@ -10,7 +10,8 @@
     "run:ios": "npx cap run ios",
     "run:android": "npx cap run android",
     "add:ios": "npx cap add ios",
-    "add:android": "npx cap add android"
+    "add:android": "npx cap add android",
+    "test": "node --test tests/*.test.cjs"
   },
   "dependencies": {
     "@capacitor/core": "^8.0.0",
