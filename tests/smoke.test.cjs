@@ -90,6 +90,11 @@ test('Ghost režimy a oddělení ELO/klasických zápasů zůstávají v kódu',
   assert.ok(facts);
   assert.ok(facts[1].includes('if(m.solo14 || m.ghostMode || m.winnerTableMode || m.doublesMode)return;'));
 });
+test('Po rozřešení se kontrolují skutečná ID a turnaje nenabízejí neaktivní profily',()=>{
+  assert.ok(html.includes('if(new Set(resolvedIds).size!==resolvedIds.length)'));
+  assert.ok(html.includes("const resolvedIds=doublesMode"));
+  assert.ok(html.includes(".filter(p=>p && p.active!==false && p.hiddenFromPlayers!==true)"));
+});
 test('Turnaje stále vybírají podle ID a zachovávají hosty',()=>{
   assert.ok(html.includes('id="tournamentPlayerDropdown"'));
   assert.ok(html.includes('id="addTournamentGuestBtn"'));
