@@ -522,7 +522,7 @@
     }
   
 
-/* === v4.51.71 RC • mobilní herní obrazovka portrait / landscape === */
+/* === v4.51.72 RC • mobilní herní obrazovka portrait / landscape === */
 @media (max-width:700px) and (orientation:portrait){
   #screen-match{margin-top:8px}
   #screen-match>.card{padding:10px;border-radius:14px}
@@ -2413,6 +2413,51 @@ html[data-theme="light"] #leagueSchedule .history-item .muted{
 #screen-setup.setup-ghost #fourteenBreakInfo{display:none!important}
 #screen-setup.setup-ghost #setupMoreBtn{display:none!important}
 </style>
+
+<style id="pool-player-picker-styles">
+  /* Jednotný, dotykově přívětivý výběr hráčů – zápas i turnaj. */
+  .match-player-entry{display:flex;align-items:stretch;gap:8px;min-width:0}
+  .match-player-entry>input{flex:1 1 auto;min-width:0;width:100%}
+  .match-player-pick-btn{flex:0 0 auto;min-width:96px;font-size:12px;padding:9px 10px;white-space:nowrap}
+  #tournamentPlayerDropdown{display:none!important}
+  #tournamentPlayerChooseBtn{width:100%;min-height:49px;text-align:left;font-weight:900}
+  #poolPlayerPickerDialog{z-index:240;overscroll-behavior:contain}
+  #poolPlayerPickerDialog .pool-player-picker-card{
+    width:min(640px,100%);text-align:left;max-height:calc(100dvh - 24px);
+    display:flex;flex-direction:column;gap:12px;overflow:hidden;
+  }
+  .pool-player-picker-header{display:flex;justify-content:space-between;align-items:flex-start;gap:12px}
+  .pool-player-picker-header h2{font-size:22px;margin:0 0 5px}
+  .pool-player-picker-header p{font-size:12px;line-height:1.4;margin:0;color:var(--muted)}
+  #poolPlayerPickerClose{flex:0 0 auto;min-width:42px;min-height:42px;padding:6px}
+  #poolPlayerPickerSearch{min-height:52px;font-size:16px;flex:0 0 auto}
+  #poolPlayerPickerCount{font-size:12px;color:var(--muted);font-weight:800}
+  #poolPlayerPickerResults{
+    min-height:80px;max-height:min(55dvh,510px);overflow-y:auto;
+    -webkit-overflow-scrolling:touch;overscroll-behavior:contain;
+    display:flex;flex-direction:column;gap:6px;padding:2px 3px 4px;
+  }
+  .pool-player-picker-row{
+    border:1px solid #38332b;border-radius:13px;background:#141414;color:var(--text);
+    width:100%;min-height:58px;padding:12px 14px;text-align:left;cursor:pointer;
+    display:flex;justify-content:space-between;align-items:center;gap:12px;
+    font-size:14px;line-height:1.4;font-weight:850;overflow-wrap:anywhere;
+  }
+  .pool-player-picker-row:focus-visible,.pool-player-picker-row:hover{outline:2px solid var(--gold);background:#211b0d}
+  .pool-player-picker-row .pick-arrow{color:var(--gold2);font-size:20px;flex:0 0 auto}
+  .pool-player-picker-empty{padding:20px 12px;text-align:center;color:var(--muted);font-size:13px}
+  #poolPlayerPickerManual{width:100%;min-height:48px;flex:0 0 auto}
+  html[data-theme="light"] .pool-player-picker-row{background:#fff!important;color:#171717!important;border-color:#c9bfad}
+  html[data-theme="light"] .pool-player-picker-row:hover{background:#fff7e6!important}
+  @media(max-width:700px){
+    .match-player-pick-btn{min-width:84px;font-size:11px;padding:8px}
+    #poolPlayerPickerDialog{padding:8px!important;align-items:center}
+    #poolPlayerPickerDialog .pool-player-picker-card{padding:14px;max-height:calc(100dvh - 16px);border-radius:16px}
+    #poolPlayerPickerResults{max-height:52dvh}
+    .pool-player-picker-row{min-height:62px}
+  }
+</style>
+
 </head>
 <body>
 
@@ -2448,7 +2493,7 @@ html[data-theme="light"] #leagueSchedule .history-item .muted{
           <span class="by">by</span>
           <span class="club">BC Rybárna</span>
         </div>
-        <small class="modern-brand-version">v4.51.71 RC</small>
+        <small class="modern-brand-version">v4.51.72 RC</small>
       </div>
     </div>
     <div class="nav">
@@ -3044,7 +3089,7 @@ html[data-theme="light"] #leagueSchedule .history-item .muted{
         </div>
         <div class="subpanel" style="min-width:210px;text-align:center;margin:0">
           <div class="muted" style="font-size:10px;font-weight:950;letter-spacing:1px">AKTUÁLNÍ VERZE</div>
-          <div style="font-size:22px;font-weight:950;color:var(--gold2);margin-top:5px">v4.51.71 RC</div>
+          <div style="font-size:22px;font-weight:950;color:var(--gold2);margin-top:5px">v4.51.72 RC</div>
         </div>
       </div>
     </div>
@@ -5722,7 +5767,7 @@ html[data-theme="light"] #leagueSchedule .history-item .muted{
       </div>
 
       <div id="groupPlayoffSeedStatus" class="muted" style="margin-top:12px;min-height:20px"></div>
-      <div class="muted" style="margin-top:4px;font-size:11px">RC v4.51.71</div>
+      <div class="muted" style="margin-top:4px;font-size:11px">RC v4.51.72</div>
       <div class="modal-actions">
         <button id="groupPlayoffSeedApplyBtn" class="btn primary big" type="button">NASADIT DO PLAY-OFF</button>
         <button id="groupPlayoffSeedCancelBtn" class="btn">ZRUŠIT</button>
@@ -6906,7 +6951,7 @@ html[data-theme="light"] #leagueSchedule .history-item .muted{
     const btn=$('submitReportBtn');if(btn)btn.disabled=true;
     try{
       const id=uid(),p=currentUserPlayerId?data.players?.[currentUserPlayerId]:null;
-      const report={id,createdByUid:cloudUid,createdByPlayerId:currentUserPlayerId||'',createdByName:p?playerSelectionLabel(p):(cloudUserEmail||'Uživatel'),email:cloudUserEmail||'',type,area,description,appVersion:'v4.51.71 RC',createdAt:new Date().toISOString(),updatedAt:new Date().toISOString(),status:'new',adminNote:''};
+      const report={id,createdByUid:cloudUid,createdByPlayerId:currentUserPlayerId||'',createdByName:p?playerSelectionLabel(p):(cloudUserEmail||'Uživatel'),email:cloudUserEmail||'',type,area,description,appVersion:'v4.51.72 RC',createdAt:new Date().toISOString(),updatedAt:new Date().toISOString(),status:'new',adminNote:''};
       await reportRequest(id,'PUT',report);
       try{
         await writeReportUserMirror(report);
@@ -28524,6 +28569,181 @@ setInterval(tick,30000);setInterval(render,5000);setTimeout(tick,5000);
   screen.classList.add('setup-compact');
 })();
 </script>
+
+<div id="poolPlayerPickerDialog" class="modal" role="dialog" aria-modal="true" aria-labelledby="poolPlayerPickerHeading" aria-hidden="true">
+  <div class="modal-card pool-player-picker-card">
+    <div class="pool-player-picker-header">
+      <div>
+        <h2 id="poolPlayerPickerHeading">Vybrat hráče</h2>
+        <p id="poolPlayerPickerHint">Začni psát jméno a vyber hráče jedním klepnutím.</p>
+      </div>
+      <button id="poolPlayerPickerClose" class="btn" type="button" aria-label="Zavřít výběr hráče">✕</button>
+    </div>
+    <input id="poolPlayerPickerSearch" type="search" autocomplete="off" placeholder="Hledat jméno nebo klub..." aria-label="Hledat hráče">
+    <div id="poolPlayerPickerCount" aria-live="polite"></div>
+    <div id="poolPlayerPickerResults" role="listbox" aria-label="Nalezení hráči"></div>
+    <button id="poolPlayerPickerManual" type="button" class="btn hidden">POUŽÍT ZADANÉ JMÉNO</button>
+  </div>
+</div>
+<script id="pool-player-picker-script">
+(function(){
+  'use strict';
+  const $=id=>document.getElementById(id);
+  const dialog=$('poolPlayerPickerDialog');
+  const search=$('poolPlayerPickerSearch');
+  const results=$('poolPlayerPickerResults');
+  const count=$('poolPlayerPickerCount');
+  const manual=$('poolPlayerPickerManual');
+  if(!dialog||!search||!results)return;
+  let kind='',target=null,items=[],previousFocus=null,previousOverflow='';
+  const normalize=value=>String(value||'').normalize('NFD')
+    .replace(/[\u0300-\u036f]/g,'').toLocaleLowerCase('cs').trim();
+  const emitChange=el=>{
+    el.dispatchEvent(new Event('input',{bubbles:true}));
+    el.dispatchEvent(new Event('change',{bubbles:true}));
+  };
+  const hide=()=>{
+    dialog.classList.remove('show');
+    dialog.setAttribute('aria-hidden','true');
+    document.body.style.overflow=previousOverflow;
+    kind='';target=null;items=[];
+    if(previousFocus && previousFocus.isConnected && !previousFocus.disabled){
+      try{previousFocus.focus({preventScroll:true});}catch(e){}
+    }
+    previousFocus=null;
+  };
+  const choose=value=>{
+    if(kind==='match' && target && !target.disabled && !target.readOnly){
+      target.value=value;
+      emitChange(target);
+    }else if(kind==='tournament'){
+      const select=$('tournamentPlayerDropdown');
+      if(!select || select.disabled || !$('addTournamentPlayerBtn') || $('addTournamentPlayerBtn').disabled)return;
+      select.value=value;
+      if(select.value!==value)return;
+      select.dispatchEvent(new Event('change',{bubbles:true}));
+      hide();
+      $('addTournamentPlayerBtn').click();
+      return;
+    }
+    hide();
+  };
+  const render=()=>{
+    const q=normalize(search.value);
+    const terms=q.split(/\s+/).filter(Boolean);
+    const filtered=items.filter(p=>terms.every(t=>normalize(p.label).includes(t)));
+    const shown=filtered.slice(0,80);
+    results.replaceChildren();
+    for(const item of shown){
+      const button=document.createElement('button');
+      button.type='button';
+      button.className='pool-player-picker-row';
+      button.setAttribute('role','option');
+      button.setAttribute('aria-selected','false');
+      const name=document.createElement('span');
+      name.textContent=item.label;
+      const arrow=document.createElement('span');
+      arrow.className='pick-arrow';
+      arrow.textContent='›';
+      arrow.setAttribute('aria-hidden','true');
+      button.append(name,arrow);
+      button.addEventListener('click',()=>choose(item.value));
+      results.appendChild(button);
+    }
+    if(!shown.length){
+      const empty=document.createElement('div');
+      empty.className='pool-player-picker-empty';
+      empty.textContent=q?'Žádný hráč neodpovídá hledání.':'Seznam hráčů je zatím prázdný.';
+      results.appendChild(empty);
+    }
+    count.textContent=filtered.length+' hráčů'+(filtered.length>80?' · zobrazeno prvních 80, upřesni hledání':'');
+    const allowManual=kind==='match' && search.value.trim().length>0;
+    manual.classList.toggle('hidden',!allowManual);
+    manual.textContent=allowManual?'POUŽÍT JMÉNO: '+search.value.trim():'POUŽÍT ZADANÉ JMÉNO';
+  };
+  const open=(type,el)=>{
+    if(!el || el.disabled || el.readOnly)return;
+    previousFocus=document.activeElement;
+    previousOverflow=document.body.style.overflow;
+    kind=type;target=el;
+    if(type==='tournament'){
+      const options=Array.from(el.options).filter(o=>o.value);
+      items=options.map(o=>({value:o.value,label:o.textContent.trim()}));
+      $('poolPlayerPickerHeading').textContent='Přidat hráče do turnaje';
+      $('poolPlayerPickerHint').textContent='Vyhledej hráče podle jména nebo klubu. Výběrem se rovnou přidá do prezence.';
+      search.value='';
+      search.placeholder='Hledat jméno nebo klub...';
+    }else{
+      const dl=$('playersList');
+      const values=dl?Array.from(dl.options).map(o=>o.value).filter(Boolean):[];
+      items=Array.from(new Set(values)).map(value=>({value,label:value}));
+      $('poolPlayerPickerHeading').textContent='Vybrat hráče do zápasu';
+      $('poolPlayerPickerHint').textContent='Vyber hráče ze seznamu, nebo napiš nové jméno. Ruční zadání zůstává možné i přímo v zápase.';
+      search.value=el.value||'';
+      search.placeholder='Hledat hráče podle jména...';
+    }
+    dialog.classList.add('show');
+    dialog.setAttribute('aria-hidden','false');
+    document.body.style.overflow='hidden';
+    render();
+    try{search.focus({preventScroll:true});search.select();}catch(e){}
+  };
+  // Původní datalist funguje různě v Androidu/iOS. U zápasových hráčů
+  // ho nahrazujeme vlastním výběrem, ale textový vstup zůstává editovatelný.
+  for(const input of document.querySelectorAll('#screen-setup input[list="playersList"]')){
+    if(input.dataset.playerPickerReady==='1')continue;
+    input.dataset.playerPickerReady='1';
+    input.removeAttribute('list');
+    const wrapper=document.createElement('div');
+    wrapper.className='match-player-entry';
+    input.parentNode.insertBefore(wrapper,input);
+    wrapper.appendChild(input);
+    const btn=document.createElement('button');
+    btn.type='button';
+    btn.className='btn match-player-pick-btn';
+    btn.textContent='⌕ VYBRAT';
+    btn.setAttribute('aria-label','Vybrat hráče ze seznamu');
+    btn.addEventListener('click',()=>open('match',input));
+    wrapper.appendChild(btn);
+  }
+  // Turnajový select ponecháváme jako zdroj hodnot a pro existující logiku
+  // přidávání. Zobrazujeme ale vyhledávací výběr místo dlouhého selectu.
+  const select=$('tournamentPlayerDropdown');
+  if(select){
+    select.setAttribute('aria-hidden','true');
+    select.tabIndex=-1;
+    const btn=document.createElement('button');
+    btn.id='tournamentPlayerChooseBtn';
+    btn.type='button';
+    btn.className='btn';
+    btn.textContent='⌕ VYHLEDAT A PŘIDAT HRÁČE';
+    select.insertAdjacentElement('afterend',btn);
+    btn.addEventListener('click',()=>open('tournament',select));
+    const syncDisabled=()=>{btn.disabled=select.disabled;};
+    new MutationObserver(syncDisabled).observe(select,{attributes:true,attributeFilter:['disabled']});
+    syncDisabled();
+  }
+  $('poolPlayerPickerClose').addEventListener('click',hide);
+  dialog.addEventListener('click',e=>{if(e.target===dialog)hide();});
+  document.addEventListener('keydown',e=>{
+    if(!dialog.classList.contains('show'))return;
+    if(e.key==='Escape'){e.preventDefault();hide();}
+    if(e.key==='Enter' && document.activeElement===search){
+      e.preventDefault();
+      const q=normalize(search.value);
+      const exact=items.find(p=>normalize(p.label)===q);
+      if(exact)choose(exact.value);
+      else if(kind==='match' && search.value.trim())choose(search.value.trim());
+      else if(results.querySelectorAll('button').length===1)results.querySelector('button').click();
+    }
+  });
+  search.addEventListener('input',render);
+  manual.addEventListener('click',()=>{
+    if(kind==='match' && search.value.trim())choose(search.value.trim());
+  });
+})();
+</script>
+
 </body>
 
 </html>
