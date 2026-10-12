@@ -5957,8 +5957,8 @@ body.modern-test header{top:12px}
 
   // Firebase project configuration.
   // Web API key is intentionally client-side; access is protected by Firebase Authentication + Database Rules.
-  const FIREBASE_API_KEY = 'AIzaSyDwbY_hOmhf6tfotV5RO-msCoOUUXNqXAQ';
-  const FIREBASE_DB = 'https://bc-rybarna-scrbrd-default-rtdb.europe-west1.firebasedatabase.app';
+  const FIREBASE_API_KEY = 'TEST_CLOUD_DISABLED';
+  const FIREBASE_DB = 'https://poolcitalo-test.invalid';
   const FIREBASE_DB_URL = FIREBASE_DB;
   const MAIN_ADMIN_EMAIL='bcrybarna@gmail.com';
 
@@ -7225,7 +7225,7 @@ body.modern-test header{top:12px}
     if(!await ensureCloudToken()) throw new Error('NO_AUTH');
 
     const r=await fetch(
-      'https://identitytoolkit.googleapis.com/v1/accounts:lookup?key='+encodeURIComponent(FIREBASE_API_KEY),
+      'https://poolcitalo-test.invalid/v1/accounts:lookup?key='+encodeURIComponent(FIREBASE_API_KEY),
       {
         method:'POST',
         headers:{'Content-Type':'application/json'},
@@ -7264,7 +7264,7 @@ body.modern-test header{top:12px}
 
     async function doSend(){
       const r=await fetch(
-        'https://identitytoolkit.googleapis.com/v1/accounts:sendOobCode?key='+encodeURIComponent(FIREBASE_API_KEY),
+        'https://poolcitalo-test.invalid/v1/accounts:sendOobCode?key='+encodeURIComponent(FIREBASE_API_KEY),
         {
           method:'POST',
           headers:{'Content-Type':'application/json'},
@@ -7372,7 +7372,7 @@ body.modern-test header{top:12px}
 
   async function firebaseRegister(email,password){
     const r=await fetch(
-      'https://identitytoolkit.googleapis.com/v1/accounts:signUp?key='+encodeURIComponent(FIREBASE_API_KEY),
+      'https://poolcitalo-test.invalid/v1/accounts:signUp?key='+encodeURIComponent(FIREBASE_API_KEY),
       {
         method:'POST',
         headers:{'Content-Type':'application/json'},
@@ -7402,7 +7402,7 @@ body.modern-test header{top:12px}
 
   async function firebaseSignIn(email,password){
     const r=await fetch(
-      'https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key='+encodeURIComponent(FIREBASE_API_KEY),
+      'https://poolcitalo-test.invalid/v1/accounts:signInWithPassword?key='+encodeURIComponent(FIREBASE_API_KEY),
       {
         method:'POST',
         headers:{'Content-Type':'application/json'},
@@ -7429,7 +7429,7 @@ body.modern-test header{top:12px}
     if(!refreshToken) return false;
     const body='grant_type=refresh_token&refresh_token='+encodeURIComponent(refreshToken);
     const r=await fetch(
-      'https://securetoken.googleapis.com/v1/token?key='+encodeURIComponent(FIREBASE_API_KEY),
+      'https://poolcitalo-test.invalid/v1/token?key='+encodeURIComponent(FIREBASE_API_KEY),
       {
         method:'POST',
         headers:{'Content-Type':'application/x-www-form-urlencoded'},
