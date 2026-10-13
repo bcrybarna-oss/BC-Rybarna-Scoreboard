@@ -522,7 +522,7 @@
     }
   
 
-/* === v4.51.74 RC • mobilní herní obrazovka portrait / landscape === */
+/* === v4.51.75 RC • mobilní herní obrazovka portrait / landscape === */
 @media (max-width:700px) and (orientation:portrait){
   #screen-match{margin-top:8px}
   #screen-match>.card{padding:10px;border-radius:14px}
@@ -2382,8 +2382,7 @@ html[data-theme="light"] #leagueSchedule .history-item .muted{
 #screen-setup.setup-compact:not(.setup-expanded) #threeFoulRow,
 #screen-setup.setup-compact:not(.setup-expanded) #shotClockRow,
 #screen-setup.setup-compact:not(.setup-expanded) #clockSettings,
-#screen-setup.setup-compact:not(.setup-expanded) #streamEnabled,
-#screen-setup.setup-compact:not(.setup-expanded) #streamMatchTitle,
+#screen-setup.setup-compact:not(.setup-expanded) #setupStreamOptionsPanel,
 #screen-setup.setup-compact:not(.setup-expanded) #doublesRow,
 #screen-setup.setup-compact:not(.setup-expanded) #solo14Row,
 #screen-setup.setup-compact:not(.setup-expanded) #solo14GhostRow,
@@ -2502,7 +2501,7 @@ html[data-theme="light"] #leagueSchedule .history-item .muted{
           <span class="by">by</span>
           <span class="club">BC Rybárna</span>
         </div>
-        <small class="modern-brand-version">v4.51.74 RC</small>
+        <small class="modern-brand-version">v4.51.75 RC</small>
       </div>
     </div>
     <div class="nav">
@@ -2766,7 +2765,7 @@ html[data-theme="light"] #leagueSchedule .history-item .muted{
         <button type="button" class="btn" id="setupGhostBtn" aria-pressed="false">🎱 Ghost trénink</button>
       </div>
       <p id="setupModeHint" class="muted" style="margin:10px 0 16px">Zápas dvou hráčů. Další možnosti najdeš v pokročilém nastavení.</p>
-      <button type="button" id="setupMoreBtn" class="btn" aria-expanded="false" style="margin:4px 0 12px">⚙ Další nastavení ▾</button>
+
       <div class="grid two">
         <div>
           <label id="p1Label">Hráč 1</label>
@@ -2855,6 +2854,12 @@ html[data-theme="light"] #leagueSchedule .history-item .muted{
         </div>
       </div>
 
+      <div id="setupMatchTitleField" class="subpanel" style="margin-top:16px">
+        <label for="streamMatchTitle">Název / popis zápasu <span class="muted">(volitelné)</span></label>
+        <input id="streamMatchTitle" type="text" placeholder="např. Liga Sever • 2. kolo">
+        <div class="muted" style="margin-top:6px">Zobrazí se také v Livescore, historii a na streamu.</div>
+      </div>
+      <button type="button" id="setupMoreBtn" class="btn" aria-expanded="false" style="margin:4px 0 12px">⚙ Další nastavení ▾</button>
       <div id="handicapMatchRow" class="toggle-row" style="margin-top:12px">
         <div>
           <strong>Handicapový zápas</strong>
@@ -2965,13 +2970,7 @@ html[data-theme="light"] #leagueSchedule .history-item .muted{
         </div>
       </div>
 
-      <div class="subpanel" style="margin-top:16px">
-        <label>NÁZEV / POPIS ZÁPASU <span class="muted">(volitelné)</span></label>
-        <input id="streamMatchTitle" type="text" placeholder="např. MČR 9-ball • 2. kolo • B strana">
-        <div class="muted" style="margin-top:6px">Zobrazí se v počítadle, Livescore, stream overlayi, historii a statistikách zápasu. Pokud pole necháš prázdné, nic navíc se nezobrazí.</div>
-      </div>
-
-      <div class="subpanel" style="margin-top:16px">
+      <div id="setupStreamOptionsPanel" class="subpanel" style="margin-top:16px">
         <div class="toggle-row">
           <div>
             <strong>Stream overlay</strong>
@@ -3100,7 +3099,7 @@ html[data-theme="light"] #leagueSchedule .history-item .muted{
         </div>
         <div class="subpanel" style="min-width:210px;text-align:center;margin:0">
           <div class="muted" style="font-size:10px;font-weight:950;letter-spacing:1px">AKTUÁLNÍ VERZE</div>
-          <div style="font-size:22px;font-weight:950;color:var(--gold2);margin-top:5px">v4.51.74 RC</div>
+          <div style="font-size:22px;font-weight:950;color:var(--gold2);margin-top:5px">v4.51.75 RC</div>
         </div>
       </div>
     </div>
@@ -5779,7 +5778,7 @@ html[data-theme="light"] #leagueSchedule .history-item .muted{
       </div>
 
       <div id="groupPlayoffSeedStatus" class="muted" style="margin-top:12px;min-height:20px"></div>
-      <div class="muted" style="margin-top:4px;font-size:11px">RC v4.51.74</div>
+      <div class="muted" style="margin-top:4px;font-size:11px">RC v4.51.75</div>
       <div class="modal-actions">
         <button id="groupPlayoffSeedApplyBtn" class="btn primary big" type="button">NASADIT DO PLAY-OFF</button>
         <button id="groupPlayoffSeedCancelBtn" class="btn">ZRUŠIT</button>
@@ -6963,7 +6962,7 @@ html[data-theme="light"] #leagueSchedule .history-item .muted{
     const btn=$('submitReportBtn');if(btn)btn.disabled=true;
     try{
       const id=uid(),p=currentUserPlayerId?data.players?.[currentUserPlayerId]:null;
-      const report={id,createdByUid:cloudUid,createdByPlayerId:currentUserPlayerId||'',createdByName:p?playerSelectionLabel(p):(cloudUserEmail||'Uživatel'),email:cloudUserEmail||'',type,area,description,appVersion:'v4.51.74 RC',createdAt:new Date().toISOString(),updatedAt:new Date().toISOString(),status:'new',adminNote:''};
+      const report={id,createdByUid:cloudUid,createdByPlayerId:currentUserPlayerId||'',createdByName:p?playerSelectionLabel(p):(cloudUserEmail||'Uživatel'),email:cloudUserEmail||'',type,area,description,appVersion:'v4.51.75 RC',createdAt:new Date().toISOString(),updatedAt:new Date().toISOString(),status:'new',adminNote:''};
       await reportRequest(id,'PUT',report);
       try{
         await writeReportUserMirror(report);
@@ -9434,15 +9433,24 @@ $('useClock').addEventListener('change',e=>$('clockSettings').classList.toggle('
     return !sameName.some(p=>p.active!==false && p.hiddenFromPlayers!==true);
   }
 
-  function getOrCreatePlayer(name){
-    const key=String(name||'').trim().toLowerCase();
-    const found=Object.values(data.players||{}).find(p=>
-      p &&
-      p.active!==false &&
-      p.hiddenFromPlayers!==true &&
-      String(p.name||'').trim().toLowerCase()===key
+  function getOrCreatePlayer(name, selectedPlayerId=null){
+    const key=String(name||'').trim().toLocaleLowerCase('cs');
+    // Profil se vybírá podle ID. Při ručním zadání nedovolíme tiché
+    // přiřazení nesprávného profilu u dvou lidí stejného jména.
+    if(selectedPlayerId){
+      const selected=data.players?.[selectedPlayerId];
+      if(!selected || selected.active===false || selected.hiddenFromPlayers===true ||
+          String(selected.name||'').trim().toLocaleLowerCase('cs')!==key){
+        throw new Error('PLAYER_SELECTION_STALE');
+      }
+      return selected;
+    }
+    const candidates=Object.values(data.players||{}).filter(p=>
+      p && p.active!==false && p.hiddenFromPlayers!==true &&
+      String(p.name||'').trim().toLocaleLowerCase('cs')===key
     );
-    if(found) return found;
+    if(candidates.length>1)throw new Error('PLAYER_AMBIGUOUS');
+    if(candidates.length===1)return candidates[0];
 
     const sameNameExists=Object.values(data.players||{}).some(p=>
       p && String(p.name||'').trim().toLowerCase()===key
@@ -9453,6 +9461,28 @@ $('useClock').addEventListener('change',e=>$('clockSettings').classList.toggle('
     data.players[p.id]=p; saveData(); return p;
   }
 
+
+  function selectedSetupPlayerId(inputId,typedName){
+    const el=$(inputId);
+    const selectedId=String(el?.dataset?.selectedPlayerId||'').trim();
+    const selectedName=String(el?.dataset?.selectedPlayerName||'').trim();
+    return selectedId && selectedName===String(typedName||'').trim() ? selectedId : null;
+  }
+
+  // Jednotný čtecí seznam pro vlastní vyhledávací dialog zápasů.
+  // Nepředává soukromé údaje, jen ID, jméno a viditelný popisek hráče.
+  window.poolMatchPickerPlayers=function(){
+    return Object.values(data.players||{})
+      .filter(p=>p && p.active!==false && p.hiddenFromPlayers!==true)
+      .sort((a,b)=>{
+        const ap=currentUserPlayerPriority(a)?0:1;
+        const bp=currentUserPlayerPriority(b)?0:1;
+        if(ap!==bp)return ap-bp;
+        return String(a.name||'').localeCompare(String(b.name||''),'cs') ||
+          String(a.club||'').localeCompare(String(b.club||''),'cs');
+      })
+      .map(p=>({id:p.id,value:p.name,label:playerSelectionLabel(p)}));
+  };
 
   function savedDoublesSideNames(m,side){
     if(!m)return [];
@@ -9574,7 +9604,19 @@ $('useClock').addEventListener('change',e=>$('clockSettings').classList.toggle('
     const namesCheck=doublesMode
       ? [p1,p1Partner,p2,p2Partner]
       : (winnerTableMode ? [p1,p2,p3] : (singlePlayer?[p1]:[p1,p2]));
-    if(new Set(namesCheck.map(x=>x.toLowerCase())).size!==namesCheck.length){ toast('Hráči musí být různí.'); return; }
+    const p1Id=pendingTournamentLink?.p1ParticipantId && !pendingTournamentLink?.p1Guest
+      ? pendingTournamentLink.p1ParticipantId : selectedSetupPlayerId('p1Name',p1);
+    const p2Id=pendingTournamentLink?.p2ParticipantId && !pendingTournamentLink?.p2Guest
+      ? pendingTournamentLink.p2ParticipantId : selectedSetupPlayerId('p2Name',p2);
+    const p1PartnerId=selectedSetupPlayerId('p1PartnerName',p1Partner);
+    const p2PartnerId=selectedSetupPlayerId('p2PartnerName',p2Partner);
+    const p3Id=selectedSetupPlayerId('p3Name',p3);
+    const identityKey=(name,id)=>id ? 'id:'+id : 'name:'+name.toLocaleLowerCase('cs');
+    const identityCheck=doublesMode
+      ? [identityKey(p1,p1Id),identityKey(p1Partner,p1PartnerId),identityKey(p2,p2Id),identityKey(p2Partner,p2PartnerId)]
+      : (winnerTableMode ? [identityKey(p1,p1Id),identityKey(p2,p2Id),identityKey(p3,p3Id)]
+                         : (singlePlayer?[identityKey(p1,p1Id)]:[identityKey(p1,p1Id),identityKey(p2,p2Id)]));
+    if(new Set(identityCheck).size!==identityCheck.length){ toast('Hráči musí být různí.'); return; }
 
     // Hráči Federal Cupu jsou nezávislí hosté a neblokují je existující/skryté profily.
     const unavailableSelected=federalCupLink ? null : namesCheck.find(name=>playerNameIsUnavailable(name));
@@ -9592,17 +9634,27 @@ $('useClock').addEventListener('change',e=>$('clockSettings').classList.toggle('
     }
     const p1obj=federalCupLink ? federalCupGuestPlayer('a',p1) : ((pendingTournamentLink && pendingTournamentLink.p1Guest)
       ? {id:pendingTournamentLink.p1ParticipantId,name:p1,nickname:'',club:'',showNickname:false}
-      : getOrCreatePlayer(p1));
+      : getOrCreatePlayer(p1,p1Id));
     const p2obj=federalCupLink ? federalCupGuestPlayer('b',p2) : (solo14
       ? {id:(solo14GhostMode?'__SOLO14_GHOST__':'__SOLO__'),name:(solo14GhostMode?'GHOST':'Sólo trénink')}
       : (ghostMode
         ? {id:'__GHOST__',name:'GHOST'}
         : ((pendingTournamentLink && pendingTournamentLink.p2Guest)
           ? {id:pendingTournamentLink.p2ParticipantId,name:p2,nickname:'',club:'',showNickname:false}
-          : getOrCreatePlayer(p2))));
-    const p1PartnerObj=doublesMode ? (federalCupLink ? federalCupGuestPlayer('a',p1Partner) : getOrCreatePlayer(p1Partner)) : null;
-    const p2PartnerObj=doublesMode ? (federalCupLink ? federalCupGuestPlayer('b',p2Partner) : getOrCreatePlayer(p2Partner)) : null;
-    const p3obj=winnerTableMode ? getOrCreatePlayer(p3) : null;
+          : getOrCreatePlayer(p2,p2Id))));
+    const p1PartnerObj=doublesMode ? (federalCupLink ? federalCupGuestPlayer('a',p1Partner) : getOrCreatePlayer(p1Partner,p1PartnerId)) : null;
+    const p2PartnerObj=doublesMode ? (federalCupLink ? federalCupGuestPlayer('b',p2Partner) : getOrCreatePlayer(p2Partner,p2PartnerId)) : null;
+    const p3obj=winnerTableMode ? getOrCreatePlayer(p3,p3Id) : null;
+    // Textové jméno a vybrané ID mohou vypadat různě, proto kontrolujeme
+    // i výsledné identity. Jeden profil nesmí hrát současně za obě strany.
+    const resolvedIds=doublesMode
+      ? [p1obj.id,p1PartnerObj.id,p2obj.id,p2PartnerObj.id]
+      : (winnerTableMode ? [p1obj.id,p2obj.id,p3obj.id]
+                         : (singlePlayer ? [p1obj.id] : [p1obj.id,p2obj.id]));
+    if(new Set(resolvedIds).size!==resolvedIds.length){
+      toast('Stejný hráč nemůže být v zápasu vícekrát. Vyber rozdílné profily.');
+      return;
+    }
 
     const side1Name=doublesMode
       ? playerDisplayName(p1obj)+' + '+playerDisplayName(p1PartnerObj)
@@ -9778,6 +9830,14 @@ $('useClock').addEventListener('change',e=>$('clockSettings').classList.toggle('
     }
     }catch(err){
       console.error(err);
+      if(err?.message==='PLAYER_AMBIGUOUS'){
+        toast('Existuje více hráčů se stejným jménem. Použij tlačítko VYBRAT a zvol konkrétní profil.');
+        return;
+      }
+      if(err?.message==='PLAYER_SELECTION_STALE'){
+        toast('Vybraný profil už není dostupný nebo se změnil. Vyber hráče znovu.');
+        return;
+      }
       alert('Nepodařilo se zahájit zápas. Zkus stránku znovu načíst v běžném prohlížeči (Chrome / Safari). Chyba: '+(err && err.message ? err.message : err));
     }
   }
@@ -14413,7 +14473,7 @@ $('liveScoreClose').onclick=()=>{
     if(!select)return;
 
     const players=Object.values(data.players||{})
-      .filter(p=>p.hiddenFromPlayers!==true)
+      .filter(p=>p && p.active!==false && p.hiddenFromPlayers!==true)
       .sort((a,b)=>{
         const ap=currentUserPlayerPriority(a)?0:1;
         const bp=currentUserPlayerPriority(b)?0:1;
@@ -28664,9 +28724,12 @@ setInterval(tick,30000);setInterval(render,5000);setTimeout(tick,5000);
     }
     previousFocus=null;
   };
-  const choose=value=>{
+  const choose=selection=>{
+    const value=typeof selection==='object' && selection ? selection.value : selection;
     if(kind==='match' && target && !target.disabled && !target.readOnly){
       target.value=value;
+      target.dataset.selectedPlayerId=selection?.id||'';
+      target.dataset.selectedPlayerName=selection?.id ? String(value) : '';
       emitChange(target);
     }else if(kind==='tournament'){
       const select=$('tournamentPlayerDropdown');
@@ -28699,7 +28762,7 @@ setInterval(tick,30000);setInterval(render,5000);setTimeout(tick,5000);
       arrow.textContent='›';
       arrow.setAttribute('aria-hidden','true');
       button.append(name,arrow);
-      button.addEventListener('click',()=>choose(item.value));
+      button.addEventListener('click',()=>choose(item));
       results.appendChild(button);
     }
     if(!shown.length){
@@ -28726,9 +28789,13 @@ setInterval(tick,30000);setInterval(render,5000);setTimeout(tick,5000);
       search.value='';
       search.placeholder='Hledat jméno nebo klub...';
     }else{
-      const dl=$('playersList');
-      const values=dl?Array.from(dl.options).map(o=>o.value).filter(Boolean):[];
-      items=Array.from(new Set(values)).map(value=>({value,label:value}));
+      if(typeof window.poolMatchPickerPlayers==='function'){
+        items=window.poolMatchPickerPlayers();
+      }else{
+        const dl=$('playersList');
+        const values=dl?Array.from(dl.options).map(o=>o.value).filter(Boolean):[];
+        items=Array.from(new Set(values)).map(value=>({value,label:value}));
+      }
       $('poolPlayerPickerHeading').textContent='Vybrat hráče do zápasu';
       $('poolPlayerPickerHint').textContent='Vyber hráče ze seznamu, nebo napiš nové jméno. Ruční zadání zůstává možné i přímo v zápase.';
       search.value=el.value||'';
@@ -28745,7 +28812,14 @@ setInterval(tick,30000);setInterval(render,5000);setTimeout(tick,5000);
   for(const input of document.querySelectorAll('#screen-setup input[list="playersList"]')){
     if(input.dataset.playerPickerReady==='1')continue;
     input.dataset.playerPickerReady='1';
+    input.addEventListener('input',()=>{
+      if(input.dataset.selectedPlayerName!==input.value.trim()){
+        delete input.dataset.selectedPlayerId;
+        delete input.dataset.selectedPlayerName;
+      }
+    });
     input.removeAttribute('list');
+
     const wrapper=document.createElement('div');
     wrapper.className='match-player-entry';
     input.parentNode.insertBefore(wrapper,input);
@@ -28784,7 +28858,7 @@ setInterval(tick,30000);setInterval(render,5000);setTimeout(tick,5000);
       e.preventDefault();
       const q=normalize(search.value);
       const exact=items.find(p=>normalize(p.label)===q);
-      if(exact)choose(exact.value);
+      if(exact)choose(exact);
       else if(kind==='match' && search.value.trim())choose(search.value.trim());
       else if(results.querySelectorAll('button').length===1)results.querySelector('button').click();
     }
