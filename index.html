@@ -522,7 +522,7 @@
     }
   
 
-/* === v4.51.72 RC • mobilní herní obrazovka portrait / landscape === */
+/* === v4.51.73 RC • mobilní herní obrazovka portrait / landscape === */
 @media (max-width:700px) and (orientation:portrait){
   #screen-match{margin-top:8px}
   #screen-match>.card{padding:10px;border-radius:14px}
@@ -2384,7 +2384,6 @@ html[data-theme="light"] #leagueSchedule .history-item .muted{
 #screen-setup.setup-compact:not(.setup-expanded) #clockSettings,
 #screen-setup.setup-compact:not(.setup-expanded) #streamEnabled,
 #screen-setup.setup-compact:not(.setup-expanded) #streamMatchTitle,
-#screen-setup.setup-compact:not(.setup-expanded) #winnerTableRow,
 #screen-setup.setup-compact:not(.setup-expanded) #doublesRow,
 #screen-setup.setup-compact:not(.setup-expanded) #solo14Row,
 #screen-setup.setup-compact:not(.setup-expanded) #solo14GhostRow,
@@ -2493,7 +2492,7 @@ html[data-theme="light"] #leagueSchedule .history-item .muted{
           <span class="by">by</span>
           <span class="club">BC Rybárna</span>
         </div>
-        <small class="modern-brand-version">v4.51.72 RC</small>
+        <small class="modern-brand-version">v4.51.73 RC</small>
       </div>
     </div>
     <div class="nav">
@@ -2793,6 +2792,14 @@ html[data-theme="light"] #leagueSchedule .history-item .muted{
         </div>
       </div>
 
+      <div id="winnerTableRow" class="toggle-row" style="margin-top:12px">
+        <div>
+          <strong>VÍTĚZ NA STOLE</strong>
+          <div class="muted">3 hráči. Vítěz racku zůstává, poražený jde čekat a čekající hráč jde na stůl a rozstřeluje.</div>
+        </div>
+        <label class="switch"><input id="winnerTableMode" type="checkbox"><span class="slider"></span></label>
+      </div>
+
       <div id="advancedSetupOptions">
       <div class="grid three" style="margin-top:16px">
         <div>
@@ -2912,13 +2919,7 @@ html[data-theme="light"] #leagueSchedule .history-item .muted{
         </div>
       </div>
 
-      <div id="winnerTableRow" class="toggle-row" style="margin-top:12px">
-        <div>
-          <strong>VÍTĚZ NA STOLE</strong>
-          <div class="muted">3 hráči. Vítěz racku zůstává, poražený jde čekat a čekající hráč jde na stůl a rozstřeluje.</div>
-        </div>
-        <label class="switch"><input id="winnerTableMode" type="checkbox"><span class="slider"></span></label>
-      </div>
+
 
       <div id="fourteenBreakInfo" class="subpanel hidden" style="margin-top:16px">
         <strong>14.1 nekonečná:</strong>
@@ -3089,7 +3090,7 @@ html[data-theme="light"] #leagueSchedule .history-item .muted{
         </div>
         <div class="subpanel" style="min-width:210px;text-align:center;margin:0">
           <div class="muted" style="font-size:10px;font-weight:950;letter-spacing:1px">AKTUÁLNÍ VERZE</div>
-          <div style="font-size:22px;font-weight:950;color:var(--gold2);margin-top:5px">v4.51.72 RC</div>
+          <div style="font-size:22px;font-weight:950;color:var(--gold2);margin-top:5px">v4.51.73 RC</div>
         </div>
       </div>
     </div>
@@ -5767,7 +5768,7 @@ html[data-theme="light"] #leagueSchedule .history-item .muted{
       </div>
 
       <div id="groupPlayoffSeedStatus" class="muted" style="margin-top:12px;min-height:20px"></div>
-      <div class="muted" style="margin-top:4px;font-size:11px">RC v4.51.72</div>
+      <div class="muted" style="margin-top:4px;font-size:11px">RC v4.51.73</div>
       <div class="modal-actions">
         <button id="groupPlayoffSeedApplyBtn" class="btn primary big" type="button">NASADIT DO PLAY-OFF</button>
         <button id="groupPlayoffSeedCancelBtn" class="btn">ZRUŠIT</button>
@@ -6951,7 +6952,7 @@ html[data-theme="light"] #leagueSchedule .history-item .muted{
     const btn=$('submitReportBtn');if(btn)btn.disabled=true;
     try{
       const id=uid(),p=currentUserPlayerId?data.players?.[currentUserPlayerId]:null;
-      const report={id,createdByUid:cloudUid,createdByPlayerId:currentUserPlayerId||'',createdByName:p?playerSelectionLabel(p):(cloudUserEmail||'Uživatel'),email:cloudUserEmail||'',type,area,description,appVersion:'v4.51.72 RC',createdAt:new Date().toISOString(),updatedAt:new Date().toISOString(),status:'new',adminNote:''};
+      const report={id,createdByUid:cloudUid,createdByPlayerId:currentUserPlayerId||'',createdByName:p?playerSelectionLabel(p):(cloudUserEmail||'Uživatel'),email:cloudUserEmail||'',type,area,description,appVersion:'v4.51.73 RC',createdAt:new Date().toISOString(),updatedAt:new Date().toISOString(),status:'new',adminNote:''};
       await reportRequest(id,'PUT',report);
       try{
         await writeReportUserMirror(report);
