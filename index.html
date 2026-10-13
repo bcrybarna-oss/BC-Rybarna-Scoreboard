@@ -522,7 +522,7 @@
     }
   
 
-/* === v4.51.73 RC • mobilní herní obrazovka portrait / landscape === */
+/* === v4.51.74 RC • mobilní herní obrazovka portrait / landscape === */
 @media (max-width:700px) and (orientation:portrait){
   #screen-match{margin-top:8px}
   #screen-match>.card{padding:10px;border-radius:14px}
@@ -2492,7 +2492,7 @@ html[data-theme="light"] #leagueSchedule .history-item .muted{
           <span class="by">by</span>
           <span class="club">BC Rybárna</span>
         </div>
-        <small class="modern-brand-version">v4.51.73 RC</small>
+        <small class="modern-brand-version">v4.51.74 RC</small>
       </div>
     </div>
     <div class="nav">
@@ -3090,7 +3090,7 @@ html[data-theme="light"] #leagueSchedule .history-item .muted{
         </div>
         <div class="subpanel" style="min-width:210px;text-align:center;margin:0">
           <div class="muted" style="font-size:10px;font-weight:950;letter-spacing:1px">AKTUÁLNÍ VERZE</div>
-          <div style="font-size:22px;font-weight:950;color:var(--gold2);margin-top:5px">v4.51.73 RC</div>
+          <div style="font-size:22px;font-weight:950;color:var(--gold2);margin-top:5px">v4.51.74 RC</div>
         </div>
       </div>
     </div>
@@ -4300,6 +4300,10 @@ html[data-theme="light"] #leagueSchedule .history-item .muted{
         <div id="wtWaitingName" style="font-size:24px;font-weight:950;color:var(--gold2);margin-top:5px">—</div>
         <div id="wtWaitingWins" class="muted" style="font-weight:850;margin-top:3px">VÝHRY: 0</div>
         <div id="wtRotationInfo" class="muted" style="margin-top:7px">Vítěz zůstává • čekající jde na stůl a rozstřeluje • poražený jde čekat.</div>
+        <details id="wtProgressDetails" style="margin-top:10px;text-align:left">
+          <summary style="cursor:pointer;color:var(--gold2);font-weight:900;padding:8px">📈 VÝVOJ SKÓRE / RACKY</summary>
+          <div id="wtScoreProgressLive" style="margin-top:10px"></div>
+        </details>
       </div>
 
       <div id="specialSoundPanel" class="subpanel" style="text-align:center;margin-bottom:12px">
@@ -5768,7 +5772,7 @@ html[data-theme="light"] #leagueSchedule .history-item .muted{
       </div>
 
       <div id="groupPlayoffSeedStatus" class="muted" style="margin-top:12px;min-height:20px"></div>
-      <div class="muted" style="margin-top:4px;font-size:11px">RC v4.51.73</div>
+      <div class="muted" style="margin-top:4px;font-size:11px">RC v4.51.74</div>
       <div class="modal-actions">
         <button id="groupPlayoffSeedApplyBtn" class="btn primary big" type="button">NASADIT DO PLAY-OFF</button>
         <button id="groupPlayoffSeedCancelBtn" class="btn">ZRUŠIT</button>
@@ -6952,7 +6956,7 @@ html[data-theme="light"] #leagueSchedule .history-item .muted{
     const btn=$('submitReportBtn');if(btn)btn.disabled=true;
     try{
       const id=uid(),p=currentUserPlayerId?data.players?.[currentUserPlayerId]:null;
-      const report={id,createdByUid:cloudUid,createdByPlayerId:currentUserPlayerId||'',createdByName:p?playerSelectionLabel(p):(cloudUserEmail||'Uživatel'),email:cloudUserEmail||'',type,area,description,appVersion:'v4.51.73 RC',createdAt:new Date().toISOString(),updatedAt:new Date().toISOString(),status:'new',adminNote:''};
+      const report={id,createdByUid:cloudUid,createdByPlayerId:currentUserPlayerId||'',createdByName:p?playerSelectionLabel(p):(cloudUserEmail||'Uživatel'),email:cloudUserEmail||'',type,area,description,appVersion:'v4.51.74 RC',createdAt:new Date().toISOString(),updatedAt:new Date().toISOString(),status:'new',adminNote:''};
       await reportRequest(id,'PUT',report);
       try{
         await writeReportUserMirror(report);
@@ -9700,6 +9704,7 @@ $('useClock').addEventListener('change',e=>$('clockSettings').classList.toggle('
         active:[0,1],
         waiting:2,
         wins:[0,0,0],
+        rackHistory:[],
         stats:[blankMatchStats(),blankMatchStats(),blankMatchStats()]
       } : null,
       ghostRackNumber: ghostMode ? 1 : null,
@@ -10720,6 +10725,8 @@ const isFourteen=match.discipline==='14.1' && !simpleCounter;
       const wi=match.winnerTable.waiting;
       $('wtWaitingName').textContent=match.winnerTable.players[wi].displayName;
       $('wtWaitingWins').textContent='VÝHRY: '+(match.winnerTable.wins[wi]||0);
+      const graph=$('wtScoreProgressLive');
+      if(graph)graph.innerHTML=winnerTableProgressHtml(match,{limit:8});
     }
     if(match.ghostMode){
       const balls=ghostBallCountLabel(match);
@@ -12549,6 +12556,15 @@ const isFourteen=match.discipline==='14.1' && !simpleCounter;
       const incoming=wt.waiting;
 
       wt.wins[globalWinner]=(wt.wins[globalWinner]||0)+1;
+      if(!Array.isArray(wt.rackHistory))wt.rackHistory=[];
+      wt.rackHistory.push({
+        rack:Math.max(1,Number(match.rackNumber||1)),
+        winnerIndex:globalWinner,
+        loserIndex:globalLoser,
+        nextIndex:incoming,
+        scores:wt.wins.slice(0,3).map(x=>Number(x)||0),
+        ts:new Date().toISOString()
+      });
       logEvent(
         wt.players[globalWinner].displayName+' vyhrává rack • celkem '+wt.wins[globalWinner]+' výher'
       );
@@ -23891,6 +23907,10 @@ function openMatchStatsCard(m,isCurrent=false){
         Vítěz racku zůstává na stole. Poražený jde čekat a staví nový trojúhelník.
         Čekající hráč jde na stůl a rozstřeluje.
       </div>
+      <div style="margin-top:12px">
+        <div style="font-weight:900;color:#f1d67a;margin-bottom:8px">VÝVOJ SKÓRE PO RACKÁCH</div>
+        ${winnerTableProgressHtml(m)}
+      </div>
     </div>`;
   }
 
@@ -24538,6 +24558,74 @@ function winnerTableHistoryRows(m){
     })).sort((a,b)=>b.wins-a.wins || a.index-b.index);
   }
 
+  function winnerTableProgressRows(m){
+    const wt=m?.winnerTable;
+    const players=Array.isArray(wt?.players)?wt.players.slice(0,3):[];
+    if(!m?.winnerTableMode || players.length!==3)return [];
+    const history=Array.isArray(wt.rackHistory)?wt.rackHistory:[];
+    return history.map((r,i)=>{
+      const idx=Number(r.winnerIndex);
+      const loser=Number(r.loserIndex);
+      const next=Number(r.nextIndex);
+      const wins=Array.isArray(r.scores)?r.scores.slice(0,3).map(x=>Math.max(0,Number(x||0))):[0,0,0];
+      if(idx<0||idx>2||!Number.isInteger(idx))return null;
+      return {
+        rack:Number(r.rack)||i+1,
+        winner:players[idx]?.displayName||players[idx]?.realName||'Hráč '+(idx+1),
+        loser:players[loser]?.displayName||players[loser]?.realName||'—',
+        incoming:players[next]?.displayName||players[next]?.realName||'—',
+        scores:wins
+      };
+    }).filter(Boolean);
+  }
+
+  function winnerTableProgressHtml(m,opts={}){
+    const wt=m?.winnerTable;
+    const ps=Array.isArray(wt?.players)?wt.players.slice(0,3):[];
+    if(ps.length!==3)return '';
+    const rows=winnerTableProgressRows(m);
+    if(!rows.length)return '<div class="muted" style="padding:8px">Zatím nebyl dokončen žádný rack. Vývoj začne prvním získaným bodem.</div>';
+    const names=ps.map((p,i)=>esc(p?.displayName||p?.realName||'Hráč '+(i+1)));
+    const colors=['#edb951','#6dc3ef','#e18cbd'];
+    const width=620,height=230,left=39,right=15,top=18,bottom=35;
+    const maxScore=Math.max(2,...rows.flatMap(r=>r.scores));
+    const x=(n)=>left+(n/rows.length)*(width-left-right);
+    const y=(v)=>top+(maxScore-v)/maxScore*(height-top-bottom);
+    const points=[{scores:[0,0,0]},...rows];
+    const grid=Array.from({length:5},(_,i)=>{
+      const tick=Math.round(maxScore*i/4);
+      return '<line x1="'+left+'" y1="'+y(tick)+'" x2="'+(width-right)+'" y2="'+y(tick)+'" stroke="currentColor" opacity=".13"/>'+
+        '<text x="'+(left-7)+'" y="'+(y(tick)+4)+'" fill="currentColor" font-size="12" text-anchor="end">'+tick+'</text>';
+    }).join('');
+    const lines=[0,1,2].map(idx=>{
+      const coordinates=points.map((p,i)=>x(i).toFixed(1)+','+y(Number(p.scores[idx]||0)).toFixed(1)).join(' ');
+      const last=rows[rows.length-1].scores[idx]||0;
+      return '<polyline points="'+coordinates+'" fill="none" stroke="'+colors[idx]+'" stroke-width="3" stroke-linejoin="round" stroke-linecap="round"/>'+
+        '<circle cx="'+x(rows.length)+'" cy="'+y(last)+'" r="4" fill="'+colors[idx]+'"/>';
+    }).join('');
+    const labelStep=rows.length>14?Math.ceil(rows.length/10):1;
+    const xlabels=Array.from({length:rows.length+1},(_,i)=>i)
+      .filter(i=>i===0||i===rows.length||i%labelStep===0)
+      .map(i=>'<text x="'+x(i)+'" y="'+(height-12)+'" text-anchor="middle" fill="currentColor" font-size="11">'+i+'</text>').join('');
+    const legend=names.map((name,i)=>
+      '<span style="display:inline-flex;gap:5px;align-items:center;font-size:12px;font-weight:800"><span style="display:inline-block;width:12px;height:12px;border-radius:50%;background:'+colors[i]+'"></span>'+name+' • '+Number(wt.wins?.[i]||0)+'</span>'
+    ).join('');
+    const lastCount=opts.limit||0;
+    const shown=lastCount>0?rows.slice(-lastCount):rows;
+    const progress=shown.map(r=>'<div style="padding:7px 0;border-top:1px solid rgba(160,160,160,.15);font-size:12px">'+
+      '<strong>Rack '+esc(String(r.rack))+'</strong> • '+esc(r.winner)+
+      ' vyhrál • <strong>'+r.scores.map(n=>esc(String(n))).join(' : ')+'</strong>'+
+      '<div style="opacity:.75;font-size:11px;margin-top:2px">'+esc(r.loser)+' jde čekat · '+esc(r.incoming)+' nastupuje</div></div>'
+    ).join('');
+    return '<div class="wt-score-progress">'+
+      '<div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:8px">'+legend+'</div>'+
+      '<div style="overflow-x:auto"><svg role="img" aria-label="Graf vývoje skóre tří hráčů po jednotlivých rackách" viewBox="0 0 '+width+' '+height+'" style="width:100%;min-width:280px;max-height:250px">'+
+      grid+lines+xlabels+
+      '<text x="'+(width/2)+'" y="'+(height-1)+'" font-size="11" fill="currentColor" text-anchor="middle">Počet dokončených racků</text></svg></div>'+
+      '<div style="font-weight:900;font-size:12px;margin:8px 0">Průběh racků'+(lastCount&&rows.length>lastCount?' • posledních '+lastCount:'')+'</div>'+
+      progress+'</div>';
+  }
+
   function winnerTableHistoryHtml(m){
     const rows=winnerTableHistoryRows(m);
     if(!rows.length)return '';
@@ -24548,7 +24636,9 @@ function winnerTableHistoryRows(m){
         <div style="font-size:22px;font-weight:950;color:var(--gold2);margin-top:3px">${r.wins}</div>
         <div class="muted" style="font-size:10px">VÝHER</div>
       </div>`).join('')}
-    </div>`;
+    </div>`+
+      '<details style="margin-top:10px"><summary style="cursor:pointer;font-weight:900;color:var(--gold2)">📈 VÝVOJ SKÓRE • '+winnerTableProgressRows(m).length+' racků</summary>'+
+      '<div style="margin-top:8px">'+winnerTableProgressHtml(m)+'</div></details>';
   }
 
 function renderHistory(){
