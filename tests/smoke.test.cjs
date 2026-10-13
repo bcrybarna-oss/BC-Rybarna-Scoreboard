@@ -31,7 +31,7 @@ test('Všechny vložené JavaScriptové bloky mají platnou syntaxi',()=>{
   scripts.forEach((m,i)=>assert.doesNotThrow(()=>new Function(m[1]),'script '+i));
 });
 test('Verze a základní struktura odpovídá první etapě',()=>{
-  assert.ok(html.includes('v4.51.73 RC'));
+  assert.ok(html.includes('v4.51.74 RC'));
   assert.equal(count(/id="streamMatchTitle"/g),1);
   assert.equal(count(/id="setupMoreBtn"/g),1);
   assert.equal(count(/id="poolPlayerPickerDialog"/g),1);
@@ -94,6 +94,18 @@ test('Po rozřešení se kontrolují skutečná ID a turnaje nenabízejí neakti
   assert.ok(html.includes('if(new Set(resolvedIds).size!==resolvedIds.length)'));
   assert.ok(html.includes("const resolvedIds=doublesMode"));
   assert.ok(html.includes(".filter(p=>p && p.active!==false && p.hiddenFromPlayers!==true)"));
+});
+test('Vítěz na stole ukládá průběh racků a zobrazuje graf v zápase, historii i PDF',()=>{
+  assert.ok(html.includes('rackHistory:[]'));
+  assert.ok(html.includes('wt.rackHistory.push({'));
+  assert.ok(html.includes('winnerIndex:globalWinner'));
+  assert.ok(html.includes('scores:wt.wins.slice(0,3)'));
+  assert.ok(html.includes('function winnerTableProgressRows(m)'));
+  assert.ok(html.includes('function winnerTableProgressHtml(m,opts={})'));
+  assert.ok(html.includes('winnerTableProgressHtml(match,{limit:8})'));
+  assert.ok(html.includes("winnerTableProgressHtml(m)"));
+  assert.ok(html.includes('winnerTable:match.winnerTable'));
+  assert.ok(html.includes('match.winnerTable=x.winnerTable'));
 });
 test('Turnaje stále vybírají podle ID a zachovávají hosty',()=>{
   assert.ok(html.includes('id="tournamentPlayerDropdown"'));
