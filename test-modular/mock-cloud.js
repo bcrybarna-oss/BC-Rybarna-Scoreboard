@@ -60,7 +60,8 @@
     let url;
     try{url=new URL(rawUrl,window.location.href);}catch(e){return originalFetch(input,options);}
     if(url.hostname!==fakeHost)return originalFetch(input,options);
-    const parts=url.pathname.replace(/\\/g,'/').replace(/\\.json$/,'').split('/').filter(Boolean).map(decodeURIComponent);
+    const pathname=url.pathname.endsWith('.json')?url.pathname.slice(0,-5):url.pathname;
+    const parts=pathname.split('/').filter(Boolean).map(decodeURIComponent);
     const method=String(options?.method||input?.method||'GET').toUpperCase();
     try{
       const state=read();
