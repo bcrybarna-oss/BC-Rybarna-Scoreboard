@@ -1558,7 +1558,7 @@
         const disk=JSON.parse(localStorage.getItem(DB_KEY)||'null');
         if(Array.isArray(disk?.tournaments))diskTournaments=disk.tournaments;
       }catch(e){console.warn('TEST tournament recovery snapshot:',e);}
-      const local=mergeTournamentArrays(diskTournaments,data.tournaments||[],false);
+      const local=mergeTournamentArrays(diskTournaments,data.tournaments||[],true);
       const deleted=new Set(data.deletedTournamentIds||[]);
       data.tournaments=mergeTournamentArrays(local,remoteTournaments,false)
         .filter(t=>t && t.id && !deleted.has(t.id));
@@ -1860,7 +1860,7 @@
         const disk=JSON.parse(localStorage.getItem(DB_KEY)||'null');
         if(Array.isArray(disk?.matches))diskMatches=disk.matches;
       }catch(e){console.warn('TEST match recovery snapshot:',e);}
-      const local=arrayMergeById(diskMatches,data.matches||[],false);
+      const local=arrayMergeById(diskMatches,data.matches||[],true);
       const deleted=new Set(data.deletedMatchIds||[]);
       data.matches=arrayMergeById(remoteMatches,local,true)
         .filter(m=>m && m.id && !deleted.has(m.id));
