@@ -7,7 +7,12 @@ const test=require('node:test');
 const assert=require('node:assert/strict');
 const fs=require('node:fs');
 const path=require('node:path');
-const html=fs.readFileSync(path.join(__dirname,'..','index.html'),'utf8');
+const page=fs.readFileSync(path.join(__dirname,'..','index.html'),'utf8');
+// Kompatibilita s novou modulární strukturou, kontroly zahrnují HTML, JS i CSS.
+const linkedJs=[...page.matchAll(/<script\b[^>]*src="(assets\/js\/[^"]+)"/g)].map(m=>m[1]);
+const linkedCss=[...page.matchAll(/<link\b[^>]*href="(assets\/css\/[^"]+)"/g)].map(m=>m[1]);
+const readLinked=file=>fs.readFileSync(path.join(__dirname,'..',file),'utf8');
+const html=[page,...linkedJs.map(readLinked),...linkedCss.map(readLinked)].join('\n');
 
 function count(re){return [...html.matchAll(re)].length;}
 function selectedPlayerResolver(players){
@@ -26,12 +31,13 @@ function expectError(fn,message){
 }
 
 test('Všechny vložené JavaScriptové bloky mají platnou syntaxi',()=>{
-  const scripts=[...html.matchAll(/<script\b[^>]*>([\s\S]*?)<\/script>/g)];
+  const scripts=[...page.matchAll(/<script\b[^>]*>([\s\S]*?)<\/script>/g)];
   assert.ok(scripts.length>=8);
-  scripts.forEach((m,i)=>assert.doesNotThrow(()=>new Function(m[1]),'script '+i));
+  scripts.forEach((m,i)=>assert.doesNotThrow(()=>new Function(m[1]),'inline '+i));
+  linkedJs.forEach(file=>assert.doesNotThrow(()=>new Function(readLinked(file)),file));
 });
 test('Verze a základní struktura odpovídá první etapě',()=>{
-  assert.ok(html.includes('v4.51.75 RC'));
+  assert.ok(html.includes('v4.51.76 RC'));
   assert.equal(count(/id="streamMatchTitle"/g),1);
   assert.equal(count(/id="setupMoreBtn"/g),1);
   assert.equal(count(/id="poolPlayerPickerDialog"/g),1);
