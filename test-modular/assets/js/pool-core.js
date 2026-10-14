@@ -1549,7 +1549,31 @@
     const r=await fetch(cloudUrl('tournaments')+'&t='+Date.now(),{cache:'no-store'});
     if(!r.ok) throw new Error('TOURNAMENTS_READ_'+r.status);
     const raw=await r.json()||{};
-    data.tournaments=Object.values(raw).filter(Boolean);
+    const remoteTournaments=Object.values(raw).filter(t=>t && t.id);
+    if(window.POOL_TEST_MODE){
+      // Preview nemá serverovou databázi. Starší prázdný snapshot nesmí
+      // vymazat lokálně rozběhnutý turnaj po potvrzení výsledku.
+      let diskTournaments=[];
+      try{
+        const disk=JSON.parse(localStorage.getItem(DB_KEY)||'null');
+        if(Array.isArray(disk?.tournaments))diskTournaments=disk.tournaments;
+      }catch(e){console.warn('TEST tournament recovery snapshot:',e);}
+      const local=mergeTournamentArrays(diskTournaments,data.tournaments||[],true);
+      const deleted=new Set(data.deletedTournamentIds||[]);
+      data.tournaments=mergeTournamentArrays(local,remoteTournaments,false)
+        .filter(t=>t && t.id && !deleted.has(t.id));
+      // Chybějící záznam obnovíme také do simulované databáze,
+      // aby další načtení turnaj znovu neschovalo.
+      const remoteIds=new Set(remoteTournaments.map(t=>t.id));
+      for(const restored of data.tournaments){
+        if(!remoteIds.has(restored.id)){
+          try{await secureTournamentRequest(restored.id,'PUT',restored);}
+          catch(e){console.warn('TEST restored tournament write:',e);}
+        }
+      }
+    }else{
+      data.tournaments=remoteTournaments;
+    }
     const repaired=[];
     data.tournaments.forEach(t=>{
       if(!t.managerUids||typeof t.managerUids!=='object'||Array.isArray(t.managerUids))t.managerUids={};
@@ -1829,7 +1853,20 @@
     const r=await fetch(cloudUrl('matches')+'&t='+Date.now(),{cache:'no-store'});
     if(!r.ok) throw new Error('MATCHES_READ_'+r.status);
     const raw=await r.json()||{};
-    data.matches=Object.values(raw).filter(Boolean);
+    const remoteMatches=Object.values(raw).filter(m=>m && m.id);
+    if(window.POOL_TEST_MODE){
+      let diskMatches=[];
+      try{
+        const disk=JSON.parse(localStorage.getItem(DB_KEY)||'null');
+        if(Array.isArray(disk?.matches))diskMatches=disk.matches;
+      }catch(e){console.warn('TEST match recovery snapshot:',e);}
+      const local=arrayMergeById(diskMatches,data.matches||[],true);
+      const deleted=new Set(data.deletedMatchIds||[]);
+      data.matches=arrayMergeById(remoteMatches,local,true)
+        .filter(m=>m && m.id && !deleted.has(m.id));
+    }else{
+      data.matches=remoteMatches;
+    }
     const compatibilityRepaired=applyKnownHistoricalMatchMetadataRepairs(data.matches);
     data.matches.forEach(m=>{
       if(m.status==null)m.status='complete';
@@ -12540,9 +12577,26 @@ function renderSKOTournament(t){
       renderTournamentDetail();
       showScreen('tournament-detail');
     }else{
+      // Pokus o návrat z rozehraného zápasu: prázdná simulovaná databáze
+      // není důvod přepnout na formulář nového turnaje.
+      if(window.POOL_TEST_MODE){
+        try{
+          const disk=JSON.parse(localStorage.getItem(DB_KEY)||'null');
+          const backup=(disk?.tournaments||[]).find(x=>x?.id===tid);
+          if(backup){
+            data.tournaments=data.tournaments||[];
+            data.tournaments.push(backup);
+            try{await secureTournamentRequest(backup.id,'PUT',backup);}catch(e){}
+            renderTournamentDetail();
+            showScreen('tournament-detail');
+            toast('Turnaj byl obnoven z lokální zálohy.');
+            return;
+          }
+        }catch(e){console.warn('TEST tournament return recovery:',e);}
+      }
       renderTournament();
       showScreen('tournament');
-      toast('Turnaj se nepodařilo znovu načíst.');
+      toast('Turnaj se nepodařilo znovu načíst. Podívej se do seznamu dokončených turnajů.');
     }
   }
 
@@ -15464,6 +15518,7 @@ function renderTournamentDetail(){
       new Date(b.createdAt||0)-new Date(a.createdAt||0)
     );
     const active=tournaments.filter(t=>t.status!=='complete');
+    const completed=tournaments.filter(t=>t.status==='complete');
 
     const activeWrap=$('tournamentActiveList');
 
@@ -15495,9 +15550,16 @@ function renderTournamentDetail(){
     };
 
     if(activeWrap){
-      activeWrap.innerHTML=active.length
+      // V náhledu zobrazujeme také dokončené turnaje – po prvním
+      // výsledku se nesmějí bez vysvětlení ztratit z obrazovky.
+      const archived=window.POOL_TEST_MODE && completed.length
+        ? '<div class="muted" style="font-weight:900;margin:18px 0 10px">DOKONČENÉ TURNAJE • lze otevřít výsledky</div>'
+          +completed.map(t=>cardHtml(t,true)).join('')
+        : '';
+      activeWrap.innerHTML=(active.length
         ? active.map(t=>cardHtml(t,false)).join('')
-        : '<div class="muted">Momentálně není rozehraný žádný turnaj.</div>';
+        : '<div class="muted">Momentálně není rozehraný žádný turnaj.</div>')
+        +archived;
     }
 
 
