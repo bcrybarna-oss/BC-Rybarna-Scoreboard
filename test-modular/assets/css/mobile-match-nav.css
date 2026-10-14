@@ -1,0 +1,14 @@
+
+  /* Spodní mobilní navigace se při nastavování a hraní zápasu schovává,
+     aby nezabírala místo ani nepřekážela ovládacím prvkům. */
+  @media(max-width:700px){
+    body.modern-test:has(#screen-setup.active) .modern-mobile-nav,
+    body.modern-test:has(#screen-match.active) .modern-mobile-nav{
+      display:none!important;
+    }
+
+    body.modern-test:has(#screen-setup.active) .app,
+    body.modern-test:has(#screen-match.active) .app{
+      padding-bottom:calc(14px + env(safe-area-inset-bottom))!important;
+    }
+  }
