@@ -108,5 +108,8 @@ test('Saved tournaments remain visible after completion',()=>{
   assert.match(core,/DOKONČENÉ TURNAJE/);
   assert.match(core,/completed\.map\(t=>cardHtml\(t,true\)\)/);
   assert.match(core,/Turnaj byl obnoven z lokální zálohy/);
+  assert.match(core,/poolTestLastTournamentId/);
+  assert.match(core,/if\(tid\)postMatchTournamentId=tid/);
+  assert.match(core,/const targetTournamentId=postMatchTournamentId[\s\S]*?\|\|forcedTournamentReturnId/);
   assert.doesNotThrow(()=>new Function(core));
 });

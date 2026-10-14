@@ -12603,6 +12603,19 @@ function renderSKOTournament(t){
   function updateCurrentTournamentShortcut(){
     const btn=$('currentTournamentNavBtn');
     if(!btn)return;
+    if(window.POOL_TEST_MODE){
+      try{
+        if(!selectedTournamentId){
+          const lastId=sessionStorage.getItem('poolTestLastTournamentId');
+          if(lastId && (data.tournaments||[]).some(t=>t?.id===lastId)){
+            selectedTournamentId=lastId;
+          }
+        }
+        if(selectedTournamentId && (data.tournaments||[]).some(t=>t?.id===selectedTournamentId)){
+          sessionStorage.setItem('poolTestLastTournamentId',selectedTournamentId);
+        }
+      }catch(e){console.warn('TEST last tournament shortcut:',e);}
+    }
     const t=(data.tournaments||[]).find(x=>x.id===selectedTournamentId);
     btn.classList.toggle('hidden',!t);
     if(t)btn.textContent='Aktuální: '+(t.name||'Turnaj');
@@ -15561,6 +15574,7 @@ function renderTournamentDetail(){
         : '<div class="muted">Momentálně není rozehraný žádný turnaj.</div>')
         +archived;
     }
+    if(window.POOL_TEST_MODE)updateCurrentTournamentShortcut();
 
 
   }
@@ -16513,6 +16527,17 @@ $('createTournamentBtn').onclick=async()=>{
 
   function showTournamentResultMessage(title,html){
     postMatchReturnScreen='tournament';
+    if(window.POOL_TEST_MODE){
+      // Přímé zadání výsledku nemusí mít aktivní match. Uložíme proto
+      // ID turnaje i pro samostatné potvrzovací okno.
+      const tid=match?.tournamentLink?.tournamentId
+        ||historicalScoreContext?.tournamentId
+        ||swissScoreContext?.tournamentId
+        ||forcedTournamentReturnId
+        ||selectedTournamentId
+        ||null;
+      if(tid)postMatchTournamentId=tid;
+    }
     $('tournamentResultTitle').textContent=title||'';
     $('tournamentResultBody').innerHTML=html||'';
     $('tournamentResultModal').classList.add('show');
@@ -16521,7 +16546,12 @@ $('createTournamentBtn').onclick=async()=>{
   $('tournamentResultOk').onclick=()=>{
     $('tournamentResultModal').classList.remove('show');
 
-    const targetTournamentId=postMatchTournamentId||selectedTournamentId||null;
+    const targetTournamentId=postMatchTournamentId
+      ||selectedTournamentId
+      ||forcedTournamentReturnId
+      ||historicalScoreContext?.tournamentId
+      ||swissScoreContext?.tournamentId
+      ||null;
 
     renderTournament();
 
