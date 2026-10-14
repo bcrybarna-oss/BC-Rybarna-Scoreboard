@@ -17,11 +17,15 @@ test('TEST MODULAR authenticates with real Firebase identity, never production R
   assert.notEqual(key(core),'TEST_CLOUD_DISABLED');
   assert.match(core,/const FIREBASE_DB = 'https:\/\/poolcitalo-test\.invalid'/);
   assert.doesNotMatch(core,/bc-rybarna-scrbrd-default-rtdb\.europe-west1\.firebasedatabase\.app/);
+  assert.doesNotThrow(()=>new Function(core));
   assert.match(core,/TEST_REGISTRATION_DISABLED/);
+  assert.match(core,/poolTestSetRole/);
+  assert.match(core,/if\(window\.POOL_TEST_MODE\)return currentUserRole==='system_admin'/);
   assert.match(core,/TEST_VERIFICATION_EMAIL_DISABLED/);
   const csp=preview.match(/http-equiv="Content-Security-Policy" content="([^"]+)"/)?.[1]||'';
   assert.match(csp,/connect-src https:\/\/identitytoolkit\.googleapis\.com https:\/\/securetoken\.googleapis\.com/);
   assert.doesNotMatch(csp,/firebaseio|firebasedatabase|unsafe-inline|\*/);
+  assert.match(preview,/id="poolTestRole"/);
   assert.ok(preview.indexOf('poolcitadlo-test-isolation')<preview.indexOf('mock-cloud.js'));
   assert.ok(preview.indexOf('mock-cloud.js')<preview.indexOf('assets/js/pool-core.js'));
   assert.match(preview,/poolcitadlo_test_modular_v45175__/);
