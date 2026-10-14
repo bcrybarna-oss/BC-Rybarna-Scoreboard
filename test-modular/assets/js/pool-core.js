@@ -26,7 +26,7 @@
 
   // Firebase project configuration.
   // Web API key is intentionally client-side; access is protected by Firebase Authentication + Database Rules.
-  const FIREBASE_API_KEY = 'TEST_CLOUD_DISABLED';
+  const FIREBASE_API_KEY = 'AIzaSyDwbY_hOmhf6tfotV5RO-msCoOUUXNqXAQ';
   const FIREBASE_DB = 'https://poolcitalo-test.invalid';
   const FIREBASE_DB_URL = FIREBASE_DB;
   const MAIN_ADMIN_EMAIL='bcrybarna@gmail.com';
@@ -1324,6 +1324,7 @@
   }
 
   async function sendVerificationEmail(){
+    if(window.POOL_TEST_MODE)throw new Error('TEST_VERIFICATION_EMAIL_DISABLED');
     if(!await ensureCloudToken()) throw new Error('NO_AUTH');
 
     // Před odesláním ověříme skutečný účet a cílovou adresu.
@@ -1440,6 +1441,7 @@
   }
 
   async function firebaseRegister(email,password){
+    if(window.POOL_TEST_MODE)throw new Error('TEST_REGISTRATION_DISABLED');
     const r=await fetch(
       'https://identitytoolkit.googleapis.com/v1/accounts:signUp?key='+encodeURIComponent(FIREBASE_API_KEY),
       {
@@ -2739,7 +2741,7 @@
       $('cloudPassword').value='';
       refreshAccountUI();
       renderPlayers();
-      toast('Cloud synchronizace aktivní.');
+      toast('TEST: přihlášení ověřeno, data jsou jen v tomto prohlížeči.');
     }catch(e){
       console.warn('Firebase login error:',e);
       const code=String(e && e.message ? e.message : e || 'UNKNOWN_ERROR');
