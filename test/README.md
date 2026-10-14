@@ -3,7 +3,7 @@
 Testovací adresa (GitHub Pages):  
 https://bcrybarna-oss.github.io/BC-Rybarna-Scoreboard/test/
 
-Zdroj: testovací větev `improvement/setup-players-tests-20261012`. Ostrý `index.html` zůstává na v4.51.72 RC.
+Zdroj: samostatný izolovaný snapshot první etapy z větve `improvement/setup-players-tests-20261012`. Test zůstává na **v4.51.73 RC**; hlavní aplikace už mezitím postoupila na **v4.51.75 RC**. Testovací stránka se neaktualizuje automaticky podle ostré verze.
 
 ## Bezpečnost a data
 
