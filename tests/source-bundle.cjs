@@ -8,7 +8,26 @@ const crypto=require('node:crypto');
 const root=path.join(__dirname,'..');
 
 const cssTags={
-  'assets/css/base.css':'<style>'
+  "assets/css/base.css": "<style>",
+  "assets/css/dashboard.css": "<style id=\"modern-test-dashboard-styles\">",
+  "assets/css/tournament-community.css": "<style id=\"tournament-community-hub-styles\">",
+  "assets/css/light-dashboard.css": "<style id=\"modern-light-mode-fix\">",
+  "assets/css/theme-logo.css": "<style id=\"poolcitadlo-theme-logo-switch\">",
+  "assets/css/logo-mobile.css": "<style id=\"poolcitadlo-logo-mobile-fix\">",
+  "assets/css/hubs.css": "<style id=\"modern-hub-cleanup-styles\">",
+  "assets/css/league-hub.css": "<style id=\"league-hub-styles\">",
+  "assets/css/light-global.css": "<style id=\"global-light-mode-completion\">",
+  "assets/css/light-legacy.css": "<style id=\"light-mode-history-and-legacy-panels-fix\">",
+  "assets/css/historical-entry.css": "<style id=\"historical-structured-entry-styles\">",
+  "assets/css/resume-state.css": "<style id=\"resume-tile-disabled-fix\">",
+  "assets/css/match-challenges.css": "<style id=\"match-challenge-styles\">",
+  "assets/css/scheduled-home.css": "<style id=\"scheduled-home-empty-state\">",
+  "assets/css/mobile-match-nav.css": "<style id=\"mobile-nav-match-screen-visibility-fix\">",
+  "assets/css/federal-cup-2026.css": "<style id=\"federal-cup-2026-styles\">",
+  "assets/css/match-setup.css": "<style>",
+  "assets/css/player-picker.css": "<style id=\"pool-player-picker-styles\">",
+  "assets/css/winner-on-table.css": "<style id=\"winner-table-score-timeline\">",
+  "assets/css/online-presence.css": "<style>"
 };
 const jsTags={
   'assets/js/theme.js':'<script>',
