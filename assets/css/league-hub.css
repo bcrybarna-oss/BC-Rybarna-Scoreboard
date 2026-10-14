@@ -1,0 +1,23 @@
+
+  .league-hub-grid{
+    display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;
+  }
+  .league-hub-card{
+    min-height:155px;border:1px solid rgba(216,173,82,.3);
+    border-radius:18px;padding:20px;text-align:left;color:#fff;
+    background:linear-gradient(145deg,rgba(216,173,82,.11),#0d0d0d 68%);
+    display:flex;flex-direction:column;justify-content:space-between;
+    cursor:pointer;transition:.18s ease;
+  }
+  .league-hub-card:hover{
+    transform:translateY(-2px);
+    border-color:rgba(216,173,82,.58);
+    box-shadow:0 14px 34px rgba(0,0,0,.28);
+  }
+  .league-hub-icon{font-size:30px;color:var(--gold2)}
+  .league-hub-card strong{display:block;font-size:20px;margin-top:18px}
+  .league-hub-card small{display:block;color:#aaa;font-size:12px;line-height:1.5;margin-top:6px}
+  @media(max-width:700px){
+    .league-hub-grid{grid-template-columns:1fr}
+    .league-hub-card{min-height:125px}
+  }
