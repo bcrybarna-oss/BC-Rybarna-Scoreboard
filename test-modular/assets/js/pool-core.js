@@ -26,7 +26,7 @@
 
   // Firebase project configuration.
   // Web API key is intentionally client-side; access is protected by Firebase Authentication + Database Rules.
-  const FIREBASE_API_KEY = 'TEST_CLOUD_DISABLED';
+  const FIREBASE_API_KEY = 'AIzaSyDwbY_hOmhf6tfotV5RO-msCoOUUXNqXAQ';
   const FIREBASE_DB = 'https://poolcitalo-test.invalid';
   const FIREBASE_DB_URL = FIREBASE_DB;
   const MAIN_ADMIN_EMAIL='bcrybarna@gmail.com';
@@ -1324,6 +1324,7 @@
   }
 
   async function sendVerificationEmail(){
+    if(window.POOL_TEST_MODE)throw new Error('TEST_VERIFICATION_EMAIL_DISABLED');
     if(!await ensureCloudToken()) throw new Error('NO_AUTH');
 
     // Před odesláním ověříme skutečný účet a cílovou adresu.
@@ -1440,6 +1441,7 @@
   }
 
   async function firebaseRegister(email,password){
+    if(window.POOL_TEST_MODE)throw new Error('TEST_REGISTRATION_DISABLED');
     const r=await fetch(
       'https://identitytoolkit.googleapis.com/v1/accounts:signUp?key='+encodeURIComponent(FIREBASE_API_KEY),
       {
@@ -2392,7 +2394,7 @@
       }
 
       // Hlavní účet BC Rybárna je bootstrap SYSTEM ADMIN.
-      if(rec && String(cloudUserEmail||rec.email||'').toLowerCase()===MAIN_ADMIN_EMAIL && rec.role!=='system_admin'){
+      if(rec && !window.POOL_TEST_MODE && String(cloudUserEmail||rec.email||'').toLowerCase()===MAIN_ADMIN_EMAIL && rec.role!=='system_admin'){
         rec.role='system_admin';
         await userRecordRequest('PUT',rec);
       }
@@ -2472,10 +2474,37 @@
       btn.textContent='VYTVOŘIT MŮJ PROFIL';
     }
     updateLoggedInUserBadge();
+    if(window.POOL_TEST_MODE && $('poolTestRole'))$('poolTestRole').value=currentUserRole;
     // Po načtení/propojení účtu přesuň přihlášeného hráče na první místo výběrů.
     try{ refreshPlayerList(); }catch(e){}
     try{ renderTournamentPlayerPicker(); }catch(e){}
   }
+
+  // Local preview role switch: affects ONLY fake /users records in this browser.
+  // Firebase account identity remains real; no role is written to production.
+  window.poolTestSetRole=async function(role){
+    if(!window.POOL_TEST_MODE)return false;
+    if(!cloudAuthenticated || !cloudUid){
+      toast('Nejdřív se přihlas svým účtem.');
+      return false;
+    }
+    if(!['system_admin','club_admin','player'].includes(role))return false;
+    try{
+      const rec=await userRecordRequest('GET')||{uid:cloudUid,email:cloudUserEmail};
+      rec.role=role;
+      if(role==='club_admin')rec.clubId=rec.clubId||'test-club';
+      await userRecordRequest('PUT',rec);
+      currentUserRole=role;
+      currentUserClubId=rec.clubId||null;
+      if(role==='system_admin')enforceAdminSessionPersistence();
+      refreshAccountUI();
+      try{renderPlayers();}catch(e){}
+      try{renderTournament();}catch(e){}
+      try{if(typeof window.renderModernHome==='function')window.renderModernHome();}catch(e){}
+      toast('Testovací role přepnuta: '+(role==='system_admin'?'ADMIN':role==='club_admin'?'CLUB ADMIN':'HRÁČ'));
+      return true;
+    }catch(e){console.error('TEST ROLE',e);toast('Testovací roli se nepodařilo změnit.');return false;}
+  };
 
   function clearRuntimeCloudIdentity(){
     cloudAuthenticated=false;
@@ -2739,7 +2768,7 @@
       $('cloudPassword').value='';
       refreshAccountUI();
       renderPlayers();
-      toast('Cloud synchronizace aktivní.');
+      toast('TEST: přihlášení ověřeno, data jsou jen v tomto prohlížeči.');
     }catch(e){
       console.warn('Firebase login error:',e);
       const code=String(e && e.message ? e.message : e || 'UNKNOWN_ERROR');
@@ -15512,6 +15541,7 @@ function renderTournamentDetail(){
     // Administrátorská práva platí jen pro aktivně přihlášený a ověřený účet.
     // Nestačí zbytková role nebo e-mail uložený v runtime/localStorage.
     if(!cloudAuthenticated || !cloudUid || !cloudEmailVerified) return false;
+    if(window.POOL_TEST_MODE)return currentUserRole==='system_admin';
     if(currentUserRole==='system_admin') return true;
     const email=typeof cloudUserEmail==='string' ? cloudUserEmail.trim().toLowerCase() : '';
     return email===MAIN_ADMIN_EMAIL;
