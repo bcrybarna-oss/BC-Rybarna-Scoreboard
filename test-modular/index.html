@@ -173,6 +173,14 @@ body.modern-test header{top:12px}
 <div id="poolcitadlo-test-banner" role="status">
  <strong>🧪 POOLČÍTADLO TEST MODULAR · v4.51.75 RC</strong>
  <span>Přihlášení skutečným účtem Firebase · testovací výsledky jen v tomto prohlížeči · ostrá databáze odpojena</span>
+ <label for="poolTestRole" style="display:flex;gap:8px;align-items:center;margin:0;font-size:12px">TESTOVACÍ ROLE
+ <select id="poolTestRole" style="width:auto;min-width:150px;padding:8px;border-radius:8px;background:#fff5d4;color:#24190c;font-weight:800">
+  <option value="player">HRÁČ</option>
+  <option value="club_admin">CLUB ADMIN</option>
+  <option value="system_admin">ADMIN</option>
+ </select>
+ </label>
+ <button type="button" onclick="window.poolTestSetRole(document.getElementById('poolTestRole').value)">PŘEPNOUT ROLI</button>
  <button type="button" onclick="poolTestReset()">VYMAZAT TESTOVACÍ DATA</button>
 </div>
 
