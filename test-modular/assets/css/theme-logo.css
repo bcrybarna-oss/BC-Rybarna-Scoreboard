@@ -1,0 +1,35 @@
+
+  /* V light modu zůstává hero jako tmavý brand blok s originálním logem. */
+  html[data-theme="light"] body.modern-test .modern-hero{
+    background:
+      radial-gradient(circle at 78% 10%,rgba(216,173,82,.13),transparent 30%),
+      radial-gradient(circle at 10% 85%,rgba(216,173,82,.06),transparent 28%),
+      linear-gradient(145deg,#121213,#090909)!important;
+    border-color:rgba(216,173,82,.24)!important;
+    box-shadow:0 18px 42px rgba(42,31,10,.18)!important;
+  }
+  html[data-theme="light"] body.modern-test .modern-hero .modern-kicker{
+    color:#d7b15c!important;
+    border-color:rgba(216,173,82,.24);
+    background:rgba(216,173,82,.06);
+  }
+  html[data-theme="light"] body.modern-test .modern-hero .modern-title{
+    color:#f5f2ea!important;
+  }
+  html[data-theme="light"] body.modern-test .modern-hero .modern-title span{
+    color:var(--modern-gold2)!important;
+  }
+  html[data-theme="light"] body.modern-test .modern-hero .modern-subtitle,
+  html[data-theme="light"] body.modern-test .modern-hero .modern-origin{
+    color:#bdb5a6!important;
+  }
+  html[data-theme="light"] .poolcitadlo-hero-logo-block{
+    background:transparent!important;
+    border:0!important;
+    box-shadow:none!important;
+    padding:0!important;
+  }
+  html[data-theme="light"] .poolcitadlo-hero-logo-block .poolcitadlo-exact-logo{
+    display:block!important;
+    filter:none!important;
+  }
