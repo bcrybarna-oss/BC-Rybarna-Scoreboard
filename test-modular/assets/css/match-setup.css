@@ -38,3 +38,10 @@
 #screen-setup.setup-ghost #tenBallRuleField,
 #screen-setup.setup-ghost #fourteenBreakInfo{display:none!important}
 #screen-setup.setup-ghost #setupMoreBtn{display:none!important}
+
+/* Ghost is a separate match category: never offer its controls in Classic / 14.1 advanced options. */
+#screen-setup #ghostRow,
+#screen-setup #solo14GhostRow,
+#screen-setup:not(.setup-ghost) #ghostBallCountField,
+#screen-setup:not(.setup-ghost) #solo14GhostSettings,
+#screen-setup.setup-ghost:not(.setup-ghost14) #solo14GhostSettings{display:none!important}
