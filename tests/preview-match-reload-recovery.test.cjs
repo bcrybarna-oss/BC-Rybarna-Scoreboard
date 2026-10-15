@@ -108,3 +108,30 @@ test('successful manual and automatic login both recover after loading saved mat
   assert.equal((core.match(/restoreOwnedTestMatchAfterLogin\(\);/g)||[]).length,2);
   assert.doesNotThrow(()=>new Function(core));
 });
+
+test('active secure test-database backup is discoverable even if local snapshot is absent',()=>{
+  const h=harness({uid:'owner',authenticated:true});
+  h.ctx.data.matches=[{...mk('secure-only','owner',[7,6]),activeResumeBackup:true}];
+  assert.equal(h.ctx.restoreOwnedTestMatchAfterLogin(),true);
+  assert.equal(h.ctx.match.id,'secure-only');
+  assert.deepEqual(Array.from(h.ctx.match.scores),[7,6]);
+  assert.equal(h.calls.save.length,1);
+});
+
+test('restoration diagnostics list only unfinished non-deleted backups',()=>{
+  const h=harness({uid:'owner',authenticated:true,
+    recovery:{'old-1':[mk('old-1','owner')],gone:[mk('gone','owner')]},
+    deleted:['gone']});
+  h.ctx.data.matches=[mk('secure-2','owner'),{...mk('done','owner'),status:'complete',endedAt:'2026-10-15T09:30:00Z'}];
+  const list=Array.from(h.ctx.testMatchRecoveryCandidates());
+  assert.deepEqual(list.map(x=>x.id),['old-1','secure-2']);
+});
+
+test('modular preview exposes the backup diagnostic button and status panel',()=>{
+  const html=fs.readFileSync(path.join(__dirname,'..','test-modular','index.html'),'utf8');
+  assert.match(html,/id="poolTestRecoveryPanel"/);
+  assert.match(html,/id="poolTestRecoveryStatus"/);
+  assert.match(html,/poolTestOpenRecovery\?\.\(\)/);
+  assert.match(core,/window\.poolTestOpenRecovery=function\(\)/);
+  assert.match(core,/renderTestMatchRecoveryStatus\(\);/);
+});
