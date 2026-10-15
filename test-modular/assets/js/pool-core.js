@@ -7751,14 +7751,16 @@ $('winnerText').textContent = match.solo14
     renderTestMatchRecoveryStatus();
   };
 
+  let testMatchAutoRestoredThisPage=false;
   function restoreOwnedTestMatchAfterLogin(){
-    if(!window.POOL_TEST_MODE || !cloudAuthenticated || !cloudUid)return false;
+    if(!window.POOL_TEST_MODE || !cloudAuthenticated || !cloudUid || testMatchAutoRestoredThisPage)return false;
     if(match && !match.endedAt && editableMatchOwnedByCurrentUser(match)){
       // Stav zápasu už existuje v paměti, ale obrazovka po přihlášení
       // může stále ukazovat domovskou stránku.
       showScreen('match');
       if(match.useClock)resetClock(false,false);
       renderMatch();
+      if(match)testMatchAutoRestoredThisPage=true;
       return !!match;
     }
 
@@ -7779,6 +7781,7 @@ $('winnerText').textContent = match.solo14
     if(match.useClock)resetClock(false,false);
     renderMatch();
     if(!match)return false;
+    testMatchAutoRestoredThisPage=true;
     startLiveHeartbeat();
     toast('Obnoven rozehraný zápas • '+(match.scores?.[0]||0)+':'+(match.scores?.[1]||0)+'.');
     return true;
