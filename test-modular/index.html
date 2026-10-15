@@ -185,6 +185,7 @@ body.modern-test header{top:12px}
  </select>
  </label>
  <button type="button" onclick="window.poolTestSetRole(document.getElementById('poolTestRole').value)">PŘEPNOUT ROLI</button>
+ <button type="button" onclick="window.poolTestOpenRecovery?.()">🔎 ZACHRÁNIT ROZEHRANÝ ZÁPAS</button>
  <button type="button" onclick="poolTestReset()">VYMAZAT TESTOVACÍ DATA</button>
 </div>
 
@@ -1339,6 +1340,16 @@ body.modern-test header{top:12px}
         <button id="cleanupStaleLiveBtn" class="btn">REFRESH</button>
       </div>
       <div class="muted" style="margin-bottom:14px">Aktuálně rozehrané zápasy a probíhající turnaje. Aktivní zápas posílá heartbeat každých 30 s, takže se nesmaže ani při dlouhém racku bez změny skóre.</div>
+      <div class="subpanel" style="margin-bottom:14px;border-color:#ab8736" id="poolTestRecoveryPanel">
+        <strong>🔎 ZÁCHRANA ROZEHRANÉHO ZÁPASU</strong>
+        <div id="poolTestRecoveryStatus" class="muted" style="margin-top:6px;font-size:13px">
+          Zjišťuji uložené zápasy a zálohy v tomto prohlížeči…
+        </div>
+        <div class="muted" style="margin-top:6px;font-size:12px">
+          Pokud se uložený zápas objeví níže, klikni na POKRAČOVAT.
+          Při nule dostupných záloh nic nemaž; podívej se, zda jsi přihlášený stejným účtem.
+        </div>
+      </div>
 
       <div class="grid two">
         <div class="subpanel">
@@ -3581,7 +3592,7 @@ body.modern-test header{top:12px}
     </div>
   </div>
 
-<script src="assets/js/pool-core.js?v=20261015-match-reload"></script>
+<script src="assets/js/pool-core.js?v=20261015-recovery-list"></script>
 
 <script src="assets/js/tournament-navigation.js"></script>
 
