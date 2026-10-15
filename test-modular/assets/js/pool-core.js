@@ -6205,10 +6205,11 @@ const isFourteen=match.discipline==='14.1' && !simpleCounter;
     openBreakPotCount('break_foul');
   };
 
-  window.actionFoul = function(){
+  window.actionFoul = function(reason='manual'){
     if(!match || match.discipline==='14.1')return;
+    const timeFoul=reason==='time';
 
-    saveManualEntryUndoSnapshot('Faul');
+    saveManualEntryUndoSnapshot(timeFoul?'Časový faul':'Faul');
 
     const i=Number(match.turn||0);
     const other=1-i;
@@ -6224,7 +6225,7 @@ const isFourteen=match.discipline==='14.1' && !simpleCounter;
     match.stats[i].fouls=Number(match.stats[i].fouls||0)+1;
     match.consecutiveFouls[i]=Number(match.consecutiveFouls[i]||0)+1;
 
-    addActionEvent('Faul • '+match.playerNames[i]);
+    addActionEvent((timeFoul?'Časový faul':'Faul')+' • '+match.playerNames[i]);
 
     const threeFoulActive=!!match.useThreeFoul &&
       (match.discipline==='9-ball'||match.discipline==='10-ball');
@@ -17154,12 +17155,23 @@ $('createTournamentBtn').onclick=async()=>{
         beep(820,.10,.20);
       }
 
-      // Nula = časový faul. Delší a hlubší tón.
+      // Vypršení času je skutečný faul: přepne tah a spustí čas soupeře.
       if(timeLeft<=0){
         timeLeft=0;
         stopTimer();
         beep(180,.80,.30);
-        toast('TIME – časový faul!');
+        const rackMatch=match &&
+          ['8-ball','9-ball','10-ball'].includes(match.discipline) &&
+          !match.ghostMode && match.counterMode!=='simple' &&
+          !match.endedAt && match.status!=='complete';
+        if(rackMatch){
+          const foulingPlayer=match.playerNames[match.turn];
+          window.actionFoul('time');
+          toast('TIME • časový faul hráče '+foulingPlayer+' – na tahu soupeř');
+        }else{
+          // 14.1 potřebuje uzavření náběhu a počet koulí; Ghost má vlastní pravidla.
+          toast('TIME – časový faul!');
+        }
       }
 
       renderClock();
