@@ -4847,6 +4847,8 @@ const isFourteen=match.discipline==='14.1' && !simpleCounter;
       $('p2Fourteen').innerHTML='';
     }
     $('fourteenActions').classList.toggle('hidden',!isFourteen);
+    // Potopená koule v 14.1 jen obnovuje shot clock: skóre se dopočítá na konci náběhu.
+    $('fourteenPotClockBtn')?.classList.toggle('hidden',!isFourteen || !match.useClock);
     $('fourteenPanel')?.classList.toggle('solo14-actions',!!match.solo14 && isFourteen);
     $('ghostActions').classList.toggle('hidden',simpleCounter || !match.ghostMode);
     $('simpleCounterActions').classList.toggle('hidden',!simpleCounter);
@@ -7048,6 +7050,11 @@ const isFourteen=match.discipline==='14.1' && !simpleCounter;
     $('ballsCalc14').textContent='Zahráno v náběhu: '+potted+' → +'+potted+' bodů';
   }
 
+  $('fourteenPotClockBtn').onclick=()=>{
+    if(!match || match.discipline!=='14.1' || !match.useClock || match.endedAt)return;
+    // Každý úspěšný strk zahájí nové běžné časové okno, bez změny skóre či náběhu.
+    resetClock(false,true);
+  };
   $('endMiss14').onclick=()=>openEndInning14('miss');
   $('endSafe14').onclick=()=>openEndInning14('safe');
   $('endFoul14').onclick=()=>openEndInning14('foul');
