@@ -121,6 +121,7 @@
     q('tournamentCreatePanel')?.classList.toggle('hidden',!showCreation);
     try{window.poolTestRefreshTournamentOverview?.();}catch(e){console.warn(e);}
   }
+  window.poolTestShowTournamentList=()=>showWork(false);
   function showCalendar(){
     q('tournamentHubPanel')?.classList.add('hidden');
     q('tournamentWorkPanel')?.classList.add('hidden');
