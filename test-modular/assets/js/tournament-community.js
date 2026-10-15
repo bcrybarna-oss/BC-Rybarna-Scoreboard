@@ -112,13 +112,16 @@
     q('tournamentSeriesPanel')?.classList.add('hidden');
     q('tournamentCreatePanel')?.classList.remove('hidden');
   }
-  function showWork(){
+  function showWork(showCreation=true){
     q('tournamentHubPanel')?.classList.add('hidden');
     q('tournamentCalendarPanel')?.classList.add('hidden');
     q('tournamentWorkPanel')?.classList.remove('hidden');
     q('tournamentSeriesPanel')?.classList.add('hidden');
-    q('tournamentCreatePanel')?.classList.remove('hidden');
+    // Návrat po výsledku ukáže nejprve uložené turnaje, ne formulář.
+    q('tournamentCreatePanel')?.classList.toggle('hidden',!showCreation);
+    try{window.poolTestRefreshTournamentOverview?.();}catch(e){console.warn(e);}
   }
+  window.poolTestShowTournamentList=()=>showWork(false);
   function showCalendar(){
     q('tournamentHubPanel')?.classList.add('hidden');
     q('tournamentWorkPanel')?.classList.add('hidden');
@@ -127,7 +130,13 @@
   }
 
   document.addEventListener('DOMContentLoaded',function(){
-    q('tournamentHubCreateBtn')?.addEventListener('click',showWork);
+    q('tournamentHubCreateBtn')?.addEventListener('click',()=>showWork(true));
+    q('poolTestNewTournamentBtn')?.addEventListener('click',function(){
+      const panel=q('tournamentCreatePanel');
+      if(!panel)return;
+      panel.classList.toggle('hidden');
+      if(!panel.classList.contains('hidden'))panel.scrollIntoView({behavior:'smooth',block:'start'});
+    });
     q('tournamentHubCalendarBtn')?.addEventListener('click',showCalendar);
     q('tournamentCalendarBackBtn')?.addEventListener('click',showHub);
     q('tournamentHubBackBtn')?.addEventListener('click',showHub);
@@ -143,7 +152,7 @@
     });
 
     document.querySelectorAll('[data-nav="tournament"]').forEach(function(btn){
-      btn.addEventListener('click',function(){setTimeout(showHub,0)},true);
+      btn.addEventListener('click',function(){setTimeout(()=>showWork(false),0)},true);
     });
     showHub();
   });
