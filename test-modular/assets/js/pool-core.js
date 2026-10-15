@@ -3134,6 +3134,10 @@
         .then(()=>renderLeague())
         .catch(e=>console.warn('League load:',e));
     }
+    if(name==='tournament' && window.POOL_TEST_MODE && forcedTournamentReturnId){
+      // Pokud se detail dočasně nenačte, ukaž uložené turnaje místo formuláře.
+      try{window.poolTestShowTournamentList?.();}catch(e){console.warn('TEST tournament overview',e);}
+    }
     if(name==='tournament-detail' && selectedTournamentId) renderTournamentDetail();
     if(name==='live'){
       discardForeignLocalActiveMatch();
