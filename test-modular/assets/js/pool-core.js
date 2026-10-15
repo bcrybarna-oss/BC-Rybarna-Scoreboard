@@ -7694,20 +7694,9 @@ $('winnerText').textContent = match.solo14
     return true;
   }
 
-  function restoreOwnedTestMatchAfterLogin(){
-    if(!window.POOL_TEST_MODE || !cloudAuthenticated || !cloudUid)return false;
-    if(match && !match.endedAt)return false;
-
-    const completedIds=new Set(
-      (data.matches||[]).filter(m=>m && (
-        !!m.endedAt || ['complete','incomplete','pending_confirmation','needs_correction'].includes(m.status)
-      )).map(m=>m.id)
-    );
-    const deletedIds=new Set(data.deletedMatchIds||[]);
+  function testMatchRecoveryCandidates(){
+    if(!window.POOL_TEST_MODE)return [];
     const candidates=[loadDeviceActiveMatch(),...Object.values(loadDeviceActiveMatches())];
-
-    // Starší verze mohla aktivní snapshot chybně odebrat z mapy při reloadu.
-    // Zkusíme proto i její nezávislé lokální záchranné kopie.
     try{
       const raw=localStorage.getItem(LOCAL_ACTIVE_MATCH_RECOVERY_KEY);
       const backups=raw?JSON.parse(raw):{};
@@ -7717,11 +7706,65 @@ $('winnerText').textContent = match.solo14
         });
       }
     }catch(e){console.warn('TEST match recovery read:',e);}
+    // Celý stav rozehraného zápasu může být také uložený v odděleném
+    // testovacím /matches/{id}; LIVE payload samotný pro obnovu nestačí.
+    candidates.push(...(data.matches||[]).filter(m=>
+      m && !m.endedAt && ['playing','active'].includes(m.status)
+    ));
+    const completedIds=new Set(
+      (data.matches||[]).filter(m=>m && (
+        !!m.endedAt || ['complete','incomplete','pending_confirmation','needs_correction'].includes(m.status)
+      )).map(m=>m.id)
+    );
+    const deletedIds=new Set(data.deletedMatchIds||[]);
+    const byId=new Map();
+    candidates.forEach(m=>{
+      if(!m?.id || m.endedAt || completedIds.has(m.id) || deletedIds.has(m.id))return;
+      const old=byId.get(m.id);
+      byId.set(m.id,betterResumableState(old,m));
+    });
+    return [...byId.values()].sort((a,b)=>
+      (Date.parse(b.localUpdatedAt||b.updatedAt||b.startedAt)||0)-
+      (Date.parse(a.localUpdatedAt||a.updatedAt||a.startedAt)||0)
+    );
+  }
+
+  // Záchranný přehled: zobrazí počty záloh i tehdy, když nelze obnovit
+  // konkrétní zápas. Není třeba mazat prohlížeč ani testovací data.
+  function renderTestMatchRecoveryStatus(){
+    const host=$('poolTestRecoveryStatus');
+    if(!host || !window.POOL_TEST_MODE)return;
+    const candidates=testMatchRecoveryCandidates();
+    const accessible=cloudAuthenticated && cloudUid
+      ? candidates.filter(editableMatchOwnedByCurrentUser)
+      : [];
+    const status=cloudAuthenticated && cloudUid
+      ? 'Přihlášení ověřeno.'
+      : 'Nejdřív se přihlas stejným účtem, kterým jsi zápas zakládal.';
+    host.textContent='Záchranné kopie v tomto prohlížeči: '+candidates.length+
+      ' • obnovitelné pro aktuální účet: '+accessible.length+'. '+status;
+  }
+
+  window.poolTestOpenRecovery=function(){
+    if(!window.POOL_TEST_MODE)return;
+    showScreen('live');
+    renderTestMatchRecoveryStatus();
+  };
+
+  function restoreOwnedTestMatchAfterLogin(){
+    if(!window.POOL_TEST_MODE || !cloudAuthenticated || !cloudUid)return false;
+    if(match && !match.endedAt && editableMatchOwnedByCurrentUser(match)){
+      // Stav zápasu už existuje v paměti, ale obrazovka po přihlášení
+      // může stále ukazovat domovskou stránku.
+      showScreen('match');
+      if(match.useClock)resetClock(false,false);
+      renderMatch();
+      return !!match;
+    }
 
     let best=null;
-    for(const candidate of candidates){
-      if(!candidate?.id || candidate.endedAt || deletedIds.has(candidate.id) ||
-         completedIds.has(candidate.id) || !editableMatchOwnedByCurrentUser(candidate))continue;
+    for(const candidate of testMatchRecoveryCandidates()){
+      if(!editableMatchOwnedByCurrentUser(candidate))continue;
       best=betterResumableState(best,candidate);
     }
     if(!best)return false;
@@ -7859,11 +7902,14 @@ $('winnerText').textContent = match.solo14
     const secure=(data.matches||[]).filter(m=>m && !m.endedAt && (m.status==='playing' || m.status==='active'));
     const local=Object.values(loadDeviceActiveMatches()).filter(m=>m && m.id && !m.endedAt);
     const current=(match && !match.endedAt) ? [match] : [];
+    const recovered=(window.POOL_TEST_MODE && cloudAuthenticated && cloudUid)
+      ? testMatchRecoveryCandidates().filter(editableMatchOwnedByCurrentUser)
+      : [];
     const map=new Map();
 
     // Cloud poskytne LIVE z jiných zařízení, ale vlastní lokální snapshot má přednost,
     // protože obsahuje kompletní editovatelný stav zápasu.
-    [...secure,...cloudLiveMatches,...local,...current].forEach(m=>{
+    [...secure,...cloudLiveMatches,...recovered,...local,...current].forEach(m=>{
       if(m && m.id) map.set(m.id,m);
     });
 
@@ -8068,6 +8114,7 @@ $('winnerText').textContent = match.solo14
     if(!matchesWrap || !tournamentsWrap)return;
 
     const matches=activeLiveMatches();
+    renderTestMatchRecoveryStatus();
     updateLiveNavStatus();
     if(!matches.length){
       matchesWrap.innerHTML='<div class="muted">Momentálně není rozehraný žádný zápas.</div>';
