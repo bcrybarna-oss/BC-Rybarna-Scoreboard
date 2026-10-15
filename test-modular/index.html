@@ -168,6 +168,10 @@ body.modern-test header{top:12px}
 }
 </style>
 <style id="test-modular-auth-css">#cloudRegisterBtn,#emailVerifyResendBtn{display:none!important}#poolcitadlo-test-banner{background:#edc66a!important}#cloudLoginModal .modal-card:before{content:'TEST MODULAR • Přihlas se svým běžným účtem. Přihlášení ověří Firebase, ale herní data se ukládají pouze místně.';display:block;padding:10px 12px;margin-bottom:14px;background:#352a11;color:#ffe3a2;border-radius:10px;font-size:12px;line-height:1.45}</style>
+<style id="pool-test-141-ghost-separation">
+#screen-setup #ghostRow,#screen-setup #solo14GhostRow{display:none!important}
+#screen-setup:not(.setup-ghost) #solo14GhostSettings{display:none!important}
+</style>
 </head>
 <body>
 <div id="poolcitadlo-test-banner" role="status">
@@ -1528,9 +1532,16 @@ body.modern-test header{top:12px}
       </div>
 
       <div id="tournamentWorkPanel" class="hidden">
+      <div id="poolTestTournamentOverview" class="subpanel" style="margin-bottom:15px;border:1px solid rgba(212,175,55,.5)">
+        <h2 style="margin:0 0 5px">🎱 Probíhající a uložené turnaje</h2>
+        <div class="muted" style="margin-bottom:12px">Otevři turnaj a pokračuj tam, kde jsi skončil. Výsledky zůstávají uložené v tomto prohlížeči.</div>
+        <div id="tournamentActiveList"></div>
+      </div>
+
         <div class="subpanel" style="margin-bottom:14px">
           <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center">
             <button id="tournamentHubBackBtn" class="btn big" type="button">← TURNAJE A LIGY</button>
+            <button id="poolTestNewTournamentBtn" class="btn primary big" type="button">+ NOVÝ TURNAJ</button>
           </div>
         </div>
 
@@ -1861,12 +1872,7 @@ body.modern-test header{top:12px}
         </div>
       </div>
 
-      <div class="hr"></div>
-      <div style="margin:10px 0 14px">
-        <h2 style="margin:0">Probíhající turnaje</h2>
-        <div class="muted">Aktuální turnaje, které ještě nejsou dohrané.</div>
-      </div>
-      <div id="tournamentActiveList"></div>
+
       </div><!-- /tournamentWorkPanel -->
     </div>
   </section>
