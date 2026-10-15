@@ -11,7 +11,7 @@ test('14.1 displays the potted-ball shot-clock control only with a running match
   assert.equal((html.match(/id="fourteenPotClockBtn"/g)||[]).length,1);
   assert.match(html,/id="fourteenPotClockBtn"[^>]*class="[^"]*hidden[^"]*"/);
   assert.match(html,/POTOPENÁ KOULE • NOVÝ ČAS/);
-  assert.match(html,/assets\/js\/pool-core\.js\?v=20261015-time-foul/);
+  assert.match(html,/assets\/js\/pool-core\.js\?v=20261015-match-reload/);
   assert.match(core,/\$\('fourteenPotClockBtn'\)\?\.classList\.toggle\('hidden',!isFourteen \|\| !match\.useClock\)/);
   assert.doesNotThrow(()=>new Function(core));
 });
