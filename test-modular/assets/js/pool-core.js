@@ -2801,6 +2801,7 @@
       await loadSecureMatches();
       await loadSecureTournaments();
       await promoteLegacyTournamentGuestsToProfiles();
+      restoreOwnedTestMatchAfterLogin();
       $('cloudLoginModal').classList.remove('show');
       $('cloudPassword').value='';
       refreshAccountUI();
@@ -2870,6 +2871,7 @@
       await loadSecureMatches();
       await loadSecureTournaments();
       await promoteLegacyTournamentGuestsToProfiles();
+        restoreOwnedTestMatchAfterLogin();
         return;
       }catch(e){
         console.warn('Cloud auto login:',e);
@@ -7680,10 +7682,62 @@ $('winnerText').textContent = match.solo14
     const foreignId=match.id;
     match=null;
     data.currentMatch=null;
-    removeDeviceActiveMatch(foreignId);
-    saveDeviceActiveMatch(null);
+    // TEST: při reloadu se Firebase identita obnovuje asynchronně. Dokud
+    // neznáme UID, nesmíme považovat lokální snapshot za cizí a smazat ho.
+    // Zápas z editovatelné paměti odpojíme, ale jeho zálohu zachováme pro
+    // bezpečné obnovení po ověření identity (nebo po dalším přihlášení).
+    if(!window.POOL_TEST_MODE){
+      removeDeviceActiveMatch(foreignId);
+      saveDeviceActiveMatch(null);
+    }
+    console.warn('Foreign active match detached from editable state:',foreignId);
+    return true;
+  }
 
-    console.warn('Foreign active match removed from editable state:',foreignId);
+  function restoreOwnedTestMatchAfterLogin(){
+    if(!window.POOL_TEST_MODE || !cloudAuthenticated || !cloudUid)return false;
+    if(match && !match.endedAt)return false;
+
+    const completedIds=new Set(
+      (data.matches||[]).filter(m=>m && (
+        !!m.endedAt || ['complete','incomplete','pending_confirmation','needs_correction'].includes(m.status)
+      )).map(m=>m.id)
+    );
+    const deletedIds=new Set(data.deletedMatchIds||[]);
+    const candidates=[loadDeviceActiveMatch(),...Object.values(loadDeviceActiveMatches())];
+
+    // Starší verze mohla aktivní snapshot chybně odebrat z mapy při reloadu.
+    // Zkusíme proto i její nezávislé lokální záchranné kopie.
+    try{
+      const raw=localStorage.getItem(LOCAL_ACTIVE_MATCH_RECOVERY_KEY);
+      const backups=raw?JSON.parse(raw):{};
+      if(backups && typeof backups==='object' && !Array.isArray(backups)){
+        Object.values(backups).forEach(arr=>{
+          if(Array.isArray(arr))candidates.push(...arr);
+        });
+      }
+    }catch(e){console.warn('TEST match recovery read:',e);}
+
+    let best=null;
+    for(const candidate of candidates){
+      if(!candidate?.id || candidate.endedAt || deletedIds.has(candidate.id) ||
+         completedIds.has(candidate.id) || !editableMatchOwnedByCurrentUser(candidate))continue;
+      best=betterResumableState(best,candidate);
+    }
+    if(!best)return false;
+
+    match=JSON.parse(JSON.stringify(best));
+    match.endedAt=null;
+    match.status='playing';
+    match.winner=null;
+    data.currentMatch=null;
+    saveDeviceActiveMatch(match);
+    showScreen('match');
+    if(match.useClock)resetClock(false,false);
+    renderMatch();
+    if(!match)return false;
+    startLiveHeartbeat();
+    toast('Obnoven rozehraný zápas • '+(match.scores?.[0]||0)+':'+(match.scores?.[1]||0)+'.');
     return true;
   }
 
