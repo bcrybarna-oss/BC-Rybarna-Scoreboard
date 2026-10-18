@@ -7243,23 +7243,42 @@ const isFourteen=match.discipline==='14.1' && !simpleCounter;
     finishMatch(winner,true);
   };
 
-  $('cancelMatch').onclick=async()=>{
-    if(!match) return;
-    if(!confirm('Opravdu zrušit rozehraný zápas? Nebude uložen a žádné jeho statistiky se nezapočítají.')) return;
+  let pendingCancelMatchId=null;
+  $('cancelMatch').onclick=()=>{
+    if(!match || !editableMatchOwnedByCurrentUser(match))return;
+    pendingCancelMatchId=match.id;
+    $('cancelMatchConfirm').classList.add('show');
+  };
+  $('cancelMatchKeep').onclick=()=>{
+    pendingCancelMatchId=null;
+    $('cancelMatchConfirm').classList.remove('show');
+  };
+  $('cancelMatchDiscard').onclick=async()=>{
+    const cancelledLiveId=pendingCancelMatchId;
+    pendingCancelMatchId=null;
+    $('cancelMatchConfirm').classList.remove('show');
+    // The account or active match may have changed while the dialog was open.
+    if(!cancelledLiveId || !match || match.id!==cancelledLiveId || !editableMatchOwnedByCurrentUser(match))return;
+    const hadStream=!!match.streamEnabled;
     stopTimer();
     stopLiveHeartbeat();
     clearTimeout(activeMatchCloudSaveTimer);
-    const cancelledLiveId=match.id;
-    const hadStream=!!match.streamEnabled;
-    await removeLiveMatch(cancelledLiveId);
-    await removeActiveMatchCloudBackup(cancelledLiveId);
+    clearTimeout(liveMatchSendTimer);
+    // Persist the cancellation before asynchronous cleanup, so a reload cannot
+    // recover it from local history or a delayed active-backup response.
     removeDeviceActiveMatch(cancelledLiveId);
-    if(hadStream)await clearStreamState();
+    removeActiveMatchRecovery(cancelledLiveId);
+    data.matches=(data.matches||[]).filter(m=>m?.id!==cancelledLiveId);
+    if(!Array.isArray(data.deletedMatchIds))data.deletedMatchIds=[];
+    if(!data.deletedMatchIds.includes(cancelledLiveId))data.deletedMatchIds.push(cancelledLiveId);
     match=null;
     saveDeviceActiveMatch(null);
     data.currentMatch=null;
     saveData();
     showScreen('setup');
+    await removeLiveMatch(cancelledLiveId);
+    await removeActiveMatchCloudBackup(cancelledLiveId);
+    if(hadStream)await clearStreamState();
     renderLive();
     toast('Zápas byl zrušen bez uložení.');
   };

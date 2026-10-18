@@ -32,7 +32,7 @@ není potvrzením nasazení do produkce. Architekturu popisuje PROJECT_CONTEXT.m
   a turnaje spuštěním obou skutečných sekvencí s izolovanými závislostmi.
 - Přidán scénář odloženého přihlášení: cizí účet nesmí obnovit zápas,
   vlastník následně obnoví skóre s pozastavenými hodinami.
-- Místně po opravě: `npm test` — 39/39, Node v24.19.0; `git diff --check` bez chyb.
+- Místně po opravě: `npm test` — 44/44, Node v24.19.0; `git diff --check` bez chyb.
 - CI používá Node 22; jeho výsledek je nutné ověřit na aktuálním commitu PR.
 - Ruční browser test ani přístup do Firebase v tomto kroku neproběhl.
 
@@ -54,3 +54,14 @@ není potvrzením nasazení do produkce. Architekturu popisuje PROJECT_CONTEXT.m
 4. Aktualizovat tento přehled v příslušném PR a označit neověřené skutečnosti.
 5. PR #6 zachovat. Ostatní PR, větve ani staré soubory neodstraňovat bez dohody.
 6. Další krok: CI a ruční ověření této opravy, poté samostatné řešení ochrany nasazení.
+
+## Navazující oprava zrušení zápasu
+
+- Jaroslav ověřil obnovu zápasu po reloadu v soukromém náhledu PR #12.
+- Po hlášení nefunkčního zrušení přidáno potvrzení přímo ve stránce.
+- Zrušení odstraní aktivní stav i recovery kopie a uloží ID mezi zrušené
+  ještě před asynchronním úklidem, aby se zápas po reloadu nevrátil.
+- Pět nových testů ověřuje potvrzení, zachování zápasu, změnu účtu/zápasu,
+  odmítnutí starých záloh po reloadu a dostupnost ovládacích prvků.
+- Soukromý náhled: https://poolcitadlo-pr12-20261018.fundeer1.chatgpt.site
+- Opravu zrušení je ještě nutné ručně ověřit.
