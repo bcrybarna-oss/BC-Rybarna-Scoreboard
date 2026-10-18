@@ -2801,7 +2801,8 @@
       await loadSecureMatches();
       await loadSecureTournaments();
       await promoteLegacyTournamentGuestsToProfiles();
-      restoreOwnedTestMatchAfterLogin();
+      const matchRestored=restoreOwnedTestMatchAfterLogin();
+      if(!matchRestored)restoreTestTournamentAfterLogin();
       $('cloudLoginModal').classList.remove('show');
       $('cloudPassword').value='';
       refreshAccountUI();
@@ -2871,7 +2872,8 @@
       await loadSecureMatches();
       await loadSecureTournaments();
       await promoteLegacyTournamentGuestsToProfiles();
-        restoreOwnedTestMatchAfterLogin();
+        const matchRestored=restoreOwnedTestMatchAfterLogin();
+        if(!matchRestored)restoreTestTournamentAfterLogin();
         return;
       }catch(e){
         console.warn('Cloud auto login:',e);
@@ -7677,6 +7679,9 @@ $('winnerText').textContent = match.solo14
 
   function discardForeignLocalActiveMatch(){
     if(!match)return false;
+    // TEST: Firebase obnovuje přihlášení asynchronně. Do té doby ponecháme
+    // rozehraný zápas v paměti i lokální záloze (bez udělení dalších práv).
+    if(window.POOL_TEST_MODE && !cloudAuthenticated)return false;
     if(editableMatchOwnedByCurrentUser(match))return false;
 
     const foreignId=match.id;
@@ -12716,19 +12721,38 @@ function renderSKOTournament(t){
     }
   }
 
+  function restoreTestTournamentAfterLogin(){
+    if(!window.POOL_TEST_MODE || !cloudAuthenticated || !cloudUid)return false;
+    try{
+      const storedId=localStorage.getItem('poolTestLastTournamentId')||
+        sessionStorage.getItem('poolTestLastTournamentId');
+      const active=(data.tournaments||[]).filter(t=>t && t.id &&
+        !['completed','complete','finished','cancelled','archived'].includes(String(t.status||'').toLowerCase()));
+      const target=(data.tournaments||[]).find(t=>t.id===storedId) ||
+        (active.length===1?active[0]:null);
+      if(!target)return false;
+      selectedTournamentId=target.id;
+      updateCurrentTournamentShortcut();
+      renderTournamentDetail();
+      showScreen('tournament-detail');
+      return true;
+    }catch(e){console.warn('TEST tournament reload recovery:',e);return false;}
+  }
+
   function updateCurrentTournamentShortcut(){
     const btn=$('currentTournamentNavBtn');
     if(!btn)return;
     if(window.POOL_TEST_MODE){
       try{
         if(!selectedTournamentId){
-          const lastId=sessionStorage.getItem('poolTestLastTournamentId');
+          const lastId=localStorage.getItem('poolTestLastTournamentId')||sessionStorage.getItem('poolTestLastTournamentId');
           if(lastId && (data.tournaments||[]).some(t=>t?.id===lastId)){
             selectedTournamentId=lastId;
           }
         }
         if(selectedTournamentId && (data.tournaments||[]).some(t=>t?.id===selectedTournamentId)){
           sessionStorage.setItem('poolTestLastTournamentId',selectedTournamentId);
+          localStorage.setItem('poolTestLastTournamentId',selectedTournamentId);
         }
       }catch(e){console.warn('TEST last tournament shortcut:',e);}
     }
