@@ -1,0 +1,40 @@
+
+  .tournament-hub-intro{margin-bottom:16px}
+  .tournament-hub-title{font-size:clamp(28px,4vw,46px);margin:0 0 7px;letter-spacing:-.035em}
+  .tournament-hub-title span{color:var(--gold2)}
+  .tournament-hub-choice-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin:16px 0}
+  .tournament-hub-choice{
+    border:1px solid #2d2a23;background:linear-gradient(180deg,#171511,#0d0d0d);
+    border-radius:18px;padding:20px;color:#fff;text-align:left;min-height:150px;
+    transition:.18s ease;cursor:pointer
+  }
+  .tournament-hub-choice:hover{transform:translateY(-2px);border-color:rgba(216,177,75,.55);box-shadow:0 14px 34px rgba(0,0,0,.28)}
+  .tournament-hub-choice.primary{background:linear-gradient(145deg,#d8b14b,#6f4e12);color:#120e07;border-color:#f0cf74}
+  .tournament-hub-choice .icon{font-size:30px;display:block;margin-bottom:18px}
+  .tournament-hub-choice strong{display:block;font-size:19px}
+  .tournament-hub-choice small{display:block;margin-top:7px;color:#a8a8a8;line-height:1.45}
+  .tournament-hub-choice.primary small{color:#251c0d}
+  .tournament-calendar-toolbar{display:flex;gap:8px;flex-wrap:wrap;align-items:center;justify-content:space-between;margin-bottom:14px}
+  .tournament-calendar-section{margin-top:18px}
+  .tournament-calendar-section h2{margin:0 0 10px;font-size:21px}
+  .tournament-calendar-list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+  .tournament-public-card{
+    border:1px solid #2e2b24;background:linear-gradient(180deg,#14130f,#0d0d0d);
+    border-radius:17px;padding:17px;min-width:0
+  }
+  .tournament-public-card.past{opacity:.8}
+  .tournament-public-card-head{display:flex;justify-content:space-between;gap:12px;align-items:flex-start}
+  .tournament-public-card h3{margin:0;font-size:20px}
+  .tournament-public-date{color:var(--gold2);font-weight:900;font-size:13px;white-space:nowrap}
+  .tournament-public-meta{display:flex;gap:7px;flex-wrap:wrap;margin:10px 0}
+  .tournament-public-meta span{border:1px solid #34312a;border-radius:999px;padding:5px 8px;color:#c9c3b4;font-size:11px;font-weight:800}
+  .tournament-public-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:13px}
+  .tournament-public-description{color:#aaa;font-size:13px;line-height:1.5}
+  .tournament-reg-count{color:#d9c27d;font-size:12px;font-weight:900}
+  .tournament-calendar-empty{border:1px dashed #39342a;border-radius:16px;padding:24px;color:#8f8f8f;text-align:center}
+  .tournament-public-form{border-color:rgba(216,177,75,.35)!important;background:#100f0c!important}
+  .tournament-public-form textarea{width:100%;min-height:90px;resize:vertical;border:1px solid #393939;background:#0d0d0d;color:var(--text);padding:13px 14px;border-radius:12px;outline:none;font:inherit}
+  .tournament-detail-public{border:1px solid rgba(216,177,75,.3);background:linear-gradient(180deg,rgba(216,177,75,.055),#0e0e0e);border-radius:16px;padding:16px;margin-bottom:14px}
+  @media(max-width:800px){
+    .tournament-hub-choice-grid,.tournament-calendar-list{grid-template-columns:1fr}
+  }

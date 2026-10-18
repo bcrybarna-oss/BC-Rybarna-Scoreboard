@@ -7,7 +7,8 @@ const test=require('node:test');
 const assert=require('node:assert/strict');
 const fs=require('node:fs');
 const path=require('node:path');
-const html=fs.readFileSync(path.join(__dirname,'..','index.html'),'utf8');
+const {assembleLegacyHtml,gitBlobSha}=require('./source-bundle.cjs');
+const html=assembleLegacyHtml();
 
 function count(re){return [...html.matchAll(re)].length;}
 function selectedPlayerResolver(players){
@@ -25,6 +26,9 @@ function expectError(fn,message){
   assert.throws(fn,e=>e instanceof Error && e.message===message);
 }
 
+test('Modularizovaný zdroj je přesně původní v4.51.75 (obsah i pořadí)',()=>{
+  assert.equal(gitBlobSha(html),'69e860aca3aeada86227e68bfecb0733e6db5233');
+});
 test('Všechny vložené JavaScriptové bloky mají platnou syntaxi',()=>{
   const scripts=[...html.matchAll(/<script\b[^>]*>([\s\S]*?)<\/script>/g)];
   assert.ok(scripts.length>=8);

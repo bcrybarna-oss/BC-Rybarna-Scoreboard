@@ -1,0 +1,22362 @@
+
+(() => {
+  const $ = id => document.getElementById(id);
+  const nowTime = () => new Date().toLocaleTimeString('cs-CZ',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
+  const uid = () => {
+    try{
+      if(window.crypto && typeof window.crypto.randomUUID==='function') return window.crypto.randomUUID();
+    }catch(e){}
+    return Date.now().toString(36)+Math.random().toString(36).slice(2)+Math.random().toString(36).slice(2);
+  };
+
+  const DB_KEY = 'bc_rybarna_scoreboard_v1';
+  const CLOUD_LOCAL_TS_KEY = 'bc_rybarna_cloud_local_updated_at';
+  const CLOUD_REFRESH_KEY = 'bc_rybarna_cloud_refresh_token';
+  const CLOUD_EMAIL_KEY = 'bc_rybarna_cloud_email';
+  // SYSTEM ADMIN session se z bezpečnostních důvodů neukládá trvale.
+  // sessionStorage přežije reload stejné karty, ale ne zavření prohlížeče/karty.
+  const CLOUD_ADMIN_SESSION_REFRESH_KEY = 'bc_rybarna_admin_session_refresh_token';
+  const CLOUD_ADMIN_SESSION_EMAIL_KEY = 'bc_rybarna_admin_session_email';
+  const CLOUD_BACKUP_KEY = 'bc_rybarna_local_backup_v1';
+  const LOCAL_ACTIVE_MATCH_KEY = 'bc_rybarna_device_active_match_v1';
+  const LOCAL_ACTIVE_MATCHES_KEY = 'bc_rybarna_device_active_matches_v2';
+  const LOCAL_ACTIVE_MATCH_RECOVERY_KEY = 'bc_rybarna_device_active_match_recovery_v1';
+  // Pouze lokální UI filtr Livescore. Nezasahuje do cloudu, zápasů ani identity.
+  const LOCAL_HIDDEN_LIVE_IDS_KEY = 'bc_rybarna_hidden_live_ids_v1';
+
+  // Firebase project configuration.
+  // Web API key is intentionally client-side; access is protected by Firebase Authentication + Database Rules.
+  const FIREBASE_API_KEY = 'AIzaSyDwbY_hOmhf6tfotV5RO-msCoOUUXNqXAQ';
+  const FIREBASE_DB = 'https://bc-rybarna-scrbrd-default-rtdb.europe-west1.firebasedatabase.app';
+  const FIREBASE_DB_URL = FIREBASE_DB;
+  const MAIN_ADMIN_EMAIL='bcrybarna@gmail.com';
+
+  let cloudIdToken='';
+  let cloudRefreshToken='';
+  let cloudTokenExpiresAt=0;
+  let cloudEmailVerified=false;
+  let currentUserProfileClaimId=null;
+  let currentUserClubId=null;
+  let currentUserPlayerId=null;
+  let currentUserRole='player';
+  let adminRegisteredUsersCache={};
+  let adminRegisteredUsersLoading=false;
+  let adminRegisteredUsersGlobalReadDenied=false;
+  let adminCreatePlayerTargetUid=null;
+  let cloudUserEmail='';
+  let cloudUid='';
+  let cloudAuthenticated=false;
+  let cloudSyncTimer=null;
+  let cloudSyncInProgress=false;
+  let cloudPollTimer=null;
+  let cloudPollInProgress=false;
+  let cloudApplyingRemote=false;
+  let cloudLastError='';
+  const CLOUD_POLL_MS=2500;
+
+  function normalizeDataObject(parsed){
+    if(!parsed || typeof parsed!=='object') parsed=defaultData();
+    if(!parsed.players) parsed.players={};
+    if(!Array.isArray(parsed.matches)) parsed.matches=[];
+    if(!Array.isArray(parsed.tournaments)) parsed.tournaments=[];
+    if(!Array.isArray(parsed.tournamentSeries)) parsed.tournamentSeries=[];
+    if(!Array.isArray(parsed.leagues)) parsed.leagues=[];
+    if(!parsed.federalCup2026 || typeof parsed.federalCup2026!=='object') parsed.federalCup2026=defaultFederalCup2026();
+    parsed.federalCup2026={...defaultFederalCup2026(),...parsed.federalCup2026};
+    if(!Array.isArray(parsed.federalCup2026.rosterA))parsed.federalCup2026.rosterA=['','','','',''];
+    if(!Array.isArray(parsed.federalCup2026.rosterB))parsed.federalCup2026.rosterB=['','','','',''];
+    parsed.federalCup2026.rosterA=parsed.federalCup2026.rosterA.slice(0,5);while(parsed.federalCup2026.rosterA.length<5)parsed.federalCup2026.rosterA.push('');
+    parsed.federalCup2026.rosterB=parsed.federalCup2026.rosterB.slice(0,5);while(parsed.federalCup2026.rosterB.length<5)parsed.federalCup2026.rosterB.push('');
+    if(!parsed.federalCup2026.lineups || typeof parsed.federalCup2026.lineups!=='object')parsed.federalCup2026.lineups={};
+    if(!parsed.federalCup2026.teamResults || typeof parsed.federalCup2026.teamResults!=='object')parsed.federalCup2026.teamResults={};
+    parsed.tournaments.forEach(t=>{if(t && (!t.managerUids || typeof t.managerUids!=='object' || Array.isArray(t.managerUids)))t.managerUids={};});
+    parsed.tournamentSeries.forEach(s=>{if(s && (!s.managerUids || typeof s.managerUids!=='object' || Array.isArray(s.managerUids)))s.managerUids={};});
+    if(!Array.isArray(parsed.deletedMatchIds)) parsed.deletedMatchIds=[];
+    if(!Array.isArray(parsed.deletedTournamentIds)) parsed.deletedTournamentIds=[];
+    // currentMatch je pouze lokální pro konkrétní zařízení/stůl.
+    parsed.currentMatch=null;
+
+    Object.values(parsed.players||{}).forEach(p=>{
+      if(p.nickname==null)p.nickname='';
+      if(p.club==null)p.club='';
+      if(p.note==null)p.note='';
+      if(p.photo==null)p.photo='';
+      if(p.identifier==null)p.identifier='';
+      if(p.useNicknameInMatch==null)p.useNicknameInMatch=false;
+    });
+    (parsed.matches||[]).forEach(m=>{if(m.status==null)m.status='complete';});
+    try{applyKnownHistoricalMatchMetadataRepairs(parsed.matches||[]);}catch(e){}
+    const deletedMatchSet=new Set(parsed.deletedMatchIds||[]);
+    const deletedTournamentSet=new Set(parsed.deletedTournamentIds||[]);
+    parsed.matches=(parsed.matches||[]).filter(m=>!deletedMatchSet.has(m.id));
+    parsed.tournaments=(parsed.tournaments||[]).filter(t=>!deletedTournamentSet.has(t.id));
+    return parsed;
+  }
+
+  function loadDeviceActiveMatches(){
+    try{
+      const raw=localStorage.getItem(LOCAL_ACTIVE_MATCHES_KEY);
+      const parsed=raw ? JSON.parse(raw) : {};
+      const map=(parsed && typeof parsed==='object' && !Array.isArray(parsed)) ? parsed : {};
+
+      // Migrace starší verze, která uměla držet jen jeden rozehraný zápas.
+      const legacyRaw=localStorage.getItem(LOCAL_ACTIVE_MATCH_KEY);
+      if(legacyRaw){
+        try{
+          const legacy=JSON.parse(legacyRaw);
+          if(legacy?.id && !legacy.endedAt && !map[legacy.id])map[legacy.id]=legacy;
+        }catch(e){}
+      }
+
+      localStorage.setItem(LOCAL_ACTIVE_MATCHES_KEY,JSON.stringify(map));
+      return map;
+    }catch(e){return {};}
+  }
+
+  function loadDeviceActiveMatch(){
+    try{
+      const raw=localStorage.getItem(LOCAL_ACTIVE_MATCH_KEY);
+      if(raw)return JSON.parse(raw);
+
+      // Pokud není určen právě otevřený zápas, vezmeme naposledy upravený.
+      const all=Object.values(loadDeviceActiveMatches())
+        .filter(m=>m && m.id && !m.endedAt)
+        .sort((a,b)=>new Date(b.localUpdatedAt||b.startedAt||0)-new Date(a.localUpdatedAt||a.startedAt||0));
+      return all[0]||null;
+    }catch(e){return null;}
+  }
+
+  function activeMatchStateMetrics(m){
+    if(!m)return {events:0,rack:0,score:0,stats:0,ts:0};
+    const events=Array.isArray(m.events)?m.events.length:0;
+    const rack=Number(m.rackNumber||0);
+    const score=(Array.isArray(m.scores)?m.scores:[]).reduce((a,b)=>a+Math.max(0,Number(b||0)),0);
+    let stats=0;
+    (Array.isArray(m.stats)?m.stats:[]).forEach(s=>{
+      if(!s||typeof s!=='object')return;
+      Object.values(s).forEach(v=>{if(Number.isFinite(Number(v)))stats+=Math.max(0,Number(v));});
+    });
+    const rawTs=m.localUpdatedAt||m.updatedAt||m.endedAt||m.startedAt||'';
+    const ts=Date.parse(rawTs)||0;
+    return {events,rack,score,stats,ts};
+  }
+
+  function catastrophicActiveMatchRegression(newer,older){
+    if(!newer||!older||newer.id!==older.id)return false;
+    const n=activeMatchStateMetrics(newer),o=activeMatchStateMetrics(older);
+    const scoreCollapse=o.score>=3 && n.score<=1 && o.score-n.score>=3;
+    const eventCollapse=o.events>=4 && n.events+3<=o.events;
+    const rackCollapse=o.rack>=3 && n.rack+2<=o.rack;
+    const statsCollapse=o.stats>=4 && n.stats+3<=o.stats;
+    return scoreCollapse && (eventCollapse||rackCollapse||statsCollapse);
+  }
+
+  function loadActiveMatchRecovery(matchId){
+    try{
+      const raw=localStorage.getItem(LOCAL_ACTIVE_MATCH_RECOVERY_KEY);
+      const all=raw?JSON.parse(raw):{};
+      const arr=Array.isArray(all?.[matchId])?all[matchId]:[];
+      return arr.filter(x=>x&&x.id===matchId).map(x=>JSON.parse(JSON.stringify(x)));
+    }catch(e){return [];}
+  }
+
+  function recordActiveMatchRecoverySnapshot(m){
+    if(!m||!m.id)return;
+    try{
+      const raw=localStorage.getItem(LOCAL_ACTIVE_MATCH_RECOVERY_KEY);
+      const all=raw?JSON.parse(raw):{};
+      const arr=Array.isArray(all[m.id])?all[m.id]:[];
+      const copy=JSON.parse(JSON.stringify(m));
+      copy.recoverySavedAt=new Date().toISOString();
+      const sig=JSON.stringify({s:copy.scores,e:(copy.events||[]).length,r:copy.rackNumber,t:copy.turn});
+      const last=arr[arr.length-1];
+      const lastSig=last?JSON.stringify({s:last.scores,e:(last.events||[]).length,r:last.rackNumber,t:last.turn}):'';
+      if(sig!==lastSig)arr.push(copy);
+      all[m.id]=arr.slice(-12);
+      localStorage.setItem(LOCAL_ACTIVE_MATCH_RECOVERY_KEY,JSON.stringify(all));
+    }catch(e){}
+  }
+
+  function removeActiveMatchRecovery(matchId){
+    if(!matchId)return;
+    try{
+      const raw=localStorage.getItem(LOCAL_ACTIVE_MATCH_RECOVERY_KEY);
+      const all=raw?JSON.parse(raw):{};
+      if(all && typeof all==='object'){
+        delete all[matchId];
+        localStorage.setItem(LOCAL_ACTIVE_MATCH_RECOVERY_KEY,JSON.stringify(all));
+      }
+    }catch(e){}
+  }
+
+  function betterResumableState(a,b){
+    if(!a)return b?JSON.parse(JSON.stringify(b)):null;
+    if(!b)return JSON.parse(JSON.stringify(a));
+    const am=activeMatchStateMetrics(a),bm=activeMatchStateMetrics(b);
+    const newer=am.ts>=bm.ts?a:b;
+    const older=newer===a?b:a;
+    if(catastrophicActiveMatchRegression(newer,older))return JSON.parse(JSON.stringify(older));
+    return JSON.parse(JSON.stringify(newer));
+  }
+
+  function saveDeviceActiveMatch(m){
+    try{
+      if(!m){
+        localStorage.removeItem(LOCAL_ACTIVE_MATCH_KEY);
+        return;
+      }
+
+      const map=loadDeviceActiveMatches();
+      const existing=map[m.id]?JSON.parse(JSON.stringify(map[m.id])):null;
+      if(existing)recordActiveMatchRecoverySnapshot(existing);
+
+      m.localUpdatedAt=new Date().toISOString();
+      recordActiveMatchRecoverySnapshot(m);
+      localStorage.setItem(LOCAL_ACTIVE_MATCH_KEY,JSON.stringify(m));
+      map[m.id]=JSON.parse(JSON.stringify(m));
+      localStorage.setItem(LOCAL_ACTIVE_MATCHES_KEY,JSON.stringify(map));
+    }catch(e){}
+  }
+
+  function removeDeviceActiveMatch(matchId){
+    if(!matchId)return;
+    try{
+      const map=loadDeviceActiveMatches();
+      delete map[matchId];
+      localStorage.setItem(LOCAL_ACTIVE_MATCHES_KEY,JSON.stringify(map));
+
+      const current=loadDeviceActiveMatch();
+      if(current?.id===matchId)localStorage.removeItem(LOCAL_ACTIVE_MATCH_KEY);
+    }catch(e){}
+  }
+
+  function getDeviceActiveMatch(matchId){
+    if(!matchId)return null;
+    try{
+      const map=loadDeviceActiveMatches();
+      return map[matchId] ? JSON.parse(JSON.stringify(map[matchId])) : null;
+    }catch(e){return null;}
+  }
+
+  async function liveMatchRequest(matchId,method,body=null){
+    if(!matchId)throw new Error('LIVE_MATCH_INVALID');
+    if(!await ensureCloudToken())throw new Error('NO_AUTH');
+
+    const opts={method,headers:{'Content-Type':'application/json'},cache:'no-store'};
+    if(body!==null)opts.body=JSON.stringify(body);
+
+    const r=await fetch(cloudUrl('stream/liveMatches/'+matchId),opts);
+    if(!r.ok)throw new Error('LIVE_MATCH_'+r.status);
+    try{return await r.json();}catch(e){return null;}
+  }
+
+  async function loadCloudLiveMatches(force=false){
+    if(liveMatchLoadInProgress)return cloudLiveMatches;
+    if(!await ensureCloudToken())return cloudLiveMatches;
+
+    const now=Date.now();
+    if(!force && now-liveLastCloudPollAt<700)return cloudLiveMatches;
+
+    liveMatchLoadInProgress=true;
+    liveLastCloudPollAt=now;
+
+    try{
+      const url=cloudUrl('stream/liveMatches')+'&_live='+now;
+      const r=await fetch(url,{
+        method:'GET',
+        cache:'no-store',
+        headers:{
+          'Cache-Control':'no-cache, no-store, must-revalidate',
+          'Pragma':'no-cache'
+        }
+      });
+
+      if(!r.ok)throw new Error('LIVE_MATCHES_READ_'+r.status);
+
+      const raw=await r.json()||{};
+      const all=Object.values(raw).filter(m=>m && m.id && !m.endedAt);
+
+      const fresh=[];
+      const stale=[];
+
+      all.forEach(m=>{
+        const ts=Date.parse(m.updatedAt||m.startedAt||'');
+        const age=Number.isFinite(ts)?now-ts:Infinity;
+        if(age>LIVE_STALE_MS) stale.push(m);
+        else fresh.push(m);
+      });
+
+      cloudLiveMatches=fresh;
+
+      // Osiřelé LIVE záznamy po pádu/zavření aplikace čistíme automaticky.
+      if(stale.length){
+        // Cizí LIVE zápas nesmí běžný uživatel mazat. Rules dovolí mazání jen
+        // vlastníkovi záznamu nebo systémovému administrátorovi.
+        const deletable=stale.filter(m=>currentUserIsSystemAdmin() || m.createdByUid===cloudUid);
+        if(deletable.length){
+          Promise.allSettled(deletable.map(m=>liveMatchRequest(m.id,'DELETE')))
+            .catch(()=>{});
+        }
+      }
+
+      return cloudLiveMatches;
+    }catch(e){
+      console.error('Load live matches:',e);
+      return cloudLiveMatches;
+    }finally{
+      liveMatchLoadInProgress=false;
+    }
+  }
+
+
+  function liveMomentumSnapshotFromMatch(m){
+    if(!m)return {scores:[],winners:[]};
+
+    // Veřejný LIVE používá jen odvozený průběh skóre. Interní eventy se neposílají.
+    const events=Array.isArray(m.events)?m.events:[];
+    const h=Array.isArray(m.handicapScores)?[Number(m.handicapScores[0]||0),Number(m.handicapScores[1]||0)]:[0,0];
+    let prev=[Math.max(0,h[0]),Math.max(0,h[1])];
+    const scores=[prev[0]+':'+prev[1]];
+    const winners=[];
+
+    events.forEach(e=>{
+      const mt=String(e?.text||'').match(/^Skóre\s+(\d+)\s*:\s*(\d+)/i);
+      if(!mt)return;
+      const cur=[Number(mt[1]),Number(mt[2])];
+      let winner=null;
+      if(cur[0]>prev[0] && cur[1]===prev[1])winner=0;
+      else if(cur[1]>prev[1] && cur[0]===prev[0])winner=1;
+      // Ruční korekce skóre nechceme vydávat za vyhraný rack.
+      if(winner!==null){
+        scores.push(cur[0]+':'+cur[1]);
+        winners.push(winner);
+      }
+      prev=cur;
+    });
+
+    // Zamezíme zbytečně velkému veřejnému payloadu i u velmi dlouhého zápasu.
+    return {scores:scores.slice(-30),winners:winners.slice(-29)};
+  }
+
+  function liveMatchPayload(m){
+    if(!m||!m.id)return null;
+    const momentum=liveMomentumSnapshotFromMatch(m);
+
+    return {
+      id:m.id,
+      createdByUid:m.createdByUid||cloudUid||'',
+      updatedAt:new Date().toISOString(),
+      startedAt:m.startedAt||null,
+      endedAt:m.endedAt||null,
+      status:m.endedAt?'complete':'playing',
+
+      playerIds:Array.isArray(m.playerIds)?m.playerIds.slice(0,3):[],
+      playerNames:Array.isArray(m.playerNames)?m.playerNames.slice(0,3):[],
+      scores:Array.isArray(m.scores)?m.scores.slice(0,3):[0,0],
+
+      discipline:m.discipline||'',
+      target:m.target??m.raceTo??null,
+      raceTo:m.target??m.raceTo??null,
+      turn:typeof m.turn==='number'?m.turn:null,
+      breaker:typeof m.breaker==='number'?m.breaker:null,
+      rackNumber:m.rackNumber||null,
+      breakMode:m.breakMode||'',
+
+      tournamentLink:m.tournamentLink?JSON.parse(JSON.stringify(m.tournamentLink)):null,
+      leagueLink:m.leagueLink?JSON.parse(JSON.stringify(m.leagueLink)):null,
+
+      // Veřejný LIVE payload nikdy neobsahuje plný rozehraný stav.
+      // Bezpečná resume kopie je uložena pouze v chráněné větvi /matches/{id}.
+      solo14:!!m.solo14,
+      solo14GhostMode:!!m.solo14GhostMode,
+      solo14GhostDifficulty:m.solo14GhostMode ? (m.solo14GhostDifficulty??null) : null,
+      solo14GhostPointsPerError:m.solo14GhostMode ? Number(m.solo14GhostPointsPerError||0) : 0,
+      solo14PlayerId:m.solo14 ? (m.playerIds?.[0]||'') : '',
+
+      shotClockRemaining:m.useClock && typeof timeLeft==='number'?timeLeft:null,
+      clockRunning:!!m.useClock && !!timerRunning,
+      useClock:!!m.useClock,
+
+      // Pouze veřejný, read-only vývoj skóre pro Livescore.
+      liveScoreProgress:momentum.scores,
+      liveRackWinners:momentum.winners
+    };
+  }
+
+  async function pushLiveMatchNow(m=match){
+    const payload=liveMatchPayload(m);
+    if(!payload||payload.endedAt)return;
+
+    try{
+      await liveMatchRequest(payload.id,'PUT',payload);
+      const i=cloudLiveMatches.findIndex(x=>x.id===payload.id);
+      if(i>=0)cloudLiveMatches[i]=payload;
+      else cloudLiveMatches.push(payload);
+    }catch(e){
+      console.error('Live match write:',e);
+    }
+  }
+
+  function scheduleLiveMatchPush(){
+    if(!match||match.endedAt)return;
+
+    clearTimeout(liveMatchSendTimer);
+    liveMatchSendTimer=setTimeout(()=>{
+      pushLiveMatchNow(match);
+    },180);
+  }
+
+
+  async function saveActiveMatchCloudBackupNow(m=match){
+    if(!m || !m.id || m.endedAt || !cloudUid)return false;
+    if(!editableMatchOwnedByCurrentUser(m))return false;
+
+    const copy=JSON.parse(JSON.stringify(m));
+    copy.endedAt=null;
+    copy.status='playing';
+    copy.winner=null;
+    copy.updatedAt=new Date().toISOString();
+    copy.activeResumeBackup=true;
+
+    try{
+      // Pojistka proti katastrofickému přepsání: pokud už cloud obsahuje
+      // výrazně pokročilejší stav stejného zápasu, nulový/resetovaný stav ho nesmí přepsat.
+      const existing=await secureMatchRequest(copy.id,'GET').catch(()=>null);
+      if(existing && !existing.endedAt && catastrophicActiveMatchRegression(copy,existing)){
+        console.error('BLOCKED REGRESSIVE ACTIVE MATCH BACKUP',copy.id,copy.scores,existing.scores);
+        recordActiveMatchRecoverySnapshot(existing);
+        return false;
+      }
+      await secureMatchRequest(copy.id,'PUT',copy);
+      return true;
+    }catch(e){
+      console.warn('Active match cloud backup:',e);
+      return false;
+    }
+  }
+
+  function scheduleActiveMatchCloudBackup(){
+    if(!match || match.endedAt || !cloudUid)return;
+    clearTimeout(activeMatchCloudSaveTimer);
+    activeMatchCloudSaveTimer=setTimeout(()=>{
+      saveActiveMatchCloudBackupNow(match);
+    },420);
+  }
+
+  async function removeActiveMatchCloudBackup(matchId){
+    if(!matchId || !cloudUid)return false;
+    try{
+      const stored=await secureMatchRequest(matchId,'GET');
+      if(!stored)return false;
+
+      // Bezpečnostní pojistka: nikdy nemažeme dokončený / historický zápas jen proto,
+      // že po něm zůstal osiřelý LIVE záznam. Maže se pouze aktivní resume záloha.
+      const activeBackup=!!stored.activeResumeBackup || ['playing','active'].includes(stored.status);
+      if(!activeBackup || stored.endedAt)return false;
+
+      await secureMatchRequest(matchId,'DELETE');
+      return true;
+    }catch(e){
+      console.warn('Active match cloud backup delete:',e);
+      return false;
+    }
+  }
+
+  function stopLiveHeartbeat(){
+    if(liveHeartbeatTimer){
+      clearInterval(liveHeartbeatTimer);
+      liveHeartbeatTimer=null;
+    }
+  }
+
+  function startLiveHeartbeat(){
+    stopLiveHeartbeat();
+    if(!match||match.endedAt)return;
+
+    // Okamžitě po startu pošleme první stav.
+    pushLiveMatchNow(match);
+
+    // Pak udržujeme zápas živý i když se 20 minut nezmění skóre.
+    liveHeartbeatTimer=setInterval(()=>{
+      if(!match||match.endedAt){
+        stopLiveHeartbeat();
+        return;
+      }
+      pushLiveMatchNow(match);
+    },LIVE_HEARTBEAT_MS);
+  }
+
+
+  async function removeLiveMatch(matchId){
+    if(!matchId)return;
+    try{
+      await liveMatchRequest(matchId,'DELETE');
+    }catch(e){
+      console.error('Live match delete:',e);
+    }
+    cloudLiveMatches=cloudLiveMatches.filter(m=>m.id!==matchId);
+  }
+
+
+  let postMatchReturnScreen=null;
+  let postMatchTournamentId=null;
+  let liveScoreSelectedId=null;
+  let liveRefreshTimer=null;
+  let cloudLiveMatches=[];
+  let liveMatchSendTimer=null;
+  let activeMatchCloudSaveTimer=null;
+  let liveMatchLoadInProgress=false;
+  let liveLastCloudPollAt=0;
+  let liveHeartbeatTimer=null;
+  const LIVE_HEARTBEAT_MS=30*1000;
+  const LIVE_STALE_MS=3*60*1000;
+  const LIVE_WARNING_MS=90*1000;
+  let selectedTournamentId=null;
+  let forcedTournamentReturnId=null;
+  let manualTournamentSeedOrder=[];
+
+  let data = loadData();
+  let match = loadDeviceActiveMatch();
+  if(!match && data.currentMatch){
+    match=JSON.parse(JSON.stringify(data.currentMatch));
+    saveDeviceActiveMatch(match);
+  }
+  // Aktivní zápas necestuje přes společný data.currentMatch sync.
+  // Plný rozehraný stav se ale bezpečně zálohuje do /matches/{id}, aby šel obnovit i na jiném zařízení.
+  data.currentMatch=null;
+  let timer = null;
+  let timerRunning = false;
+  let timeLeft = 30;
+  let clockPhase = 'normal';
+  let pendingThreeFoulLoser = null;
+  let pendingTournamentLink = null;
+  let pendingLeagueLink = null;
+  let pendingFederalCupLink = null;
+  let selectedLeagueFixtureId = null;
+  let tournamentGuestDrafts=[];
+  let tournamentSelectedPlayerIds=[];
+  let tournamentDrawNumbers={};
+  let tournamentCheckin={};
+  let tournamentCheckinClosed=false;
+  let tournamentPrizeMoney={mode:'percent',returnPercent:100,fixedAmount:0,bonus:0,payouts:[
+    {label:'1. místo',count:1,percent:50},
+    {label:'2. místo',count:1,percent:30},
+    {label:'3. místo',count:1,percent:20}
+  ]};
+  const TOURNAMENT_CHECKIN_DRAFT_KEY='bcRybarnaTournamentCheckinDraft_v1';
+  let tournamentCheckinDraftRestored=false;
+  let guestAssignContext=null;
+
+  // Jeden trvale používaný audio kontext.
+  let audioCtx = null;
+  function ensureAudio(){
+    try{
+      if(!audioCtx){
+        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      }
+      if(audioCtx.state === 'suspended') audioCtx.resume();
+    }catch(e){}
+  }
+
+  // Odemknutí zvuku uživatelským kliknutím / dotykem.
+  document.addEventListener('touchstart', ensureAudio, {passive:true});
+  document.addEventListener('click', ensureAudio, false);
+
+  // Backward compatibility for data from older versions.
+  Object.values(data.players||{}).forEach(p=>{if(p.nickname==null)p.nickname='';if(p.identifier==null)p.identifier='';if(p.club==null)p.club='';if(p.note==null)p.note='';if(p.equipment==null)p.equipment='';if(p.achievements==null)p.achievements='';if(p.photo==null)p.photo='';if(p.useNicknameInMatch==null)p.useNicknameInMatch=false;});
+  (data.matches||[]).forEach(m=>{if(m.status==null)m.status='complete';});
+
+  function defaultFederalCup2026(){
+    return {
+      year:2026,
+      teamAName:'Slovensko',
+      teamBName:'Česko',
+      rosterA:['','','','',''],
+      rosterB:['','','','',''],
+      lineups:{},
+      teamResults:{},
+      updatedAt:0
+    };
+  }
+  function defaultData(){ return {players:{}, matches:[], tournaments:[], tournamentSeries:[], leagues:[], federalCup2026:defaultFederalCup2026(), deletedMatchIds:[], deletedTournamentIds:[], currentMatch:null}; }
+  function loadData(){
+    try{
+      const raw = window.localStorage ? window.localStorage.getItem(DB_KEY) : null;
+      const parsed = raw ? JSON.parse(raw) : defaultData();
+      return normalizeDataObject(parsed);
+    }catch(e){
+      return defaultData();
+    }
+  }
+  function cloneForBackup(obj){
+    const c=JSON.parse(JSON.stringify(obj||defaultData()));
+    // Fotky profilů mohou být velmi velké. Pro bezpečnostní zálohu statistik je nepotřebujeme.
+    Object.values(c.players||{}).forEach(p=>{if(p && p.photo)p.photo='';});
+    return c;
+  }
+
+  function saveSafetyBackup(reason='cloud merge'){
+    try{
+      const payload={
+        createdAt:Date.now(),
+        reason,
+        data:cloneForBackup(data)
+      };
+      localStorage.setItem(CLOUD_BACKUP_KEY,JSON.stringify(payload));
+    }catch(e){
+      console.warn('Safety backup:',e);
+    }
+  }
+
+  function arrayMergeById(localArr,remoteArr,preferRemote){
+    const out=new Map();
+    (localArr||[]).forEach(x=>{if(x&&x.id)out.set(x.id,JSON.parse(JSON.stringify(x)));});
+    (remoteArr||[]).forEach(x=>{
+      if(!x||!x.id)return;
+      if(!out.has(x.id) || preferRemote) out.set(x.id,JSON.parse(JSON.stringify(x)));
+    });
+    return [...out.values()];
+  }
+
+  function tournamentStatusRank(status){
+    return {pending:0,assigned:1,playing:2,done:3}[status] ?? 0;
+  }
+
+  function mergeTournamentMatch(a,b,preferRemote=true){
+    if(!a) return JSON.parse(JSON.stringify(b));
+    if(!b) return JSON.parse(JSON.stringify(a));
+
+    const ar=tournamentStatusRank(a.status), br=tournamentStatusRank(b.status);
+
+    // Dokončený výsledek má vždy přednost před starším rozehraným/čekajícím stavem.
+    if(ar!==br){
+      return JSON.parse(JSON.stringify(ar>br ? a : b));
+    }
+
+    const preferred=preferRemote ? b : a;
+    const other=preferRemote ? a : b;
+    const out={...JSON.parse(JSON.stringify(other)),...JSON.parse(JSON.stringify(preferred))};
+
+    // Číslo stolu zachováme, dokud zápas není dokončen.
+    if(out.status!=='done') out.tableNumber=preferred.tableNumber || other.tableNumber || null;
+    else out.tableNumber=null;
+
+    return out;
+  }
+
+  function mergeTournamentRound(a,b,preferRemote=true){
+    if(!a) return JSON.parse(JSON.stringify(b));
+    if(!b) return JSON.parse(JSON.stringify(a));
+    const preferred=preferRemote?b:a, other=preferRemote?a:b;
+    const out={...JSON.parse(JSON.stringify(other)),...JSON.parse(JSON.stringify(preferred))};
+
+    const byId=new Map();
+    (a.matches||[]).forEach(m=>byId.set(m.id,JSON.parse(JSON.stringify(m))));
+    (b.matches||[]).forEach(m=>{
+      byId.set(m.id,mergeTournamentMatch(byId.get(m.id),m,preferRemote));
+    });
+    out.matches=[...byId.values()];
+
+    const byeMap=new Map();
+    [...(a.byes||[]),...(b.byes||[])].forEach(x=>{
+      if(x) byeMap.set(String(x.playerId)+'|'+String(x.bracket||''),JSON.parse(JSON.stringify(x)));
+    });
+    out.byes=[...byeMap.values()];
+    return out;
+  }
+
+  function recomputeDKOState(t){
+    if(!t || t.format!=='dko' || !t.dko) return t;
+
+    const losses={};
+    (t.playerIds||[]).forEach(id=>losses[id]=0);
+    let championId=null;
+    let finalResetNeeded=false;
+
+    for(const r of (t.dko.rounds||[])){
+      for(const m of (r.matches||[])){
+        if(m.status!=='done' || !m.loserId || !m.winnerId) continue;
+        losses[m.loserId]=(losses[m.loserId]||0)+1;
+
+        if(m.bracket==='GF'){
+          if((losses[m.loserId]||0)>=2){
+            championId=m.winnerId;
+            finalResetNeeded=false;
+          }else{
+            const wl=losses[m.winnerId]||0;
+            const ll=losses[m.loserId]||0;
+            if(wl===1 && ll===1) finalResetNeeded=true;
+          }
+        }
+      }
+    }
+
+    t.dko.losses=losses;
+    t.dko.championId=championId;
+    t.dko.finalResetNeeded=finalResetNeeded;
+    t.status=championId?'complete':'active';
+
+    if(!championId){
+      // Pokud současně doběhly poslední zápasy kola na různých telefonech,
+      // po sloučení výsledků vytvoříme další vlnu právě jednou.
+      dkoCreateWave(t);
+      assignTournamentTables(t);
+    }
+    return t;
+  }
+
+  function mergeTournamentObject(a,b,preferRemote=true){
+    if(!a)return JSON.parse(JSON.stringify(b));
+    if(!b)return JSON.parse(JSON.stringify(a));
+
+    const preferred=preferRemote?b:a, other=preferRemote?a:b;
+    const out={...JSON.parse(JSON.stringify(other)),...JSON.parse(JSON.stringify(preferred))};
+    out.guests={...(a.guests||{}),...(b.guests||{})};
+    if(!out.schedule && (a.schedule||b.schedule))out.schedule=JSON.parse(JSON.stringify(preferred.schedule||other.schedule));
+
+    if(tournamentHasGroups(out)){
+      const groups=new Map();
+      (a.groups||[]).forEach(g=>groups.set(g.id,JSON.parse(JSON.stringify(g))));
+      (b.groups||[]).forEach(g=>{
+        const old=groups.get(g.id);
+        if(!old){groups.set(g.id,JSON.parse(JSON.stringify(g)));return;}
+        const merged={...old,...JSON.parse(JSON.stringify(g))};
+        const mm=new Map();
+        (old.matches||[]).forEach(m=>mm.set(m.id,JSON.parse(JSON.stringify(m))));
+        (g.matches||[]).forEach(m=>mm.set(m.id,mergeTournamentMatch(mm.get(m.id),m,preferRemote)));
+        merged.matches=[...mm.values()];
+        groups.set(g.id,merged);
+      });
+      out.groups=[...groups.values()];
+    }
+
+    const mergePlayoff=(key)=>{
+      if(!a[key]&&!b[key])return;
+      const aa=a[key]||{},bb=b[key]||{};
+      const base={...JSON.parse(JSON.stringify(aa)),...JSON.parse(JSON.stringify(bb))};
+      const rounds=new Map();
+      (aa.rounds||[]).forEach(r=>rounds.set(r.id,JSON.parse(JSON.stringify(r))));
+      (bb.rounds||[]).forEach(r=>rounds.set(r.id,mergeTournamentRound(rounds.get(r.id),r,preferRemote)));
+      base.rounds=[...rounds.values()];
+      out[key]=base;
+    };
+    mergePlayoff('ko');
+    mergePlayoff('dko');
+
+    if(a.swiss||b.swiss){
+      const aa=a.swiss||{},bb=b.swiss||{};
+      const base={...JSON.parse(JSON.stringify(aa)),...JSON.parse(JSON.stringify(bb))};
+      const rounds=new Map();
+      (aa.rounds||[]).forEach(r=>rounds.set(r.id,JSON.parse(JSON.stringify(r))));
+      (bb.rounds||[]).forEach(r=>rounds.set(r.id,mergeTournamentRound(rounds.get(r.id),r,preferRemote)));
+      base.rounds=[...rounds.values()].sort((x,y)=>Number(x.number||0)-Number(y.number||0));
+      out.swiss=base;
+    }
+
+    return out;
+  }
+
+  function mergeTournamentArrays(localArr,remoteArr,preferRemote=true){
+    const map=new Map();
+    (localArr||[]).forEach(t=>{if(t&&t.id)map.set(t.id,JSON.parse(JSON.stringify(t)));});
+    (remoteArr||[]).forEach(t=>{
+      if(!t||!t.id)return;
+      map.set(t.id,mergeTournamentObject(map.get(t.id),t,preferRemote));
+    });
+    return [...map.values()];
+  }
+
+  function leagueFixtureStatusRank(status){ return {pending:0,playing:1,needs_decider:2,done:3}[status] ?? 0; }
+
+  function mergeLeagueObject(a,b,preferRemote=true){
+    if(!a)return JSON.parse(JSON.stringify(b));
+    if(!b)return JSON.parse(JSON.stringify(a));
+    const out=preferRemote ? {...JSON.parse(JSON.stringify(a)),...JSON.parse(JSON.stringify(b))} : {...JSON.parse(JSON.stringify(b)),...JSON.parse(JSON.stringify(a))};
+    const fm=new Map();
+    (a.fixtures||[]).forEach(f=>{if(f?.id)fm.set(f.id,JSON.parse(JSON.stringify(f)));});
+    (b.fixtures||[]).forEach(f=>{
+      if(!f?.id)return;
+      const old=fm.get(f.id);
+      if(!old){fm.set(f.id,JSON.parse(JSON.stringify(f)));return;}
+      const or=leagueFixtureStatusRank(old.status), nr=leagueFixtureStatusRank(f.status);
+      if(nr>or){fm.set(f.id,JSON.parse(JSON.stringify(f)));return;}
+      if(nr<or)return;
+      const ot=Date.parse(old.updatedAt||old.completedAt||old.startedAt||'')||0;
+      const nt=Date.parse(f.updatedAt||f.completedAt||f.startedAt||'')||0;
+      if(nt>ot || (nt===ot && preferRemote))fm.set(f.id,JSON.parse(JSON.stringify(f)));
+    });
+    out.fixtures=[...fm.values()];
+    return out;
+  }
+
+  function mergeLeagueArrays(localArr,remoteArr,preferRemote=true){
+    const map=new Map();
+    (localArr||[]).forEach(l=>{if(l?.id)map.set(l.id,JSON.parse(JSON.stringify(l)));});
+    (remoteArr||[]).forEach(l=>{if(l?.id)map.set(l.id,mergeLeagueObject(map.get(l.id),l,preferRemote));});
+    return [...map.values()];
+  }
+
+  function mergeDataObjects(localData,remoteData,preferRemote=true){
+    const l=normalizeDataObject(JSON.parse(JSON.stringify(localData||defaultData())));
+    const r=normalizeDataObject(JSON.parse(JSON.stringify(remoteData||defaultData())));
+
+    const players={};
+    Object.entries(l.players||{}).forEach(([id,p])=>players[id]=JSON.parse(JSON.stringify(p)));
+    Object.entries(r.players||{}).forEach(([id,p])=>{
+      if(!players[id]) players[id]=JSON.parse(JSON.stringify(p));
+      else players[id]=preferRemote
+        ? {...players[id],...JSON.parse(JSON.stringify(p))}
+        : {...JSON.parse(JSON.stringify(p)),...players[id]};
+    });
+
+    const deletedMatchIds=[...new Set([...(l.deletedMatchIds||[]),...(r.deletedMatchIds||[])])];
+    const deletedTournamentIds=[...new Set([...(l.deletedTournamentIds||[]),...(r.deletedTournamentIds||[])])];
+    const deletedMatchSet=new Set(deletedMatchIds);
+    const deletedTournamentSet=new Set(deletedTournamentIds);
+
+    const merged={
+      players,
+      matches:arrayMergeById(l.matches,r.matches,preferRemote).filter(m=>!deletedMatchSet.has(m.id)),
+      tournaments:mergeTournamentArrays(l.tournaments,r.tournaments,preferRemote).filter(t=>!deletedTournamentSet.has(t.id)),
+      tournamentSeries:arrayMergeById(l.tournamentSeries,r.tournamentSeries,preferRemote),
+      leagues:mergeLeagueArrays(l.leagues,r.leagues,preferRemote),
+      federalCup2026:JSON.parse(JSON.stringify(preferRemote ? r.federalCup2026 : l.federalCup2026)),
+      deletedMatchIds,
+      deletedTournamentIds,
+      currentMatch:null
+    };
+
+    return normalizeDataObject(merged);
+  }
+
+  function restoreSafetyBackup(){
+    let raw='';
+    try{raw=localStorage.getItem(CLOUD_BACKUP_KEY)||'';}catch(e){}
+    if(!raw){toast('Žádná lokální záloha zatím není k dispozici.');return;}
+    let b;
+    try{b=JSON.parse(raw);}catch(e){toast('Zálohu se nepodařilo načíst.');return;}
+    if(!b || !b.data){toast('Záloha je neplatná.');return;}
+
+    const when=b.createdAt ? new Date(b.createdAt).toLocaleString('cs-CZ') : '';
+    if(!confirm('Obnovit lokální zálohu'+(when?' z '+when:'')+'? Současná data se nejdřív znovu zazálohují.')) return;
+
+    saveSafetyBackup('before manual restore');
+    cloudApplyingRemote=true;
+    try{
+      const activeBefore=match ? JSON.parse(JSON.stringify(match)) : loadDeviceActiveMatch();
+      data=normalizeDataObject(b.data);
+      data.currentMatch=null;
+      match=activeBefore;
+      saveDeviceActiveMatch(match);
+      localStorage.setItem(DB_KEY,JSON.stringify(data));
+      localStorage.setItem(CLOUD_LOCAL_TS_KEY,String(Date.now()));
+      refreshViewsAfterCloudLoad();
+    }finally{
+      cloudApplyingRemote=false;
+    }
+    scheduleCloudDataSync();
+    toast('Lokální záloha obnovena.');
+  }
+
+  function markLocalDataChanged(){
+    if(cloudApplyingRemote) return;
+    try{ localStorage.setItem(CLOUD_LOCAL_TS_KEY,String(Date.now())); }catch(e){}
+  }
+
+  function saveData(){
+    data.currentMatch=null;
+    try{
+      if(window.localStorage) window.localStorage.setItem(DB_KEY, JSON.stringify(data));
+    }catch(e){}
+    markLocalDataChanged();
+    scheduleCloudDataSync();
+    refreshPlayerList();
+  }
+
+  function autosaveCurrent(){
+    data.currentMatch=null;
+    saveDeviceActiveMatch(match);
+    try{
+      if(window.localStorage) window.localStorage.setItem(DB_KEY, JSON.stringify(data));
+    }catch(e){
+      // Zápas zůstává v paměti zařízení i při omezeném localStorage.
+    }
+
+    // Read-only stav se publikuje pro LIVE. Plný stav se zároveň bezpečně zálohuje
+    // do vlastního záznamu zápasu, aby šlo pokračovat i po ztrátě lokálního snapshotu.
+    scheduleLiveMatchPush();
+    scheduleActiveMatchCloudBackup();
+  }
+
+  function updateLoggedInUserBadge(){
+    refreshStreamOverlayUrl();
+    const el=$('loggedInUserBadge');
+    const modernEl=$('modernLoggedInUserBadge');
+    const modernRole=$('modernAccountRole');
+
+    try{discardForeignLocalActiveMatch();}catch(e){}
+
+    const applyBadge=(label,title,role)=>{
+      if(el){
+        el.textContent=label;
+        el.title=title||label;
+      }
+      if(modernEl){
+        modernEl.textContent=label.replace(/^Přihlášen:\s*/,'');
+        modernEl.title=title||label;
+      }
+      if(modernRole) modernRole.textContent=role||'—';
+    };
+
+    if(!cloudAuthenticated || !cloudUid){
+      applyBadge('Nepřihlášen','Není aktivní přihlášení','OFFLINE');
+      return;
+    }
+
+    let name='';
+    if(currentUserPlayerId && data.players?.[currentUserPlayerId]){
+      name=playerDisplayName(data.players[currentUserPlayerId]);
+    }
+
+    if(!name){
+      const email=typeof cloudUserEmail==='string' ? cloudUserEmail.trim() : '';
+      name=email || 'Přihlášený účet';
+    }
+
+    const roleLabel=currentUserRole==='system_admin'
+      ? 'ADMIN'
+      : (currentUserRole==='club_admin' ? 'CLUB ADMIN' : 'HRÁČ');
+    const adminSuffix=currentUserIsSystemAdmin() ? ' ★' : '';
+    applyBadge('Přihlášen: '+name+adminSuffix,name+adminSuffix,roleLabel);
+  }
+
+  function setCloudStatus(label,ok=false){
+    const b=$('cloudStatusBtn');
+    const dot=$('modernCloudDot');
+    const raw=String(label||'').trim();
+    const upper=raw.toUpperCase();
+    if(b){
+      b.title='Cloud: '+(raw||'stav neznámý');
+      b.setAttribute('aria-label','Cloud: '+(raw||'stav neznámý'));
+    }
+    if(dot){
+      dot.classList.remove('online','busy');
+      if(ok || upper.includes('ONLINE') || upper.includes('AUTO')) dot.classList.add('online');
+      else if(upper.includes('PŘIPOJUJI') || upper.includes('SYNC') || upper.includes('NAČÍT')) dot.classList.add('busy');
+    }
+    try{updateLoggedInUserBadge();}catch(e){}
+  }
+
+  function localCloudTimestamp(){
+    try{return Number(localStorage.getItem(CLOUD_LOCAL_TS_KEY)||0);}catch(e){return 0;}
+  }
+
+  function writeLocalWithoutCloudSync(newData,cloudTs){
+    const activeBefore=match ? JSON.parse(JSON.stringify(match)) : loadDeviceActiveMatch();
+    data=normalizeDataObject(newData);
+    data.currentMatch=null;
+    match=activeBefore;
+    saveDeviceActiveMatch(match);
+    try{
+      localStorage.setItem(DB_KEY,JSON.stringify(data));
+      localStorage.setItem(CLOUD_LOCAL_TS_KEY,String(cloudTs||Date.now()));
+    }catch(e){}
+  }
+
+
+  let cloudReports=[];
+  let ownReportsPollTimer=null;
+  const OWN_REPORTS_POLL_MS=5000;
+  function reportTypeLabel(type){return {bug:'Chyba aplikace',feature:'Návrh na zlepšení',data:'Chybná data / výsledek',account:'Účet / profil',other:'Ostatní'}[type]||'Ostatní';}
+  function reportStatusLabel(status){return {new:'NOVÉ',in_progress:'ŘEŠÍ SE',resolved:'VYŘEŠENO'}[status]||'NOVÉ';}
+
+  async function writeReportUserMirror(report){
+    if(!report || !report.id || !report.createdByUid)return false;
+    if(!await ensureCloudToken())throw new Error('NO_AUTH');
+
+    const token=await currentIdToken();
+    if(!token)throw new Error('NO_AUTH');
+
+    const mirror={
+      id:report.id,
+      createdByUid:report.createdByUid,
+      createdByPlayerId:report.createdByPlayerId||'',
+      createdByName:report.createdByName||'',
+      type:report.type||'other',
+      area:report.area||'',
+      description:report.description||'',
+      appVersion:report.appVersion||'',
+      createdAt:report.createdAt||new Date().toISOString(),
+      updatedAt:report.updatedAt||new Date().toISOString(),
+      status:report.status||'new',
+      adminNote:report.adminNote||''
+    };
+
+    const url=`${FIREBASE_DB_URL}/reportIndexByUser/${encodeURIComponent(report.createdByUid)}/${encodeURIComponent(report.id)}.json?auth=${encodeURIComponent(token)}`;
+    const r=await fetch(url,{
+      method:'PUT',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify(mirror),
+      cache:'no-store'
+    });
+    if(!r.ok){
+      const body=await r.text().catch(()=> '');
+      throw new Error('REPORT_MIRROR_'+r.status+(body?': '+body:''));
+    }
+    return true;
+  }
+
+  async function reportRequest(reportId,method,body=null){
+    if(!await ensureCloudToken())throw new Error('NO_AUTH');
+    const opts={method,headers:{'Content-Type':'application/json'},cache:'no-store'};
+    if(body!==null)opts.body=JSON.stringify(body);
+    const r=await fetch(cloudUrl('reports/'+reportId),opts);
+    if(!r.ok){
+      const body=await r.text().catch(()=> '');
+      throw new Error('REPORT_'+r.status+(body?': '+body:''));
+    }
+    try{return await r.json();}catch(e){return null;}
+  }
+
+  function stopOwnReportsPolling(){
+    if(ownReportsPollTimer){
+      clearInterval(ownReportsPollTimer);
+      ownReportsPollTimer=null;
+    }
+  }
+
+  function startOwnReportsPolling(){
+    stopOwnReportsPolling();
+    ownReportsPollTimer=setInterval(()=>{
+      const screen=$('screen-reports');
+      if(!screen || !screen.classList.contains('active')){
+        stopOwnReportsPolling();
+        return;
+      }
+      loadOwnReports(true);
+    },OWN_REPORTS_POLL_MS);
+  }
+
+  async function loadOwnReports(silent=false){
+    if(!await ensureCloudToken())return [];
+    try{
+      const r=await fetch(cloudUrl('reportIndexByUser/'+cloudUid)+'&t='+Date.now(),{
+        cache:'no-store',
+        headers:{'Cache-Control':'no-cache, no-store, must-revalidate','Pragma':'no-cache'}
+      });
+      if(!r.ok)throw new Error('REPORT_INDEX_'+r.status);
+
+      const raw=await r.json()||{};
+      const rows=[];
+
+      for(const [id,value] of Object.entries(raw)){
+        if(value && typeof value==='object'){
+          rows.push({...value,id:value.id||id});
+          continue;
+        }
+
+        // Zpětná kompatibilita pro staré indexy uložené pouze jako true.
+        if(value===true){
+          try{
+            const item=await reportRequest(id,'GET');
+            if(item){
+              rows.push(item);
+              // Starý záznam rovnou převedeme na nový mirror.
+              try{await writeReportUserMirror(item);}catch(e){}
+            }
+          }catch(e){
+            console.warn('Load legacy report',id,e);
+          }
+        }
+      }
+
+      cloudReports=rows
+        .filter(r=>r && r.createdByUid===cloudUid)
+        .sort((a,b)=>new Date(b.createdAt||0)-new Date(a.createdAt||0));
+
+      renderMyReports();
+      if(!silent && $('reportSubmitInfo')){
+        $('reportSubmitInfo').textContent='Hlášení aktualizována • '+new Date().toLocaleTimeString('cs-CZ',{hour:'2-digit',minute:'2-digit'});
+      }
+      return cloudReports;
+    }catch(e){
+      console.error('Load own reports:',e);
+      if(!silent && $('reportSubmitInfo'))$('reportSubmitInfo').textContent='Moje hlášení se nepodařilo obnovit.';
+      renderMyReports();
+      return cloudReports;
+    }
+  }
+
+  function renderMyReports(){
+    const wrap=$('myReportsList');if(!wrap)return;
+    const rows=(cloudReports||[]).filter(r=>r&&r.createdByUid===cloudUid);
+    if(!rows.length){wrap.innerHTML='<div class="muted">Zatím jsi neposlal žádné hlášení.</div>';return;}
+    wrap.innerHTML=rows.map(r=>`<div class="subpanel" style="margin-bottom:8px"><div style="display:flex;justify-content:space-between;gap:8px;align-items:flex-start;flex-wrap:wrap"><div><strong>${esc(reportTypeLabel(r.type))}</strong>${r.area?' • '+esc(r.area):''}<div class="muted" style="margin-top:4px">${esc(new Date(r.createdAt).toLocaleString('cs-CZ'))}</div></div><span class="tournament-badge ${r.status==='resolved'?'gold':''}">${esc(reportStatusLabel(r.status))}</span></div><div style="margin-top:9px;white-space:pre-wrap">${esc(r.description||'')}</div>${r.adminNote?`<div class="subpanel" style="margin-top:10px"><strong>Odpověď admina:</strong><div style="margin-top:5px;white-space:pre-wrap">${esc(r.adminNote)}</div></div>`:''}</div>`).join('');
+  }
+
+  async function submitProblemReport(){
+    const type=$('reportType')?.value||'other',area=($('reportArea')?.value||'').trim(),description=($('reportDescription')?.value||'').trim();
+    if(description.length<5){toast('Popiš prosím problém trochu podrobněji.');return;}
+    if(!cloudUid){toast('Pro odeslání hlášení musíš být přihlášen.');return;}
+    const btn=$('submitReportBtn');if(btn)btn.disabled=true;
+    try{
+      const id=uid(),p=currentUserPlayerId?data.players?.[currentUserPlayerId]:null;
+      const report={id,createdByUid:cloudUid,createdByPlayerId:currentUserPlayerId||'',createdByName:p?playerSelectionLabel(p):(cloudUserEmail||'Uživatel'),email:cloudUserEmail||'',type,area,description,appVersion:'v4.51.75 RC',createdAt:new Date().toISOString(),updatedAt:new Date().toISOString(),status:'new',adminNote:''};
+      await reportRequest(id,'PUT',report);
+      try{
+        await writeReportUserMirror(report);
+      }catch(indexError){
+        console.warn('Report mirror write:',indexError);
+      }
+      $('reportDescription').value='';$('reportArea').value='';$('reportSubmitInfo').textContent='Hlášení bylo odesláno adminovi.';toast('Hlášení bylo odesláno.');await loadOwnReports();if(currentUserIsSystemAdmin())await loadReportsAdmin();
+    }catch(e){
+      console.error('Submit report:',e);
+      const msg=String(e&&e.message||e||'');
+      if(msg.includes('REPORT_401')||msg.includes('REPORT_403')){
+        toast('Firebase zápis odmítl. Nasad nová Realtime Database Rules.');
+        if($('reportSubmitInfo'))$('reportSubmitInfo').textContent='Firebase nemá povolený zápis do /reports. Nasad aktuální Realtime Database Rules.';
+      }else{
+        toast('Hlášení se nepodařilo odeslat.');
+        if($('reportSubmitInfo'))$('reportSubmitInfo').textContent='Chyba: '+msg;
+      }
+    }finally{if(btn)btn.disabled=false;}
+  }
+
+  async function loadReportsAdmin(){
+    const wrap=$('reportsAdminList');if(!currentUserIsSystemAdmin()){if(wrap)wrap.innerHTML='<div class="muted">Pouze pro systémového administrátora.</div>';return [];}
+    try{if(!await ensureCloudToken())throw new Error('NO_AUTH');const r=await fetch(cloudUrl('reports')+'&t='+Date.now(),{cache:'no-store'});if(!r.ok)throw new Error('REPORTS_ADMIN_'+r.status);const raw=await r.json()||{};const order={new:0,in_progress:1,resolved:2};const rows=Object.values(raw).filter(Boolean).sort((a,b)=>(order[a.status]??9)-(order[b.status]??9)||new Date(b.createdAt||0)-new Date(a.createdAt||0));renderReportsAdmin(rows);return rows;}catch(e){console.error('Load reports admin:',e);if(wrap)wrap.innerHTML='<div class="muted">Hlášení se nepodařilo načíst.</div>';return [];}
+  }
+
+  function renderReportsAdmin(rows){
+    const wrap=$('reportsAdminList');if(!wrap)return;if(!rows.length){wrap.innerHTML='<div class="muted">Žádná hlášení.</div>';return;}
+    wrap.innerHTML=rows.map(r=>`<div class="subpanel" style="margin-bottom:10px"><div style="display:flex;justify-content:space-between;gap:10px;align-items:flex-start;flex-wrap:wrap"><div><strong>${esc(r.createdByName||r.email||'Uživatel')}</strong><div class="muted">${esc(reportTypeLabel(r.type))}${r.area?' • '+esc(r.area):''} • ${esc(r.appVersion||'')}</div><div class="muted">${esc(new Date(r.createdAt).toLocaleString('cs-CZ'))}</div></div><select id="reportStatus_${r.id}" onchange="updateReportStatus('${r.id}',this.value)"><option value="new" ${r.status==='new'?'selected':''}>NOVÉ</option><option value="in_progress" ${r.status==='in_progress'?'selected':''}>ŘEŠÍ SE</option><option value="resolved" ${r.status==='resolved'?'selected':''}>VYŘEŠENO</option></select></div><div style="margin-top:10px;white-space:pre-wrap">${esc(r.description||'')}</div><div style="margin-top:10px"><label>Odpověď / poznámka pro uživatele</label><textarea id="reportNote_${r.id}" rows="3">${esc(r.adminNote||'')}</textarea><div style="display:flex;justify-content:flex-end;gap:8px;margin-top:7px"><button class="btn report-save-note-btn" data-report-id="${r.id}">ULOŽIT ODPOVĚĎ</button><button class="btn danger report-delete-btn" data-report-id="${r.id}">SMAZAT</button></div></div></div>`).join('');
+
+    wrap.querySelectorAll('.report-save-note-btn').forEach(btn=>{
+      btn.addEventListener('click',()=>window.saveReportAdminNote(btn.dataset.reportId));
+    });
+    wrap.querySelectorAll('.report-delete-btn').forEach(btn=>{
+      btn.addEventListener('click',()=>window.deleteProblemReport(btn.dataset.reportId));
+    });
+  }
+
+  window.updateReportStatus=async function(id,status){
+    if(!currentUserIsSystemAdmin())return;
+    try{
+      const report=await reportRequest(id,'GET');
+      if(!report)return;
+      report.status=status;
+      report.updatedAt=new Date().toISOString();
+      await reportRequest(id,'PUT',report);
+      await writeReportUserMirror(report);
+      await loadReportsAdmin();
+      toast('Stav hlášení byl uložen.');
+    }catch(e){
+      console.error('Update report status:',e);
+      toast('Stav hlášení se nepodařilo uložit.');
+    }
+  };
+  window.saveReportAdminNote=async function(id){
+    if(!currentUserIsSystemAdmin())return;
+    try{
+      const report=await reportRequest(id,'GET');
+      if(!report)return;
+      report.adminNote=($('reportNote_'+id)?.value||'').trim();
+      if(report.adminNote&&report.status==='new')report.status='in_progress';
+      report.updatedAt=new Date().toISOString();
+
+      await reportRequest(id,'PUT',report);
+      await writeReportUserMirror(report);
+
+      toast('Odpověď byla odeslána uživateli.');
+      await loadReportsAdmin();
+    }catch(e){
+      console.error('Save report admin note:',e);
+      toast('Odpověď se nepodařilo odeslat uživateli.');
+    }
+  };
+  async function deleteProblemReportAction(id){
+    if(!currentUserIsSystemAdmin()){
+      toast('Tuto akci může provést pouze admin.');
+      return;
+    }
+    if(!confirm('Opravdu toto hlášení smazat?'))return;
+
+    let report=null;
+    try{
+      report=await reportRequest(id,'GET');
+    }catch(e){
+      console.error('Read report before delete:',e);
+    }
+
+    try{
+      // 1) Smažeme hlavní report v /reports.
+      await reportRequest(id,'DELETE');
+
+      // 2) Smažeme i hráčský mirror/index.
+      if(report?.createdByUid){
+        if(!await ensureCloudToken())throw new Error('NO_AUTH');
+        const token=await currentIdToken();
+        if(!token)throw new Error('NO_AUTH');
+
+        const mirrorUrl=`${FIREBASE_DB_URL}/reportIndexByUser/${encodeURIComponent(report.createdByUid)}/${encodeURIComponent(id)}.json?auth=${encodeURIComponent(token)}`;
+        const mr=await fetch(mirrorUrl,{
+          method:'DELETE',
+          cache:'no-store',
+          headers:{'Cache-Control':'no-cache, no-store, must-revalidate'}
+        });
+
+        if(!mr.ok && mr.status!==404){
+          const body=await mr.text().catch(()=> '');
+          throw new Error('REPORT_MIRROR_DELETE_'+mr.status+(body?': '+body:''));
+        }
+      }
+
+      // Lokálně hned odebereme záznam, aby nezůstal viset do dalšího refresh.
+      const wrap=$('reportsAdminList');
+      if(wrap){
+        const btn=wrap.querySelector(`.report-delete-btn[data-report-id="${CSS.escape(id)}"]`);
+        const panel=btn?.closest('.subpanel');
+        if(panel)panel.remove();
+      }
+
+      toast('Hlášení bylo smazáno.');
+      await loadReportsAdmin();
+    }catch(e){
+      console.error('Delete problem report:',e);
+      const code=String(e&&e.message?e.message:e||'');
+      if(code.includes('401')||code.includes('403')||code.includes('PERMISSION_DENIED')){
+        toast('Smazání odmítla Firebase pravidla. Je potřeba upravit oprávnění pro admina.');
+      }else{
+        toast('Hlášení se nepodařilo smazat.');
+      }
+    }
+  }
+  window.deleteProblemReport=deleteProblemReportAction;
+
+  function refreshViewsAfterCloudLoad(){
+    refreshPlayerList();
+    updateLoggedInUserBadge();
+    try{ renderPlayers(); }catch(e){}
+    try{ renderHistory(); }catch(e){}
+    try{ renderStats(); }catch(e){}
+    try{ renderTournament(); renderSeriesList(); renderTournamentSeriesSelect(); }catch(e){}
+    try{window.renderFederalCup2026?.();}catch(e){}
+    updateDisciplineSetup();
+    setTimeout(maybeShowPendingResultConfirmation,100);
+
+    if(match && !match.endedAt){
+      if(match.discipline==='14.1' && match.ballsOnTable==null) match.ballsOnTable=15;
+      if(match.discipline==='14.1' && match.reracksInInning14==null) match.reracksInInning14=0;
+      if(match.discipline==='14.1' && !match.consecutiveFouls14) match.consecutiveFouls14=[0,0];
+      if(match.discipline==='14.1' && match.openingBreakAvailable14==null) match.openingBreakAvailable14=false;
+      if(match.streamEnabled==null) match.streamEnabled=false;
+      if(match.streamMatchTitle==null) match.streamMatchTitle='';
+      if(!match.streamMode) match.streamMode='live';
+      if(match.isBreakShot==null) match.isBreakShot=false;
+      if(match.nineBallBreakRule==null) match.nineBallBreakRule='none';
+      if(match.tenBallRule==null) match.tenBallRule='spot';
+      if(match.ghostMode && (match.discipline==='9-ball'||match.discipline==='10-ball') && match.ghostBallCount==null){
+        match.ghostBallCount=ghostFullBallCountForDiscipline(match.discipline);
+      }
+      if(match.softBreakOriginalBreaker===undefined) match.softBreakOriginalBreaker=null;
+      if(match.softBreakReturnEligibleFor===undefined) match.softBreakReturnEligibleFor=null;
+      if(match.breakAndRunEligible===undefined) match.breakAndRunEligible=true;
+      if(!Array.isArray(match.inningsHistory14)) match.inningsHistory14=[];
+      if(match.runoutEligibleFor===undefined) match.runoutEligibleFor=null;
+      if(match.runoutEligibleReason===undefined) match.runoutEligibleReason=null;
+      if(match.pushOutEligibleFor===undefined) match.pushOutEligibleFor=null;
+      if(match.pushOutBy===undefined) match.pushOutBy=null;
+      if(match.pushOutDecisionFor===undefined) match.pushOutDecisionFor=null;
+      if(match.safetyEscapeEligibleFor===undefined) match.safetyEscapeEligibleFor=null;
+      showScreen('match');
+      if(match.useClock) resetClock(false,false);
+      renderMatch();
+    }
+  }
+
+  async function currentIdToken(forceRefresh=false){
+    if(forceRefresh){
+      let refresh=cloudRefreshToken;
+      if(!refresh){
+        const saved=persistedCloudSession();
+        refresh=saved.refresh||'';
+        if(!cloudUserEmail)cloudUserEmail=saved.email||'';
+      }
+      if(!refresh)return '';
+      await firebaseRefreshAuth(refresh);
+    }else if(!await ensureCloudToken()){
+      return '';
+    }
+    return cloudIdToken||'';
+  }
+
+  async function firebaseAccountLookup(){
+    if(!await ensureCloudToken()) throw new Error('NO_AUTH');
+
+    const r=await fetch(
+      'https://identitytoolkit.googleapis.com/v1/accounts:lookup?key='+encodeURIComponent(FIREBASE_API_KEY),
+      {
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({idToken:cloudIdToken})
+      }
+    );
+    const j=await r.json();
+    if(!r.ok) throw new Error((j.error&&j.error.message)||'LOOKUP_FAILED');
+
+    const user=(j.users&&j.users[0])||null;
+    if(user){
+      cloudUid=user.localId||cloudUid||'';
+      cloudUserEmail=user.email||cloudUserEmail||'';
+      cloudEmailVerified=!!user.emailVerified;
+    }
+    return user;
+  }
+
+  function friendlyVerificationError(code){
+    code=String(code||'');
+    if(code.includes('TOO_MANY_ATTEMPTS_TRY_LATER')) return 'Příliš mnoho pokusů. Počkej několik minut a zkus odeslání znovu.';
+    if(code.includes('USER_DISABLED')) return 'Tento účet je ve Firebase zablokovaný.';
+    if(code.includes('EMAIL_NOT_FOUND')) return 'Firebase tento účet nenašel.';
+    if(code.includes('INVALID_ID_TOKEN') || code.includes('TOKEN_EXPIRED')) return 'Přihlášení vypršelo. Přihlas se znovu a zkus odeslání znovu.';
+    if(code.includes('OPERATION_NOT_ALLOWED')) return 'Ověřování e-mailu není ve Firebase správně povolené.';
+    return code || 'VERIFY_SEND_FAILED';
+  }
+
+  async function sendVerificationEmail(){
+    if(!await ensureCloudToken()) throw new Error('NO_AUTH');
+
+    // Před odesláním ověříme skutečný účet a cílovou adresu.
+    const account=await firebaseAccountLookup();
+    if(!account || !cloudUserEmail) throw new Error('EMAIL_NOT_FOUND');
+    if(cloudEmailVerified) return {alreadyVerified:true,email:cloudUserEmail};
+
+    async function doSend(){
+      const r=await fetch(
+        'https://identitytoolkit.googleapis.com/v1/accounts:sendOobCode?key='+encodeURIComponent(FIREBASE_API_KEY),
+        {
+          method:'POST',
+          headers:{'Content-Type':'application/json'},
+          body:JSON.stringify({
+            requestType:'VERIFY_EMAIL',
+            idToken:cloudIdToken
+          })
+        }
+      );
+      const j=await r.json().catch(()=>({}));
+      if(!r.ok){
+        const code=(j.error&&j.error.message)||('HTTP_'+r.status);
+        throw new Error(code);
+      }
+      return j;
+    }
+
+    try{
+      const response=await doSend();
+      return {ok:true,email:cloudUserEmail,response};
+    }catch(e){
+      const code=String(e&&e.message?e.message:e||'');
+      // Jednou zkusíme obnovit token, pokud Firebase hlásí problém s tokenem.
+      if((code.includes('INVALID_ID_TOKEN') || code.includes('TOKEN_EXPIRED')) && cloudRefreshToken){
+        await firebaseRefreshAuth(cloudRefreshToken);
+        const response=await doSend();
+        return {ok:true,email:cloudUserEmail,response};
+      }
+      throw new Error(friendlyVerificationError(code));
+    }
+  }
+
+  function showEmailVerificationGate(){
+    $('cloudLoginModal').classList.remove('show');
+    $('emailVerifyInfo').textContent='Ověřovací e-mail posíláme na '+(cloudUserEmail||'tvůj e-mail')+'.';
+    $('emailVerifyMessage').textContent='';
+    $('emailVerifyModal').classList.add('show');
+  }
+
+  async function ensureVerifiedBeforeApp(){
+    const user=await firebaseAccountLookup();
+    if(!user) return false;
+
+    // Bezpečnost: ověřený e-mail vyžadujeme i u hlavního administrátora.
+    if(!cloudEmailVerified){
+      showEmailVerificationGate();
+      return false;
+    }
+
+    $('emailVerifyModal').classList.remove('show');
+    return true;
+  }
+
+  function isMainAdminEmail(email){
+    return String(email||'').trim().toLowerCase()===MAIN_ADMIN_EMAIL;
+  }
+
+  function persistCloudSession(email,refreshToken,forceSessionOnly=false){
+    const sessionOnly=forceSessionOnly || currentUserRole==='system_admin' || isMainAdminEmail(email);
+    try{
+      if(sessionOnly){
+        sessionStorage.setItem(CLOUD_ADMIN_SESSION_REFRESH_KEY,refreshToken||'');
+        sessionStorage.setItem(CLOUD_ADMIN_SESSION_EMAIL_KEY,email||'');
+        localStorage.removeItem(CLOUD_REFRESH_KEY);
+        localStorage.removeItem(CLOUD_EMAIL_KEY);
+      }else{
+        localStorage.setItem(CLOUD_REFRESH_KEY,refreshToken||'');
+        localStorage.setItem(CLOUD_EMAIL_KEY,email||'');
+        sessionStorage.removeItem(CLOUD_ADMIN_SESSION_REFRESH_KEY);
+        sessionStorage.removeItem(CLOUD_ADMIN_SESSION_EMAIL_KEY);
+      }
+    }catch(e){}
+  }
+
+  function persistedCloudSession(){
+    let sessionEmail='',sessionRefresh='',localEmail='',localRefresh='';
+    try{
+      sessionEmail=sessionStorage.getItem(CLOUD_ADMIN_SESSION_EMAIL_KEY)||'';
+      sessionRefresh=sessionStorage.getItem(CLOUD_ADMIN_SESSION_REFRESH_KEY)||'';
+      localEmail=localStorage.getItem(CLOUD_EMAIL_KEY)||'';
+      localRefresh=localStorage.getItem(CLOUD_REFRESH_KEY)||'';
+    }catch(e){}
+
+    if(sessionRefresh){
+      return {email:sessionEmail,refresh:sessionRefresh,sessionOnly:true};
+    }
+
+    // Migrace starého chování: hlavní admin nesmí být automaticky obnoven
+    // z dlouhodobého localStorage tokenu.
+    if(localRefresh && isMainAdminEmail(localEmail)){
+      try{
+        localStorage.removeItem(CLOUD_REFRESH_KEY);
+        localStorage.removeItem(CLOUD_EMAIL_KEY);
+      }catch(e){}
+      return {email:localEmail,refresh:'',sessionOnly:true,expiredAdminPersistence:true};
+    }
+
+    return {email:localEmail,refresh:localRefresh,sessionOnly:false};
+  }
+
+  function enforceAdminSessionPersistence(){
+    if(currentUserRole!=='system_admin' || !cloudRefreshToken)return;
+    persistCloudSession(cloudUserEmail,cloudRefreshToken,true);
+  }
+
+  async function firebaseRegister(email,password){
+    const r=await fetch(
+      'https://identitytoolkit.googleapis.com/v1/accounts:signUp?key='+encodeURIComponent(FIREBASE_API_KEY),
+      {
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({email,password,returnSecureToken:true})
+      }
+    );
+    const j=await r.json();
+    if(!r.ok) throw new Error((j.error&&j.error.message)||'REGISTER_FAILED');
+
+    cloudUid=j.localId||'';
+    cloudUserEmail=j.email||email||'';
+    cloudIdToken=j.idToken;
+    cloudRefreshToken=j.refreshToken;
+    cloudTokenExpiresAt=Date.now()+(Number(j.expiresIn||3600)*1000)-60000;
+    cloudAuthenticated=true;
+
+    persistCloudSession(email,cloudRefreshToken,isMainAdminEmail(email));
+
+    // Do Realtime Database ještě nezapisujeme. Bezpečnostní Rules povolují
+    // zápisy až po ověření e-mailu; uživatelský záznam vznikne po ověření.
+    cloudEmailVerified=false;
+    await sendVerificationEmail();
+    setCloudStatus('OVĚŘ E-MAIL',false);
+    return true;
+  }
+
+
+  async function firebaseSignIn(email,password){
+    const r=await fetch(
+      'https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key='+encodeURIComponent(FIREBASE_API_KEY),
+      {
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({email,password,returnSecureToken:true})
+      }
+    );
+    const j=await r.json();
+    if(!r.ok) throw new Error((j.error&&j.error.message)||'LOGIN_FAILED');
+
+    cloudIdToken=j.idToken;
+    cloudRefreshToken=j.refreshToken;
+    cloudTokenExpiresAt=Date.now()+(Number(j.expiresIn||3600)*1000)-60000;
+    cloudAuthenticated=true;
+    cloudLastError='';
+
+    persistCloudSession(email,cloudRefreshToken,isMainAdminEmail(email));
+    setCloudStatus('ONLINE • AUTO',true);
+    startCloudAutoSync();
+    return true;
+  }
+
+
+  async function firebaseRefreshAuth(refreshToken){
+    if(!refreshToken) return false;
+    const body='grant_type=refresh_token&refresh_token='+encodeURIComponent(refreshToken);
+    const r=await fetch(
+      'https://securetoken.googleapis.com/v1/token?key='+encodeURIComponent(FIREBASE_API_KEY),
+      {
+        method:'POST',
+        headers:{'Content-Type':'application/x-www-form-urlencoded'},
+        body
+      }
+    );
+    const j=await r.json();
+    if(!r.ok) throw new Error((j.error&&j.error.message)||'REFRESH_FAILED');
+
+    cloudIdToken=j.id_token;
+    cloudRefreshToken=j.refresh_token||refreshToken;
+    cloudTokenExpiresAt=Date.now()+(Number(j.expires_in||3600)*1000)-60000;
+    cloudAuthenticated=true;
+    cloudLastError='';
+    persistCloudSession(cloudUserEmail,cloudRefreshToken,currentUserRole==='system_admin' || isMainAdminEmail(cloudUserEmail));
+    setCloudStatus('ONLINE • AUTO',true);
+    startCloudAutoSync();
+    return true;
+  }
+
+
+
+  async function securePlayerRequest(playerId,method,body=null){
+    if(!await ensureCloudToken()) throw new Error('NO_AUTH');
+    const opts={method,headers:{'Content-Type':'application/json'},cache:'no-store'};
+    if(body!==null) opts.body=JSON.stringify(body);
+    const r=await fetch(cloudUrl('players/'+playerId),opts);
+    if(!r.ok) throw new Error('PLAYER_SECURE_'+r.status);
+    return await r.json();
+  }
+
+
+
+
+  async function secureTournamentRequest(tournamentId,method,body=null){
+    if(!await ensureCloudToken()) throw new Error('NO_AUTH');
+    const opts={method,headers:{'Content-Type':'application/json'},cache:'no-store'};
+    if(body!==null) opts.body=JSON.stringify(body);
+    const r=await fetch(cloudUrl('tournaments/'+tournamentId),opts);
+    if(!r.ok) throw new Error('TOURNAMENT_SECURE_'+r.status);
+    return await r.json();
+  }
+
+  async function loadSecureTournaments(){
+    if(!await ensureCloudToken()) throw new Error('NO_AUTH');
+    const r=await fetch(cloudUrl('tournaments')+'&t='+Date.now(),{cache:'no-store'});
+    if(!r.ok) throw new Error('TOURNAMENTS_READ_'+r.status);
+    const raw=await r.json()||{};
+    data.tournaments=Object.values(raw).filter(Boolean);
+    const repaired=[];
+    data.tournaments.forEach(t=>{
+      if(!t.managerUids||typeof t.managerUids!=='object'||Array.isArray(t.managerUids))t.managerUids={};
+      try{
+        if(repairHybridWaitingState(t))repaired.push(t);
+      }catch(e){}
+    });
+    try{localStorage.setItem(DB_KEY,JSON.stringify(data));}catch(e){}
+
+    // Opravu starého chybného stavu zapíšeme i do cloudu, pokud má uživatel oprávnění.
+    for(const t of repaired){
+      try{
+        if(canManageTournament(t))await secureTournamentRequest(t.id,'PUT',t);
+      }catch(e){
+        console.warn('Hybrid waiting-state repair save:',e);
+      }
+    }
+
+    try{if(typeof window.renderModernHome==='function')window.renderModernHome();}catch(e){}
+    return data.tournaments;
+  }
+
+  async function saveSecureTournament(tournament){
+    if(!tournament || !tournament.id) throw new Error('TOURNAMENT_INVALID');
+
+    const copy=JSON.parse(JSON.stringify(tournament));
+    if(!copy.createdByUid) copy.createdByUid=cloudUid||'';
+    copy.updatedAt=new Date().toISOString();
+
+    // JEDINÝ zápis do /tournaments/{id}. Žádné rekurzivní volání.
+    await secureTournamentRequest(copy.id,'PUT',copy);
+
+    const i=(data.tournaments||[]).findIndex(t=>t.id===copy.id);
+    if(i>=0) data.tournaments[i]=copy;
+    else data.tournaments.push(copy);
+
+    try{localStorage.setItem(DB_KEY,JSON.stringify(data));}catch(e){}
+    try{if(typeof window.renderModernHome==='function')window.renderModernHome();}catch(e){}
+    return copy;
+  }
+
+  async function deleteSecureTournament(tournamentId){
+    await secureTournamentRequest(tournamentId,'DELETE');
+    data.tournaments=(data.tournaments||[]).filter(t=>t.id!==tournamentId);
+    try{localStorage.setItem(DB_KEY,JSON.stringify(data));}catch(e){}
+    try{if(typeof window.renderModernHome==='function')window.renderModernHome();}catch(e){}
+  }
+
+  function matchConfirmationUids(m){
+    if(!m || m.solo14 || m.ghostMode || m.winnerTableMode || m.doublesMode)return [];
+    if(!Array.isArray(m.playerIds) || m.playerIds.length<2)return [];
+    const p1=data.players?.[m.playerIds[0]];
+    const p2=data.players?.[m.playerIds[1]];
+    const u1=String(p1?.ownerUid||'').trim();
+    const u2=String(p2?.ownerUid||'').trim();
+    if(!u1 || !u2 || u1===u2)return [];
+    return [u1,u2];
+  }
+
+  function matchNeedsDualConfirmation(m){
+    if(currentUserIsSystemAdmin())return false;
+    if(m?.tournamentLink || m?.leagueLink)return false;
+    return matchConfirmationUids(m).length===2;
+  }
+
+  function matchConfirmationComplete(m){
+    if(m?.adminConfirmation?.confirmed===true)return true;
+    if(!m?.confirmationRequired)return true;
+    const uids=Array.isArray(m.confirmationUids)&&m.confirmationUids.length===2
+      ? m.confirmationUids
+      : matchConfirmationUids(m);
+    if(uids.length!==2)return false;
+    return uids.every(uid=>m.confirmations?.[uid]==='confirmed');
+  }
+
+  function matchConfirmationRejected(m){
+    if(m?.adminConfirmation?.confirmed===true)return false;
+    return !!(m?.confirmationRequired && Object.values(m.confirmations||{}).includes('rejected'));
+  }
+
+  function applyEffectiveConfirmationStatus(m){
+    if(!m)return m;
+    if(m.adminConfirmation?.confirmed===true){
+      m.status='complete';
+      m.confirmationState='admin_confirmed';
+      return m;
+    }
+    if(!m.confirmationRequired)return m;
+    if(matchConfirmationRejected(m)){
+      m.status='needs_correction';
+      m.confirmationState='needs_correction';
+    }else if(matchConfirmationComplete(m)){
+      m.status='complete';
+      m.confirmationState='confirmed';
+    }else{
+      m.status='pending_confirmation';
+      m.confirmationState='pending';
+    }
+    return m;
+  }
+
+  async function secureMatchConfirmationRequest(matchId,uid,value){
+    if(!matchId || !uid)throw new Error('CONFIRMATION_INVALID');
+
+    // Před každým potvrzením obnovíme token, aby Firebase neposuzovala starou session.
+    let token=await currentIdToken(true);
+    if(!token)throw new Error('NO_AUTH');
+
+    // Ověříme skutečné UID účtu, kterým je požadavek autorizovaný.
+    const account=await firebaseAccountLookup();
+    const actualUid=String(account?.localId||cloudUid||'').trim();
+    const expectedUid=String(uid||'').trim();
+    if(!actualUid)throw new Error('NO_AUTH_UID');
+    if(actualUid!==expectedUid){
+      throw new Error('CONFIRMATION_UID_MISMATCH|expected='+expectedUid+'|actual='+actualUid);
+    }
+
+    // firebaseAccountLookup mohl obnovit údaje session; vezmeme aktuální token ještě jednou.
+    token=cloudIdToken||token;
+    const url=`${FIREBASE_DB_URL}/matches/${encodeURIComponent(matchId)}/confirmations/${encodeURIComponent(expectedUid)}.json?auth=${encodeURIComponent(token)}`;
+    const r=await fetch(url,{
+      method:'PUT',
+      headers:{'Content-Type':'application/json'},
+      cache:'no-store',
+      body:JSON.stringify(value)
+    });
+    if(!r.ok)throw new Error('MATCH_CONFIRM_'+r.status+': '+await r.text().catch(()=>''));
+    return {ok:true,uid:actualUid};
+  }
+
+  let pendingOwnResultConfirmationResolve=null;
+  let pendingInboxConfirmationMatchId=null;
+  const postponedResultConfirmationIds=new Set();
+
+  function showOwnResultConfirmation(m){
+    return new Promise(resolve=>{
+      pendingOwnResultConfirmationResolve=resolve;
+      pendingInboxConfirmationMatchId=null;
+      $('resultConfirmationText').textContent=
+        m.playerNames[0]+' '+m.scores[0]+' : '+m.scores[1]+' '+m.playerNames[1];
+      $('resultConfirmationHelp').textContent=
+        'Potvrď, že zadaný výsledek odpovídá skutečně odehranému zápasu. Soupeř s propojeným účtem ho následně musí potvrdit také.';
+      $('resultConfirmationReject').textContent='VRÁTIT SE';
+      $('resultConfirmationAccept').textContent='POTVRDIT VÝSLEDEK';
+      if($('resultConfirmationLater'))$('resultConfirmationLater').classList.add('hidden');
+      $('resultConfirmationReject').disabled=false;
+      $('resultConfirmationAccept').disabled=false;
+      $('resultConfirmationModal').classList.add('show');
+    });
+  }
+
+  function pendingConfirmationMatchesForCurrentUser(){
+    if(!cloudUid)return [];
+    return (data.matches||[]).filter(m=>{
+      if(!m?.confirmationRequired || m.tournamentLink || m.status==='needs_correction')return false;
+      if(postponedResultConfirmationIds.has(m.id))return false;
+      const uids=Array.isArray(m.confirmationUids)?m.confirmationUids:[];
+      if(!uids.includes(cloudUid))return false;
+      if(m.confirmations?.[cloudUid])return false;
+      return !matchConfirmationComplete(m);
+    });
+  }
+
+  function maybeShowPendingResultConfirmation(){
+    if(pendingOwnResultConfirmationResolve || $('resultConfirmationModal')?.classList.contains('show'))return;
+    const m=pendingConfirmationMatchesForCurrentUser()[0];
+    if(!m)return;
+
+    pendingInboxConfirmationMatchId=m.id;
+    $('resultConfirmationText').textContent=
+      (m.playerNames?.[0]||'Hráč 1')+' '+(m.scores?.[0]||0)+' : '+(m.scores?.[1]||0)+' '+(m.playerNames?.[1]||'Hráč 2');
+    $('resultConfirmationHelp').textContent=
+      'Druhý hráč zadal tento výsledek. Potvrď ho pouze tehdy, pokud souhlasí.';
+    $('resultConfirmationReject').textContent='ODMÍTNOUT';
+    $('resultConfirmationAccept').textContent='POTVRDIT';
+    if($('resultConfirmationLater'))$('resultConfirmationLater').classList.add('hidden');
+    $('resultConfirmationReject').disabled=false;
+    $('resultConfirmationAccept').disabled=false;
+    $('resultConfirmationModal').classList.add('show');
+  }
+
+  async function respondToInboxMatchConfirmation(value){
+    const id=pendingInboxConfirmationMatchId;
+    const m=(data.matches||[]).find(x=>x.id===id);
+    if(!id || !m || !cloudUid)return;
+
+    const acceptBtn=$('resultConfirmationAccept');
+    const rejectBtn=$('resultConfirmationReject');
+    const laterBtn=$('resultConfirmationLater');
+    if(acceptBtn)acceptBtn.disabled=true;
+    if(rejectBtn)rejectBtn.disabled=true;
+    if(laterBtn)laterBtn.classList.add('hidden');
+    $('resultConfirmationHelp').textContent='Ukládám rozhodnutí…';
+
+    try{
+      await secureMatchConfirmationRequest(id,cloudUid,value);
+      m.confirmations=m.confirmations||{};
+      m.confirmations[cloudUid]=value;
+      applyEffectiveConfirmationStatus(m);
+      $('resultConfirmationModal').classList.remove('show');
+      pendingInboxConfirmationMatchId=null;
+
+      await loadSecureMatches();
+      try{
+        reconcileTournamentResultsFromMatches();
+        renderTournament();
+      }catch(e){}
+
+      renderHistory();
+      renderStats();
+      toast(value==='confirmed'
+        ? (matchConfirmationComplete(m)?'Výsledek byl potvrzen oběma hráči.':'Tvoje potvrzení bylo uloženo.')
+        : 'Výsledek byl odmítnut a vrácen zapisujícímu hráči k opravě.');
+
+      setTimeout(maybeShowPendingResultConfirmation,120);
+    }catch(e){
+      console.error('Match confirmation:',e);
+      if(acceptBtn)acceptBtn.disabled=false;
+      if(rejectBtn)rejectBtn.disabled=false;
+      if(laterBtn)laterBtn.classList.remove('hidden');
+
+      const msg=String(e?.message||e||'');
+      const permission=/MATCH_CONFIRM_(401|403)|PERMISSION_DENIED/i.test(msg);
+      const mismatch=/CONFIRMATION_UID_MISMATCH/i.test(msg);
+      let detail='';
+      if(mismatch){
+        const expected=(msg.match(/expected=([^|]+)/)||[])[1]||cloudUid||'—';
+        const actual=(msg.match(/actual=([^|]+)/)||[])[1]||'—';
+        detail=' Očekávané UID: '+expected+' • Přihlášené UID: '+actual;
+      }
+      $('resultConfirmationHelp').textContent=mismatch
+        ? 'Přihlášený Firebase účet neodpovídá hráči, který má výsledek potvrdit.'+detail+' Můžeš dát POZDĚJI / ZAVŘÍT a znovu se přihlásit správným účtem.'
+        : (permission
+          ? 'Firebase nepovolila zápis potvrzení. Výsledek se nezměnil. Můžeš to zkusit znovu nebo dát POZDĚJI / ZAVŘÍT. UID účtu je v pořádku, takže je potřeba zkontrolovat databázová oprávnění.'
+          : 'Potvrzení se nepodařilo uložit. Výsledek se nezměnil. Můžeš to zkusit znovu nebo dát POZDĚJI / ZAVŘÍT. Chyba: '+msg);
+      toast(mismatch?'Přihlášený účet neodpovídá potvrzujícímu hráči.':(permission?'Firebase nepovolila zápis potvrzení.':'Potvrzení výsledku se nepodařilo uložit.'));
+    }
+  }
+
+  async function secureMatchRequest(matchId,method,body=null){
+    if(!await ensureCloudToken()) throw new Error('NO_AUTH');
+    const opts={method,headers:{'Content-Type':'application/json'},cache:'no-store'};
+    if(body!==null) opts.body=JSON.stringify(body);
+    const r=await fetch(cloudUrl('matches/'+matchId),opts);
+    if(!r.ok) throw new Error('MATCH_SECURE_'+r.status);
+    return await r.json();
+  }
+
+
+  function applyKnownHistoricalMatchMetadataRepairs(matches){
+    let changed=false;
+    (matches||[]).forEach(m=>{
+      if(!m)return;
+      if(m.id==='6a0a8d43-e9c9-404d-adbc-9584e086e587' && !matchIsDoubles(m)){
+        const a1=findPlayerByName('Jaroslav Tichý');
+        const a2=findPlayerByName('René Kulas');
+        const b1=findPlayerByName('Roman Kára');
+        const b2=findPlayerByName('Michael Vlk');
+
+        m.doublesMode=true;
+        m.teamPlayerNames=[['Jaroslav Tichý','René Kulas'],['Roman Kára','Michael Vlk']];
+        m.teamPlayerIds=[
+          [a1?.id||m.playerIds?.[0]||'',a2?.id||''],
+          [b1?.id||m.playerIds?.[1]||'',b2?.id||'']
+        ];
+        m.playerNames=['Jaroslav Tichý + René Kulas','Roman Kára + Michael Vlk'];
+        if(a1?.id && b1?.id)m.playerIds=[a1.id,b1.id];
+        m.metadataCompatibilityRepair='MR_DOUBLES_2026_09_19';
+        changed=true;
+      }
+    });
+    return changed;
+  }
+
+  async function loadSecureMatches(){
+    if(!await ensureCloudToken()) throw new Error('NO_AUTH');
+    const r=await fetch(cloudUrl('matches')+'&t='+Date.now(),{cache:'no-store'});
+    if(!r.ok) throw new Error('MATCHES_READ_'+r.status);
+    const raw=await r.json()||{};
+    data.matches=Object.values(raw).filter(Boolean);
+    const compatibilityRepaired=applyKnownHistoricalMatchMetadataRepairs(data.matches);
+    data.matches.forEach(m=>{
+      if(m.status==null)m.status='complete';
+      applyEffectiveConfirmationStatus(m);
+    });
+    if(compatibilityRepaired && currentUserIsSystemAdmin()){
+      data.matches
+        .filter(m=>m?.metadataCompatibilityRepair==='MR_DOUBLES_2026_09_19')
+        .forEach(m=>secureMatchRequest(m.id,'PUT',m).catch(e=>console.warn('Historical metadata repair save:',e)));
+    }
+    try{localStorage.setItem(DB_KEY,JSON.stringify(data));}catch(e){}
+    setTimeout(maybeShowPendingResultConfirmation,80);
+    try{if(typeof window.renderModernHome==='function')window.renderModernHome();}catch(e){}
+    return data.matches;
+  }
+
+  async function saveSecureMatch(savedMatch){
+    const copy=JSON.parse(JSON.stringify(savedMatch));
+    if(!copy.id) throw new Error('MATCH_INVALID');
+    if(!copy.createdByUid) copy.createdByUid=cloudUid;
+    copy.updatedAt=new Date().toISOString();
+    await secureMatchRequest(copy.id,'PUT',copy);
+    const i=(data.matches||[]).findIndex(m=>m.id===copy.id);
+    if(i>=0)data.matches[i]=copy; else data.matches.push(copy);
+    try{localStorage.setItem(DB_KEY,JSON.stringify(data));}catch(e){}
+    try{renderHistory();}catch(e){}
+    try{renderResultsTournaments();}catch(e){}
+    try{renderResultsSeries();}catch(e){}
+    try{if(typeof window.renderModernHome==='function')window.renderModernHome();}catch(e){}
+    try{if(typeof window.completeScheduledChallengeForMatch==='function')window.completeScheduledChallengeForMatch(copy);}catch(e){console.warn('Challenge completion:',e);}
+    try{if(typeof window.renderFederalCup2026==='function')window.renderFederalCup2026();}catch(e){}
+    return copy;
+  }
+
+  async function deleteSecureMatch(matchId){
+    // Defense in depth: i přímé zavolání funkce z konzole musí projít admin kontrolou.
+    if(!currentUserIsSystemAdmin()) throw new Error('ADMIN_ONLY');
+    await secureMatchRequest(matchId,'DELETE');
+    data.matches=(data.matches||[]).filter(m=>m.id!==matchId);
+    try{localStorage.setItem(DB_KEY,JSON.stringify(data));}catch(e){}
+    try{if(typeof window.renderModernHome==='function')window.renderModernHome();}catch(e){}
+  }
+
+  async function loadSecurePlayers(){
+    if(!await ensureCloudToken()) throw new Error('NO_AUTH');
+    const r=await fetch(cloudUrl('players')+'&t='+Date.now(),{cache:'no-store'});
+    if(!r.ok) throw new Error('PLAYERS_READ_'+r.status);
+    const players=await r.json()||{};
+    data.players=players;
+    try{if(typeof window.renderModernHome==='function')window.renderModernHome();}catch(e){}
+    return players;
+  }
+
+  async function saveSecurePlayer(player){
+    if(!player||!player.id) throw new Error('PLAYER_INVALID');
+    await securePlayerRequest(player.id,'PUT',player);
+    data.players[player.id]=player;
+    try{if(typeof window.renderModernHome==='function')window.renderModernHome();}catch(e){}
+  }
+
+  async function clearUserPlayerLink(uid,playerId){
+    if(!uid || !playerId)return;
+
+    // /users/{uid}/playerId is only an auxiliary account mapping.
+    // Removing it lets that account stop pointing at the released profile.
+    const token=await currentIdToken();
+    if(!token)throw new Error('Chybí přihlášení.');
+
+    const url=`${FIREBASE_DB_URL}/users/${encodeURIComponent(uid)}/playerId.json?auth=${encodeURIComponent(token)}`;
+    const res=await fetch(url,{method:'DELETE'});
+    if(!res.ok){
+      const body=await res.text().catch(()=> '');
+      throw new Error(body||('HTTP '+res.status));
+    }
+  }
+
+
+  async function deleteSecurePlayer(playerId){
+    if(!playerId) return;
+    await securePlayerRequest(playerId,'DELETE');
+    delete data.players[playerId];
+    try{if(typeof window.renderModernHome==='function')window.renderModernHome();}catch(e){}
+  }
+
+  async function migratePlayersToSecureBranch(){
+    if(currentUserRole!=='system_admin'){
+      toast('Migraci může spustit pouze SYSTEM ADMIN.');
+      return;
+    }
+
+    const btn=$('migratePlayersBtn');
+    const status=$('playersMigrationStatus');
+    const players=Object.values(data.players||{});
+
+    if(!players.length){
+      status.textContent='Nejsou žádní hráči k migraci.';
+      return;
+    }
+
+    if(!confirm(
+      'Zkopírovat '+players.length+' hráčských profilů do nové zabezpečené větve /players?\n\n'+
+      'Původní /appData zůstane beze změny.'
+    )) return;
+
+    btn.disabled=true;
+    let ok=0,failed=0;
+
+    try{
+      for(let i=0;i<players.length;i++){
+        const p=players[i];
+        status.textContent='Migruji hráče '+(i+1)+' / '+players.length+'…';
+        try{
+          const copy=JSON.parse(JSON.stringify(p));
+          copy.id=p.id;
+          if(copy.active===undefined) copy.active=true;
+          await securePlayerRequest(p.id,'PUT',copy);
+          ok++;
+        }catch(e){
+          console.error('Player migration',p&&p.id,e);
+          failed++;
+        }
+      }
+
+      status.textContent='Hotovo: '+ok+' profilů migrováno'+(failed?' • '+failed+' chyb':'')+'.';
+      toast(failed?'Migrace dokončena s chybami.':'Hráči byli úspěšně migrováni.');
+    }finally{
+      btn.disabled=false;
+    }
+  }
+
+  async function profileClaimRequest(uid,method,body=null){
+    if(!await ensureCloudToken()) throw new Error('NO_AUTH');
+    const opts={method,headers:{'Content-Type':'application/json'},cache:'no-store'};
+    if(body!==null) opts.body=JSON.stringify(body);
+    const r=await fetch(cloudUrl('profileClaims/'+uid),opts);
+    if(!r.ok) throw new Error('PROFILE_CLAIM_'+r.status);
+    return await r.json();
+  }
+
+  async function createProfileClaim(playerId){
+    const p=data.players[playerId];
+    if(!p) throw new Error('PLAYER_NOT_FOUND');
+    const claim={
+      uid:cloudUid,
+      email:cloudUserEmail||'',
+      playerId:p.id,
+      playerName:p.name,
+      status:'pending',
+      requestedAt:new Date().toISOString()
+    };
+    await profileClaimRequest(cloudUid,'PUT',claim);
+    currentUserProfileClaimId=p.id;
+    refreshAccountUI();
+  }
+
+  async function loadOwnProfileClaim(){
+    if(!cloudAuthenticated||!cloudUid)return null;
+    try{
+      const c=await profileClaimRequest(cloudUid,'GET');
+      currentUserProfileClaimId=(c&&c.status==='pending')?c.playerId:null;
+      refreshAccountUI();
+      return c;
+    }catch(e){
+      console.warn('profile claim',e);
+      return null;
+    }
+  }
+
+  async function loadAllProfileClaims(){
+    if(currentUserRole!=='system_admin')return {};
+    if(!await ensureCloudToken())throw new Error('NO_AUTH');
+    const r=await fetch(cloudUrl('profileClaims'),{cache:'no-store'});
+    if(!r.ok)throw new Error('CLAIMS_'+r.status);
+    return await r.json()||{};
+  }
+
+  async function renderProfileClaimsAdmin(){
+    const wrap=$('profileClaimsAdminList');
+    if(!wrap)return;
+    if(currentUserRole!=='system_admin'){
+      wrap.innerHTML='<div class="muted">Nemáš oprávnění.</div>';
+      return;
+    }
+    wrap.innerHTML='<div class="muted">Načítám žádosti…</div>';
+    try{
+      const claims=await loadAllProfileClaims();
+      const rows=Object.values(claims).filter(c=>c&&c.status==='pending')
+        .sort((a,b)=>new Date(a.requestedAt||0)-new Date(b.requestedAt||0));
+      if(!rows.length){
+        wrap.innerHTML='<div class="muted">Žádné čekající žádosti.</div>';
+        return;
+      }
+      wrap.innerHTML=rows.map(c=>{
+        const p=data.players[c.playerId];
+        const pn=p?p.name:(c.playerName||'Neznámý profil');
+        return `<div class="subpanel" style="margin-bottom:10px">
+          <div><strong>${esc(c.email||c.uid)}</strong></div>
+          <div style="margin-top:5px">žádá o profil: <strong>${esc(pn)}</strong></div>
+          <div class="muted" style="margin-top:4px">${c.requestedAt?new Date(c.requestedAt).toLocaleString('cs-CZ'):''}</div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px">
+            <button class="btn primary" onclick="approveProfileClaim('${c.uid}')">SCHVÁLIT</button>
+            <button class="btn danger" onclick="rejectProfileClaim('${c.uid}')">ZAMÍTNOUT</button>
+          </div>
+        </div>`;
+      }).join('');
+    }catch(e){
+      wrap.innerHTML='<div class="muted">Načtení selhalo: '+esc(String(e.message||e))+'</div>';
+    }
+  }
+
+  window.approveProfileClaim=async function(uid){
+    if(currentUserRole!=='system_admin')return toast('Nemáš oprávnění.');
+    try{
+      const c=await profileClaimRequest(uid,'GET');
+      if(!c||c.status!=='pending')return toast('Žádost už není aktivní.');
+      const p=data.players[c.playerId];
+      if(!p)return toast('Profil hráče nebyl nalezen.');
+      if(p.ownerUid&&p.ownerUid!==uid)return toast('Profil už má jiného vlastníka.');
+      if(!confirm('Přiřadit profil „'+p.name+'“ účtu '+(c.email||uid)+'?'))return;
+
+      p.ownerUid=uid;
+      p.placeholderProfile=false;
+      p.profileSource=p.profileSource||'claimed_existing';
+      p.claimedAt=new Date().toISOString();
+      await saveSecurePlayer(p);
+
+      if(!await ensureCloudToken())throw new Error('NO_AUTH');
+      const url=cloudUrl('users/'+uid);
+      const gr=await fetch(url,{cache:'no-store'});
+      if(!gr.ok)throw new Error('USER_GET_'+gr.status);
+      const u=await gr.json()||{};
+      u.uid=uid;
+      u.email=c.email||u.email||'';
+      u.role=u.role||'player';
+      u.playerId=p.id;
+      u.clubId=p.clubId||u.clubId||'';
+      const wr=await fetch(url,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(u)});
+      if(!wr.ok)throw new Error('USER_WRITE_'+wr.status);
+
+      c.status='approved';
+      c.decidedAt=new Date().toISOString();
+      c.decidedBy=cloudUid;
+      await profileClaimRequest(uid,'PUT',c);
+
+      saveData();
+      await renderProfileClaimsAdmin();
+      renderPlayers();
+      toast('Profil byl přiřazen.');
+    }catch(e){
+      console.error(e);
+      toast('Schválení selhalo: '+String(e.message||e));
+    }
+  };
+
+  window.rejectProfileClaim=async function(uid){
+    if(currentUserRole!=='system_admin')return toast('Nemáš oprávnění.');
+    try{
+      const c=await profileClaimRequest(uid,'GET');
+      if(!c)return;
+      if(!confirm('Zamítnout žádost účtu '+(c.email||uid)+'?'))return;
+      c.status='rejected';
+      c.decidedAt=new Date().toISOString();
+      c.decidedBy=cloudUid;
+      await profileClaimRequest(uid,'PUT',c);
+      await renderProfileClaimsAdmin();
+      toast('Žádost zamítnuta.');
+    }catch(e){
+      toast('Zamítnutí selhalo: '+String(e.message||e));
+    }
+  };
+
+  async function loadAllRegisteredUsers(force=false){
+    if(!currentUserIsSystemAdmin())return {};
+    if(adminRegisteredUsersGlobalReadDenied && !force)return adminRegisteredUsersCache||{};
+    if(adminRegisteredUsersLoading && !force)return adminRegisteredUsersCache||{};
+    if(!await ensureCloudToken())throw new Error('NO_AUTH');
+
+    adminRegisteredUsersLoading=true;
+    try{
+      const r=await fetch(cloudUrl('users')+'&t='+Date.now(),{cache:'no-store'});
+
+      if(r.status===401 || r.status===403){
+        adminRegisteredUsersGlobalReadDenied=true;
+        const fallback={};
+
+        Object.values(data.players||{}).forEach(p=>{
+          if(!p?.ownerUid)return;
+          fallback[p.ownerUid]={
+            uid:p.ownerUid,
+            email:'',
+            role:'player',
+            playerId:p.id,
+            clubId:p.clubId||'',
+            inferredFromPlayer:true
+          };
+        });
+
+        Object.values(leagueConfigTeams||{}).forEach(t=>{
+          if(!t?.captainUid)return;
+          if(!fallback[t.captainUid]){
+            fallback[t.captainUid]={
+              uid:t.captainUid,
+              email:'',
+              role:'player',
+              playerId:t.captainPlayerId||'',
+              inferredFromLeague:true
+            };
+          }
+        });
+
+        adminRegisteredUsersCache=fallback;
+        return adminRegisteredUsersCache;
+      }
+
+      if(!r.ok)throw new Error('USERS_'+r.status);
+
+      const users=await r.json()||{};
+      adminRegisteredUsersGlobalReadDenied=false;
+      adminRegisteredUsersCache=users && typeof users==='object' ? users : {};
+      return adminRegisteredUsersCache;
+    }finally{
+      adminRegisteredUsersLoading=false;
+    }
+  }
+  function registeredUserLinkedPlayer(uid,rec=null){
+    const r=rec||adminRegisteredUsersCache?.[uid]||{};
+    if(r.playerId&&data.players?.[r.playerId])return data.players[r.playerId];
+    return Object.values(data.players||{}).find(p=>p?.ownerUid===uid)||null;
+  }
+  function registeredUserLabel(uid,rec=null){
+    const r=rec||adminRegisteredUsersCache?.[uid]||{};
+    const p=registeredUserLinkedPlayer(uid,r);
+    return p?playerSelectionLabel(p):(r.email||uid);
+  }
+  async function renderRegisteredUsersAdmin(force=false){
+    const wrap=$('registeredUsersAdminList');
+    if(!wrap)return;
+    if(!currentUserIsSystemAdmin()){
+      wrap.innerHTML='<div class="muted">Nemáš oprávnění.</div>';
+      return;
+    }
+
+    wrap.innerHTML='<div class="muted">Načítám registrované účty…</div>';
+    try{
+      const users=await loadAllRegisteredUsers(force);
+      const rows=Object.entries(users||{})
+        .filter(([,u])=>u&&typeof u==='object')
+        .sort((a,b)=>registeredUserLabel(a[0],a[1]).localeCompare(registeredUserLabel(b[0],b[1]),'cs'));
+
+      const fallbackNotice=adminRegisteredUsersGlobalReadDenied
+        ? `<div class="subpanel" style="margin-bottom:10px;border-color:rgba(212,175,55,.4)">
+            <strong>OMEZENÉ ZOBRAZENÍ ÚČTŮ</strong>
+            <div class="muted" style="margin-top:5px;line-height:1.45">
+              Firebase nepovoluje globální čtení <strong>/users</strong>. Zobrazuji proto účty dohledatelné
+              z propojených hráčských profilů a z nastavení kapitánů. Ostatní administrace zůstává funkční.
+            </div>
+          </div>`
+        : '';
+
+      if(!rows.length){
+        wrap.innerHTML=fallbackNotice+'<div class="muted">Žádný dostupný účet se nepodařilo dohledat.</div>';
+        return;
+      }
+
+      wrap.innerHTML=fallbackNotice+rows.map(([uid,u])=>{
+        const p=registeredUserLinkedPlayer(uid,u);
+        const role=u.role==='system_admin'?'SYSTEM ADMIN':(u.role==='club_admin'?'CLUB ADMIN':'HRÁČ');
+        const teams=LEAGUE_SEVER_TEAMS
+          .filter(t=>leagueConfigTeams?.[t.id]?.captainUid===uid)
+          .map(t=>t.name);
+
+        return `<div class="history-item" style="margin-bottom:8px">
+          <div class="history-line">
+            <div style="min-width:0">
+              <strong>${esc(p?playerSelectionLabel(p):(u.email||'Registrovaný účet'))}</strong>
+              ${u.email?`<div class="muted" style="margin-top:3px">${esc(u.email)}</div>`:''}
+              <div class="muted" style="font-size:11px;margin-top:3px">UID: ${esc(uid)}</div>
+            </div>
+            <div style="text-align:right"><span class="badge gold">${esc(role)}</span></div>
+          </div>
+          <div class="muted" style="margin-top:7px">
+            Hráčský profil: ${p?'<strong>'+esc(playerSelectionLabel(p))+'</strong>':'<strong style="color:#f1d67a">NEPŘIŘAZEN</strong>'}
+            ${teams.length?' • Kapitán: <strong>'+esc(teams.join(', '))+'</strong>':''}
+          </div>
+          ${(!p && !adminRegisteredUsersGlobalReadDenied)
+            ? `<div class="item-actions" style="margin-top:8px">
+                <button class="btn primary" onclick="openAdminCreatePlayerForUser('${esc(uid)}')">VYTVOŘIT HRÁČSKÝ PROFIL</button>
+              </div>`
+            : ''}
+        </div>`;
+      }).join('');
+
+      try{renderLeagueCaptainAdmin();}catch(e){}
+    }catch(e){
+      wrap.innerHTML='<div class="muted">Seznam účtů se nepodařilo načíst. Ostatní administrace zůstává funkční.</div>';
+    }
+  }
+
+
+  async function adminUserRecordRequest(targetUid,method,body=null){
+    if(!currentUserIsSystemAdmin())throw new Error('NO_ADMIN');
+    if(!targetUid || !await ensureCloudToken())throw new Error('NO_AUTH');
+    const opts={method,headers:{'Content-Type':'application/json'},cache:'no-store'};
+    if(body!==null)opts.body=JSON.stringify(body);
+    const r=await fetch(cloudUrl('users/'+targetUid),opts);
+    if(!r.ok)throw new Error('ADMIN_USER_RECORD_'+r.status);
+    try{return await r.json();}catch(e){return null;}
+  }
+
+  window.openAdminCreatePlayerForUser=function(targetUid){
+    if(!currentUserIsSystemAdmin())return toast('Nemáš oprávnění.');
+    const rec=adminRegisteredUsersCache?.[targetUid];
+    if(!rec)return toast('Registrovaný účet nebyl nalezen.');
+
+    const existing=registeredUserLinkedPlayer(targetUid,rec);
+    if(existing){
+      toast('Tento účet už má přiřazený profil.');
+      return;
+    }
+
+    adminCreatePlayerTargetUid=targetUid;
+    $('adminCreatePlayerFirstName').value='';
+    $('adminCreatePlayerLastName').value='';
+    $('adminCreatePlayerClub').value='';
+    $('adminCreatePlayerForUserMessage').textContent='';
+    $('adminCreatePlayerForUserInfo').textContent=
+      'Účet: '+(rec.email||targetUid);
+    $('adminCreatePlayerForUserModal').classList.add('show');
+    setTimeout(()=>$('adminCreatePlayerFirstName')?.focus(),50);
+  };
+
+  function closeAdminCreatePlayerForUser(){
+    adminCreatePlayerTargetUid=null;
+    $('adminCreatePlayerForUserModal')?.classList.remove('show');
+  }
+
+  if($('adminCreatePlayerForUserCancel')){
+    $('adminCreatePlayerForUserCancel').onclick=closeAdminCreatePlayerForUser;
+  }
+
+  if($('adminCreatePlayerForUserConfirm')){
+    $('adminCreatePlayerForUserConfirm').onclick=async()=>{
+      if(!currentUserIsSystemAdmin() || !adminCreatePlayerTargetUid)return;
+
+      const targetUid=adminCreatePlayerTargetUid;
+      const rec=adminRegisteredUsersCache?.[targetUid]||{};
+      const first=String($('adminCreatePlayerFirstName')?.value||'').trim();
+      const last=String($('adminCreatePlayerLastName')?.value||'').trim();
+      const club=String($('adminCreatePlayerClub')?.value||'').trim();
+      const fullName=[first,last].filter(Boolean).join(' ').trim();
+      const msg=$('adminCreatePlayerForUserMessage');
+      const btn=$('adminCreatePlayerForUserConfirm');
+
+      if(!first || !last){
+        if(msg)msg.textContent='Vyplň jméno i příjmení.';
+        return;
+      }
+
+      const existingByOwner=Object.values(data.players||{}).find(p=>p?.ownerUid===targetUid);
+      if(existingByOwner){
+        if(msg)msg.textContent='Tento účet už má profil: '+(existingByOwner.name||existingByOwner.id);
+        return;
+      }
+
+      const exactName=Object.values(data.players||{}).find(p=>
+        p && String(p.name||'').trim().toLowerCase()===fullName.toLowerCase() &&
+        String(p.club||'').trim().toLowerCase()===club.toLowerCase()
+      );
+      if(exactName){
+        const ok=confirm(
+          'Už existuje profil „'+fullName+'“'+(club?' • '+club:'')+'.\n\n'+
+          'Chceš přesto vytvořit NOVÝ profil pro tento registrovaný účet?'
+        );
+        if(!ok)return;
+      }
+
+      btn.disabled=true;
+      if(msg)msg.textContent='Vytvářím profil…';
+
+      try{
+        const p={
+          id:uid(),
+          name:fullName,
+          firstName:first,
+          lastName:last,
+          nickname:'',
+          identifier:'',
+          useNicknameInMatch:false,
+          club:club,
+          clubId:rec.clubId||'',
+          ownerUid:targetUid,
+          note:'',
+          equipment:'',
+          achievements:'',
+          photo:'',
+          active:true,
+          createdAt:new Date().toISOString(),
+          createdByAdminUid:cloudUid||''
+        };
+
+        await securePlayerRequest(p.id,'PUT',p);
+
+        const freshUser=await adminUserRecordRequest(targetUid,'GET')||{};
+        const updatedUser={
+          ...freshUser,
+          uid:targetUid,
+          email:freshUser.email||rec.email||'',
+          role:freshUser.role||'player',
+          playerId:p.id,
+          clubId:p.clubId||freshUser.clubId||'',
+          updatedAt:new Date().toISOString()
+        };
+        await adminUserRecordRequest(targetUid,'PUT',updatedUser);
+
+        data.players[p.id]=p;
+        adminRegisteredUsersCache[targetUid]=updatedUser;
+        try{localStorage.setItem(DB_KEY,JSON.stringify(data));}catch(e){}
+
+        closeAdminCreatePlayerForUser();
+        renderPlayers();
+        refreshPlayerList();
+        try{renderTournamentPlayerPicker();}catch(e){}
+        try{renderLeagueCaptainAdmin();}catch(e){}
+        await renderRegisteredUsersAdmin(false);
+
+        toast('Hráčský profil byl vytvořen a propojen s účtem.');
+      }catch(e){
+        console.error(e);
+        if(msg){
+          msg.textContent='Vytvoření profilu selhalo: '+String(e.message||e)+
+            '. Pokud chyba obsahuje 401/403, zkontroluj Firebase Rules pro /players a /users.';
+        }
+      }finally{
+        btn.disabled=false;
+      }
+    };
+  }
+
+  async function userRecordRequest(method,body=null){
+    if(!cloudUid || !await ensureCloudToken()) throw new Error('NO_AUTH');
+    const opts={method,headers:{'Content-Type':'application/json'},cache:'no-store'};
+    if(body!==null) opts.body=JSON.stringify(body);
+    const r=await fetch(cloudUrl('users/'+cloudUid),opts);
+    if(!r.ok) throw new Error('USER_RECORD_'+r.status);
+    return await r.json();
+  }
+
+  async function ensureUserAccessRecord(createIfMissing=false){
+    if(!cloudUid) return null;
+    try{
+      let rec=await userRecordRequest('GET');
+      if(!rec && createIfMissing){
+        rec={
+          uid:cloudUid,
+          email:cloudUserEmail||'',
+          role:(String(cloudUserEmail||'').toLowerCase()===MAIN_ADMIN_EMAIL?'system_admin':'player'),
+          playerId:null,
+          clubId:null,
+          createdAt:new Date().toISOString()
+        };
+        await userRecordRequest('PUT',rec);
+      }
+
+      // Hlavní účet BC Rybárna je bootstrap SYSTEM ADMIN.
+      if(rec && String(cloudUserEmail||rec.email||'').toLowerCase()===MAIN_ADMIN_EMAIL && rec.role!=='system_admin'){
+        rec.role='system_admin';
+        await userRecordRequest('PUT',rec);
+      }
+
+      if(rec){
+        currentUserRole=rec.role||'player';
+        currentUserPlayerId=rec.playerId||null;
+        currentUserClubId=rec.clubId||null;
+        if(!cloudUserEmail) cloudUserEmail=rec.email||'';
+        // Jakmile se potvrdí role SYSTEM ADMIN, token se smí držet jen v sessionStorage.
+        enforceAdminSessionPersistence();
+      }
+      refreshAccountUI();
+      return rec;
+    }catch(e){
+      console.warn('User access record:',e);
+      refreshAccountUI();
+      return null;
+    }
+  }
+
+  async function updateUserAccessRecord(patch){
+    let rec=await ensureUserAccessRecord(true) || {};
+
+    // Běžný klient nesmí měnit vlastní roli. Role se spravují odděleně administrátorem.
+    const safePatch={...patch};
+    delete safePatch.role;
+
+    rec={...rec,...safePatch,uid:cloudUid,email:cloudUserEmail||rec.email||''};
+
+    if(String(cloudUserEmail||rec.email||'').toLowerCase()===MAIN_ADMIN_EMAIL){
+      rec.role='system_admin';
+    }
+
+    await userRecordRequest('PUT',rec);
+    currentUserRole=rec.role||'player';
+    currentUserPlayerId=rec.playerId||null;
+    currentUserClubId=rec.clubId||null;
+    refreshAccountUI();
+    return true;
+  }
+
+  function canEditPlayer(p){
+    if(!p || !cloudAuthenticated || !cloudUid) return false;
+    if(currentUserRole==='system_admin') return true;
+    if(p.ownerUid && p.ownerUid===cloudUid) return true;
+    if(currentUserRole==='club_admin' && currentUserClubId && p.clubId===currentUserClubId) return true;
+    return false;
+  }
+
+  function refreshAccountUI(){
+    const el=$('accountPlayerStatus');
+    const btn=$('myPlayerProfileBtn');
+    const adminBtn=$('adminNavBtn');
+    if(adminBtn)adminBtn.classList.toggle('hidden',currentUserRole!=='system_admin');
+    if(!el||!btn)return;
+
+    if(!cloudAuthenticated || !cloudUid){
+      el.textContent='Pro vlastnictví profilu se přihlas do cloudu.';
+      btn.textContent='PŘIHLÁSIT SE';
+      updateLoggedInUserBadge();
+      return;
+    }
+
+    const roleLabel=currentUserRole==='system_admin'
+      ? 'SYSTEM ADMIN'
+      : (currentUserRole==='club_admin'?'CLUB ADMIN':'HRÁČ');
+
+    if(currentUserPlayerId && data.players[currentUserPlayerId]){
+      el.textContent=(cloudUserEmail||'Přihlášen')+' • '+roleLabel+' • OVĚŘENÝ E-MAIL • profil: '+data.players[currentUserPlayerId].name;
+      btn.textContent='MŮJ PROFIL';
+    }else if(currentUserProfileClaimId && data.players[currentUserProfileClaimId]){
+      el.textContent=(cloudUserEmail||'Přihlášen')+' • '+roleLabel+' • OVĚŘENÝ E-MAIL • čeká na schválení profilu: '+data.players[currentUserProfileClaimId].name;
+      btn.textContent='ČEKÁ NA SCHVÁLENÍ';
+    }else{
+      el.textContent=(cloudUserEmail||'Přihlášen')+' • '+roleLabel+' • OVĚŘENÝ E-MAIL • profil zatím není vytvořen';
+      btn.textContent='VYTVOŘIT MŮJ PROFIL';
+    }
+    updateLoggedInUserBadge();
+    // Po načtení/propojení účtu přesuň přihlášeného hráče na první místo výběrů.
+    try{ refreshPlayerList(); }catch(e){}
+    try{ renderTournamentPlayerPicker(); }catch(e){}
+  }
+
+  function clearRuntimeCloudIdentity(){
+    cloudAuthenticated=false;
+    cloudIdToken='';
+    cloudTokenExpiresAt=0;
+    cloudUid='';
+    cloudUserEmail='';
+    currentUserRole='player';
+    currentUserPlayerId=null;
+    currentUserClubId=null;
+    currentUserProfileClaimId=null;
+    cloudEmailVerified=false;
+    try{refreshAccountUI();}catch(e){}
+    try{updateLoggedInUserBadge();}catch(e){}
+  }
+
+  async function ensureCloudToken(){
+    if(cloudAuthenticated && cloudIdToken && Date.now()<cloudTokenExpiresAt) return true;
+
+    let refresh=cloudRefreshToken;
+    if(!refresh){
+      const saved=persistedCloudSession();
+      refresh=saved.refresh||'';
+      if(!cloudUserEmail)cloudUserEmail=saved.email||'';
+    }
+    if(!refresh) return false;
+
+    try{
+      await firebaseRefreshAuth(refresh);
+      return true;
+    }catch(e){
+      cloudRefreshToken='';
+      try{
+        localStorage.removeItem(CLOUD_REFRESH_KEY);
+        localStorage.removeItem(CLOUD_EMAIL_KEY);
+        sessionStorage.removeItem(CLOUD_ADMIN_SESSION_REFRESH_KEY);
+        sessionStorage.removeItem(CLOUD_ADMIN_SESSION_EMAIL_KEY);
+      }catch(err){}
+      clearRuntimeCloudIdentity();
+      setCloudStatus('OFFLINE',false);
+      return false;
+    }
+  }
+
+
+  function canWriteGlobalAppData(){
+    // /appData je společná globální konfigurace. Běžný hráč ji pouze čte.
+    // Zápasy, profily, turnaje, liga a stream se zapisují do vlastních zabezpečených větví.
+    return currentUserIsSystemAdmin();
+  }
+
+  function cloudUrl(path){
+    return FIREBASE_DB+'/'+path+'.json?auth='+encodeURIComponent(cloudIdToken);
+  }
+
+  async function uploadCloudData(){
+    if(cloudSyncInProgress) return;
+    if(!await ensureCloudToken()) return;
+    // Globální /appData smí měnit pouze systémový administrátor.
+    // Tím běžný registrovaný uživatel nemůže přepsat společnou konfiguraci aplikace.
+    if(!canWriteGlobalAppData()) return;
+    cloudSyncInProgress=true;
+    try{
+      // Nejdřív vždy přečteme cloud a sloučíme ho s lokálními daty.
+      // Tím zařízení nemůže vymazat zápasy/hráče, které samo lokálně nezná.
+      let remote=null;
+      let remoteTs=0;
+      try{
+        const gr=await fetch(cloudUrl('appData')+'&t='+Date.now(),{cache:'no-store'});
+        if(gr.ok){
+          remote=await gr.json();
+          remoteTs=Number(remote&&remote.updatedAt||0);
+        }
+      }catch(e){}
+
+      if(remote && remote.data){
+        saveSafetyBackup('before cloud upload merge');
+        cloudApplyingRemote=true;
+        try{
+          // Hráči už žijí pouze v zabezpečené větvi /players.
+          const remoteAppData=JSON.parse(JSON.stringify(remote.data));
+          delete remoteAppData.players;
+          delete remoteAppData.matches;
+          delete remoteAppData.deletedMatchIds;
+          delete remoteAppData.tournaments;
+          delete remoteAppData.leagues;
+
+          // Lokální změna je právě ta, kterou uploadujeme, proto při shodném ID preferujeme lokální verzi.
+          data=mergeDataObjects(data,remoteAppData,false);
+          try{localStorage.setItem(DB_KEY,JSON.stringify(data));}catch(e){}
+        }finally{
+          cloudApplyingRemote=false;
+        }
+      }
+
+      const updatedAt=Math.max(Date.now(),remoteTs+1);
+      const cloudData=JSON.parse(JSON.stringify(data));
+      delete cloudData.players;
+      delete cloudData.matches;
+      delete cloudData.deletedMatchIds;
+      delete cloudData.tournaments;
+      delete cloudData.leagues;
+      cloudData.currentMatch=null;
+      const payload={updatedAt,data:cloudData};
+      const r=await fetch(cloudUrl('appData'),{
+        method:'PUT',
+        headers:{'Content-Type':'application/json'},
+        body:JSON.stringify(payload),
+        cache:'no-store'
+      });
+      if(!r.ok) throw new Error('CLOUD_WRITE_'+r.status);
+      try{localStorage.setItem(CLOUD_LOCAL_TS_KEY,String(updatedAt));}catch(e){}
+      cloudLastError='';
+      setCloudStatus('ONLINE • AUTO',true);
+    }catch(e){
+      cloudLastError=String(e.message||e);
+      setCloudStatus('CHYBA',false);
+      console.warn('Cloud sync:',e);
+    }finally{
+      cloudSyncInProgress=false;
+    }
+  }
+
+  function scheduleCloudDataSync(){
+    if(!cloudAuthenticated || cloudApplyingRemote || !canWriteGlobalAppData()) return;
+    if(cloudSyncTimer) clearTimeout(cloudSyncTimer);
+    cloudSyncTimer=setTimeout(uploadCloudData,450);
+  }
+
+  async function pollCloudData(){
+    if(cloudPollInProgress || cloudSyncInProgress || cloudApplyingRemote) return;
+    if(!document.hidden && await ensureCloudToken()){
+      cloudPollInProgress=true;
+      try{
+        const r=await fetch(cloudUrl('appData')+'&t='+Date.now(),{cache:'no-store'});
+        if(!r.ok) throw new Error('CLOUD_READ_'+r.status);
+        const cloud=await r.json();
+        if(!cloud || !cloud.data) return;
+
+        const cloudTs=Number(cloud.updatedAt||0);
+        const localTs=localCloudTimestamp();
+
+        // Jiný telefon/PC uložil novější stav -> automaticky ho převezmeme.
+        // Pokud máme čerstvější lokální změnu čekající na upload, nepřepisujeme ji.
+        if(cloudTs>localTs+500){
+          saveSafetyBackup('before cloud download');
+          cloudApplyingRemote=true;
+          try{
+            const remoteAppData=JSON.parse(JSON.stringify(cloud.data));
+            delete remoteAppData.players;
+            delete remoteAppData.matches;
+            delete remoteAppData.deletedMatchIds;
+            delete remoteAppData.tournaments;
+            delete remoteAppData.leagues;
+              const merged=mergeDataObjects(data,remoteAppData,true);
+            writeLocalWithoutCloudSync(merged,cloudTs);
+            refreshViewsAfterCloudLoad();
+          }finally{
+            cloudApplyingRemote=false;
+          }
+          setCloudStatus('ONLINE • AUTO',true);
+        }else{
+          setCloudStatus('ONLINE • AUTO',true);
+        }
+        cloudLastError='';
+      }catch(e){
+        cloudLastError=String(e.message||e);
+        console.warn('Cloud auto sync:',e);
+      }finally{
+        cloudPollInProgress=false;
+      }
+    }
+  }
+
+  function startCloudAutoSync(){
+    if(cloudPollTimer) clearInterval(cloudPollTimer);
+    cloudPollTimer=setInterval(pollCloudData,CLOUD_POLL_MS);
+    setTimeout(pollCloudData,700);
+    setCloudStatus('ONLINE • AUTO',true);
+  }
+
+  document.addEventListener('visibilitychange',()=>{
+    if(!document.hidden && cloudAuthenticated){
+      pollCloudData();
+      Promise.all([loadSecureMatches(),loadSecureTournaments()])
+        .then(()=>{try{renderHistory();renderStats();renderPlayers();renderTournament();}catch(e){}})
+        .catch(()=>{});
+    }
+  });
+
+  async function initialCloudMerge(){
+    if(!await ensureCloudToken()) return false;
+    setCloudStatus('SYNC…',true);
+
+    const r=await fetch(cloudUrl('appData')+'&t='+Date.now(),{cache:'no-store'});
+    if(!r.ok) throw new Error('CLOUD_READ_'+r.status);
+    const cloud=await r.json();
+
+    // Prázdný globální cloud smí inicializovat pouze systémový administrátor.
+    // Běžný hráč nesmí vytvořit/přepsat společnou /appData větev.
+    if(!cloud || !cloud.data){
+      if(canWriteGlobalAppData()) await uploadCloudData();
+      return true;
+    }
+
+    const cloudTs=Number(cloud.updatedAt||0);
+    const localTs=localCloudTimestamp();
+
+    // Pokud byly na tomto zařízení po poslední cloud synchronizaci provedeny offline změny,
+    // lokální verze vyhraje. Jinak je hlavním zdrojem cloud.
+    if(localTs>cloudTs+1500){
+      await uploadCloudData();
+    }else{
+      saveSafetyBackup('before initial cloud merge');
+      cloudApplyingRemote=true;
+      try{
+        const remoteAppData=JSON.parse(JSON.stringify(cloud.data));
+        delete remoteAppData.players;
+        delete remoteAppData.matches;
+        delete remoteAppData.deletedMatchIds;
+        delete remoteAppData.tournaments;
+        const merged=mergeDataObjects(data,remoteAppData,true);
+        writeLocalWithoutCloudSync(merged,cloudTs);
+        refreshViewsAfterCloudLoad();
+      }finally{
+        cloudApplyingRemote=false;
+      }
+      setCloudStatus('ONLINE • AUTO',true);
+    }
+    startCloudAutoSync();
+    return true;
+  }
+
+  async function cloudLoginFromModal(){
+    const email=$('cloudEmail').value.trim();
+    const password=$('cloudPassword').value;
+    if(!email || !password){
+      $('cloudLoginMessage').textContent='Vyplň e-mail i heslo.';
+      return;
+    }
+
+    $('cloudLoginBtn').disabled=true;
+    $('cloudLoginMessage').textContent='Přihlašuji…';
+    try{
+      await firebaseSignIn(email,password);
+
+      if(!await ensureVerifiedBeforeApp()){
+        $('cloudLoginMessage').textContent='Nejdřív ověř svůj e-mail.';
+        return;
+      }
+
+      await ensureUserAccessRecord(true);
+      await loadOwnProfileClaim();
+      $('cloudLoginMessage').textContent='Přihlášeno. Synchronizuji data…';
+      await initialCloudMerge();
+      await loadSecurePlayers();
+      await loadSecureMatches();
+      await loadSecureTournaments();
+      await promoteLegacyTournamentGuestsToProfiles();
+      $('cloudLoginModal').classList.remove('show');
+      $('cloudPassword').value='';
+      refreshAccountUI();
+      renderPlayers();
+      toast('Cloud synchronizace aktivní.');
+    }catch(e){
+      console.warn('Firebase login error:',e);
+      const code=String(e && e.message ? e.message : e || 'UNKNOWN_ERROR');
+      let msg='Přihlášení se nepodařilo.';
+
+      if(code.includes('INVALID_LOGIN_CREDENTIALS') || code.includes('INVALID_PASSWORD')){
+        msg='Nesprávný e-mail nebo heslo.';
+      }else if(code.includes('EMAIL_NOT_FOUND')){
+        msg='Tento e-mail ve Firebase Authentication neexistuje.';
+      }else if(code.includes('OPERATION_NOT_ALLOWED')){
+        msg='Email/Password přihlašování není ve Firebase povolené.';
+      }else if(code.includes('USER_DISABLED')){
+        msg='Tento Firebase uživatel je zakázaný.';
+      }else if(code.includes('API_KEY_INVALID') || code.includes('INVALID_API_KEY')){
+        msg='Firebase API key není platný.';
+      }else if(code.includes('TOO_MANY_ATTEMPTS')){
+        msg='Příliš mnoho pokusů. Zkus to později.';
+      }else if(code.includes('NETWORK') || code.includes('Failed to fetch')){
+        msg='Nepodařilo se spojit s Firebase. Zkontroluj internet.';
+      }
+
+      $('cloudLoginMessage').innerHTML =
+        msg +
+        '<div style="margin-top:8px;font-size:12px;word-break:break-word;color:#ffb3b3">' +
+        'Firebase: <strong>' + code.replace(/</g,'&lt;').replace(/>/g,'&gt;') + '</strong>' +
+        '</div>';
+
+      clearRuntimeCloudIdentity();
+      setCloudStatus('OFFLINE',false);
+    }finally{
+      $('cloudLoginBtn').disabled=false;
+    }
+  }
+
+  async function autoCloudInit(){
+    setCloudStatus('PŘIPOJUJI…',false);
+
+    const persisted=persistedCloudSession();
+    let savedEmail=persisted.email||'';
+    let savedRefresh=persisted.refresh||'';
+
+    $('cloudEmail').value=savedEmail;
+
+    if(persisted.expiredAdminPersistence){
+      $('cloudLoginMessage').textContent='Admin účet byl z bezpečnostních důvodů odhlášen. Přihlas se znovu.';
+    }
+
+    if(savedRefresh){
+      try{
+        cloudRefreshToken=savedRefresh;
+        cloudUserEmail=savedEmail||'';
+        await firebaseRefreshAuth(savedRefresh);
+
+        if(!await ensureVerifiedBeforeApp()){
+          return;
+        }
+
+        await ensureUserAccessRecord(true);
+        await loadOwnProfileClaim();
+        await initialCloudMerge();
+      await loadSecurePlayers();
+      await loadSecureMatches();
+      await loadSecureTournaments();
+      await promoteLegacyTournamentGuestsToProfiles();
+        return;
+      }catch(e){
+        console.warn('Cloud auto login:',e);
+        clearRuntimeCloudIdentity();
+      }
+    }
+
+    clearRuntimeCloudIdentity();
+    setCloudStatus('PŘIHLÁSIT',false);
+    $('cloudLoginMessage').textContent='';
+    $('cloudLoginModal').classList.add('show');
+  }
+
+
+
+  $('emailVerifyResendBtn').onclick=async()=>{
+    $('emailVerifyResendBtn').disabled=true;
+    $('emailVerifyMessage').textContent='Odesílám ověřovací e-mail…';
+    try{
+      const result=await sendVerificationEmail();
+      if(result&&result.alreadyVerified){
+        $('emailVerifyMessage').textContent='Tento e-mail už je ověřený.';
+      }else{
+        $('emailVerifyMessage').textContent='Firebase přijal požadavek na odeslání pro '+((result&&result.email)||cloudUserEmail||'tento účet')+'. Pokud zpráva nepřijde během několika minut, dej mi vědět.';
+      }
+    }catch(e){
+      $('emailVerifyMessage').textContent='Odeslání se nepodařilo: '+String(e.message||e);
+    }finally{
+      $('emailVerifyResendBtn').disabled=false;
+    }
+  };
+
+  $('emailVerifyCheckBtn').onclick=async()=>{
+    $('emailVerifyCheckBtn').disabled=true;
+    $('emailVerifyMessage').textContent='Kontroluji ověření…';
+
+    try{
+      if(!await ensureVerifiedBeforeApp()){
+        $('emailVerifyMessage').textContent='E-mail zatím není ověřený. Klikni na odkaz v e-mailu a zkus to znovu.';
+        return;
+      }
+
+      await ensureUserAccessRecord(true);
+      await loadOwnProfileClaim();
+      await initialCloudMerge();
+      await loadSecurePlayers();
+      await loadSecureMatches();
+      await loadSecureTournaments();
+      await promoteLegacyTournamentGuestsToProfiles();
+
+      $('emailVerifyModal').classList.remove('show');
+      setCloudStatus('ONLINE • AUTO',true);
+      startCloudAutoSync();
+      refreshAccountUI();
+      renderPlayers();
+      toast('E-mail je ověřen. Vítej v Poolčítadle.');
+    }catch(e){
+      $('emailVerifyMessage').textContent='Kontrola se nepodařila: '+String(e.message||e);
+    }finally{
+      $('emailVerifyCheckBtn').disabled=false;
+    }
+  };
+
+  $('emailVerifyLogoutBtn').onclick=()=>{
+    if(confirm('Odhlásit tento účet?')){
+      logoutFromApp();
+      $('emailVerifyModal').classList.remove('show');
+    }
+  };
+
+  $('cloudRegisterBtn').onclick=async()=>{
+    const email=$('cloudEmail').value.trim();
+    const password=$('cloudPassword').value;
+    if(!email || !password){
+      $('cloudLoginMessage').textContent='Pro registraci vyplň e-mail i heslo.';
+      return;
+    }
+    if(password.length<6){
+      $('cloudLoginMessage').textContent='Heslo musí mít alespoň 6 znaků.';
+      return;
+    }
+
+    $('cloudRegisterBtn').disabled=true;
+    $('cloudLoginMessage').textContent='Vytvářím účet…';
+    try{
+      await firebaseRegister(email,password);
+      $('cloudLoginMessage').textContent='Účet vytvořen. Ověř prosím svůj e-mail.';
+      $('cloudPassword').value='';
+      showEmailVerificationGate();
+      toast('Firebase přijal požadavek na ověřovací e-mail.');
+    }catch(e){
+      const code=String(e&&e.message?e.message:e||'');
+      if(code.includes('EMAIL_EXISTS')) $('cloudLoginMessage').textContent='Účet s tímto e-mailem už existuje.';
+      else if(code.includes('WEAK_PASSWORD')) $('cloudLoginMessage').textContent='Heslo je příliš slabé.';
+      else $('cloudLoginMessage').textContent='Registrace se nepodařila: '+code;
+    }finally{
+      $('cloudRegisterBtn').disabled=false;
+    }
+  };
+
+  if($('refreshRegisteredUsersBtn'))$('refreshRegisteredUsersBtn').onclick=()=>renderRegisteredUsersAdmin(true);
+
+  $('cloudRestoreBackupBtn').onclick=restoreSafetyBackup;
+
+  function logoutFromApp(){
+    // Rozehraný zápas je lokální a zůstává zachovaný.
+    if(match) saveDeviceActiveMatch(match);
+
+    cloudRefreshToken='';
+    clearRuntimeCloudIdentity();
+
+    if(cloudPollTimer){
+      clearInterval(cloudPollTimer);
+      cloudPollTimer=null;
+    }
+
+    try{
+      localStorage.removeItem(CLOUD_REFRESH_KEY);
+      localStorage.removeItem(CLOUD_EMAIL_KEY);
+      sessionStorage.removeItem(CLOUD_ADMIN_SESSION_REFRESH_KEY);
+      sessionStorage.removeItem(CLOUD_ADMIN_SESSION_EMAIL_KEY);
+    }catch(e){}
+
+    setCloudStatus('OFFLINE',false);
+    refreshAccountUI();
+    renderPlayers();
+
+    $('cloudEmail').value='';
+    $('cloudPassword').value='';
+    $('cloudLoginMessage').textContent='Byl jsi odhlášen. Přihlas se nebo si vytvoř nový účet.';
+    if($('cloudRegisterBtn')){
+      $('cloudRegisterBtn').style.display='';
+      $('cloudRegisterBtn').disabled=false;
+    }
+    if($('cloudLoginBtn')){
+      $('cloudLoginBtn').style.display='';
+      $('cloudLoginBtn').disabled=false;
+    }
+    $('cloudLoginModal').classList.add('show');
+    toast('Odhlášeno.');
+  }
+
+  $('logoutBtn').onclick=()=>{
+    if(confirm('Opravdu se odhlásit? Lokální data ani rozehraný zápas se nesmažou.')){
+      logoutFromApp();
+    }
+  };
+
+  $('cloudLoginBtn').onclick=cloudLoginFromModal;
+  $('cloudPassword').addEventListener('keydown',e=>{if(e.key==='Enter')cloudLoginFromModal();});
+
+  $('cloudOfflineBtn').onclick=()=>{
+    $('cloudLoginModal').classList.remove('show');
+    clearRuntimeCloudIdentity();
+    setCloudStatus('OFFLINE',false);
+    toast('Scoreboard běží pouze lokálně.');
+  };
+
+  $('cloudStatusBtn').onclick=async()=>{
+    if(cloudAuthenticated){
+      try{
+        setCloudStatus('SYNC…',true);
+        await initialCloudMerge();
+        toast('Cloud data synchronizována.');
+      }catch(e){
+        setCloudStatus('CHYBA',false);
+        toast('Cloud synchronizace selhala.');
+      }
+    }else{
+      $('cloudLoginMessage').textContent='';
+      $('cloudLoginModal').classList.add('show');
+    }
+  };
+
+  function toast(msg){
+    $('toast').textContent = msg; $('toast').classList.add('show');
+    setTimeout(()=> $('toast').classList.remove('show'),1800);
+  }
+  function esc(s=''){ return s.replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m])); }
+
+  document.querySelectorAll('[data-nav]').forEach(btn => btn.addEventListener('click',()=>{
+    showScreen(btn.dataset.nav);
+    if(btn.dataset.nav==='admin'){renderProfileClaimsAdmin();renderRegisteredUsersAdmin(false);}
+  }));
+  $('backToMatchNav').addEventListener('click',()=>{
+    if(match && !editableMatchOwnedByCurrentUser(match)){
+      discardForeignLocalActiveMatch();
+      showScreen('live');
+      toast('Cizí zápas je dostupný pouze přes LIVESCORE.');
+      return;
+    }
+    if(match){
+      showScreen('match');
+      renderMatch();
+    }
+  });
+  function showScreen(name){
+    // Navigace nesmí měnit stav zápasu; před opuštěním skóre pouze vytvoříme záchranný snapshot.
+    try{if(match&&!match.endedAt&&name!=='match')recordActiveMatchRecoverySnapshot(match);}catch(e){}
+    // Po dokončení turnajového zápasu nesmí žádné pozdější volání
+    // shodit uživatele zpět do hlavního seznamu turnajů.
+    if(name==='tournament' && forcedTournamentReturnId){
+      const targetId=forcedTournamentReturnId;
+      selectedTournamentId=targetId;
+
+      const t=(data.tournaments||[]).find(x=>x.id===targetId);
+      if(t){
+        name='tournament-detail';
+      }
+    }
+
+    document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+    if(name==='federal-cup-editor' && !currentUserIsSystemAdmin())name='federal-cup-2026';
+    $('screen-'+name).classList.add('active');
+
+    // Mobilní spodní navigace je užitečná pro běžné sekce,
+    // ale při přípravě a samotném hraní zápasu zbytečně zabírá místo.
+    // Po opuštění zápasových obrazovek se automaticky znovu zobrazí.
+    const mobileNav=document.querySelector('.modern-mobile-nav');
+    if(mobileNav){
+      mobileNav.classList.toggle('hidden', name==='setup' || name==='match');
+    }
+
+    const backBtn=$('backToMatchNav');
+    if(backBtn){
+      backBtn.classList.toggle('hidden', !match || name==='match');
+      if(match) backBtn.textContent='← ZPĚT NA SKÓRE '+match.scores[0]+':'+match.scores[1];
+    }
+
+    if(name==='results'){
+      Promise.allSettled([loadSecureMatches(),loadSecureTournaments()])
+        .then(()=>{
+          try{reconcileTournamentResultsFromMatches();}catch(e){}
+        })
+        .catch(()=>{});
+    }
+    if(name==='results-tournaments') renderResultsTournaments();
+    if(name==='results-series') renderResultsSeries();
+    if(name==='history') renderHistory();
+    if(name==='players') renderPlayers();
+    if(name==='reports'){
+      loadOwnReports();
+      startOwnReportsPolling();
+    }else{
+      stopOwnReportsPolling();
+    }
+    if(name==='stats') renderStats();
+    if(name==='my-stats') renderMyStats();
+    if(name==='federal-cup-2026' || name==='federal-cup-editor'){
+      try{if(typeof window.renderFederalCup2026==='function')window.renderFederalCup2026();}catch(e){console.warn('Federal Cup 2026:',e);}
+      if(name==='federal-cup-2026'){
+        try{window.refreshFederalCupViewer?.();}catch(e){console.warn('Federal Cup viewer refresh:',e);}
+      }
+    }
+    if(name==='challenges'){
+      try{if(typeof window.openMatchChallengesScreen==='function')window.openMatchChallengesScreen();}catch(e){console.warn('Challenges screen:',e);}
+    }
+    if(name==='tournament') renderTournament();
+    if(name==='league'){
+      renderLeague();
+      Promise.allSettled([loadSecureMatches(),loadLeagueCloud()])
+        .then(()=>renderLeague())
+        .catch(e=>console.warn('League load:',e));
+    }
+    if(name==='tournament-detail' && selectedTournamentId) renderTournamentDetail();
+    if(name==='live'){
+      discardForeignLocalActiveMatch();
+      renderLive();
+      Promise.allSettled([loadSecureMatches(),loadSecureTournaments(),cleanupStaleLiveMatches(false),loadCloudLiveMatches(true)])
+        .then(()=>renderLive())
+        .catch(()=>{});
+    }
+    if(name==='admin'){populateAdminProfileOwnerSelect();populateMergePlayerSelectors();loadReportsAdmin();}
+    if(name==='home'){
+      try{if(typeof window.renderModernHome==='function')window.renderModernHome();}catch(e){}
+      try{if(typeof window.refreshModernHomeData==='function')window.refreshModernHomeData(false);}catch(e){}
+    }
+
+  }
+
+  
+
+
+  async function openResultsSection(section){
+    try{
+      if(section==='history'){
+        await loadSecureMatches();
+        renderHistory();
+        showScreen('history');
+        return;
+      }
+
+      if(section==='results-tournaments'){
+        await Promise.allSettled([loadSecureMatches(),loadSecureTournaments()]);
+        reconcileTournamentResultsFromMatches();
+        renderResultsTournaments();
+        showScreen('results-tournaments');
+        return;
+      }
+
+      if(section==='results-series'){
+        await Promise.allSettled([loadSecureMatches(),loadSecureTournaments()]);
+        reconcileTournamentResultsFromMatches();
+        renderResultsSeries();
+        showScreen('results-series');
+        return;
+      }
+
+      showScreen('results');
+    }catch(e){
+      console.error('Results load:',e);
+      // I při chybě cloudu zobrazíme lokální data.
+      if(section==='history')renderHistory();
+      if(section==='results-tournaments')renderResultsTournaments();
+      if(section==='results-series')renderResultsSeries();
+      showScreen(section||'results');
+      toast('Výsledky se nepodařilo plně synchronizovat, zobrazují se dostupná data.');
+    }
+  }
+
+  if($('resultsMatchesBtn'))$('resultsMatchesBtn').onclick=()=>openResultsSection('history');
+  if($('resultsTournamentsBtn'))$('resultsTournamentsBtn').onclick=()=>openResultsSection('results-tournaments');
+  if($('resultsSeriesBtn'))$('resultsSeriesBtn').onclick=()=>openResultsSection('results-series');
+
+  document.querySelectorAll('.resultsBackBtn').forEach(btn=>{
+    btn.onclick=()=>showScreen('results');
+  });
+
+  if($('backToTournamentListBtn')){
+    $('backToTournamentListBtn').onclick=()=>{
+      forcedTournamentReturnId=null;
+      const target=tournamentDetailReturnScreen||'tournament';
+      tournamentDetailReturnScreen='tournament';
+      if(target==='results-tournaments')renderResultsTournaments();
+      else renderTournament();
+      showScreen(target);
+    };
+  }
+
+  if($('currentTournamentNavBtn')){
+    $('currentTournamentNavBtn').onclick=async()=>{
+      if(!selectedTournamentId){
+        toast('Není vybraný žádný aktuální turnaj.');
+        return;
+      }
+      await openTournamentDetail(selectedTournamentId);
+    };
+  }
+
+$('useClock').addEventListener('change',e=>$('clockSettings').classList.toggle('hidden',!e.target.checked));
+  $('solo14').addEventListener('change',()=>{
+    const on=$('solo14').checked && $('discipline').value==='14.1';
+    $('solo14GhostRow')?.classList.toggle('hidden',!on);
+    if(!on){
+      if($('solo14GhostMode'))$('solo14GhostMode').checked=false;
+      if($('ghostMode'))$('ghostMode').checked=false;
+      $('solo14GhostSettings')?.classList.add('hidden');
+    }
+    if(on){
+      if($('ghostMode'))$('ghostMode').checked=!!$('solo14GhostMode')?.checked;
+      $('winnerTableMode').checked=false;
+      $('doublesMode').checked=false;
+    }
+    updateDisciplineSetup();
+    if(on){
+      $('p2Name').value='';
+      $('p1PartnerName').value='';
+      $('p2PartnerName').value='';
+      $('useLag').checked=false;
+    }
+  });
+
+
+  $('solo14GhostMode')?.addEventListener('change',()=>{
+    const on=!!$('solo14GhostMode').checked;
+    $('solo14GhostSettings')?.classList.toggle('hidden',!on);
+    if($('discipline').value==='14.1' && $('solo14').checked && $('ghostMode')){
+      $('ghostMode').checked=on;
+    }
+    updateDisciplineSetup();
+  });
+
+  $('solo14GhostDifficulty')?.addEventListener('change',()=>{
+    $('solo14GhostCustomRow')?.classList.toggle('hidden',$('solo14GhostDifficulty').value!=='custom');
+  });
+
+  $('ghostMode').addEventListener('change',()=>{
+    const d=$('discipline').value;
+    const wantsGhost=$('ghostMode').checked;
+
+    if(d==='14.1'){
+      if(wantsGhost){
+        $('solo14').checked=true;
+        if($('solo14GhostMode'))$('solo14GhostMode').checked=true;
+        $('winnerTableMode').checked=false;
+        $('doublesMode').checked=false;
+        $('p2Name').value='';
+        $('p1PartnerName').value='';
+        $('p2PartnerName').value='';
+        $('useLag').checked=false;
+      }else{
+        if($('solo14GhostMode'))$('solo14GhostMode').checked=false;
+        // Sólo 14.1 necháváme zapnuté, aby šlo snadno pokračovat bez Ghosta.
+      }
+      updateDisciplineSetup();
+      return;
+    }
+
+    const on=wantsGhost && (d==='8-ball'||d==='9-ball'||d==='10-ball');
+    if(on){
+      $('solo14').checked=false;
+      $('winnerTableMode').checked=false;
+      $('doublesMode').checked=false;
+      $('p2Name').value='';
+      $('p1PartnerName').value='';
+      $('p2PartnerName').value='';
+    }
+    updateDisciplineSetup();
+  });
+
+  $('winnerTableMode').addEventListener('change',()=>{
+    const d=$('discipline').value;
+    const allowed=d==='8-ball'||d==='9-ball'||d==='10-ball';
+    const on=$('winnerTableMode').checked && allowed;
+    if(on){
+      $('ghostMode').checked=false;
+      $('solo14').checked=false;
+      $('doublesMode').checked=false;
+      $('useLag').checked=false;
+      $('p1PartnerName').value='';
+      $('p2PartnerName').value='';
+    }
+    updateDisciplineSetup();
+  });
+
+  $('doublesMode').addEventListener('change',()=>{
+    const d=$('discipline').value;
+    const allowed=(d==='8-ball'||d==='9-ball'||d==='10-ball') && !pendingTournamentLink;
+    const on=$('doublesMode').checked && allowed;
+    if(on){
+      $('ghostMode').checked=false;
+      $('winnerTableMode').checked=false;
+      $('solo14').checked=false;
+    }
+    updateDisciplineSetup();
+  });
+
+  $('discipline').addEventListener('change', updateDisciplineSetup);
+
+  $('counterMode')?.addEventListener('change', updateCounterModeSetup);
+
+  function applySimpleCounterVisibility(){
+    const simple=$('counterMode')?.value==='simple';
+    $('advancedSetupOptions')?.classList.remove('hidden');
+    $('simpleSetupInfo')?.classList.toggle('hidden',!simple);
+    if(!simple)return;
+
+    // V jednoduchém režimu ponecháváme základní parametry zápasu a také VÍTĚZ NA STOLE.
+    // Schováme pouze detailní herní automatiku, kterou jednoduché počítadlo nepoužívá.
+    ['nineBallBreakRuleField','tenBallRuleField','solo14Row','solo14GhostRow','solo14GhostSettings',
+     'doublesRow','ghostRow','ghostBallCountField','fourteenBreakInfo',
+     'threeFoulRow','shotClockRow','clockSettings']
+      .forEach(id=>$(id)?.classList.add('hidden'));
+  }
+
+  function updateCounterModeSetup(){
+    const simple=$('counterMode')?.value==='simple';
+    $('advancedSetupOptions')?.classList.remove('hidden');
+    $('simpleSetupInfo')?.classList.toggle('hidden',!simple);
+
+    if(simple){
+      // Jednoduché počítadlo nepoužívá detailní herní automatiku.
+      if($('solo14'))$('solo14').checked=false;
+      if($('solo14GhostMode'))$('solo14GhostMode').checked=false;
+      if($('ghostMode'))$('ghostMode').checked=false;
+      if($('doublesMode'))$('doublesMode').checked=false;
+      if($('useThreeFoul'))$('useThreeFoul').checked=false;
+      if($('useClock'))$('useClock').checked=false;
+      updateDisciplineSetup();
+      applySimpleCounterVisibility();
+    }else{
+      updateDisciplineSetup();
+    }
+  }
+
+
+  let pendingGhostMissResolution=null;
+
+  function ghostAvailableMissBalls(){
+    const maxBall=match?.discipline==='10-ball'?10:(match?.discipline==='8-ball'?8:9);
+    const trackedRotation=match?.discipline==='9-ball'||match?.discipline==='10-ball';
+    const rem=trackedRotation && Array.isArray(match?.rackRemainingBalls) && match.rackRemainingBalls.length
+      ? match.rackRemainingBalls.slice().map(Number).filter(n=>n>=1&&n<=maxBall).sort((a,b)=>a-b)
+      : Array.from({length:maxBall},(_,i)=>i+1);
+    return [...new Set(rem)];
+  }
+
+  function closeGhostMissBallPicker(){
+    pendingGhostMissResolution=null;
+    $('ghostMissInline')?.classList.add('hidden');
+    $('ghostMissBallModal')?.classList.remove('show');
+  }
+
+  function openGhostMissBallPicker(onPicked){
+    pendingGhostMissResolution=onPicked;
+    const balls=ghostAvailableMissBalls();
+
+    if(!balls.length){
+      const cb=pendingGhostMissResolution;
+      pendingGhostMissResolution=null;
+      if(typeof cb==='function')cb(null);
+      return;
+    }
+
+    // V aktivním Ghostu používáme inline volbu přímo pod výsledkovými tlačítky.
+    // Na mobilu je spolehlivější než samostatný modal a uživatel okamžitě vidí,
+    // že tlačítko NEDOHRÁNO zareagovalo.
+    const inline=$('ghostMissInline');
+    const inlineHost=$('ghostMissInlineChoices');
+    if(match?.ghostMode && inline && inlineHost){
+      inlineHost.innerHTML=balls.map(n=>
+        '<button type="button" class="'+exactBallVisualClass(n)+'" onclick="selectGhostMissBall('+n+')" aria-label="Koule '+n+'"><span class="ball-number">'+n+'</span></button>'
+      ).join('');
+      inline.classList.remove('hidden');
+      try{inline.scrollIntoView({behavior:'smooth',block:'nearest'});}catch(e){}
+      return;
+    }
+
+    // Fallback pro starší uložené stavy / kompatibilitu.
+    const host=$('ghostMissBallChoices');
+    if(host){
+      host.innerHTML=balls.map(n=>
+        exactBallButtonHtml(n,{onclick:'selectGhostMissBall('+n+')'})
+      ).join('');
+    }
+    $('ghostMissBallModal')?.classList.add('show');
+  }
+
+  window.selectGhostMissBall=function(ball){
+    const cb=pendingGhostMissResolution;
+    pendingGhostMissResolution=null;
+    $('ghostMissInline')?.classList.add('hidden');
+    $('ghostMissBallModal')?.classList.remove('show');
+    if(typeof cb==='function')cb(Number(ball));
+  };
+
+  if($('ghostMissInlineCancel'))$('ghostMissInlineCancel').onclick=closeGhostMissBallPicker;
+  if($('ghostMissBallCancel'))$('ghostMissBallCancel').onclick=closeGhostMissBallPicker;
+
+  function ghostFullBallCountForDiscipline(d){
+    if(d==='9-ball')return 9;
+    if(d==='10-ball')return 10;
+    return null;
+  }
+
+  function refreshGhostBallCountOptions(){
+    const sel=$('ghostBallCount');
+    if(!sel)return;
+
+    const d=$('discipline')?.value||'';
+    const max=ghostFullBallCountForDiscipline(d);
+    if(!max){
+      sel.innerHTML='';
+      return;
+    }
+
+    const previous=parseInt(sel.value||'',10);
+    const selected=Number.isFinite(previous) && previous>=3 && previous<=max ? previous : max;
+
+    sel.innerHTML='';
+    for(let n=3;n<=max;n++){
+      const opt=document.createElement('option');
+      opt.value=String(n);
+      opt.textContent=n===max ? n+' koulí • plná disciplína' : n+' koulí';
+      if(n===selected)opt.selected=true;
+      sel.appendChild(opt);
+    }
+  }
+
+  function ghostBallCountLabel(m){
+    if(!m?.ghostMode)return '';
+    if(m.discipline!=='9-ball' && m.discipline!=='10-ball')return '';
+    const full=ghostFullBallCountForDiscipline(m.discipline);
+    const count=Math.max(3,Math.min(full,Number(m.ghostBallCount||full)));
+    return count+' '+(count>=5?'KOULÍ':'KOULE');
+  }
+
+  function solo14GhostDifficultyLabel(m,includePoints=true){
+    if(!m?.solo14GhostMode)return '';
+    const resume=m.resumeState||null;
+    const raw=String(m.solo14GhostDifficulty ?? resume?.solo14GhostDifficulty ?? '').toLowerCase();
+    const pts=Math.max(0,Number(m.solo14GhostPointsPerError ?? resume?.solo14GhostPointsPerError ?? 0));
+    let level='';
+    if(raw==='5')level='LEHKÁ';
+    else if(raw==='10')level='STŘEDNÍ';
+    else if(raw==='15')level='TĚŽKÁ';
+    else if(raw==='custom')level='VLASTNÍ';
+    else if(pts===5)level='LEHKÁ';
+    else if(pts===10)level='STŘEDNÍ';
+    else if(pts===15)level='TĚŽKÁ';
+    else level='VLASTNÍ';
+    return 'ÚROVEŇ: '+level+(includePoints && pts ? ' (+'+pts+' / chyba)' : '');
+  }
+
+  function updateDisciplineSetup(){
+    const d=$('discipline').value;
+    const is14 = d==='14.1';
+    const standardAllowed=d==='8-ball'||d==='9-ball'||d==='10-ball';
+    const tournamentSetup=!!pendingTournamentLink;
+
+    if(is14 || tournamentSetup){
+      $('doublesMode').checked=false;
+    }
+
+    const ghost14On=is14 && $('solo14').checked && !!$('solo14GhostMode')?.checked;
+    if(is14 && $('ghostMode'))$('ghostMode').checked=ghost14On;
+    const ghostOn=$('ghostMode').checked && standardAllowed;
+    const winnerTableOn=$('winnerTableMode').checked && standardAllowed;
+    const doublesOn=$('doublesMode').checked && standardAllowed && !tournamentSetup;
+
+    refreshGhostBallCountOptions();
+    if($('ghostBallCountField')){
+      $('ghostBallCountField').classList.toggle('hidden',
+        !ghostOn || (d!=='9-ball' && d!=='10-ball')
+      );
+    }
+
+    $('raceLabel').textContent = is14 ? 'Cílové skóre' : 'Race to';
+    $('raceTo').value = is14 ? 100 : ($('raceTo').value==100 ? 7 : $('raceTo').value);
+
+    $('breakModeField').classList.toggle('hidden', is14 || ghostOn || winnerTableOn);
+    if($('nineBallBreakRuleField')){
+      $('nineBallBreakRuleField').classList.toggle('hidden', d!=='9-ball' || ghostOn || winnerTableOn);
+    }
+    if($('tenBallRuleField')){
+      $('tenBallRuleField').classList.toggle('hidden', d!=='10-ball' || ghostOn);
+    }
+    $('raceField').classList.toggle('hidden', winnerTableOn);
+    $('p3SetupField').classList.toggle('hidden', !winnerTableOn);
+    $('p1PartnerField').classList.toggle('hidden', !doublesOn);
+    $('p2PartnerField').classList.toggle('hidden', !doublesOn);
+    $('p1Label').textContent=doublesOn?'Dvojice 1 • hráč A':'Hráč 1';
+    $('p2Label').textContent=doublesOn?'Dvojice 2 • hráč A':'Hráč 2';
+
+    $('fourteenBreakInfo').classList.toggle('hidden', !is14);
+    $('solo14Row').classList.toggle('hidden', !is14);
+    const solo14On=is14 && $('solo14').checked;
+    $('solo14GhostRow')?.classList.toggle('hidden',!solo14On);
+    $('solo14GhostSettings')?.classList.toggle('hidden',!solo14On || !$('solo14GhostMode')?.checked);
+    $('solo14GhostCustomRow')?.classList.toggle('hidden',$('solo14GhostDifficulty')?.value!=='custom');
+
+    $('ghostRow').classList.remove('hidden');
+    $('ghostRow').style.display = ((standardAllowed || is14) && !tournamentSetup) ? 'flex' : 'none';
+    $('winnerTableRow').classList.toggle('hidden', !standardAllowed || tournamentSetup);
+    $('doublesRow').classList.toggle('hidden', !standardAllowed || tournamentSetup);
+
+    if(!is14){
+      $('solo14').checked=false;
+      if($('solo14GhostMode'))$('solo14GhostMode').checked=false;
+      $('solo14GhostRow')?.classList.add('hidden');
+      $('solo14GhostSettings')?.classList.add('hidden');
+    }
+    if((!standardAllowed && !is14) || tournamentSetup){
+      $('ghostMode').checked=false;
+      $('winnerTableMode').checked=false;
+      $('doublesMode').checked=false;
+    }
+
+    const singlePlayer=(is14 && $('solo14').checked) || ghostOn || ghost14On;
+    $('p2SetupField').classList.toggle('hidden', singlePlayer);
+    const handicapAllowed=!is14 && standardAllowed && !ghostOn && !winnerTableOn && !doublesOn;
+    $('handicapMatchRow')?.classList.toggle('hidden',!handicapAllowed);
+    if(!handicapAllowed && $('useHandicap'))$('useHandicap').checked=false;
+    $('handicapMatchFields')?.classList.toggle('hidden',!handicapAllowed || !$('useHandicap')?.checked);
+    $('lagRow').classList.toggle('hidden', (is14 && $('solo14').checked) || winnerTableOn);
+    if((is14 && $('solo14').checked) || winnerTableOn)$('useLag').checked=false;
+
+    const threeAllowed=d==='9-ball'||d==='10-ball';
+    $('threeFoulRow').classList.toggle('hidden', !threeAllowed);
+    if(d==='9-ball')$('useThreeFoul').checked=true;
+    if(!threeAllowed)$('useThreeFoul').checked=false;
+
+    if($('counterMode')?.value==='simple') applySimpleCounterVisibility();
+  }
+
+  updateCounterModeSetup();
+  $('useHandicap')?.addEventListener('change',updateDisciplineSetup);
+  $('tournamentHandicapEnabled')?.addEventListener('change',()=>{
+    renderTournamentPlayerPicker();
+    saveTournamentCheckinDraft();
+  });
+
+  function currentUserPlayerPriority(p){
+    return !!(p && currentUserPlayerId && p.id===currentUserPlayerId);
+  }
+
+  function refreshPlayerList(){
+    const dl=$('playersList'); if(!dl)return; dl.innerHTML='';
+    Object.values(data.players)
+      .filter(p=>p && p.active!==false && p.hiddenFromPlayers!==true)
+      .sort((a,b)=>{
+        const ap=currentUserPlayerPriority(a)?0:1;
+        const bp=currentUserPlayerPriority(b)?0:1;
+        if(ap!==bp)return ap-bp;
+        return (a.name||'').localeCompare(b.name||'','cs');
+      })
+      .forEach(p=>{
+        const o=document.createElement('option');
+        o.value=p.name;
+        dl.appendChild(o);
+      });
+  }
+
+  function playerNeedsIdentifierDisplay(p){
+    if(!p || !p.identifier)return false;
+    const nameKey=normalizePersonName(p.name);
+    const clubKey=normalizeClubName(p.club);
+    if(!nameKey || !clubKey)return false;
+
+    return Object.values(data.players||{}).filter(other=>
+      other &&
+      normalizePersonName(other.name)===nameKey &&
+      normalizeClubName(other.club)===clubKey
+    ).length>1;
+  }
+
+  function playerSelectionLabel(p){
+    if(!p)return '';
+    let label=playerDisplayName(p);
+    if(p.club)label+=' • '+p.club;
+    if(playerNeedsIdentifierDisplay(p))label+=' • '+p.identifier;
+    return label;
+  }
+
+  function playerDisplayName(p){
+    if(!p) return '';
+    return (p.useNicknameInMatch && p.nickname) ? p.nickname : p.name;
+  }
+
+  function playerSubname(p){
+    if(!p) return '';
+    if(p.useNicknameInMatch && p.nickname){
+      return [p.name,p.club].filter(Boolean).join(' • ');
+    }
+    return [p.nickname,p.club].filter(Boolean).join(' • ');
+  }
+
+  function findPlayerByName(name){
+    const key=String(name||'').trim().toLowerCase();
+    if(!key)return null;
+    return Object.values(data.players||{}).find(p=>
+      p && String(p.name||'').trim().toLowerCase()===key
+    )||null;
+  }
+
+  function playerNameIsUnavailable(name){
+    const key=String(name||'').trim().toLowerCase();
+    if(!key)return false;
+    const sameName=Object.values(data.players||{}).filter(p=>
+      p && String(p.name||'').trim().toLowerCase()===key
+    );
+    if(!sameName.length)return false;
+
+    // Pokud existuje alespoň jeden aktivní a viditelný profil stejného jména,
+    // jméno samo o sobě neblokujeme. Definitivně to později vyřeší playerId výběr.
+    return !sameName.some(p=>p.active!==false && p.hiddenFromPlayers!==true);
+  }
+
+  function getOrCreatePlayer(name, selectedPlayerId=null){
+    const key=String(name||'').trim().toLocaleLowerCase('cs');
+    // Profil se vybírá podle ID. Při ručním zadání nedovolíme tiché
+    // přiřazení nesprávného profilu u dvou lidí stejného jména.
+    if(selectedPlayerId){
+      const selected=data.players?.[selectedPlayerId];
+      if(!selected || selected.active===false || selected.hiddenFromPlayers===true ||
+          String(selected.name||'').trim().toLocaleLowerCase('cs')!==key){
+        throw new Error('PLAYER_SELECTION_STALE');
+      }
+      return selected;
+    }
+    const candidates=Object.values(data.players||{}).filter(p=>
+      p && p.active!==false && p.hiddenFromPlayers!==true &&
+      String(p.name||'').trim().toLocaleLowerCase('cs')===key
+    );
+    if(candidates.length>1)throw new Error('PLAYER_AMBIGUOUS');
+    if(candidates.length===1)return candidates[0];
+
+    const sameNameExists=Object.values(data.players||{}).some(p=>
+      p && String(p.name||'').trim().toLowerCase()===key
+    );
+    if(sameNameExists) throw new Error('PLAYER_UNAVAILABLE');
+
+    const p={id:uid(),name:name.trim(),nickname:'',useNicknameInMatch:false,club:'',note:'',equipment:'',achievements:'',photo:'',active:true,hiddenFromPlayers:false,createdAt:new Date().toISOString()};
+    data.players[p.id]=p; saveData(); return p;
+  }
+
+
+  function selectedSetupPlayerId(inputId,typedName){
+    const el=$(inputId);
+    const selectedId=String(el?.dataset?.selectedPlayerId||'').trim();
+    const selectedName=String(el?.dataset?.selectedPlayerName||'').trim();
+    return selectedId && selectedName===String(typedName||'').trim() ? selectedId : null;
+  }
+
+  // Jednotný čtecí seznam pro vlastní vyhledávací dialog zápasů.
+  // Nepředává soukromé údaje, jen ID, jméno a viditelný popisek hráče.
+  window.poolMatchPickerPlayers=function(){
+    return Object.values(data.players||{})
+      .filter(p=>p && p.active!==false && p.hiddenFromPlayers!==true)
+      .sort((a,b)=>{
+        const ap=currentUserPlayerPriority(a)?0:1;
+        const bp=currentUserPlayerPriority(b)?0:1;
+        if(ap!==bp)return ap-bp;
+        return String(a.name||'').localeCompare(String(b.name||''),'cs') ||
+          String(a.club||'').localeCompare(String(b.club||''),'cs');
+      })
+      .map(p=>({id:p.id,value:p.name,label:playerSelectionLabel(p)}));
+  };
+
+  function savedDoublesSideNames(m,side){
+    if(!m)return [];
+    const idx=Number(side)||0;
+
+    const ids=Array.isArray(m.teamPlayerIds?.[idx])
+      ? m.teamPlayerIds[idx]
+      : [];
+    const stored=Array.isArray(m.teamPlayerNames?.[idx])
+      ? m.teamPlayerNames[idx]
+      : [];
+
+    // U dvojic kombinujeme oba zdroje po pozicích.
+    // Když partner nemá uložené playerId, nesmíme kvůli tomu zahodit
+    // jeho jméno z teamPlayerNames.
+    const maxLen=Math.max(ids.length,stored.length,2);
+    const merged=[];
+    for(let pos=0;pos<maxLen;pos++){
+      const id=ids[pos]||'';
+      const p=id ? data.players?.[id] : null;
+      const fallback=String(stored[pos]||'').trim();
+      const name=p ? playerDisplayName(p) : fallback;
+      if(name)merged.push(name);
+    }
+    if(merged.length)return merged;
+
+    // Novější zápasy mohou mít "A + B" rovnou v playerNames.
+    const packed=String(m.playerNames?.[idx]||'')
+      .split(' + ')
+      .map(x=>x.trim())
+      .filter(Boolean);
+    if(packed.length)return packed;
+
+    return m.playerNames?.[idx] ? [String(m.playerNames[idx])] : [];
+  }
+
+  function savedMatchSideDisplayName(m,side){
+    if(matchIsDoubles(m)){
+      const names=savedDoublesSideNames(m,side);
+      if(names.length)return names.join(' + ');
+    }
+    return String(m?.playerNames?.[side]||'');
+  }
+
+  function matchHandicapScores(m){
+    const h=Array.isArray(m?.handicapScores)?m.handicapScores:[0,0];
+    return [Math.max(0,Number(h[0]||0)),Math.max(0,Number(h[1]||0))];
+  }
+
+  function actualRackScores(m){
+    const h=matchHandicapScores(m);
+    return [Math.max(0,Number(m?.scores?.[0]||0)-h[0]),Math.max(0,Number(m?.scores?.[1]||0)-h[1])];
+  }
+
+  function handicapInfoHtml(m){
+    if(!matchHasHandicap(m))return '';
+    const hs=matchHandicapScores(m);
+    return `<div class="subpanel" style="margin-bottom:10px;padding:9px 12px;border-color:rgba(212,175,55,.35)">
+      <strong>HANDICAP • POČÁTEČNÍ SKÓRE ${esc(String(hs[0]))}:${esc(String(hs[1]))}</strong>
+      <div class="muted" style="margin-top:4px;font-size:12px">
+        ${esc(savedMatchSideDisplayName(m,0)||'Hráč 1')} začínal na ${esc(String(hs[0]))} •
+        ${esc(savedMatchSideDisplayName(m,1)||'Hráč 2')} začínal na ${esc(String(hs[1]))}
+      </div>
+    </div>`;
+  }
+
+  function blankMatchStats(){
+    return {breaks:0,dryBreaks:0,softBreaks:0,softDryBreaks:0,breakFouls:0,breakPottedBalls:0,breakPottedTracked:0,aces:0,breakAndRun:0,runouts:0,pushOuts:0,pushOutsReturned:0,twoWayAttempts:0,twoWaySuccessful:0,twoWayPotSuccess:0,twoWaySafetySuccess:0,nineBallCombos:0,nineBallCaroms:0,tenBallCombos:0,tenBallCaroms:0,missBall1:0,missBall2:0,missBall3:0,missBall4:0,missBall5:0,missBall6:0,missBall7:0,missBall8:0,missBall9:0,missBall10:0,breakBall1:0,breakBall2:0,breakBall3:0,breakBall4:0,breakBall5:0,breakBall6:0,breakBall7:0,breakBall8:0,breakBall9:0,breakBall10:0,fouls:0,safeties:0,successfulSafeties:0,trackedSafeties:0,accidentalSafeties:0,safetyEscapes:0,successfulSafetyEscapes:0,resafes:0,misses:0,matchOnlyMisses:0,matchOnlyMissBadPosition:0,matchOnlyMissPot:0,threeFoulLosses:0,lagWins:0,openingBreakFouls14:0,threeFoulPenalties14:0,foulPenaltyPoints14:0,innings14:0,highRun14:0,ghostSessions:0,ghostDryBreaks:0,ghostSoftBreaks:0,ghostBreakFouls:0,ghostAces:0,ghostFailedRacks:0,ghostBIHRunouts:0,ghostCleanRunouts:0};
+  }
+
+  function syncWinnerTableSlots(){
+    if(!match || !match.winnerTableMode || !match.winnerTable) return;
+    const wt=match.winnerTable;
+    const a=wt.active;
+    match.playerIds=[wt.players[a[0]].id,wt.players[a[1]].id];
+    match.playerNames=[wt.players[a[0]].displayName,wt.players[a[1]].displayName];
+    match.playerRealNames=[wt.players[a[0]].realName,wt.players[a[1]].realName];
+    match.scores=[wt.wins[a[0]]||0,wt.wins[a[1]]||0];
+    match.stats=[wt.stats[a[0]],wt.stats[a[1]]];
+  }
+
+  $('startMatch').addEventListener('click', ()=>{ ensureAudio(); startMatch(); });
+  function startMatch(){
+    try{
+    if(!pendingTournamentLink)forcedTournamentReturnId=null;
+    const scheduledChallenge=window.pendingScheduledChallenge ? JSON.parse(JSON.stringify(window.pendingScheduledChallenge)) : null;
+    window.pendingScheduledChallenge=null;
+    const federalCupLink=pendingFederalCupLink ? JSON.parse(JSON.stringify(pendingFederalCupLink)) : null;
+    if(federalCupLink&&typeof window.fc26CanStartMatch==='function'&&!window.fc26CanStartMatch(federalCupLink.fixtureNo)){
+      pendingFederalCupLink=null;
+      toast('Federal Cup je již rozhodnutý nebo má tento zápas uložený výsledek. Nový zápas nelze zahájit.');
+      return;
+    }
+    const discipline=$('discipline').value;
+    const counterMode=$('counterMode')?.value||'full';
+    const simpleCounter=counterMode==='simple';
+    const solo14 = !simpleCounter && discipline==='14.1' && $('solo14').checked;
+    const solo14GhostMode = solo14 && !!$('solo14GhostMode')?.checked;
+    const solo14GhostDifficulty = $('solo14GhostDifficulty')?.value||'5';
+    const solo14GhostPointsPerError = solo14GhostMode
+      ? Math.max(1,Math.min(100,solo14GhostDifficulty==='custom'
+          ? parseInt($('solo14GhostCustomPoints')?.value||'10',10)
+          : parseInt(solo14GhostDifficulty,10)))
+      : 0;
+    const ghostMode = !simpleCounter && (discipline==='8-ball'||discipline==='9-ball'||discipline==='10-ball') && $('ghostMode').checked;
+    const winnerTableMode = (discipline==='8-ball'||discipline==='9-ball'||discipline==='10-ball') && $('winnerTableMode').checked;
+    const doublesMode = !simpleCounter && (pendingLeagueLink?.doubles === true || (!pendingTournamentLink && !pendingLeagueLink && (discipline==='8-ball'||discipline==='9-ball'||discipline==='10-ball') && !!$('doublesMode')?.checked));
+    const singlePlayer = solo14 || ghostMode;
+    const p1=$('p1Name').value.trim(), p2=$('p2Name').value.trim(), p3=$('p3Name').value.trim();
+    const p1Partner=$('p1PartnerName').value.trim(), p2Partner=$('p2PartnerName').value.trim();
+
+    if(!p1){ toast('Vyplň hráče.'); return; }
+    if(!singlePlayer && !p2){ toast('Vyplň oba hráče.'); return; }
+    if(winnerTableMode && !p3){ toast('Vyplň všechny tři hráče.'); return; }
+    if(doublesMode && (!p1Partner || !p2Partner)){
+      toast('U dvojic vyplň všechny čtyři hráče.');
+      return;
+    }
+    const namesCheck=doublesMode
+      ? [p1,p1Partner,p2,p2Partner]
+      : (winnerTableMode ? [p1,p2,p3] : (singlePlayer?[p1]:[p1,p2]));
+    const p1Id=pendingTournamentLink?.p1ParticipantId && !pendingTournamentLink?.p1Guest
+      ? pendingTournamentLink.p1ParticipantId : selectedSetupPlayerId('p1Name',p1);
+    const p2Id=pendingTournamentLink?.p2ParticipantId && !pendingTournamentLink?.p2Guest
+      ? pendingTournamentLink.p2ParticipantId : selectedSetupPlayerId('p2Name',p2);
+    const p1PartnerId=selectedSetupPlayerId('p1PartnerName',p1Partner);
+    const p2PartnerId=selectedSetupPlayerId('p2PartnerName',p2Partner);
+    const p3Id=selectedSetupPlayerId('p3Name',p3);
+    const identityKey=(name,id)=>id ? 'id:'+id : 'name:'+name.toLocaleLowerCase('cs');
+    const identityCheck=doublesMode
+      ? [identityKey(p1,p1Id),identityKey(p1Partner,p1PartnerId),identityKey(p2,p2Id),identityKey(p2Partner,p2PartnerId)]
+      : (winnerTableMode ? [identityKey(p1,p1Id),identityKey(p2,p2Id),identityKey(p3,p3Id)]
+                         : (singlePlayer?[identityKey(p1,p1Id)]:[identityKey(p1,p1Id),identityKey(p2,p2Id)]));
+    if(new Set(identityCheck).size!==identityCheck.length){ toast('Hráči musí být různí.'); return; }
+
+    // Hráči Federal Cupu jsou nezávislí hosté a neblokují je existující/skryté profily.
+    const unavailableSelected=federalCupLink ? null : namesCheck.find(name=>playerNameIsUnavailable(name));
+    if(unavailableSelected){
+      toast('Hráč „'+unavailableSelected+'“ je neaktivní nebo skrytý a nelze ho vybrat do nového zápasu.');
+      refreshPlayerList();
+      return;
+    }
+
+    function federalCupGuestPlayer(side,name){
+      const names=side==='a'?federalCupLink?.rosterA:federalCupLink?.rosterB;
+      const index=(names||[]).findIndex(n=>String(n||'').trim().toLocaleLowerCase('cs')===String(name||'').trim().toLocaleLowerCase('cs'));
+      if(index<0)throw new Error('Vybraný hráč není na soupisce Federal Cupu: '+name);
+      return {id:'__FC26_2026_'+side+'_'+(index+1)+'__',name,nickname:'',club:'',active:true};
+    }
+    const p1obj=federalCupLink ? federalCupGuestPlayer('a',p1) : ((pendingTournamentLink && pendingTournamentLink.p1Guest)
+      ? {id:pendingTournamentLink.p1ParticipantId,name:p1,nickname:'',club:'',showNickname:false}
+      : getOrCreatePlayer(p1,p1Id));
+    const p2obj=federalCupLink ? federalCupGuestPlayer('b',p2) : (solo14
+      ? {id:(solo14GhostMode?'__SOLO14_GHOST__':'__SOLO__'),name:(solo14GhostMode?'GHOST':'Sólo trénink')}
+      : (ghostMode
+        ? {id:'__GHOST__',name:'GHOST'}
+        : ((pendingTournamentLink && pendingTournamentLink.p2Guest)
+          ? {id:pendingTournamentLink.p2ParticipantId,name:p2,nickname:'',club:'',showNickname:false}
+          : getOrCreatePlayer(p2,p2Id))));
+    const p1PartnerObj=doublesMode ? (federalCupLink ? federalCupGuestPlayer('a',p1Partner) : getOrCreatePlayer(p1Partner,p1PartnerId)) : null;
+    const p2PartnerObj=doublesMode ? (federalCupLink ? federalCupGuestPlayer('b',p2Partner) : getOrCreatePlayer(p2Partner,p2PartnerId)) : null;
+    const p3obj=winnerTableMode ? getOrCreatePlayer(p3,p3Id) : null;
+    // Textové jméno a vybrané ID mohou vypadat různě, proto kontrolujeme
+    // i výsledné identity. Jeden profil nesmí hrát současně za obě strany.
+    const resolvedIds=doublesMode
+      ? [p1obj.id,p1PartnerObj.id,p2obj.id,p2PartnerObj.id]
+      : (winnerTableMode ? [p1obj.id,p2obj.id,p3obj.id]
+                         : (singlePlayer ? [p1obj.id] : [p1obj.id,p2obj.id]));
+    if(new Set(resolvedIds).size!==resolvedIds.length){
+      toast('Stejný hráč nemůže být v zápasu vícekrát. Vyber rozdílné profily.');
+      return;
+    }
+
+    const side1Name=doublesMode
+      ? playerDisplayName(p1obj)+' + '+playerDisplayName(p1PartnerObj)
+      : playerDisplayName(p1obj);
+    const side2Name=doublesMode
+      ? playerDisplayName(p2obj)+' + '+playerDisplayName(p2PartnerObj)
+      : (solo14 ? (solo14GhostMode?'GHOST':'Sólo trénink') : (ghostMode ? 'GHOST' : playerDisplayName(p2obj)));
+
+    const handicapAllowed=!solo14 && !ghostMode && !winnerTableMode && !doublesMode && (discipline==='8-ball'||discipline==='9-ball'||discipline==='10-ball');
+    const handicapEnabled=handicapAllowed && (!!pendingTournamentLink?.handicapEnabled || (!pendingTournamentLink && !!$('useHandicap')?.checked));
+    const matchTargetSource=(pendingTournamentLink && pendingTournamentLink.raceTo!=null) ? pendingTournamentLink.raceTo : $('raceTo').value;
+    const handicapTarget=Math.max(1,parseInt(String(matchTargetSource||'1'),10)||1);
+    const h1=handicapEnabled ? Math.max(0,Math.floor(Number(pendingTournamentLink?.p1Handicap ?? $('p1Handicap')?.value ?? 0))) : 0;
+    const h2=handicapEnabled ? Math.max(0,Math.floor(Number(pendingTournamentLink?.p2Handicap ?? $('p2Handicap')?.value ?? 0))) : 0;
+    if(handicapEnabled && (h1>=handicapTarget || h2>=handicapTarget)){
+      toast('Handicap musí být nižší než Race to '+handicapTarget+'.');
+      return;
+    }
+
+    // Před spuštěním dalšího zápasu zachováme celý stav předchozího.
+    if(match && !match.endedAt){
+      saveDeviceActiveMatch(match);
+    }
+
+    match={
+      id:uid(),
+      createdByUid:cloudUid||'',
+      startedAt:new Date().toISOString(),
+      endedAt:null,
+      playerIds:[p1obj.id,p2obj.id],
+      playerNames:[side1Name,side2Name],
+      playerRealNames:[side1Name,side2Name],
+      doublesMode:doublesMode,
+      teamPlayerIds:doublesMode
+        ? [[p1obj.id,p1PartnerObj.id],[p2obj.id,p2PartnerObj.id]]
+        : null,
+      teamPlayerNames:doublesMode
+        ? [[playerDisplayName(p1obj),playerDisplayName(p1PartnerObj)],[playerDisplayName(p2obj),playerDisplayName(p2PartnerObj)]]
+        : null,
+      solo14:solo14,
+      solo14GhostMode:solo14GhostMode,
+      solo14GhostPointsPerError:solo14GhostPointsPerError,
+      solo14GhostDifficulty:solo14GhostMode ? solo14GhostDifficulty : null,
+      solo14GhostErrors:0,
+      ghostMode:ghostMode,
+      winnerTableMode:winnerTableMode,
+      winnerTable: winnerTableMode ? {
+        players:[
+          {id:p1obj.id,displayName:playerDisplayName(p1obj),realName:p1obj.name},
+          {id:p2obj.id,displayName:playerDisplayName(p2obj),realName:p2obj.name},
+          {id:p3obj.id,displayName:playerDisplayName(p3obj),realName:p3obj.name}
+        ],
+        active:[0,1],
+        waiting:2,
+        wins:[0,0,0],
+        rackHistory:[],
+        stats:[blankMatchStats(),blankMatchStats(),blankMatchStats()]
+      } : null,
+      ghostRackNumber: ghostMode ? 1 : null,
+      ghostRackHistory: ghostMode ? [] : null,
+      ghostBallCount: ghostMode && (discipline==='9-ball'||discipline==='10-ball')
+        ? Math.max(3,Math.min(
+            ghostFullBallCountForDiscipline(discipline),
+            parseInt($('ghostBallCount')?.value||String(ghostFullBallCountForDiscipline(discipline)),10)
+          ))
+        : null,
+      streamEnabled:$('streamEnabled').checked,
+      streamMode:'live',
+      streamMatchTitle:$('streamMatchTitle').value.trim(),
+      scheduledChallengeId:scheduledChallenge?.id||null,
+      scheduledChallengePublic:scheduledChallenge?.isPublic===true,
+      tournamentLink:pendingTournamentLink ? JSON.parse(JSON.stringify(pendingTournamentLink)) : null,
+      leagueLink:pendingLeagueLink ? JSON.parse(JSON.stringify(pendingLeagueLink)) : null,
+      federalCupLink:federalCupLink,
+      isBreakShot:true,
+      discipline,
+      counterMode,
+      target:winnerTableMode ? null : (()=>{
+        const source=(pendingTournamentLink && pendingTournamentLink.raceTo!=null)
+          ? pendingTournamentLink.raceTo
+          : ((pendingLeagueLink && pendingLeagueLink.raceTo!=null) ? pendingLeagueLink.raceTo : $('raceTo').value);
+        const parsed=parseInt(String(source??''),10);
+        return Number.isFinite(parsed) && parsed>0 ? Math.floor(parsed) : 1;
+      })(),
+      breakMode: discipline==='14.1' ? 'first-only' : (ghostMode ? 'ghost-player-breaks' : (winnerTableMode ? 'winner-table' : $('breakMode').value)),
+      nineBallBreakRule: discipline==='9-ball' && !ghostMode && !winnerTableMode
+        ? ((pendingTournamentLink && pendingTournamentLink.nineBallBreakRule) || (pendingLeagueLink && pendingLeagueLink.nineBallBreakRule) || $('nineBallBreakRule')?.value || 'none')
+        : 'none',
+      tenBallRule: discipline==='10-ball'
+        ? ($('tenBallRule')?.value || 'spot')
+        : 'spot',
+      softBreakOriginalBreaker:null,
+      softBreakReturnEligibleFor:null,
+      breakAndRunEligible:true,
+      runoutEligibleFor:null,
+      runoutEligibleReason:null,
+      pushOutEligibleFor:null,
+      pushOutBy:null,
+      pushOutDecisionFor:null,
+      safetyEscapeEligibleFor:null,
+      breakPocketedBalls:[],
+      rackRemainingBalls:[],
+      lastMissBall:null,
+      useLag: (solo14 || ghostMode || winnerTableMode) ? false : ($('useLag')?.checked ?? true),
+      lagWinner:null,
+      useThreeFoul:simpleCounter ? false : ($('useThreeFoul')?.checked ?? true),
+      useClock:simpleCounter ? false : ($('useClock')?.checked ?? false),
+      clock:{
+        first:Math.max(5,parseInt($('clockFirst').value||'60',10)),
+        normal:Math.max(5,parseInt($('clockNormal').value||'30',10)),
+        warn:Math.max(1,parseInt($('clockWarn').value||'10',10)),
+        countdown:Math.max(1,parseInt($('clockCountdown').value||'5',10)),
+        extensionsPerRack:Math.max(0,parseInt($('extensionsPerRack').value||'1',10))
+      },
+      handicapEnabled:handicapEnabled,
+      handicapScores:[h1,h2],
+      scores:[h1,h2],
+      ballsOnTable: discipline==='14.1' ? 15 : null,
+      reracksInInning14: 0,
+      inningsHistory14: [],
+      pendingEndReason14: null,
+      openingBreakAvailable14: discipline==='14.1',
+      consecutiveFouls14:[0,0],
+      turn:0,
+      breaker:0,
+      rackNumber:1,
+      consecutiveFouls:[0,0],
+      warnedTwoFouls:[false,false],
+      extensionsUsed:[0,0],
+      stats:winnerTableMode ? [] : [blankMatchStats(),blankMatchStats()],
+      events:[]
+    };
+    if(match.handicapEnabled && (h1||h2)){
+      logEvent('Handicap • počáteční skóre '+h1+':'+h2);
+    }
+    if(match.discipline==='10-ball'){
+      logEvent('10-ball pravidlo • '+(match.tenBallRule==='early_win'
+        ? 'předčasná 10 = výhra racku'
+        : 'předčasná 10 = vrací se na bod'));
+    }
+    if(match.doublesMode){
+      logEvent('DVOJICE • systém rozstřelu: '+breakModeLabel(match.breakMode));
+    }
+    if(match.winnerTableMode) syncWinnerTableSlots();
+    pendingTournamentLink=null;
+    pendingLeagueLink=null;
+    pendingFederalCupLink=null;
+    autosaveCurrent();
+    startLiveHeartbeat();
+
+    // Počítadlo otevřeme vždy okamžitě. Tempo je pouze překryv nad ním,
+    // takže uživatel nikdy nezůstane po STARTU viset na obrazovce založení zápasu.
+    openMatchScreen();
+
+    // Pojistka: pokud by se během otevření počítadla zápas z jakéhokoli důvodu odpojil,
+    // nepokračujeme s přístupem na null objekt.
+    if(!match)return;
+
+    if(match.useLag){
+      $('lagP1').textContent=match.playerNames[0];
+      $('lagP2').textContent=match.playerNames[1];
+      $('lagHelp').textContent = match.discipline==='14.1'
+        ? 'Vyber vítěze tempa. U 14.1 pak vítěz rozhodne, kdo provede úvodní rozstřel.'
+        : 'Vyber vítěze tempa. Ten získá první rozstřel.';
+      $('lagModal').classList.add('show');
+    }else{
+      match.breaker=0; match.turn=0;
+      logEvent(match.winnerTableMode
+        ? 'VÍTĚZ NA STOLE • první rozstřel '+match.playerNames[0]+' • čeká '+match.winnerTable.players[match.winnerTable.waiting].displayName
+        : 'První rozstřel ručně nastaven na '+match.playerNames[0]);
+      beginRack();
+      renderMatch();
+    }
+    }catch(err){
+      console.error(err);
+      if(err?.message==='PLAYER_AMBIGUOUS'){
+        toast('Existuje více hráčů se stejným jménem. Použij tlačítko VYBRAT a zvol konkrétní profil.');
+        return;
+      }
+      if(err?.message==='PLAYER_SELECTION_STALE'){
+        toast('Vybraný profil už není dostupný nebo se změnil. Vyber hráče znovu.');
+        return;
+      }
+      alert('Nepodařilo se zahájit zápas. Zkus stránku znovu načíst v běžném prohlížeči (Chrome / Safari). Chyba: '+(err && err.message ? err.message : err));
+    }
+  }
+
+  $('lagP1').onclick=()=>chooseLagWinner(0);
+  $('lagP2').onclick=()=>chooseLagWinner(1);
+  function chooseLagWinner(i){
+    match.lagWinner=i;
+    match.stats[i].lagWins++;
+    logEvent('Tempo vyhrál '+match.playerNames[i]);
+    $('lagModal').classList.remove('show');
+
+    if(match.discipline==='14.1'){
+      $('lagChoice14Text').textContent=match.playerNames[i]+' vyhrál tempo. Kdo bude provádět úvodní rozstřel?';
+      $('lagChoice14Modal').classList.add('show');
+      return;
+    }
+
+    match.breaker=i;
+    match.turn=i;
+    beginRack();
+    openMatchScreen();
+  }
+
+  function finishLagChoice14(breaker){
+    if(!match || match.discipline!=='14.1') return;
+    match.breaker=breaker;
+    match.turn=breaker;
+    const winner=match.lagWinner;
+    if(breaker===winner){
+      logEvent(match.playerNames[winner]+' po vítězství v tempu zvolil vlastní úvodní rozstřel.');
+    }else{
+      logEvent(match.playerNames[winner]+' po vítězství v tempu přenechal úvodní rozstřel hráči '+match.playerNames[breaker]+'.');
+    }
+    $('lagChoice14Modal').classList.remove('show');
+    beginRack();
+    openMatchScreen();
+  }
+
+  $('lagBreakSelf14').onclick=()=>{
+    if(!match || match.lagWinner==null) return;
+    finishLagChoice14(match.lagWinner);
+  };
+
+  $('lagPassBreak14').onclick=()=>{
+    if(!match || match.lagWinner==null) return;
+    finishLagChoice14(1-match.lagWinner);
+  };
+
+  function openMatchScreen(){
+    showScreen('match'); renderMatch();
+  }
+
+  function beginRack(){
+    if(match.winnerTableMode) syncWinnerTableSlots();
+    match.isBreakShot=true;
+    match.softBreakOriginalBreaker=null;
+    match.softBreakReturnEligibleFor=null;
+    match.breakAndRunEligible=true;
+    match.runoutEligibleFor=null;
+    match.runoutEligibleReason=null;
+    match.pushOutEligibleFor=null;
+    match.pushOutBy=null;
+    match.pushOutDecisionFor=null;
+    match.safetyEscapeEligibleFor=null;
+    match.breakPocketedBalls=[];
+    match.rackRemainingBalls=(match.discipline==='9-ball'||match.discipline==='10-ball')
+      ? Array.from({length:match.discipline==='9-ball'?9:10},(_,k)=>k+1)
+      : [];
+    match.lastMissBall=null;
+    match.consecutiveFouls=[0,0];
+    match.warnedTwoFouls=[false,false];
+    match.extensionsUsed=[0,0];
+    match.turn=match.breaker;
+    match.stats[match.breaker].breaks++;
+    logEvent('Rack '+match.rackNumber+' • rozstřel '+match.playerNames[match.breaker]);
+    if(match.useClock) resetClock(true,true);
+  }
+
+
+  const STREAM_OVERLAY_BASE_URL = 'https://bcrybarna-oss.github.io/BC-Rybarna-Scoreboard/overlay.html?v=12';
+  let streamSendTimer=null;
+  let lastStreamPayload='';
+
+  function currentStreamDbPath(){
+    return cloudUid ? 'stream/users/'+cloudUid : null;
+  }
+
+  function currentStreamOverlayUrl(){
+    if(!cloudUid) return '';
+    const sep = STREAM_OVERLAY_BASE_URL.includes('?') ? '&' : '?';
+    const enc = encodeURIComponent(cloudUid);
+    // UID je schválně v query i hash části. Některé mobilní WebView při otočení
+    // zahodí query parametry, ale hash zachovají.
+    return STREAM_OVERLAY_BASE_URL + sep + 'uid=' + enc + '#uid=' + enc;
+  }
+
+  function refreshStreamOverlayUrl(){
+    const url=currentStreamOverlayUrl();
+    const input=$('streamOverlayUrl');
+    if(input)input.value=url;
+    const help=$('helpStreamOverlayUrl');
+    if(help)help.textContent=url || 'Po přihlášení se zde zobrazí tvoje vlastní adresa overlaye.';
+  }
+
+  function streamPlayerSub(i){
+    if(!match) return '';
+    if(match.doublesMode && Array.isArray(match.teamPlayerIds?.[i])){
+      return match.teamPlayerIds[i]
+        .map(id=>data.players[id])
+        .filter(Boolean)
+        .map(p=>p.club||'')
+        .filter(Boolean)
+        .filter((v,idx,arr)=>arr.indexOf(v)===idx)
+        .join(' • ');
+    }
+    const p=data.players[match.playerIds[i]];
+    if(!p) return '';
+    if(p.useNicknameInMatch && p.nickname){
+      return [p.name,p.club].filter(Boolean).join(' • ');
+    }
+    return [p.nickname,p.club].filter(Boolean).join(' • ');
+  }
+
+  function buildStreamState(){
+    if(!match) return null;
+    const exactRack=exactBallTrackingDiscipline() && match.counterMode!=='simple';
+    const maxBall=match.discipline==='9-ball'?9:(match.discipline==='10-ball'?10:0);
+    const remainingBalls=exactRack
+      ? [...new Set((Array.isArray(match.rackRemainingBalls)?match.rackRemainingBalls:[]).map(Number).filter(n=>n>=1 && n<=maxBall))].sort((a,b)=>a-b)
+      : [];
+    return {
+      active:true,
+      table:1,
+      matchId:match.id,
+      matchTitle:match.streamMatchTitle||'',
+      streamMode:match.streamMode||'live',
+      discipline:match.discipline,
+      target:match.target,
+      breakMode:match.breakMode||'',
+      breakModeLabel:breakModeLabel(match.breakMode||''),
+      scores:[Number(match.scores[0]||0),Number(match.scores[1]||0)],
+      playerNames:match.doublesMode
+        ? [doublesSideNames(0).join(' + '),doublesSideNames(1).join(' + ')]
+        : [match.playerNames[0]||'',match.playerNames[1]||''],
+      playerSubs:[streamPlayerSub(0),match.ghostMode||match.solo14?'':streamPlayerSub(1)],
+      turn:Number(match.turn||0),
+      breaker:Number(match.breaker||0),
+      isBreakShot:!!match.isBreakShot,
+      useClock:!!match.useClock,
+      clockRemaining:match.useClock ? Number(timeLeft||0) : 0,
+      ghostMode:!!match.ghostMode,
+      ghostBallCount:match.ghostBallCount||null,
+      winnerTableMode:!!match.winnerTableMode,
+      waitingPlayer:match.winnerTableMode ? match.winnerTable.players[match.winnerTable.waiting].displayName : '',
+      waitingWins:match.winnerTableMode ? Number(match.winnerTable.wins[match.winnerTable.waiting]||0) : 0,
+      solo14:!!match.solo14,
+      rackNumber:Number(match.ghostMode ? (match.ghostRackNumber||1) : (match.rackNumber||1)),
+      exactRackTracking:exactRack,
+      maxBall:maxBall||null,
+      remainingBalls:exactRack?remainingBalls:null,
+      updatedAt:Date.now()
+    };
+  }
+
+  async function sendStreamState(force=false){
+    if(!match || !match.streamEnabled) return false;
+    if(!cloudUid || !currentStreamDbPath())return false;
+    if(!await ensureCloudToken()){
+      setCloudStatus('PŘIHLÁSIT',false);
+      lastStreamPayload='';
+      return false;
+    }
+    const payload=buildStreamState();
+    if(!payload) return false;
+    const key=JSON.stringify(payload);
+    if(!force && key===lastStreamPayload) return true;
+    try{
+      const res=await fetch(cloudUrl(currentStreamDbPath()),{
+        method:'PUT',
+        headers:{'Content-Type':'application/json'},
+        body:key,
+        cache:'no-store'
+      });
+      if(!res.ok){
+        lastStreamPayload='';
+        console.warn('Stream sync HTTP:',res.status);
+        setCloudStatus('CHYBA',false);
+        return false;
+      }
+      lastStreamPayload=key;
+      return true;
+    }catch(err){
+      lastStreamPayload='';
+      console.warn('Stream sync:',err);
+      setCloudStatus('CHYBA',false);
+      return false;
+    }
+  }
+
+  function scheduleStreamState(){
+    if(!match || !match.streamEnabled) return;
+    if(streamSendTimer) clearTimeout(streamSendTimer);
+    streamSendTimer=setTimeout(()=>sendStreamState(),80);
+  }
+
+  // Záloha pro mobilní prohlížeče/obnovení aplikace:
+  // pokud jednorázový zápis streamu selže při přihlášení nebo návratu z pozadí,
+  // každých 5 s se aktivní stav zkusí znovu poslat.
+  setInterval(()=>{
+    if(match && match.streamEnabled) sendStreamState(true);
+  },5000);
+
+  function refreshStreamDirector(){
+    const panel=$('streamDirectorPanel');
+    if(!panel)return;
+    const visible=!!(match && match.streamEnabled);
+    panel.classList.toggle('hidden',!visible);
+    if(!visible)return;
+    const mode=match.streamMode||'live';
+    const map={live:'LIVE',pause:'PAUZA',soon:'BRZY ZAČÍNÁME',end:'KONEC'};
+    const info=$('streamModeInfo');
+    if(info)info.textContent='Aktuálně: '+(map[mode]||'LIVE');
+    [['streamModeLiveBtn','live'],['streamModePauseBtn','pause'],['streamModeSoonBtn','soon'],['streamModeEndBtn','end']].forEach(([id,m])=>{
+      const b=$(id); if(!b)return; b.classList.toggle('primary',mode===m);
+    });
+  }
+
+  async function setStreamMode(mode){
+    if(!match || !match.streamEnabled)return;
+    match.streamMode=['live','pause','soon','end'].includes(mode)?mode:'live';
+    refreshStreamDirector();
+    await sendStreamState(true);
+    autosaveCurrent();
+  }
+
+  if($('streamModeLiveBtn'))$('streamModeLiveBtn').onclick=()=>setStreamMode('live');
+  if($('streamModePauseBtn'))$('streamModePauseBtn').onclick=()=>setStreamMode('pause');
+  if($('streamModeSoonBtn'))$('streamModeSoonBtn').onclick=()=>setStreamMode('soon');
+  if($('streamModeEndBtn'))$('streamModeEndBtn').onclick=()=>setStreamMode('end');
+
+  async function clearStreamState(){
+    lastStreamPayload='';
+    try{
+      if(!cloudUid || !currentStreamDbPath())return;
+      if(!await ensureCloudToken())return;
+      await fetch(cloudUrl(currentStreamDbPath()),{
+        method:'PUT',
+        headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({active:false,updatedAt:Date.now()}),
+        cache:'no-store'
+      });
+    }catch(e){
+      console.warn('Stream clear:',e);
+    }
+  }
+
+  const copyStreamOverlayBtn=$('copyStreamOverlayUrl');
+  if(copyStreamOverlayBtn){
+    copyStreamOverlayBtn.onclick=async()=>{
+      const url=currentStreamOverlayUrl();
+      if(!url){
+        toast('Nejdřív se přihlas ke svému účtu.');
+        return;
+      }
+      try{
+        await navigator.clipboard.writeText(url);
+        toast('Adresa overlaye zkopírována.');
+      }catch(e){
+        const input=$('streamOverlayUrl');
+        if(input){input.focus();input.select();}
+        toast('Adresa je označená – zkopíruj ji ručně.');
+      }
+    };
+  }
+
+  function initials(name=''){
+    return name.trim().split(/\s+/).filter(Boolean).slice(0,2).map(x=>x[0]?.toUpperCase()||'').join('') || 'HR';
+  }
+  function applyMatchAvatar(i,p){
+    const img=$(i===0?'p1Avatar':'p2Avatar');
+    const fb=$(i===0?'p1AvatarFallback':'p2AvatarFallback');
+    if(p && p.photo){
+      img.src=p.photo; img.alt=p.name||''; img.classList.remove('hidden'); fb.classList.add('hidden');
+    }else{
+      img.removeAttribute('src'); img.classList.add('hidden'); fb.classList.remove('hidden'); fb.textContent=initials(p && p.name||(match && match.playerNames ? match.playerNames[i] : '')||'');
+    }
+  }
+  function avatarHTML(p,large=false){
+    if(p.photo) return `<img class="avatar${large?' large':''}" src="${p.photo}" alt="${esc(p.name)}">`;
+    return `<div class="avatar initials${large?' large':''}">${esc(initials(p.name))}</div>`;
+  }
+
+  function normalRaceTarget(m=match){
+    const n=Number(m?.target);
+    return Number.isFinite(n) && n>0 ? Math.floor(n) : 1;
+  }
+
+  function checkNormalRaceTarget(){
+    if(!match || match.endedAt || match.status==='complete')return false;
+    if(match.discipline==='14.1' || match.ghostMode || match.winnerTableMode)return false;
+
+    const target=normalRaceTarget(match);
+    match.target=target;
+
+    const s0=Number(match.scores?.[0]||0);
+    const s1=Number(match.scores?.[1]||0);
+
+    if(s0>=target || s1>=target){
+      const winner=s0>=target && s1>=target ? (s0>=s1?0:1) : (s0>=target?0:1);
+      finishMatch(winner);
+      return true;
+    }
+    return false;
+  }
+
+  function checkFourteenOneTarget(){
+    if(!match || match.endedAt || match.status==='complete')return false;
+    if(match.discipline!=='14.1')return false;
+
+    const target=normalRaceTarget(match);
+    match.target=target;
+
+    const s0=Number(match.scores?.[0]||0);
+    const s1=Number(match.scores?.[1]||0);
+
+    if(match.solo14 && match.solo14GhostMode){
+      if(s0>=target || s1>=target){
+        const winner=s0>=target && s1>=target ? (s0>=s1?0:1) : (s0>=target?0:1);
+        finishMatch(winner);
+        return true;
+      }
+      return false;
+    }
+
+    if(s0>=target || (!match.solo14 && s1>=target)){
+      const winner=match.solo14 ? 0 : (s0>=target && s1>=target ? (s0>=s1?0:1) : (s0>=target?0:1));
+      finishMatch(winner);
+      return true;
+    }
+    return false;
+  }
+
+  function breakModeLabel(mode){
+    if(mode==='alternate')return 'STŘÍDAVÝ BREAK PO 1';
+    if(mode==='alternate2')return 'STŘÍDÁNÍ PO 2 BREAKÁCH';
+    if(mode==='winner')return 'VÍTĚZ BREAK';
+    if(mode==='first-only')return 'POUZE PRVNÍ ROZSTŘEL';
+    if(mode==='ghost-player-breaks')return 'HRÁČ BREAKUJE KAŽDÝ RACK';
+    return 'BREAK';
+  }
+
+  function liveBreakModeLabel(m){
+    if(!m)return '';
+    const mode=m.breakMode||'';
+    if(mode==='alternate')return 'STŘÍDAVÝ ROZSTŘEL';
+    if(mode==='alternate2')return 'STŘÍDÁNÍ PO 2 ROZSTŘELECH';
+    if(mode==='winner')return 'VÍTĚZ ROZSTŘELUJE';
+    if(mode==='first-only')return 'POUZE ÚVODNÍ ROZSTŘEL';
+    if(mode==='ghost-player-breaks')return 'HRÁČ ROZSTŘELUJE KAŽDÝ RACK';
+    if(mode==='winner-table')return 'NOVĚ PŘÍCHOZÍ ROZSTŘELUJE';
+    return '';
+  }
+
+  function nineBallBreakRuleLabel(rule){
+    if(rule==='kitchen')return 'KITCHEN RULE';
+    if(rule==='box')return 'BREAK BOX';
+    if(rule==='kitchen_box')return 'KITCHEN RULE + BREAK BOX';
+    return '';
+  }
+
+  function consumeSoftBreakReturnOnShot(playerIndex){
+    if(!match)return;
+    if(match.softBreakReturnEligibleFor===playerIndex){
+      match.softBreakReturnEligibleFor=null;
+      match.softBreakOriginalBreaker=null;
+      match.breakAndRunEligible=false;
+    }
+  }
+
+  function consumePushOutOptionOnAction(playerIndex){
+    if(!match)return;
+    if(match.pushOutEligibleFor===playerIndex){
+      match.pushOutEligibleFor=null;
+    }
+  }
+
+
+  function doublesSideNames(side){
+    if(!match?.doublesMode)return [];
+    const ids=Array.isArray(match.teamPlayerIds?.[side]) ? match.teamPlayerIds[side] : [];
+    const fallback=Array.isArray(match.teamPlayerNames?.[side]) ? match.teamPlayerNames[side] : [];
+    const names=ids.map((id,idx)=>{
+      const p=data.players?.[id];
+      return p ? playerDisplayName(p) : (fallback[idx]||'Hráč');
+    }).filter(Boolean);
+    if(names.length)return names;
+    return String(match.playerNames?.[side]||'').split(' + ').map(s=>s.trim()).filter(Boolean);
+  }
+
+  function renderMatchSideName(el,side){
+    if(!el)return;
+    if(match?.doublesMode){
+      const names=doublesSideNames(side);
+      el.classList.add('doubles-name');
+      el.innerHTML=names.map((name,idx)=>
+        (idx?'<span class="doubles-plus">+</span>':'')+
+        '<span class="doubles-player">'+esc(name)+'</span>'
+      ).join('');
+    }else{
+      el.classList.remove('doubles-name');
+      el.textContent=match?.playerNames?.[side]||'';
+    }
+  }
+
+
+  function fourteenReasonLabel(reason){
+    if(reason==='safe')return 'SAFE';
+    if(reason==='foul')return 'FAUL';
+    if(reason==='opening_break_foul')return 'FAUL Z BREAKU';
+    return 'MISS';
+  }
+
+  function fourteenInningsRows(m){
+    return Array.isArray(m?.inningsHistory14)?m.inningsHistory14:[];
+  }
+
+  function fourteenInningsTimelineHtml(m){
+    const rows=fourteenInningsRows(m);
+    if(!rows.length){
+      return `<div class="subpanel" style="margin-top:12px">
+        <div style="font-size:17px;font-weight:950">PRŮBĚH NÁBĚHŮ</div>
+        <div class="muted" style="margin-top:7px">U tohoto zápasu není uložen detail jednotlivých náběhů.</div>
+      </div>`;
+    }
+    return `<div class="subpanel" style="margin-top:12px">
+      <div style="font-size:17px;font-weight:950;margin-bottom:9px">PRŮBĚH NÁBĚHŮ • TAH PO TAHU</div>
+      <div style="display:grid;gap:6px">
+        ${rows.map((r,idx)=>`
+          <div style="display:grid;grid-template-columns:auto minmax(0,1fr) auto auto;gap:8px;align-items:center;padding:8px 9px;border:1px solid #2d2d31;border-radius:10px;background:#101012">
+            <strong style="color:var(--gold2)">#${idx+1}</strong>
+            <div style="min-width:0">
+              <strong>${esc(r.playerName||m.playerNames?.[r.player]||'Hráč')}</strong>
+              <span class="muted" style="font-size:11px;margin-left:5px">${esc(fourteenReasonLabel(r.reason))}</span>
+            </div>
+            <div style="text-align:right"><span class="muted" style="font-size:10px">NÁBĚH</span><br><strong>${esc(String(r.run||0))}</strong></div>
+            <div style="text-align:right"><span class="muted" style="font-size:10px">CELKEM</span><br><strong>${esc(String(r.total??0))}</strong></div>
+          </div>`).join('')}
+      </div>
+    </div>`;
+  }
+
+  function renderFourteenInningsHistory(){
+    const host=$('fourteenInningsHistory');
+    const panel=$('fourteenInningsHistoryPanel');
+    if(!host||!panel||!match)return;
+    const show=match.discipline==='14.1';
+    panel.classList.toggle('hidden',!show);
+    if(!show)return;
+    const rows=fourteenInningsRows(match);
+    host.innerHTML=rows.length
+      ? rows.slice().reverse().map((r,revIdx)=>{
+          const n=rows.length-revIdx;
+          return `<div style="display:grid;grid-template-columns:auto minmax(0,1fr) auto auto;gap:7px;align-items:center;padding:7px 8px;border:1px solid #2b2b2f;border-radius:9px">
+            <strong style="color:var(--gold2)">#${n}</strong>
+            <div><strong>${esc(r.playerName||match.playerNames?.[r.player]||'Hráč')}</strong> <span class="muted" style="font-size:10px">${esc(fourteenReasonLabel(r.reason))}</span></div>
+            <div style="text-align:right"><span class="muted" style="font-size:9px">NÁBĚH</span><br><strong>${esc(String(r.run||0))}</strong></div>
+            <div style="text-align:right"><span class="muted" style="font-size:9px">CELKEM</span><br><strong>${esc(String(r.total??0))}</strong></div>
+          </div>`;
+        }).join('')
+      : '<div class="muted">Zatím není zapsán žádný náběh.</div>';
+  }
+
+  function basicMatchSummaryCard(m){
+    const started=m.startedAt?new Date(m.startedAt):null;
+    const ended=m.endedAt?new Date(m.endedAt):null;
+    let duration='—';
+    if(started && ended && !isNaN(started) && !isNaN(ended)){
+      const mins=Math.max(0,Math.round((ended-started)/60000));
+      duration=mins<60?mins+' min':Math.floor(mins/60)+' h '+(mins%60)+' min';
+    }
+    const br0=Number(m.stats?.[0]?.breakAndRun||0), br1=Number(m.stats?.[1]?.breakAndRun||0);
+    const ro0=Number(m.stats?.[0]?.runouts||0), ro1=Number(m.stats?.[1]?.runouts||0);
+    return `<div class="subpanel" style="margin-top:12px">
+      <div style="font-size:17px;font-weight:950;margin-bottom:9px">ZÁKLADNÍ SOUHRN</div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(115px,1fr));gap:8px">
+        ${statBox('SKÓRE',String(m.scores?.[0]??0)+' : '+String(m.scores?.[1]??0))}
+        ${statBox('DISCIPLÍNA',String(m.discipline||'—').toUpperCase())}
+        ${statBox('DÉLKA',duration)}
+        ${m.target?statBox('RACE TO',m.target):''}
+      </div>
+
+      <div style="margin-top:12px;font-size:13px;font-weight:950;color:var(--gold2)">RYCHLÉ STATISTIKY</div>
+      <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin-top:8px">
+        <div class="subpanel" style="margin:0;padding:10px;text-align:center">
+          <strong>${esc(savedMatchSideDisplayName(m,0)||'Hráč 1')}</strong>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:7px">
+            ${statBox('ČISTÉ HRY',br0)}
+            ${statBox('DOHRÁVKY',ro0)}
+          </div>
+        </div>
+        <div class="subpanel" style="margin:0;padding:10px;text-align:center">
+          <strong>${esc(savedMatchSideDisplayName(m,1)||'Hráč 2')}</strong>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:7px">
+            ${statBox('ČISTÉ HRY',br1)}
+            ${statBox('DOHRÁVKY',ro1)}
+          </div>
+        </div>
+      </div>
+
+      <div class="muted" style="margin-top:10px;line-height:1.45">
+        Zápas byl veden v jednoduchém počítadle. Evidují se pouze Čisté hry a Dohrávky.
+      </div>
+    </div>`;
+  }
+
+  function finishEightBallRackQuick(player,type='win'){
+    if(!match || match.discipline!=='8-ball' || match.counterMode==='simple' || match.ghostMode || match.solo14)return;
+    if(match.endedAt || match.status==='complete')return;
+
+    player=Number(player);
+    if(player!==0 && player!==1)return;
+
+    if(type==='clean'){
+      const cleanAllowed =
+        player===Number(match.breaker||0) &&
+        player===Number(match.turn||0) &&
+        match.breakAndRunEligible!==false;
+      if(!cleanAllowed){
+        toast('ČISTÁ je pouze Break & Run hráče, který rozstřeloval. Po dry breaku soupeře použij DOHRÁVKA.');
+        return;
+      }
+    }
+
+    if(type==='runout'){
+      const runoutAllowed =
+        match.runoutEligibleFor===player ||
+        (player!==Number(match.breaker||0) && match.breakAndRunEligible===false);
+      if(!runoutAllowed){
+        toast('DOHRÁVKA je určena pro dohrání stolu po dry breaku nebo jiném předání stolu.');
+        return;
+      }
+    }
+
+    const label=type==='clean'?'Čistá hra':(type==='runout'?'Dohrávka':'Vyhrál rack');
+    saveManualEntryUndoSnapshot('8-ball • '+label);
+
+    match.stats[player]=match.stats[player]||blankMatchStats();
+
+    if(type==='clean'){
+      match.stats[player].breakAndRun=Number(match.stats[player].breakAndRun||0)+1;
+      addActionEvent('⭐ ČISTÁ HRA • '+match.playerNames[player]+' • 8-ball');
+      playSpecialSound();
+    }else if(type==='runout'){
+      match.stats[player].runouts=Number(match.stats[player].runouts||0)+1;
+      addActionEvent('DOHRÁVKA • '+match.playerNames[player]+' • 8-ball');
+    }else{
+      addActionEvent('VYHRÁL RACK • '+match.playerNames[player]+' • 8-ball');
+    }
+
+    winRack(player,true,'8-ball • '+label);
+  }
+
+  if($('eightBallWin0'))$('eightBallWin0').onclick=()=>finishEightBallRackQuick(0,'win');
+  if($('eightBallWin1'))$('eightBallWin1').onclick=()=>finishEightBallRackQuick(1,'win');
+  if($('eightBallClean0'))$('eightBallClean0').onclick=()=>finishEightBallRackQuick(0,'clean');
+  if($('eightBallClean1'))$('eightBallClean1').onclick=()=>finishEightBallRackQuick(1,'clean');
+  if($('eightBallRunout0'))$('eightBallRunout0').onclick=()=>finishEightBallRackQuick(0,'runout');
+  if($('eightBallRunout1'))$('eightBallRunout1').onclick=()=>finishEightBallRackQuick(1,'runout');
+
+  function renderMatch(){
+    if(match && !editableMatchOwnedByCurrentUser(match)){
+      discardForeignLocalActiveMatch();
+      toast('Tento rozehraný zápas patří jinému uživateli. Můžeš ho sledovat pouze přes LIVESCORE.');
+      showScreen('live');
+      return;
+    }
+
+    if(!match) return;
+
+    // Pojistka cílového skóre: i kdyby se skóre změnilo jinou cestou,
+    // dosažení cíle okamžitě ukončí běžný zápas i 14.1.
+    if(!match.endedAt && (checkNormalRaceTarget() || checkFourteenOneTarget()))return;
+
+    if(match.winnerTableMode) syncWinnerTableSlots();
+    const mp1=data.players[match.playerIds[0]]||{name:match.playerRealNames?.[0]||match.playerNames[0]};
+    const mp2=data.players[match.playerIds[1]]||{name:match.playerRealNames?.[1]||match.playerNames[1]};
+    if(match.doublesMode){
+      match.playerNames=[doublesSideNames(0).join(' + '),doublesSideNames(1).join(' + ')];
+    }else{
+      match.playerNames[0]=data.players[match.playerIds[0]] ? playerDisplayName(mp1) : match.playerNames[0];
+      if(!match.solo14 && !match.ghostMode && data.players[match.playerIds[1]]){
+        match.playerNames[1]=playerDisplayName(mp2);
+      }
+    }
+    renderMatchSideName($('p1Display'),0);
+    renderMatchSideName($('p2Display'),1);
+    applyMatchAvatar(0,mp1);
+    applyMatchAvatar(1,mp2);
+    $('p1Subname').textContent=match.doublesMode
+      ? 'DVOJICE 1'
+      : playerSubname(mp1);
+    $('p2Subname').textContent=match.doublesMode
+      ? 'DVOJICE 2'
+      : ((match.solo14||match.ghostMode)?'':playerSubname(mp2));
+    $('p1Subname').classList.toggle('hidden',!$('p1Subname').textContent);
+    $('p2Subname').classList.toggle('hidden',!$('p2Subname').textContent);
+    $('p1Score').textContent=match.scores[0];
+    $('p2Score').textContent=match.scores[1];
+
+    const solo14View=!!match.solo14 && match.discipline==='14.1';
+    $('solo14ScoreRow').classList.toggle('hidden',!solo14View);
+    $('p1Score').classList.toggle('hidden',solo14View);
+    $('solo14StatsPanel').classList.toggle('hidden',!solo14View);
+
+    if(solo14View){
+      $('solo14TotalScore').textContent=match.scores[0];
+      $('solo14BallsTop').textContent=match.ballsOnTable==null ? 15 : match.ballsOnTable;
+      $('solo14GhostScoreTile').classList.toggle('hidden',!match.solo14GhostMode);
+      $('solo14ScoreRow').classList.toggle('ghost-enabled',!!match.solo14GhostMode);
+      if(match.solo14GhostMode){
+        $('solo14GhostScore').textContent=match.scores[1]||0;
+        if($('solo14GhostLevel')){
+          $('solo14GhostLevel').textContent=solo14GhostDifficultyLabel(match,true);
+          $('solo14GhostLevel').classList.remove('hidden');
+        }
+      }else if($('solo14GhostLevel')){
+        $('solo14GhostLevel').textContent='';
+        $('solo14GhostLevel').classList.add('hidden');
+      }
+      $('solo14Innings').textContent=statVal(match,0,'innings14');
+      $('solo14HighRun').textContent=statVal(match,0,'highRun14');
+      $('solo14Average').textContent=averagePerInning14Text(match,0);
+    }
+
+    const classic14View=!match.solo14 && match.discipline==='14.1';
+    $('classic14Overview').classList.toggle('hidden',!classic14View);
+    if(classic14View){
+      $('classic14P1Name').textContent=match.playerNames?.[0]||'Hráč 1';
+      $('classic14P2Name').textContent=match.playerNames?.[1]||'Hráč 2';
+      $('classic14P1Score').textContent=match.scores?.[0]||0;
+      $('classic14P2Score').textContent=match.scores?.[1]||0;
+      $('classic14Balls').textContent=match.ballsOnTable==null?15:match.ballsOnTable;
+      $('classic14Turn').textContent=match.playerNames?.[Number(match.turn||0)]||'—';
+      $('classic14P1Innings').textContent=statVal(match,0,'innings14');
+      $('classic14P2Innings').textContent=statVal(match,1,'innings14');
+      $('classic14P1High').textContent=statVal(match,0,'highRun14');
+      $('classic14P2High').textContent=statVal(match,1,'highRun14');
+      $('classic14P1Avg').textContent=averagePerInning14Text(match,0);
+      $('classic14P2Avg').textContent=averagePerInning14Text(match,1);
+    }
+
+    $('player2Card').classList.toggle('hidden', !!match.solo14);
+    const top=$('player1Card').parentElement;
+    const centerStack=document.querySelector('.center-stack');
+    if(match.solo14){
+      // Sólo 14.1: hlavní skóre je široké a přesně uprostřed obrazovky.
+      top.style.gridTemplateColumns='minmax(0,900px)';
+      top.style.justifyContent='center';
+      top.style.justifyItems='stretch';
+
+      $('player1Card').style.gridColumn='1';
+      $('player1Card').style.width='100%';
+      $('player1Card').style.maxWidth='900px';
+      $('player1Card').style.margin='0 auto';
+
+      centerStack.style.gridColumn='1';
+      centerStack.style.width='100%';
+      centerStack.style.maxWidth='900px';
+      centerStack.style.margin='0 auto';
+    }else{
+      top.style.gridTemplateColumns='';
+      top.style.justifyContent='';
+      top.style.justifyItems='';
+
+      $('player1Card').style.gridColumn='';
+      $('player1Card').style.width='';
+      $('player1Card').style.maxWidth='';
+      $('player1Card').style.margin='';
+
+      centerStack.style.gridColumn='';
+      centerStack.style.width='';
+      centerStack.style.maxWidth='';
+      centerStack.style.margin='';
+    }
+    $('player1Card').classList.toggle('on-turn',match.turn===0);
+    $('player2Card').classList.toggle('on-turn',match.turn===1);
+    const waitingForLag=!!match.useLag && match.lagWinner==null && match.rackNumber===1 && !(match.events||[]).some(e=>/Rack 1 • rozstřel/.test(String(e.text||'')));
+    $('p1BreakBadge').classList.toggle('hidden',waitingForLag || match.breaker!==0);
+    $('p2BreakBadge').classList.toggle('hidden',waitingForLag || match.breaker!==1);
+    $('turnText').textContent=waitingForLag
+      ? 'Čeká se na výsledek tempa'
+      : (match.solo14
+        ? 'Sólo trénink: '+match.playerNames[0]
+        : (match.ghostMode
+          ? 'GHOST mód • '+match.playerNames[0]+' rozstřeluje každý rack'
+          : (match.winnerTableMode
+            ? 'Na tahu: '+match.playerNames[match.turn]+' • čeká '+match.winnerTable.players[match.winnerTable.waiting].displayName
+            : 'Na tahu: '+match.playerNames[match.turn])));
+
+    const d=match.discipline.toUpperCase();
+    $('matchMeta').textContent = match.discipline==='14.1'
+      ? d+' • DO '+match.target
+      : (match.winnerTableMode
+        ? d+' • VÍTĚZ NA STOLE'
+        : (match.ghostMode
+          ? d+' • GHOST • DO '+match.target+(ghostBallCountLabel(match)?' • '+ghostBallCountLabel(match):'')
+          : (match.doublesMode
+            ? d+' • DVOJICE • RACE TO '+match.target+' • '+breakModeLabel(match.breakMode)+(match.discipline==='9-ball'&&nineBallBreakRuleLabel(match.nineBallBreakRule)?' • '+nineBallBreakRuleLabel(match.nineBallBreakRule):'')
+            : d+' • RACE TO '+match.target+' • '+breakModeLabel(match.breakMode)+(match.discipline==='9-ball'&&nineBallBreakRuleLabel(match.nineBallBreakRule)?' • '+nineBallBreakRuleLabel(match.nineBallBreakRule):''))));
+
+    if($('matchDescription')){
+      const description=String(match.streamMatchTitle||'').trim();
+      $('matchDescription').textContent=description;
+      $('matchDescription').classList.toggle('hidden',!description);
+    }
+    refreshStreamDirector();
+
+    const show3=match.useThreeFoul && !match.ghostMode && (match.discipline==='9-ball'||match.discipline==='10-ball');
+    [0,1].forEach(i=>{
+      const fb=$(i===0?'p1FoulBadge':'p2FoulBadge');
+      fb.classList.toggle('hidden',!show3);
+      fb.textContent='FOULS '+match.consecutiveFouls[i]+'/3';
+      fb.classList.toggle('warn',match.consecutiveFouls[i]===2);
+
+      const eb=$(i===0?'p1ExtBadge':'p2ExtBadge');
+      eb.classList.toggle('hidden',!match.useClock || match.clock.extensionsPerRack===0);
+      eb.textContent='EXT '+Math.max(0,match.clock.extensionsPerRack-match.extensionsUsed[i]);
+    });
+
+    $('clockWrap').classList.toggle('hidden',!match.useClock);
+    const simpleCounter=match.counterMode==='simple';
+    const showEightBallResult =
+      match.discipline==='8-ball' &&
+      !simpleCounter &&
+      !match.ghostMode &&
+      !match.solo14;
+    if($('eightBallResultPanel'))$('eightBallResultPanel').classList.toggle('hidden',!showEightBallResult);
+    if(showEightBallResult){
+      if($('eightBallResultName0'))$('eightBallResultName0').textContent=match.playerNames?.[0]||'Hráč 1';
+      if($('eightBallResultName1'))$('eightBallResultName1').textContent=match.playerNames?.[1]||'Hráč 2';
+
+      [0,1].forEach(i=>{
+        const cleanBtn=$(i===0?'eightBallClean0':'eightBallClean1');
+        const runoutBtn=$(i===0?'eightBallRunout0':'eightBallRunout1');
+
+        const cleanAllowed =
+          i===Number(match.breaker||0) &&
+          i===Number(match.turn||0) &&
+          match.breakAndRunEligible!==false;
+
+        const runoutAllowed =
+          match.runoutEligibleFor===i ||
+          (i!==Number(match.breaker||0) && match.breakAndRunEligible===false);
+
+        if(cleanBtn){
+          cleanBtn.disabled=!cleanAllowed;
+          cleanBtn.title=cleanAllowed
+            ? 'Break & Run po vlastním rozstřelu'
+            : 'ČISTÁ je možná pouze po vlastním rozstřelu bez předání stolu';
+        }
+        if(runoutBtn){
+          runoutBtn.disabled=!runoutAllowed;
+          runoutBtn.title=runoutAllowed
+            ? 'Dohrání stolu po soupeřově dry breaku / předání stolu'
+            : 'DOHRÁVKA je dostupná po předání stolu';
+        }
+      });
+    }
+
+const isFourteen=match.discipline==='14.1' && !simpleCounter;
+    $('p1Fourteen').classList.toggle('hidden',true);
+    $('p2Fourteen').classList.toggle('hidden',true);
+    if(isFourteen){
+      const fourteenMiniStats=i=>{
+        const innings=statVal(match,i,'innings14');
+        const highRun=statVal(match,i,'highRun14');
+        const avg=averagePerInning14Text(match,i);
+        return `<div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:7px;margin-top:10px">
+          <div class="subpanel" style="padding:8px 5px;text-align:center">
+            <div class="muted" style="font-size:10px;font-weight:900">NÁBĚHY</div>
+            <div style="font-size:18px;font-weight:950;margin-top:2px">${innings}</div>
+          </div>
+          <div class="subpanel" style="padding:8px 5px;text-align:center">
+            <div class="muted" style="font-size:10px;font-weight:900">HIGH RUN</div>
+            <div style="font-size:18px;font-weight:950;margin-top:2px">${highRun}</div>
+          </div>
+          <div class="subpanel" style="padding:8px 5px;text-align:center;border-color:var(--gold)">
+            <div class="muted" style="font-size:10px;font-weight:900">PRŮMĚR / NÁBĚH</div>
+            <div style="font-size:18px;font-weight:950;color:var(--gold2);margin-top:2px">${avg}</div>
+          </div>
+        </div>`;
+      };
+      $('p1Fourteen').innerHTML='';
+      $('p2Fourteen').innerHTML='';
+    }else{
+      $('p1Fourteen').innerHTML='';
+      $('p2Fourteen').innerHTML='';
+    }
+    $('fourteenActions').classList.toggle('hidden',!isFourteen);
+    $('fourteenPanel')?.classList.toggle('solo14-actions',!!match.solo14 && isFourteen);
+    $('ghostActions').classList.toggle('hidden',simpleCounter || !match.ghostMode);
+    $('simpleCounterActions').classList.toggle('hidden',!simpleCounter);
+    $('normalActions').classList.toggle('hidden',simpleCounter || match.discipline==='14.1' || match.ghostMode);
+
+    // Kontextová tlačítka: hráč vidí pouze akce, které dávají smysl v aktuálním stavu stolu.
+    const normalGame=!simpleCounter && match.discipline!=='14.1' && !match.ghostMode;
+    const breakPhase=normalGame && !!match.isBreakShot && match.turn===match.breaker;
+    const escapeOnly=normalGame && match.safetyEscapeEligibleFor===match.turn;
+    const softReturnChoice=normalGame && match.softBreakReturnEligibleFor===match.turn;
+    const pushOutDecision=normalGame && match.pushOutDecisionFor===match.turn && match.pushOutBy!=null;
+    const regularPlay=normalGame && !breakPhase && !escapeOnly && !pushOutDecision;
+    const compactNoClock=!match.useClock;
+    const showAction=(id,show)=>{
+      const el=$(id);
+      if(!el)return;
+      el.classList.toggle('hidden',!show);
+      el.disabled=false;
+    };
+
+    showAction('actionBreakOkBtn',breakPhase);
+    showAction('actionDryBreakBtn',breakPhase);
+    showAction('actionBreakFoulBtn',breakPhase);
+    showAction('actionSoftBreakBtn',breakPhase && match.discipline==='9-ball' && ['kitchen','kitchen_box'].includes(match.nineBallBreakRule));
+    showAction('returnTableBtn',softReturnChoice && !escapeOnly && !pushOutDecision);
+    const canPushOut=regularPlay && (match.discipline==='9-ball'||match.discipline==='10-ball') && match.pushOutEligibleFor===match.turn;
+    showAction('actionPushOutBtn',canPushOut);
+    showAction('acceptPushOutBtn',pushOutDecision);
+    showAction('returnPushOutBtn',pushOutDecision);
+
+    showAction('actionSafetyEscapeBtn',escapeOnly);
+    showAction('actionDirectBallBtn',escapeOnly);
+    // Bez shotclocku se ČISTÝ STRK běžně skrývá. Je-li ale ještě dostupný PUSH OUT,
+    // zobrazíme ho jako explicitní potvrzení prvního normálního strku, po kterém PUSH OUT zaniká.
+    showAction('actionLegalBtn',regularPlay && (!compactNoClock || canPushOut || (match.counterMode!=='simple' && exactBallTrackingDiscipline())));
+    showAction('actionFoulBtn',regularPlay);
+    showAction('actionSafeBtn',regularPlay);
+    showAction('actionTwoWayBtn',regularPlay);
+    const comboRackBalls=Array.isArray(match.rackRemainingBalls)&&match.rackRemainingBalls.length
+      ? match.rackRemainingBalls.slice().sort((a,b)=>a-b)
+      : fullRackBalls();
+    const lowestRotationBall=comboRackBalls.length?comboRackBalls[0]:null;
+    const gameBall=match.discipline==='9-ball'?9:(match.discipline==='10-ball'?10:null);
+    const earlyTenWin=match.discipline==='10-ball' && match.tenBallRule==='early_win';
+
+    // U 9-ball se kombinace / karambol na 9 zadává přes ČISTÝ STRK:
+    // vybere se potopená 9 a následně aplikace nabídne KOMBINACE / KARAMBOL.
+    // Samostatná tlačítka by byla duplicitní a matou obsluhu.
+    const canSpecialGameBall=regularPlay &&
+      match.discipline==='10-ball' &&
+      earlyTenWin &&
+      comboRackBalls.includes(10) &&
+      lowestRotationBall!==10;
+
+    showAction('actionCombo9Btn',canSpecialGameBall);
+    showAction('actionCarom9Btn',canSpecialGameBall);
+    if($('actionCombo9Btn'))$('actionCombo9Btn').textContent='KOMBINACE NA 10';
+    if($('actionCarom9Btn'))$('actionCarom9Btn').textContent='KARAMBOL NA 10';
+    showAction('actionAccidentalSafeBtn',regularPlay);
+    showAction('actionMissBtn',regularPlay);
+
+    const canBreakRun=regularPlay && match.turn===match.breaker && match.breakAndRunEligible!==false;
+    const canRunout=regularPlay && match.runoutEligibleFor===match.turn;
+    showAction('actionBreakRunBtn',canBreakRun);
+    showAction('actionRunoutBtn',canRunout && match.discipline!=='8-ball');
+    // 8-ball má vlastní DOHRÁVKA tlačítko v panelu vedle ČISTÁ.
+    // Obecné žluté tlačítko dole nesmí být v 8-ball nikdy viditelné.
+    if(match.discipline==='8-ball' && $('actionRunoutBtn'))$('actionRunoutBtn').classList.add('hidden');
+
+    // Ruční změna hráče je servisní zásah; při povinném úniku ji schováme, aby nešlo obejít statistiku úniku.
+    if($('switchTurnBtn'))$('switchTurnBtn').classList.toggle('hidden',!normalGame || escapeOnly || breakPhase || pushOutDecision);
+    if($('manualScoreCorrectionBtn')){
+      const canManualScoreCorrection=normalGame && match.counterMode!=='simple' &&
+        match.discipline!=='14.1' && !match.ghostMode && !match.winnerTableMode;
+      $('manualScoreCorrectionBtn').classList.toggle('hidden',!canManualScoreCorrection);
+    }
+    if($('undoBtn'))$('undoBtn').classList.toggle('hidden',!normalGame);
+
+    // V běžném rozšířeném počítadle se skóre mění přes herní události.
+    // U turnajových zápasů 8/9/10-ball ale musí být dostupné i rychlé +/-.
+    const tournamentRackScoreAdjust =
+      !!match.tournamentLink &&
+      ['8-ball','9-ball','10-ball'].includes(match.discipline) &&
+      !match.ghostMode &&
+      !match.winnerTableMode;
+    $('p1ScoreAdjust').classList.toggle('hidden',!tournamentRackScoreAdjust);
+    $('p2ScoreAdjust').classList.toggle('hidden',!tournamentRackScoreAdjust);
+
+    $('winnerTablePanel').classList.toggle('hidden',!match.winnerTableMode);
+    if(match.winnerTableMode){
+      const wi=match.winnerTable.waiting;
+      $('wtWaitingName').textContent=match.winnerTable.players[wi].displayName;
+      $('wtWaitingWins').textContent='VÝHRY: '+(match.winnerTable.wins[wi]||0);
+      if($('wtLiveScoreProgress'))$('wtLiveScoreProgress').innerHTML=winnerTableProgressHtml(match,true);
+    }
+    if(match.ghostMode){
+      const balls=ghostBallCountLabel(match);
+      $('ghostRackInfo').textContent='Rack '+(match.ghostRackNumber||1)+(balls?' • '+balls:'');
+      $('ghostTargetInfo').textContent='DO '+(match.target||7)+' BODŮ';
+      if($('ghostAceBtn'))$('ghostAceBtn').classList.toggle('hidden',match.discipline!=='9-ball');
+    }else if($('ghostAceBtn')){
+      $('ghostAceBtn').classList.add('hidden');
+    }
+    if(match.discipline==='14.1'){
+      if(match.ballsOnTable==null) match.ballsOnTable=15;
+      $('ballsOnTableDisplay').textContent=match.ballsOnTable;
+      if(match.solo14 && $('solo14BallsTop')){
+        $('solo14BallsTop').textContent=match.ballsOnTable;
+        $('solo14TotalScore').textContent=match.scores[0];
+        $('solo14GhostScoreTile').classList.toggle('hidden',!match.solo14GhostMode);
+        $('solo14ScoreRow').classList.toggle('ghost-enabled',!!match.solo14GhostMode);
+        if(match.solo14GhostMode){
+          $('solo14GhostScore').textContent=match.scores[1]||0;
+          if($('solo14GhostLevel')){
+            $('solo14GhostLevel').textContent=solo14GhostDifficultyLabel(match,true);
+            $('solo14GhostLevel').classList.remove('hidden');
+          }
+        }else if($('solo14GhostLevel')){
+          $('solo14GhostLevel').textContent='';
+          $('solo14GhostLevel').classList.add('hidden');
+        }
+        $('solo14Innings').textContent=statVal(match,0,'innings14');
+        $('solo14HighRun').textContent=statVal(match,0,'highRun14');
+        $('solo14Average').textContent=averagePerInning14Text(match,0);
+      }else if(!match.solo14 && match.discipline==='14.1' && $('classic14Overview')){
+        $('classic14P1Name').textContent=match.playerNames?.[0]||'Hráč 1';
+        $('classic14P2Name').textContent=match.playerNames?.[1]||'Hráč 2';
+        $('classic14P1Score').textContent=match.scores?.[0]||0;
+        $('classic14P2Score').textContent=match.scores?.[1]||0;
+        $('classic14Balls').textContent=match.ballsOnTable;
+        $('classic14Turn').textContent=match.playerNames?.[Number(match.turn||0)]||'—';
+        $('classic14P1Innings').textContent=statVal(match,0,'innings14');
+        $('classic14P2Innings').textContent=statVal(match,1,'innings14');
+        $('classic14P1High').textContent=statVal(match,0,'highRun14');
+        $('classic14P2High').textContent=statVal(match,1,'highRun14');
+        $('classic14P1Avg').textContent=averagePerInning14Text(match,0);
+        $('classic14P2Avg').textContent=averagePerInning14Text(match,1);
+      }
+      if(!match.consecutiveFouls14) match.consecutiveFouls14=[0,0];
+      $('foulInfo14').textContent='Po sobě jdoucí fauly – '+match.playerNames[0]+': '+match.consecutiveFouls14[0]+' | '+match.playerNames[1]+': '+match.consecutiveFouls14[1];
+      $('openingBreakFoul14').classList.toggle('hidden', !match.openingBreakAvailable14);
+    }
+    renderFourteenInningsHistory();
+    $('manualBreaker').classList.toggle('hidden',simpleCounter || match.discipline==='14.1' || match.ghostMode || match.winnerTableMode);
+    $('p1BreakBadge').classList.toggle('hidden',simpleCounter || waitingForLag || match.breaker!==0);
+    $('p2BreakBadge').classList.toggle('hidden',simpleCounter || waitingForLag || match.breaker!==1);
+    if(simpleCounter){
+      $('turnText').textContent=match.winnerTableMode
+        ? 'VÍTĚZ NA STOLE • JEDNODUCHÉ POČÍTADLO'
+        : 'JEDNODUCHÉ POČÍTADLO';
+      if($('simpleAddP1'))$('simpleAddP1').textContent='+1 • '+match.playerNames[0];
+      if($('simpleAddP2'))$('simpleAddP2').textContent='+1 • '+match.playerNames[1];
+      if($('simpleRunoutP1'))$('simpleRunoutP1').textContent='DOHRÁVKA • '+match.playerNames[0];
+      if($('simpleRunoutP2'))$('simpleRunoutP2').textContent='DOHRÁVKA • '+match.playerNames[1];
+      if($('simpleBreakRunWho'))$('simpleBreakRunWho').textContent='ROZSTŘELUJE • '+match.playerNames[Number(match.breaker||0)];
+      $('p1FoulBadge').classList.add('hidden');
+      $('p2FoulBadge').classList.add('hidden');
+      $('p1ExtBadge').classList.add('hidden');
+      $('p2ExtBadge').classList.add('hidden');
+      $('clockWrap').classList.add('hidden');
+    }
+    $('finishMatch').textContent = match.solo14
+      ? 'UKONČIT A ULOŽIT TRÉNINK'
+      : (match.ghostMode
+        ? 'UKONČIT A ULOŽIT GHOST SESSION'
+        : (match.winnerTableMode ? 'UKONČIT A ULOŽIT SESSION' : 'Ukončit a uložit jako nedohraný'));
+    renderRackBallState();
+    renderEvents();
+    renderClock();
+    scheduleStreamState();
+    autosaveCurrent();
+  }
+
+  function logEvent(text, meta={}){
+    if(!match) return;
+    match.events.push({id:uid(),ts:new Date().toISOString(),time:nowTime(),text,meta});
+    renderEvents();
+  }
+  function renderEvents(){
+    if(!match) return;
+    $('eventLog').innerHTML = match.events.slice().reverse().map(e=>`<div class="event"><strong>${esc(e.time)}</strong> — ${esc(e.text)}</div>`).join('');
+  }
+
+  function snapshot(){
+    return JSON.stringify({
+      scores:match.scores,
+      ballsOnTable:match.ballsOnTable,
+      reracksInInning14:match.reracksInInning14||0,
+      inningsHistory14:Array.isArray(match.inningsHistory14)?match.inningsHistory14:[],
+      pendingEndReason14:match.pendingEndReason14||null,
+      openingBreakAvailable14:match.openingBreakAvailable14!==false,
+      consecutiveFouls14:match.consecutiveFouls14||[0,0],
+      turn:match.turn,
+      breaker:match.breaker,
+      rackNumber:match.rackNumber,
+      isBreakShot:!!match.isBreakShot,
+      softBreakOriginalBreaker:match.softBreakOriginalBreaker,
+      softBreakReturnEligibleFor:match.softBreakReturnEligibleFor,
+      breakAndRunEligible:match.breakAndRunEligible!==false,
+      runoutEligibleFor:match.runoutEligibleFor??null,
+      runoutEligibleReason:match.runoutEligibleReason??null,
+      pushOutEligibleFor:match.pushOutEligibleFor??null,
+      pushOutBy:match.pushOutBy??null,
+      pushOutDecisionFor:match.pushOutDecisionFor??null,
+      safetyEscapeEligibleFor:match.safetyEscapeEligibleFor??null,
+      breakPocketedBalls:Array.isArray(match.breakPocketedBalls)?match.breakPocketedBalls:[],
+      rackRemainingBalls:Array.isArray(match.rackRemainingBalls)?match.rackRemainingBalls:[],
+      lastMissBall:match.lastMissBall??null,
+      ghostRackHistory:Array.isArray(match.ghostRackHistory)?match.ghostRackHistory:[],
+      consecutiveFouls:match.consecutiveFouls,
+      warnedTwoFouls:match.warnedTwoFouls,
+      extensionsUsed:match.extensionsUsed,
+      stats:match.stats,
+      winnerTable:match.winnerTable
+    });
+  }
+  function addActionEvent(text){
+    const snap=snapshot();
+    logEvent(text,{undoSnapshot:snap});
+  }
+  function restoreSnapshot(s){
+    const x=JSON.parse(s);
+    match.scores=x.scores; match.ballsOnTable=x.ballsOnTable; match.reracksInInning14=x.reracksInInning14||0; match.inningsHistory14=Array.isArray(x.inningsHistory14)?x.inningsHistory14:[]; match.pendingEndReason14=x.pendingEndReason14||null; match.openingBreakAvailable14=x.openingBreakAvailable14!==false; match.consecutiveFouls14=x.consecutiveFouls14||[0,0]; match.turn=x.turn; match.breaker=x.breaker; match.rackNumber=x.rackNumber; match.isBreakShot=!!x.isBreakShot;
+    match.softBreakOriginalBreaker=x.softBreakOriginalBreaker??null;
+    match.softBreakReturnEligibleFor=x.softBreakReturnEligibleFor??null;
+    match.breakAndRunEligible=x.breakAndRunEligible!==false;
+    match.runoutEligibleFor=x.runoutEligibleFor??null;
+    match.runoutEligibleReason=x.runoutEligibleReason??null;
+    match.pushOutEligibleFor=x.pushOutEligibleFor??null;
+    match.pushOutBy=x.pushOutBy??null;
+    match.pushOutDecisionFor=x.pushOutDecisionFor??null;
+    match.safetyEscapeEligibleFor=x.safetyEscapeEligibleFor??null;
+    match.breakPocketedBalls=Array.isArray(x.breakPocketedBalls)?x.breakPocketedBalls:[];
+    match.rackRemainingBalls=Array.isArray(x.rackRemainingBalls)?x.rackRemainingBalls:[];
+    match.lastMissBall=x.lastMissBall??null;
+    match.ghostRackHistory=Array.isArray(x.ghostRackHistory)?x.ghostRackHistory:[];
+    match.consecutiveFouls=x.consecutiveFouls; match.warnedTwoFouls=x.warnedTwoFouls;
+    match.extensionsUsed=x.extensionsUsed; match.stats=x.stats;
+    if(match.winnerTableMode && x.winnerTable){
+      match.winnerTable=x.winnerTable;
+      syncWinnerTableSlots();
+    }
+  }
+
+  $('undoBtn').onclick=undo;
+  $('undo14Btn').onclick=undo;
+  function undo(){
+    if(match && !editableMatchOwnedByCurrentUser(match)){
+      toast('Tento zápas můžeš pouze sledovat přes LIVESCORE.');
+      return;
+    }
+
+    if(!match) return;
+    for(let i=match.events.length-1;i>=0;i--){
+      const e=match.events[i];
+      if(e.meta && e.meta.undoSnapshot){
+        restoreSnapshot(e.meta.undoSnapshot);
+        match.pendingEndReason14=null;
+        match.events.splice(i);
+        if(match.useClock) resetClock(false,false);
+        renderMatch(); toast('Poslední akce vrácena.');
+        return;
+      }
+    }
+    toast('Není co vrátit.');
+  }
+
+  window.switchTurn = function(reason='Změna hráče'){
+    if(!match) return;
+    match.isBreakShot=false;
+    addActionEvent(reason+' • '+match.playerNames[match.turn]+' → '+match.playerNames[1-match.turn]);
+    match.softBreakReturnEligibleFor=null;
+    match.softBreakOriginalBreaker=null;
+    match.breakAndRunEligible=false;
+    match.runoutEligibleFor=null;
+    match.runoutEligibleReason=null;
+    match.pushOutEligibleFor=null;
+    match.pushOutBy=null;
+    match.pushOutDecisionFor=null;
+    match.safetyEscapeEligibleFor=null;
+    match.turn=1-match.turn;
+    if(match.useClock) resetClock(false,true);
+    renderMatch();
+  }
+
+  function recordBreakPottedBalls(i,count){
+    if(!match || !match.stats?.[i])return;
+    const n=Math.max(0,Number(count||0));
+    match.stats[i].breakPottedBalls=Number(match.stats[i].breakPottedBalls||0)+n;
+    match.stats[i].breakPottedTracked=Number(match.stats[i].breakPottedTracked||0)+1;
+  }
+
+  function breakPotCountMax(){
+    if(!match)return 15;
+    if(match.discipline==='9-ball')return 9;
+    if(match.discipline==='10-ball')return 10;
+    return 15;
+  }
+
+  let pendingBreakPotAction=null;
+  let pendingBreakAceAction=null;
+  let pendingBreakBalls=[];
+  let pendingResolvedBreakBalls=null;
+  let pendingResolvedBreakSpotGameBall=false;
+
+  function recordBreakBallIds(i,balls){
+    if(!match || !match.stats?.[i])return;
+    [...new Set((balls||[]).map(Number))].forEach(n=>{
+      if(n>=1 && n<=10){
+        const key='breakBall'+n;
+        match.stats[i][key]=Number(match.stats[i][key]||0)+1;
+      }
+    });
+  }
+
+  function exactBallTrackingDiscipline(){
+    return !!match && (match.discipline==='9-ball'||match.discipline==='10-ball');
+  }
+  function fullRackBalls(){
+    const max=match?.discipline==='9-ball'?9:(match?.discipline==='10-ball'?10:0);
+    return max?Array.from({length:max},(_,k)=>k+1):[];
+  }
+  function applyBreakBallState(selected,{spotNine=false,spotTen=false}={}){
+    if(!match || !exactBallTrackingDiscipline())return;
+    const uniq=[...new Set((selected||[]).map(Number).filter(n=>n>=1&&n<=breakPotCountMax()))].sort((a,b)=>a-b);
+    match.breakPocketedBalls=uniq.slice();
+    let gone=uniq.slice();
+    if(spotNine && match.discipline==='9-ball')gone=gone.filter(n=>n!==9);
+    if(spotTen && match.discipline==='10-ball')gone=gone.filter(n=>n!==10);
+    match.rackRemainingBalls=fullRackBalls().filter(n=>!gone.includes(n));
+  }
+
+  function exactBallVisualClass(n){
+    const dark=[2,3,4,6,7,8,10].includes(Number(n));
+    const stripe=Number(n)>=9;
+    return `exact-ball-btn ${stripe?'stripe':'solid'} ball${Number(n)} ${dark?'dark':''}`;
+  }
+  function exactBallButtonHtml(n,{selected=false,onclick=''}={}){
+    const cls=exactBallVisualClass(n)+(selected?' selected':'');
+    return `<button type="button" class="${cls}" onclick="${onclick}" aria-label="Koule ${Number(n)}"><span class="ball-number">${Number(n)}</span></button>`;
+  }
+  function exactBallStaticHtml(n){
+    const cls=exactBallVisualClass(n);
+    return `<span class="${cls}" style="cursor:default;pointer-events:none;margin:0;width:42px;height:42px"><span class="ball-number" style="width:19px;height:19px;font-size:11px">${Number(n)}</span></span>`;
+  }
+
+  function renderRackBallState(){
+    const panel=$('rackBallStatePanel');
+    const host=$('rackBallStateBalls');
+    if(!panel||!host)return;
+    const show=!!(match && match.counterMode!=='simple' && !match.ghostMode && exactBallTrackingDiscipline());
+    panel.classList.toggle('hidden',!show);
+    if(!show)return;
+    const rem=Array.isArray(match.rackRemainingBalls)?match.rackRemainingBalls:fullRackBalls();
+    host.innerHTML=rem.length?rem.map(exactBallStaticHtml).join(''):'<span class="muted">Žádná evidovaná koule na stole</span>';
+
+    const quick=$('quickRunoutBtn');
+    if(quick){
+      const canQuick=rem.length>0 &&
+        !match.ghostMode &&
+        !match.isBreakShot &&
+        match.turn!=null &&
+        match.pushOutDecisionFor==null &&
+        match.softBreakReturnEligibleFor==null &&
+        match.safetyEscapeEligibleFor==null;
+      quick.classList.toggle('hidden',!canQuick);
+      if(canQuick){
+        quick.querySelector('span').textContent='DOHRÁT '+rem.join(' → ');
+      }
+    }
+  }
+  function renderBreakBallSelector(){
+    const host=$('breakBallSelectButtons');
+    if(!host)return;
+    const max=breakPotCountMax();
+    host.innerHTML='<div class="exact-ball-grid">'+Array.from({length:max},(_,k)=>k+1).map(n=>{
+      const sel=pendingBreakBalls.includes(n);
+      return exactBallButtonHtml(n,{selected:sel,onclick:`toggleBreakBall(${n})`});
+    }).join('')+'</div>';
+  }
+  window.toggleBreakBall=function(n){
+    n=Number(n);
+    if(pendingBreakBalls.includes(n))pendingBreakBalls=pendingBreakBalls.filter(x=>x!==n);
+    else pendingBreakBalls.push(n);
+    pendingBreakBalls.sort((a,b)=>a-b);
+    renderBreakBallSelector();
+  };
+
+  function renderBreakPotCountButtons(action){
+    const exact=exactBallTrackingDiscipline();
+    $('breakBallSelectButtons')?.classList.toggle('hidden',!exact);
+    $('breakBallSelectConfirmBtn')?.classList.toggle('hidden',!exact);
+    $('breakPotCountButtons')?.classList.toggle('hidden',exact);
+    if(exact){ renderBreakBallSelector(); return; }
+    const min=action==='break_ok'?1:0;
+    const max=breakPotCountMax();
+    $('breakPotCountButtons').innerHTML=Array.from({length:max-min+1},(_,k)=>k+min)
+      .map(n=>`<button type="button" class="btn ${n>0?'primary':''}" style="min-width:58px" onclick="finishBreakPotCount(${n})">${n}</button>`)
+      .join('');
+  }
+
+  function openBreakPotCount(action){
+    if(!match)return;
+    pendingBreakPotAction=action;
+    pendingBreakAceAction=null;
+    pendingBreakBalls=[];
+    const label=action==='break_ok'?'BREAK OK':(action==='soft_break'?'SOFT BREAK':'FAUL Z BREAKU');
+    $('breakPotCountText').textContent=exactBallTrackingDiscipline()
+      ? label+' • označ všechny koule, které z rozstřelu spadly.'
+      : label+' • kolik koulí z rozstřelu spadlo?';
+    renderBreakPotCountButtons(action);
+    $('breakPotCountModal').classList.add('show');
+  }
+
+  function finishExactBreakBalls(){
+    if(!match || !pendingBreakPotAction)return;
+    const action=pendingBreakPotAction;
+    const selected=pendingBreakBalls.slice();
+    const n=selected.length;
+    if(action==='break_ok' && n===0){ toast('Při BREAK OK označ alespoň jednu potopenou kouli. Pro 0 použij DRY BREAK.'); return; }
+
+    // Devítka na platném breaku v 9-ball = ESO.
+    if(match.discipline==='9-ball' && selected.includes(9) && action==='break_ok'){
+      const i=Number(match.breaker||0);
+      saveManualEntryUndoSnapshot('Eso z breaku');
+      addActionEvent('⭐ ESO • devítka z rozstřelu • '+match.playerNames[i]+' • spadly: '+selected.join(', '));
+      match.stats[i]=match.stats[i]||blankMatchStats();
+      recordBreakPottedBalls(i,n);
+      recordBreakBallIds(i,selected);
+      match.stats[i].aces=Number(match.stats[i].aces||0)+1;
+      applyBreakBallState(selected);
+      pendingBreakPotAction=null; pendingBreakBalls=[];
+      $('breakPotCountModal').classList.remove('show');
+      match.isBreakShot=false;
+      match.breakAndRunEligible=false; match.runoutEligibleFor=null; match.runoutEligibleReason=null;
+      match.pushOutEligibleFor=null; match.pushOutBy=null; match.pushOutDecisionFor=null; match.safetyEscapeEligibleFor=null;
+      winRack(i,true,'Eso z breaku');
+      return;
+    }
+
+    pendingResolvedBreakBalls=selected.slice();
+    // 9 na soft/foul breaku se vrací; 10 z breaku se v 10-ball spotuje.
+    pendingResolvedBreakSpotGameBall=(match.discipline==='9-ball' && selected.includes(9) && action!=='break_ok') ||
+      (match.discipline==='10-ball' && selected.includes(10));
+    pendingBreakBalls=[];
+    finishBreakPotCount(n);
+
+    if(action==='soft_break' && match?.discipline==='9-ball' && selected.includes(9)){
+      alert('KITCHEN RULE NESPLNĚNA – DEVÍTKA SE VRACÍ NA STŮL.');
+    }
+    if(action==='break_foul' && match?.discipline==='9-ball' && selected.includes(9)){
+      alert('FAUL Z ROZSTŘELU + POTOPENÁ 9 • DEVÍTKA SE VRACÍ NA BOD.');
+    }
+  }
+  $('breakBallSelectConfirmBtn').onclick=finishExactBreakBalls;
+
+  window.finishBreakPotCount=function(count){
+    if(!match || !pendingBreakPotAction)return;
+    const action=pendingBreakPotAction;
+    // U přesného výběru koulí musíme data uchovat až do zpracování akce.
+    const resolvedBreakBalls=Array.isArray(pendingResolvedBreakBalls)?pendingResolvedBreakBalls.slice():null;
+    const resolvedBreakSpotGameBall=!!pendingResolvedBreakSpotGameBall;
+    pendingBreakPotAction=null;
+    pendingBreakBalls=[];
+    $('breakPotCountModal').classList.remove('show');
+    const i=Number(match.breaker||0);
+    const other=1-i;
+    const n=Math.max(0,Math.min(breakPotCountMax(),Number(count||0)));
+
+    if(action==='break_ok'){
+      addActionEvent('Break OK • '+match.playerNames[i]+' • '+(resolvedBreakBalls?'spadly: '+resolvedBreakBalls.join(', '):'potopeno z breaku: '+n));
+      if(resolvedBreakBalls){
+        recordBreakBallIds(i,resolvedBreakBalls);
+        applyBreakBallState(resolvedBreakBalls,{spotTen:match.discipline==='10-ball' && resolvedBreakSpotGameBall});
+      }
+      recordBreakPottedBalls(i,n);
+      pendingResolvedBreakBalls=null; pendingResolvedBreakSpotGameBall=false;
+      match.isBreakShot=false;
+      match.softBreakReturnEligibleFor=null;
+      match.softBreakOriginalBreaker=null;
+      match.breakAndRunEligible=true;
+      match.runoutEligibleFor=null;
+      match.runoutEligibleReason=null;
+      match.pushOutEligibleFor=(match.discipline==='9-ball'||match.discipline==='10-ball') ? i : null;
+      match.pushOutBy=null;
+      match.pushOutDecisionFor=null;
+      match.safetyEscapeEligibleFor=null;
+      match.consecutiveFouls[i]=0;
+      match.warnedTwoFouls[i]=false;
+      match.turn=i;
+      if(match.useClock)resetClock(false,true);
+      renderMatch();
+      return;
+    }
+
+    if(action==='soft_break'){
+      addActionEvent('Soft break • kitchen rule nesplněna • '+match.playerNames[i]+' • '+(resolvedBreakBalls?'spadly: '+resolvedBreakBalls.join(', '):'potopeno: '+n));
+      if(resolvedBreakBalls){
+        recordBreakBallIds(i,resolvedBreakBalls);
+        applyBreakBallState(resolvedBreakBalls,{spotNine:match.discipline==='9-ball' && resolvedBreakSpotGameBall,spotTen:match.discipline==='10-ball' && resolvedBreakSpotGameBall});
+      }
+      recordBreakPottedBalls(i,n);
+      pendingResolvedBreakBalls=null; pendingResolvedBreakSpotGameBall=false;
+      match.stats[i].softBreaks=Number(match.stats[i].softBreaks||0)+1;
+      if(n===0){
+        // Soft break bez potopené koule je zároveň dry break.
+        match.stats[i].dryBreaks=Number(match.stats[i].dryBreaks||0)+1;
+        match.stats[i].softDryBreaks=Number(match.stats[i].softDryBreaks||0)+1;
+      }
+      match.isBreakShot=false;
+      match.softBreakOriginalBreaker=i;
+      match.softBreakReturnEligibleFor=other;
+      match.breakAndRunEligible=true;
+      match.runoutEligibleFor=null;
+      match.runoutEligibleReason=null;
+      match.pushOutEligibleFor=null;
+      match.pushOutBy=null;
+      match.pushOutDecisionFor=null;
+      match.safetyEscapeEligibleFor=null;
+      match.consecutiveFouls[i]=0;
+      match.warnedTwoFouls[i]=false;
+      match.turn=other;
+      if(match.useClock)resetClock(false,true);
+      renderMatch();
+      return;
+    }
+
+    if(action==='break_foul'){
+      saveManualEntryUndoSnapshot('Faul z breaku');
+      addActionEvent('Faul z breaku • '+match.playerNames[i]+' • '+(resolvedBreakBalls?'spadly: '+resolvedBreakBalls.join(', '):'potopeno: '+n));
+      match.stats[i]=match.stats[i]||blankMatchStats();
+      if(resolvedBreakBalls){
+        recordBreakBallIds(i,resolvedBreakBalls);
+        applyBreakBallState(resolvedBreakBalls,{spotNine:match.discipline==='9-ball' && resolvedBreakSpotGameBall,spotTen:match.discipline==='10-ball' && resolvedBreakSpotGameBall});
+      }
+      recordBreakPottedBalls(i,n);
+      pendingResolvedBreakBalls=null; pendingResolvedBreakSpotGameBall=false;
+      // Počet breaků už přičítá beginRack(); tady ho nepřičítáme podruhé.
+      match.stats[i].fouls=Number(match.stats[i].fouls||0)+1;
+      match.stats[i].breakFouls=Number(match.stats[i].breakFouls||0)+1;
+      match.isBreakShot=false;
+      match.breakAndRunEligible=false;
+      // Po faulu z breaku soupeře může příchozí hráč dohrát stůl. PUSH OUT po faulu z breaku nenabízíme.
+      match.runoutEligibleFor=other;
+      match.runoutEligibleReason='break_foul';
+      match.pushOutEligibleFor=null;
+      match.pushOutBy=null;
+      match.pushOutDecisionFor=null;
+      match.safetyEscapeEligibleFor=null;
+      match.consecutiveFouls[i]=Number(match.consecutiveFouls[i]||0)+1;
+      match.warnedTwoFouls[i]=false;
+
+      const threeFoulActive=!!match.useThreeFoul && (match.discipline==='9-ball'||match.discipline==='10-ball');
+      if(threeFoulActive && match.consecutiveFouls[i]>=3){
+        match.stats[i].threeFoulLosses=Number(match.stats[i].threeFoulLosses||0)+1;
+        match.consecutiveFouls[i]=0;
+        match.warnedTwoFouls[i]=false;
+        addActionEvent('3 FAULY • rack pro '+match.playerNames[other]);
+        winRack(other,true,'3 Foul Rule');
+        return;
+      }
+      if(threeFoulActive && match.consecutiveFouls[i]===2){
+        match.warnedTwoFouls[i]=true;
+        toast('UPOZORNĚNÍ • '+match.playerNames[i]+' má 2 po sobě jdoucí fauly.');
+      }
+      match.turn=other;
+      if(match.useClock)resetClock(false,true);
+      renderMatch();
+      scheduleStreamState();
+    }
+  };
+
+  $('breakPotCountCancelBtn').onclick=()=>{
+    pendingBreakPotAction=null;
+    $('breakPotCountModal').classList.remove('show');
+    if(match?.useClock)resetClock(false,false);
+  };
+
+  window.actionBreakOk=function(){
+    if(!match || match.discipline==='14.1' || match.ghostMode || match.counterMode==='simple')return;
+    if(!match.isBreakShot || match.turn!==match.breaker){
+      toast('BREAK OK lze zadat pouze bezprostředně po rozstřelu.');
+      return;
+    }
+    if(match.useClock)stopTimer();
+    openBreakPotCount('break_ok');
+  };
+
+  window.actionDryBreak = function(){
+    if(!match || match.discipline==='14.1' || match.ghostMode)return;
+    if(!match.isBreakShot || match.turn!==match.breaker){
+      toast('DRY BREAK lze zadat pouze bezprostředně po rozstřelu.');
+      return;
+    }
+
+    const i=match.breaker;
+    addActionEvent('Dry break • '+match.playerNames[i]+' • z rozstřelu nic nespadlo');
+    recordBreakPottedBalls(i,0);
+    if(exactBallTrackingDiscipline()){ match.breakPocketedBalls=[]; match.rackRemainingBalls=fullRackBalls(); }
+    match.stats[i].dryBreaks=Number(match.stats[i].dryBreaks||0)+1;
+    match.isBreakShot=false;
+    match.softBreakReturnEligibleFor=null;
+    match.softBreakOriginalBreaker=null;
+    match.breakAndRunEligible=false;
+    match.runoutEligibleFor=1-i;
+    match.runoutEligibleReason='dry_break';
+    match.pushOutEligibleFor=(match.discipline==='9-ball'||match.discipline==='10-ball') ? 1-i : null;
+    match.pushOutBy=null;
+    match.pushOutDecisionFor=null;
+    match.safetyEscapeEligibleFor=null;
+    match.consecutiveFouls[i]=0;
+    match.warnedTwoFouls[i]=false;
+    match.turn=1-i;
+
+    if(match.useClock)resetClock(false,true);
+    renderMatch();
+  };
+
+  window.actionSoftBreak = function(){
+    if(!match || match.discipline!=='9-ball' || !['kitchen','kitchen_box'].includes(match.nineBallBreakRule))return;
+    if(!match.isBreakShot || match.turn!==match.breaker){
+      toast('KITCHEN NESPLNĚN lze zadat pouze bezprostředně po rozstřelu.');
+      return;
+    }
+    if(match.useClock)stopTimer();
+    openBreakPotCount('soft_break');
+  };
+
+  window.returnTableAfterSoftBreak = function(){
+    if(!match || match.softBreakReturnEligibleFor!==match.turn || match.softBreakOriginalBreaker==null){
+      toast('Stůl teď nelze vrátit.');
+      return;
+    }
+
+    const receiving=match.turn;
+    const original=match.softBreakOriginalBreaker;
+    addActionEvent('Stůl po soft breaku vrácen • '+match.playerNames[receiving]+' → '+match.playerNames[original]);
+    match.turn=original;
+    match.softBreakReturnEligibleFor=null;
+    match.softBreakOriginalBreaker=null;
+    match.breakAndRunEligible=true;
+    addActionEvent('Nárok na ČISTOU HRU zůstává • stůl vrácen po nesplněném SOFT BREAKU');
+    match.runoutEligibleFor=null;
+    match.runoutEligibleReason=null;
+    match.pushOutEligibleFor=(match.discipline==='9-ball'||match.discipline==='10-ball') ? original : null;
+    match.pushOutBy=null;
+    match.pushOutDecisionFor=null;
+    match.safetyEscapeEligibleFor=null;
+
+    if(match.useClock)resetClock(false,true);
+    renderMatch();
+  };
+
+  window.actionPushOut = function(){
+    if(!match || match.counterMode==='simple' || match.ghostMode || !['9-ball','10-ball'].includes(match.discipline))return;
+    const i=Number(match.turn||0);
+    const other=1-i;
+    if(match.pushOutEligibleFor!==i || match.pushOutDecisionFor!=null){
+      toast('PUSH OUT je dostupný pouze jako první strk po rozstřelu.');
+      return;
+    }
+
+    saveManualEntryUndoSnapshot('Push out');
+    addActionEvent('PUSH OUT • '+match.playerNames[i]+' • rozhoduje '+match.playerNames[other]);
+    const st=match.stats[i]=match.stats[i]||blankMatchStats();
+    st.pushOuts=Number(st.pushOuts||0)+1;
+    match.isBreakShot=false;
+    match.pushOutEligibleFor=null;
+    match.pushOutBy=i;
+    match.pushOutDecisionFor=other;
+    // PUSH OUT sám o sobě nárok na čistou hru neruší.
+    // Pokud soupeř stůl vrátí původnímu rozstřelujícímu, může stále dokončit Break & Run.
+    match.runoutEligibleFor=null;
+    match.runoutEligibleReason=null;
+    match.safetyEscapeEligibleFor=null;
+    match.consecutiveFouls[i]=0;
+    match.warnedTwoFouls[i]=false;
+    match.turn=other;
+    if(match.useClock)resetClock(false,true);
+    renderMatch();
+  };
+
+  window.acceptPushOut = function(){
+    if(!match || match.pushOutDecisionFor!==match.turn || match.pushOutBy==null){
+      toast('Teď není co přijmout po push outu.');
+      return;
+    }
+    saveManualEntryUndoSnapshot('Přijatý push out');
+    const receiver=Number(match.turn||0);
+    const pusher=Number(match.pushOutBy);
+    addActionEvent('Push out přijat • '+match.playerNames[receiver]+' přebírá stůl po '+match.playerNames[pusher]);
+    match.pushOutBy=null;
+    match.pushOutDecisionFor=null;
+    match.pushOutEligibleFor=null;
+    match.breakAndRunEligible=false;
+    match.runoutEligibleFor=null;
+    match.runoutEligibleReason=null;
+    match.safetyEscapeEligibleFor=null;
+    match.turn=receiver;
+    if(match.useClock)resetClock(false,true);
+    renderMatch();
+  };
+
+  window.returnPushOut = function(){
+    if(!match || match.pushOutDecisionFor!==match.turn || match.pushOutBy==null){
+      toast('Teď není co vrátit po push outu.');
+      return;
+    }
+    saveManualEntryUndoSnapshot('Vrácený push out');
+    const receiver=Number(match.turn||0);
+    const pusher=Number(match.pushOutBy);
+    addActionEvent('Push out vrácen • '+match.playerNames[receiver]+' → '+match.playerNames[pusher]);
+    const st=match.stats[pusher]=match.stats[pusher]||blankMatchStats();
+    st.pushOutsReturned=Number(st.pushOutsReturned||0)+1;
+    const cleanStillPossible=(pusher===Number(match.breaker||0) && match.breakAndRunEligible!==false);
+    match.pushOutBy=null;
+    match.pushOutDecisionFor=null;
+    match.pushOutEligibleFor=null;
+    if(cleanStillPossible){
+      // Původní breaker dostal po vlastním PUSH OUTU stůl zpět bez odehraného strku soupeře.
+      // Stále může dokončit ČISTOU HRU.
+      match.breakAndRunEligible=true;
+      match.runoutEligibleFor=null;
+      match.runoutEligibleReason=null;
+      addActionEvent('Nárok na ČISTOU HRU zůstává • stůl vrácen po PUSH OUTU');
+    }else{
+      // Typicky hráč, který dostal možnost po dry breaku soupeře.
+      // Pro něj jde po vráceném PUSH OUTU o DOHRÁVKU, ne Break & Run.
+      match.breakAndRunEligible=false;
+      match.runoutEligibleFor=pusher;
+      match.runoutEligibleReason='push_out_return';
+    }
+    match.safetyEscapeEligibleFor=null;
+    match.turn=pusher;
+    if(match.useClock)resetClock(false,true);
+    renderMatch();
+  };
+
+  let pendingShotBallSelection=[];
+  let pendingShotBallRequest=null;
+
+  function renderShotBallSelector(){
+    const host=$('shotBallSelectButtons');
+    if(!host||!match)return;
+    const rem=Array.isArray(match.rackRemainingBalls)&&match.rackRemainingBalls.length?match.rackRemainingBalls:fullRackBalls();
+    host.innerHTML='<div class="exact-ball-grid">'+rem.map(n=>exactBallButtonHtml(n,{selected:pendingShotBallSelection.includes(n),onclick:`toggleShotBallSelection(${n})`})).join('')+'</div>';
+  }
+  window.toggleShotBallSelection=function(n){
+    n=Number(n);
+    if(pendingShotBallSelection.includes(n))pendingShotBallSelection=pendingShotBallSelection.filter(x=>x!==n);
+    else pendingShotBallSelection.push(n);
+    pendingShotBallSelection.sort((a,b)=>a-b);
+    renderShotBallSelector();
+  };
+  function openShotBallSelector({player=null,requirePot=false,label='Strk',onDone=null}={}){
+    if(!match || match.counterMode==='simple' || !exactBallTrackingDiscipline()){
+      if(typeof onDone==='function')onDone([]);
+      return;
+    }
+    pendingShotBallSelection=[];
+    pendingShotBallRequest={player:player==null?Number(match.turn||0):Number(player),requirePot:!!requirePot,label,onDone};
+    const name=match.playerNames?.[pendingShotBallRequest.player]||'Hráč';
+    $('shotBallSelectText').textContent=label+' • '+name+' • označ všechny koule, které při strku spadly.';
+    renderShotBallSelector();
+    if(match.useClock)stopTimer();
+    $('shotBallSelectModal').classList.add('show');
+  }
+  function applyShotBallSelection(selected){
+    if(!match || !exactBallTrackingDiscipline())return;
+    const gone=new Set((selected||[]).map(Number));
+    const rem=Array.isArray(match.rackRemainingBalls)&&match.rackRemainingBalls.length?match.rackRemainingBalls.slice():fullRackBalls();
+    match.rackRemainingBalls=rem.filter(n=>!gone.has(Number(n)));
+  }
+  function finishShotBallSelection(useNone=false){
+    if(!pendingShotBallRequest)return;
+    const req=pendingShotBallRequest;
+    const selected=useNone?[]:pendingShotBallSelection.slice();
+    if(req.requirePot && !selected.length){ toast('U této akce označ alespoň jednu potopenou kouli.'); return; }
+    applyShotBallSelection(selected);
+    pendingShotBallRequest=null; pendingShotBallSelection=[];
+    $('shotBallSelectModal').classList.remove('show');
+    if(typeof req.onDone==='function')req.onDone(selected);
+  }
+  $('shotBallNoneBtn').onclick=()=>finishShotBallSelection(true);
+  $('shotBallConfirmBtn').onclick=()=>finishShotBallSelection(false);
+  $('shotBallCancelBtn').onclick=()=>{
+    pendingShotBallRequest=null; pendingShotBallSelection=[]; $('shotBallSelectModal').classList.remove('show');
+    if(match?.useClock)resetClock(false,true);
+  };
+
+
+
+  let pendingShotSequence=null;
+
+  function selectedAreSequentialPrefix(selected,remainingBefore){
+    const sel=[...new Set((selected||[]).map(Number))];
+    const rem=(remainingBefore||[]).map(Number);
+    if(sel.length<2 || rem.length<sel.length)return false;
+    return sel.every((n,idx)=>n===rem[idx]);
+  }
+
+  function askShotSequence({player,selected,remainingBefore,onSequential,onTogether}){
+    pendingShotSequence={player,selected:selected.slice(),remainingBefore:remainingBefore.slice(),onSequential,onTogether};
+    $('shotSequenceText').textContent=
+      (match.playerNames?.[player]||'Hráč')+' • vybrány koule '+selected.join(', ')+'.';
+    $('shotSequenceModal').classList.add('show');
+  }
+
+  function closeShotSequenceModal(){
+    $('shotSequenceModal').classList.remove('show');
+  }
+
+  $('shotSequenceSequentialBtn').onclick=()=>{
+    const p=pendingShotSequence;
+    pendingShotSequence=null;
+    closeShotSequenceModal();
+    if(p && typeof p.onSequential==='function')p.onSequential();
+  };
+  $('shotSequenceTogetherBtn').onclick=()=>{
+    const p=pendingShotSequence;
+    pendingShotSequence=null;
+    closeShotSequenceModal();
+    if(p && typeof p.onTogether==='function')p.onTogether();
+  };
+  $('shotSequenceCancelBtn').onclick=()=>{
+    pendingShotSequence=null;
+    closeShotSequenceModal();
+    if(match?.useClock)resetClock(false,true);
+  };
+
+  function runoutReasonText(){
+    if(!match)return '';
+    if(match.runoutEligibleReason==='push_out_return')return 'po vráceném push outu';
+    if(match.runoutEligibleReason==='break_foul')return 'po faulu z breaku soupeře';
+    if(match.runoutEligibleReason==='dry_break')return 'po dry breaku soupeře';
+    return 'po převzetí stolu';
+  }
+
+  function autoRecordRunout(player,reasonText=''){
+    if(!match || match.counterMode==='simple' || match.discipline==='14.1' || match.ghostMode)return false;
+    const i=Number(player);
+    if(match.runoutEligibleFor!==i)return false;
+    const st=match.stats[i]=match.stats[i]||blankMatchStats();
+    st.runouts=Number(st.runouts||0)+1;
+    addActionEvent('DOHRÁVKA • '+match.playerNames[i]+(reasonText?' • '+reasonText:''));
+    match.runoutEligibleFor=null;
+    match.runoutEligibleReason=null;
+    return true;
+  }
+
+  function finishGameBallFromTrackedPlay(i,gameBall,label=''){
+    const wasRunoutEligible=match.runoutEligibleFor===i;
+    const runoutReason=runoutReasonText();
+
+    match.runoutEligibleFor=null;
+    match.runoutEligibleReason=null;
+    match.pushOutEligibleFor=null;
+
+    if(wasRunoutEligible){
+      // Obnovíme hodnotu jen pro helper, který ji po zapsání hned vyčistí.
+      match.runoutEligibleFor=i;
+      autoRecordRunout(i,runoutReason);
+    }else{
+      autoRecordBreakAndRun(i,gameBall);
+    }
+
+    addActionEvent((gameBall===9?'DEVÍTKA':'DESÍTKA')+' • rack ukončen • '+match.playerNames[i]+(label?' • '+label:''));
+    winRack(i,true,'Potopená '+gameBall);
+  }
+
+  function processSequentialCleanShots(i,selected,remainingBefore){
+    if(!match || !selected?.length)return;
+    const seq=selected.slice().sort((a,b)=>remainingBefore.indexOf(a)-remainingBefore.indexOf(b));
+
+    if(Array.isArray(match.rackRemainingBalls)){
+      const sunk=new Set(seq.map(Number));
+      match.rackRemainingBalls=match.rackRemainingBalls
+        .map(Number)
+        .filter(n=>!sunk.has(n))
+        .sort((a,b)=>a-b);
+    }
+    const hadRunoutEligibility=match.runoutEligibleFor===i;
+    const savedRunoutReason=match.runoutEligibleReason;
+
+    match.isBreakShot=false;
+    consumeSoftBreakReturnOnShot(i);
+    consumePushOutOptionOnAction(i);
+    match.safetyEscapeEligibleFor=null;
+    match.consecutiveFouls[i]=0;
+    match.warnedTwoFouls[i]=false;
+    if(i!==match.breaker)match.breakAndRunEligible=false;
+
+    seq.forEach((ball,idx)=>{
+      addActionEvent(
+        'Čistý strk • '+match.playerNames[i]+' • spadla '+ball+
+        ' • RYCHLÝ ZÁPIS '+(idx+1)+'/'+seq.length
+      );
+    });
+
+    const gameBall=match.discipline==='9-ball'?9:(match.discipline==='10-ball'?10:null);
+    if(gameBall && seq.includes(gameBall)){
+      if(match.discipline==='10-ball'){
+        const tenWasLast=(Array.isArray(match.rackRemainingBalls)?match.rackRemainingBalls.length:0)===0;
+        if(!tenWasLast && match.tenBallRule!=='early_win'){
+          if(!match.rackRemainingBalls.includes(10)){
+            match.rackRemainingBalls.push(10);
+            match.rackRemainingBalls.sort((a,b)=>a-b);
+          }
+          addActionEvent('PŘEDČASNÁ 10 • vrací se na bod • '+match.playerNames[i]);
+          toast('DESÍTKA SE VRACÍ NA BOD • rack pokračuje.');
+        }else{
+          if(hadRunoutEligibility){
+            match.runoutEligibleFor=i;
+            match.runoutEligibleReason=savedRunoutReason;
+          }
+          finishGameBallFromTrackedPlay(i,10,'rychlý zápis postupně');
+          return;
+        }
+      }else{
+        if(hadRunoutEligibility){
+          match.runoutEligibleFor=i;
+          match.runoutEligibleReason=savedRunoutReason;
+        }
+        finishGameBallFromTrackedPlay(i,9,'rychlý zápis postupně');
+        return;
+      }
+    }
+
+    if(hadRunoutEligibility){
+      match.runoutEligibleFor=i;
+      match.runoutEligibleReason=savedRunoutReason;
+    }
+    if(match.useClock)resetClock(false,true);
+    renderMatch();
+  }
+
+  let pendingHigherBallShot=null;
+
+  function lowestBallBeforeShot(){
+    if(!match || !exactBallTrackingDiscipline())return null;
+    const rem=Array.isArray(match.rackRemainingBalls)&&match.rackRemainingBalls.length
+      ? match.rackRemainingBalls.slice().sort((a,b)=>a-b)
+      : fullRackBalls();
+    return rem.length?Number(rem[0]):null;
+  }
+
+  function higherPocketedBallsForShot(selected,lowest){
+    return (selected||[]).map(Number).filter(n=>lowest!=null && n>lowest);
+  }
+
+  function askHigherBallShotType({player,selected,lowest,onDone}){
+    const higher=higherPocketedBallsForShot(selected,lowest);
+    if(!higher.length){
+      onDone({type:null,higher:[]});
+      return;
+    }
+
+    pendingHigherBallShot={player,selected:selected.slice(),lowest,higher,onDone};
+    const name=match?.playerNames?.[player]||'Hráč';
+    $('higherBallTypeTitle').textContent=(higher.length>1?'VYŠŠÍ KOULE SPADLY':'VYŠŠÍ KOULE SPADLA');
+    $('higherBallTypeText').textContent=
+      name+' • nejnižší koule na stole byla '+lowest+
+      ' • potopeno navíc: '+higher.join(', ')+'.';
+    $('higherBallAccidentalBtn').classList.toggle('hidden',match?.discipline!=='10-ball');
+    $('higherBallTypeModal').classList.add('show');
+  }
+
+  function finishHigherBallShotType(type){
+    const req=pendingHigherBallShot;
+    if(!req)return;
+    pendingHigherBallShot=null;
+    $('higherBallTypeModal').classList.remove('show');
+    if(typeof req.onDone==='function')req.onDone({type,higher:req.higher.slice()});
+  }
+
+  $('higherBallComboBtn').onclick=()=>finishHigherBallShotType('combo');
+  $('higherBallCaromBtn').onclick=()=>finishHigherBallShotType('carom');
+  $('higherBallAccidentalBtn').onclick=()=>finishHigherBallShotType('accidental');
+  $('higherBallTypeCancelBtn').onclick=()=>{
+    pendingHigherBallShot=null;
+    $('higherBallTypeModal').classList.remove('show');
+    if(match?.useClock)resetClock(false,true);
+  };
+
+
+  function autoRecordBreakAndRun(player,gameBall){
+    if(!match || match.counterMode==='simple' || match.discipline==='14.1' || match.ghostMode)return false;
+    const i=Number(player);
+    if(i!==Number(match.breaker||0) || match.breakAndRunEligible===false)return false;
+
+    const st=match.stats[i]=match.stats[i]||blankMatchStats();
+    st.breakAndRun=Number(st.breakAndRun||0)+1;
+    addActionEvent('⭐ ČISTÁ HRA • Break & Run • '+match.playerNames[i]+' • automaticky po potopení '+gameBall);
+    playSpecialSound();
+    return true;
+  }
+
+  window.actionLegal = function(){
+    if(!match)return;
+    const i=Number(match.turn||0);
+    const lowestBefore=lowestBallBeforeShot();
+    const remainingBefore=Array.isArray(match.rackRemainingBalls)
+      ? match.rackRemainingBalls.slice().sort((a,b)=>a-b)
+      : fullRackBalls();
+
+    openShotBallSelector({player:i,label:'ČISTÝ STRK',onDone:(selected)=>{
+      const finishLegalShot=(shotInfo={type:null,higher:[]})=>{
+        match.isBreakShot=false;
+
+        // Každá potvrzená potopená koule musí okamžitě zmizet z evidence koulí na stole.
+        // To platí i pro KOMBINACI / KARAMBOL a více koulí při jednom strku.
+        if(Array.isArray(match.rackRemainingBalls) && selected.length){
+          const sunk=new Set(selected.map(Number));
+          match.rackRemainingBalls=match.rackRemainingBalls
+            .map(Number)
+            .filter(n=>!sunk.has(n))
+            .sort((a,b)=>a-b);
+        }
+
+        const ballsText=selected.length
+          ? (selected.length===1?' • spadla '+selected[0]:' • spadly '+selected.join(', '))
+          : ' • bez potopené koule';
+
+        let detail='';
+        if(shotInfo.type==='combo'){
+          detail=' • KOMBINACE přes '+lowestBefore;
+        }else if(shotInfo.type==='carom'){
+          detail=' • KARAMBOL po zásahu '+lowestBefore;
+        }else if(shotInfo.type==='accidental'){
+          detail=' • NECHTĚNÁ KOULE';
+        }
+
+        const wasRunoutEligible=match.runoutEligibleFor===i;
+        const savedRunoutReason=match.runoutEligibleReason;
+
+        addActionEvent('Čistý strk • '+match.playerNames[i]+ballsText+detail);
+
+        consumeSoftBreakReturnOnShot(i);
+        consumePushOutOptionOnAction(i);
+        if(i!==match.breaker)match.breakAndRunEligible=false;
+        match.safetyEscapeEligibleFor=null;
+        match.consecutiveFouls[i]=0;
+        match.warnedTwoFouls[i]=false;
+
+        // 9-ball: potopená 9 při legálním strku vždy ukončí rack.
+        if(match.discipline==='9-ball' && selected.includes(9)){
+          if(wasRunoutEligible){
+            match.runoutEligibleFor=i;
+            match.runoutEligibleReason=savedRunoutReason;
+          }
+          finishGameBallFromTrackedPlay(i,9);
+          return;
+        }
+
+        // 10-ball: potopená 10 se řídí nastaveným pravidlem.
+        if(match.discipline==='10-ball' && selected.includes(10)){
+          const remainingAfterShot=Array.isArray(match.rackRemainingBalls)?match.rackRemainingBalls.slice():[];
+          const tenWasLast=remainingAfterShot.length===0;
+
+          if(tenWasLast || match.tenBallRule==='early_win'){
+            if(wasRunoutEligible){
+              match.runoutEligibleFor=i;
+              match.runoutEligibleReason=savedRunoutReason;
+            }
+            finishGameBallFromTrackedPlay(i,10,tenWasLast?'':'předčasná 10');
+            return;
+          }
+
+          if(!match.rackRemainingBalls.includes(10)){
+            match.rackRemainingBalls.push(10);
+            match.rackRemainingBalls.sort((a,b)=>a-b);
+          }
+          addActionEvent('PŘEDČASNÁ 10 • vrací se na bod • '+match.playerNames[i]);
+          toast('DESÍTKA SE VRACÍ NA BOD • rack pokračuje.');
+        }
+
+        // Pokud hráč měl nárok na dohrávku, po běžném čistém strku ji zachováme,
+        // dokud rack skutečně nedohraje nebo nepředá stůl.
+        if(wasRunoutEligible){
+          match.runoutEligibleFor=i;
+          match.runoutEligibleReason=savedRunoutReason;
+        }
+
+        if(match.useClock) resetClock(false,true);
+        renderMatch();
+      };
+
+      const togetherFlow=()=>{
+        const higher=higherPocketedBallsForShot(selected,lowestBefore);
+        if(higher.length){
+          askHigherBallShotType({
+            player:i,
+            selected,
+            lowest:lowestBefore,
+            onDone:finishLegalShot
+          });
+        }else{
+          finishLegalShot();
+        }
+      };
+
+      if(selectedAreSequentialPrefix(selected,remainingBefore)){
+        askShotSequence({
+          player:i,
+          selected,
+          remainingBefore,
+          onSequential:()=>processSequentialCleanShots(i,selected,remainingBefore),
+          onTogether:togetherFlow
+        });
+      }else{
+        togetherFlow();
+      }
+    }});
+  };
+
+  if($('quickRunoutBtn')){
+    $('quickRunoutBtn').onclick=()=>{
+      if(!match || match.counterMode==='simple' || match.ghostMode || !exactBallTrackingDiscipline())return;
+      const rem=Array.isArray(match.rackRemainingBalls)
+        ? match.rackRemainingBalls.slice().sort((a,b)=>a-b)
+        : fullRackBalls();
+      if(!rem.length)return;
+      const i=Number(match.turn||0);
+      saveManualEntryUndoSnapshot('Dohráno postupně');
+      match.rackRemainingBalls=[];
+      processSequentialCleanShots(i,rem,rem);
+    };
+  }
+
+
+  function inferRemainingFromMissBall(ball){
+    if(!match || !exactBallTrackingDiscipline())return;
+    const n=Number(ball||0);
+    if(!n)return;
+    const alreadyGone=new Set(Array.isArray(match.breakPocketedBalls)?match.breakPocketedBalls:[]);
+    // V rotačních disciplínách chyba na kouli N znamená, že nižší koule už musely být dohrané.
+    match.rackRemainingBalls=fullRackBalls().filter(b=>b>=n && !alreadyGone.has(b));
+    if(!match.rackRemainingBalls.includes(n))match.rackRemainingBalls.unshift(n);
+    match.rackRemainingBalls=[...new Set(match.rackRemainingBalls)].sort((a,b)=>a-b);
+    match.lastMissBall=n;
+  }
+  function remainingRackBallCount(){
+    return Array.isArray(match?.rackRemainingBalls)?match.rackRemainingBalls.length:0;
+  }
+  function recordTwoWay(i,success=false,kind=''){
+    const st=match.stats[i]=match.stats[i]||blankMatchStats();
+    st.twoWayAttempts=Number(st.twoWayAttempts||0)+1;
+    if(success){
+      st.twoWaySuccessful=Number(st.twoWaySuccessful||0)+1;
+      if(kind==='pot')st.twoWayPotSuccess=Number(st.twoWayPotSuccess||0)+1;
+      if(kind==='safe')st.twoWaySafetySuccess=Number(st.twoWaySafetySuccess||0)+1;
+    }
+  }
+  let pendingTwoWayPlayer=null;
+  let pendingDirectPlayer=null;
+  let pendingTenBallSafePotPlayer=null;
+
+  window.actionTwoWayShot=function(){
+    if(!match || match.counterMode==='simple' || match.discipline==='14.1' || match.ghostMode)return;
+    pendingTwoWayPlayer=Number(match.turn||0);
+    if(match.useClock)stopTimer();
+    $('twoWayResultModal').classList.add('show');
+  };
+  $('twoWaySuccessBtn').onclick=()=>{
+    if(pendingTwoWayPlayer===null)return;
+    $('twoWayResultModal').classList.remove('show');
+    $('twoWaySuccessModal').classList.add('show');
+  };
+  $('twoWayPotBtn').onclick=()=>{
+    if(!match || pendingTwoWayPlayer===null)return;
+    const i=pendingTwoWayPlayer;
+    $('twoWaySuccessModal').classList.remove('show');
+    openShotBallSelector({player:i,requirePot:true,label:'2-WAY SHOT • POT',onDone:(selected)=>{
+      saveManualEntryUndoSnapshot('2-WAY SHOT');
+      addActionEvent('2-WAY SHOT • úspěšný pot • '+match.playerNames[i]+' • spadly '+selected.join(', '));
+      recordTwoWay(i,true,'pot');
+      consumeSoftBreakReturnOnShot(i); consumePushOutOptionOnAction(i);
+      match.safetyEscapeEligibleFor=null; match.consecutiveFouls[i]=0; match.warnedTwoFouls[i]=false;
+      pendingTwoWayPlayer=null;
+      if(match.useClock)resetClock(false,true); renderMatch();
+    }});
+  };
+  $('twoWaySafeBtn').onclick=()=>{
+    if(!match || pendingTwoWayPlayer===null)return;
+    saveManualEntryUndoSnapshot('2-WAY SHOT');
+    const i=pendingTwoWayPlayer, other=1-i;
+    addActionEvent('2-WAY SHOT • úspěšná jistota • '+match.playerNames[i]);
+    recordTwoWay(i,true,'safe');
+    const st=match.stats[i]=match.stats[i]||blankMatchStats();
+    st.safeties=Number(st.safeties||0)+1; st.trackedSafeties=Number(st.trackedSafeties||0)+1; st.successfulSafeties=Number(st.successfulSafeties||0)+1;
+    consumeSoftBreakReturnOnShot(i); consumePushOutOptionOnAction(i);
+    match.breakAndRunEligible=false; match.runoutEligibleFor=null; match.runoutEligibleReason=null;
+    match.safetyEscapeEligibleFor=other; match.turn=other;
+    pendingTwoWayPlayer=null; $('twoWaySuccessModal').classList.remove('show');
+    if(match.useClock)resetClock(false,true); renderMatch();
+  };
+  $('twoWayFailBtn').onclick=()=>{
+    if(!match || pendingTwoWayPlayer===null)return;
+    saveManualEntryUndoSnapshot('2-WAY SHOT');
+    const i=pendingTwoWayPlayer, other=1-i;
+    addActionEvent('2-WAY SHOT • neúspěšný • '+match.playerNames[i]);
+    recordTwoWay(i,false);
+    consumeSoftBreakReturnOnShot(i); consumePushOutOptionOnAction(i);
+    match.breakAndRunEligible=false; match.runoutEligibleFor=null; match.runoutEligibleReason=null; match.safetyEscapeEligibleFor=null; match.turn=other;
+    pendingTwoWayPlayer=null; $('twoWayResultModal').classList.remove('show');
+    if(match.useClock)resetClock(false,true); renderMatch();
+  };
+  $('twoWayFoulBtn').onclick=()=>{
+    if(pendingTwoWayPlayer===null)return;
+    recordTwoWay(pendingTwoWayPlayer,false);
+    $('twoWayResultModal').classList.remove('show'); pendingTwoWayPlayer=null;
+    actionFoul();
+  };
+  $('twoWayCancelBtn').onclick=()=>{ pendingTwoWayPlayer=null; $('twoWayResultModal').classList.remove('show'); if(match?.useClock)resetClock(false,true); };
+
+  window.actionDirectBallAvailable=function(){
+    if(!match || match.safetyEscapeEligibleFor!==match.turn)return;
+    pendingDirectPlayer=Number(match.turn||0);
+    if(match.useClock)stopTimer();
+    $('directBallModal').classList.add('show');
+  };
+  function closeDirectRoot(){ $('directBallModal').classList.remove('show'); }
+  $('directBallSafeBtn').onclick=()=>{ closeDirectRoot(); $('directSafeResultModal').classList.add('show'); };
+  $('directBallPotBtn').onclick=()=>{ closeDirectRoot(); $('directPotResultModal').classList.add('show'); };
+  $('directBallTwoWayBtn').onclick=()=>{ closeDirectRoot(); pendingTwoWayPlayer=pendingDirectPlayer; pendingDirectPlayer=null; $('twoWayResultModal').classList.add('show'); };
+  $('directBallFoulBtn').onclick=()=>{ closeDirectRoot(); pendingDirectPlayer=null; match.safetyEscapeEligibleFor=null; actionFoul(); };
+  $('directBallCancelBtn').onclick=()=>{ pendingDirectPlayer=null; closeDirectRoot(); if(match?.useClock)resetClock(false,true); };
+
+  function finishDirectSafe(result){
+    if(!match || pendingDirectPlayer===null)return;
+    const i=pendingDirectPlayer, other=1-i;
+    saveManualEntryUndoSnapshot('SAFE po přímém zásahu');
+    const eventText=result==='success'?'Úspěšná jistota • koule šla zasáhnout přímo • '+match.playerNames[i]:(result==='fail'?'Neúspěšná jistota • koule šla zasáhnout přímo • '+match.playerNames[i]:'SAFE • spadla koule • '+match.playerNames[i]);
+    addActionEvent(eventText);
+    const st=match.stats[i]=match.stats[i]||blankMatchStats();
+    st.safeties=Number(st.safeties||0)+1; st.trackedSafeties=Number(st.trackedSafeties||0)+1;
+    match.safetyEscapeEligibleFor=null;
+    if(result==='success'){
+      st.successfulSafeties=Number(st.successfulSafeties||0)+1;
+      match.safetyEscapeEligibleFor=other; match.turn=other;
+    }else if(result==='fail'){
+      match.turn=other;
+    }else if(result==='potted'){
+      if(match.discipline==='10-ball'){
+        consumeSoftBreakReturnOnShot(i); consumePushOutOptionOnAction(i);
+        match.breakAndRunEligible=false; match.runoutEligibleFor=null; match.runoutEligibleReason=null;
+        pendingTenBallSafePotPlayer=i;
+        $('directSafeResultModal').classList.remove('show');
+        pendingDirectPlayer=null;
+        $('tenBallSafePotDecisionModal').classList.add('show');
+        return;
+      }
+      // 9-ball: hráč musí pokračovat.
+      match.turn=i;
+    }
+    consumeSoftBreakReturnOnShot(i); consumePushOutOptionOnAction(i);
+    match.breakAndRunEligible=false; match.runoutEligibleFor=null; match.runoutEligibleReason=null;
+    pendingDirectPlayer=null; $('directSafeResultModal').classList.remove('show');
+    if(match.useClock)resetClock(false,true); renderMatch();
+  }
+  $('directSafeSuccessBtn').onclick=()=>finishDirectSafe('success');
+  $('directSafeFailBtn').onclick=()=>finishDirectSafe('fail');
+  $('directSafePottedBtn').onclick=()=>finishDirectSafe('potted');
+  $('directSafeFoulBtn').onclick=()=>{ $('directSafeResultModal').classList.remove('show'); pendingDirectPlayer=null; match.safetyEscapeEligibleFor=null; actionFoul(); };
+  $('tenBallSafePotAcceptBtn').onclick=()=>{
+    if(!match || pendingTenBallSafePotPlayer===null)return;
+    const i=pendingTenBallSafePotPlayer; match.turn=1-i; match.safetyEscapeEligibleFor=null;
+    addActionEvent('10-ball • při safe spadla koule • soupeř přijímá stůl');
+    pendingTenBallSafePotPlayer=null; $('tenBallSafePotDecisionModal').classList.remove('show'); if(match.useClock)resetClock(false,true); renderMatch();
+  };
+  $('tenBallSafePotReturnBtn').onclick=()=>{
+    if(!match || pendingTenBallSafePotPlayer===null)return;
+    const i=pendingTenBallSafePotPlayer; match.turn=i; match.safetyEscapeEligibleFor=null;
+    addActionEvent('10-ball • při safe spadla koule • stůl vrácen hráči '+match.playerNames[i]);
+    pendingTenBallSafePotPlayer=null; $('tenBallSafePotDecisionModal').classList.remove('show'); if(match.useClock)resetClock(false,true); renderMatch();
+  };
+
+  $('directPotSuccessBtn').onclick=()=>{
+    if(!match || pendingDirectPlayer===null)return;
+    const i=pendingDirectPlayer; $('directPotResultModal').classList.remove('show');
+    openShotBallSelector({player:i,requirePot:true,label:'POKUS O POTOPENÍ • ÚSPĚŠNÝ',onDone:(selected)=>{
+      saveManualEntryUndoSnapshot('Pokus o potopení');
+      addActionEvent('Pokus o potopení • úspěšný • '+match.playerNames[i]+' • spadly '+selected.join(', '));
+      match.safetyEscapeEligibleFor=null; consumeSoftBreakReturnOnShot(i); consumePushOutOptionOnAction(i);
+      pendingDirectPlayer=null; if(match.useClock)resetClock(false,true); renderMatch();
+    }});
+  };
+  $('directPotMissBtn').onclick=()=>{
+    if(!match || pendingDirectPlayer===null)return;
+    const i=pendingDirectPlayer; match.safetyEscapeEligibleFor=null; pendingDirectPlayer=null; $('directPotResultModal').classList.remove('show');
+    pendingMissPlayer=i; if(exactBallTrackingDiscipline())openMissBallChoice('missed_ball'); else registerMissReason('missed_ball');
+  };
+  $('directPotAccSafeBtn').onclick=()=>{
+    if(!match || pendingDirectPlayer===null)return;
+    const i=pendingDirectPlayer, other=1-i; saveManualEntryUndoSnapshot('Nechtěná jistota');
+    addActionEvent('Pokus o potopení • NECHTĚNÁ JISTOTA • '+match.playerNames[i]);
+    const st=match.stats[i]=match.stats[i]||blankMatchStats(); st.matchOnlyMisses=Number(st.matchOnlyMisses||0)+1; st.matchOnlyMissPot=Number(st.matchOnlyMissPot||0)+1; st.accidentalSafeties=Number(st.accidentalSafeties||0)+1;
+    match.safetyEscapeEligibleFor=other; match.turn=other; match.breakAndRunEligible=false; match.runoutEligibleFor=null; match.runoutEligibleReason=null;
+    pendingDirectPlayer=null; $('directPotResultModal').classList.remove('show'); if(match.useClock)resetClock(false,true); renderMatch();
+  };
+  $('directPotFoulBtn').onclick=()=>{ $('directPotResultModal').classList.remove('show'); pendingDirectPlayer=null; match.safetyEscapeEligibleFor=null; actionFoul(); };
+
+  window.actionBreakAndRun = function(){
+    if(!match || match.discipline==='14.1' || match.ghostMode || match.counterMode==='simple')return;
+    const i=Number(match.turn||0);
+
+    if(i!==match.breaker || match.breakAndRunEligible===false){
+      toast('ČISTOU HRU lze zapsat pouze po vlastním rozstřelu bez předání stolu soupeři.');
+      return;
+    }
+
+    saveManualEntryUndoSnapshot('Čistá hra');
+    const inferredLen=remainingRackBallCount();
+    addActionEvent('Čistá hra • Break & Run • '+match.playerNames[i]+(inferredLen?' • dohráno '+inferredLen+' koulí':''));
+    match.stats[i].breakAndRun=Number(match.stats[i].breakAndRun||0)+1;
+    match.runoutEligibleFor=null;
+    match.consecutiveFouls[i]=0;
+    match.warnedTwoFouls[i]=false;
+    playSpecialSound();
+    winRack(i,true,'Čistá hra');
+  };
+
+  window.actionRunout = function(){
+    if(!match || match.discipline==='14.1' || match.ghostMode || match.counterMode==='simple')return;
+    const i=Number(match.turn||0);
+
+    if(match.runoutEligibleFor!==i){
+      toast('DOHRÁVKU lze zapsat po dry breaku, faulu z breaku nebo vráceném push outu.');
+      return;
+    }
+
+    saveManualEntryUndoSnapshot('Dohrávka');
+    const runoutReason=match.runoutEligibleReason==='push_out_return'?'vráceném push outu':(match.runoutEligibleReason==='break_foul'?'faulu z breaku soupeře':'dry breaku soupeře');
+    const inferredLen=remainingRackBallCount();
+    addActionEvent('Dohrávka po '+runoutReason+' • '+match.playerNames[i]+(inferredLen?' • '+inferredLen+' koulí':''));
+    match.stats[i].runouts=Number(match.stats[i].runouts||0)+1;
+    match.runoutEligibleFor=null;
+    match.runoutEligibleReason=null;
+    match.pushOutEligibleFor=null;
+    match.breakAndRunEligible=false;
+    match.consecutiveFouls[i]=0;
+    match.warnedTwoFouls[i]=false;
+    winRack(i,true,'Dohrávka');
+  };
+
+  window.actionBreakFoul = function(){
+    if(!match || match.discipline==='14.1' || match.ghostMode || match.counterMode==='simple')return;
+    const i=Number(match.turn||0);
+    if(!match.isBreakShot || i!==match.breaker){
+      toast('FAUL Z BREAKU lze zapsat pouze při rozstřelu.');
+      return;
+    }
+    if(match.useClock)stopTimer();
+    openBreakPotCount('break_foul');
+  };
+
+  window.actionFoul = function(){
+    if(!match || match.discipline==='14.1')return;
+
+    saveManualEntryUndoSnapshot('Faul');
+
+    const i=Number(match.turn||0);
+    const other=1-i;
+
+    match.isBreakShot=false;
+    consumeSoftBreakReturnOnShot(i);
+    consumePushOutOptionOnAction(i);
+    match.breakAndRunEligible=false;
+    match.runoutEligibleFor=null;
+    match.runoutEligibleReason=null;
+    match.safetyEscapeEligibleFor=null;
+
+    match.stats[i].fouls=Number(match.stats[i].fouls||0)+1;
+    match.consecutiveFouls[i]=Number(match.consecutiveFouls[i]||0)+1;
+
+    addActionEvent('Faul • '+match.playerNames[i]);
+
+    const threeFoulActive=!!match.useThreeFoul &&
+      (match.discipline==='9-ball'||match.discipline==='10-ball');
+
+    if(threeFoulActive && match.consecutiveFouls[i]===2){
+      match.warnedTwoFouls[i]=true;
+      toast('UPOZORNĚNÍ • '+match.playerNames[i]+' má 2 po sobě jdoucí fauly.');
+    }
+
+    if(threeFoulActive && match.consecutiveFouls[i]>=3){
+      match.stats[i].threeFoulLosses=Number(match.stats[i].threeFoulLosses||0)+1;
+      match.consecutiveFouls[i]=0;
+      match.warnedTwoFouls[i]=false;
+
+      // 3 po sobě jdoucí fauly = ztráta racku.
+      // Použijeme stejný přechod jako po běžně vyhraném racku,
+      // aby se korektně nastavil nový breaker, nový rack i DRY BREAK.
+      addActionEvent('3 FAULY • rack pro '+match.playerNames[other]);
+      winRack(other,true,'3 Foul Rule');
+      return;
+    }
+
+    // Běžný faul vždy ukončuje tah a předává hru soupeři.
+    match.turn=other;
+
+    if(match.useClock)resetClock(false,true);
+    renderMatch();
+    autosaveCurrent();
+  };
+
+  let pendingSafetyPlayer=null;
+
+  window.actionSafe = function(){
+    saveManualEntryUndoSnapshot('Jistota');
+    if(!match)return;
+    const i=match.turn;
+    pendingSafetyPlayer=i;
+    if(match.useClock) stopTimer();
+    $('safetyResultText').textContent='Byla jistota hráče '+match.playerNames[i]+' úspěšná?';
+    $('safetyResultModal').classList.add('show');
+  }
+
+  function finishSafetyResult(success){
+    if(!match || pendingSafetyPlayer===null)return;
+    const i=pendingSafetyPlayer;
+    pendingSafetyPlayer=null;
+
+    match.isBreakShot=false;
+    addActionEvent((success?'Úspěšná jistota':'Neúspěšná jistota')+' • '+match.playerNames[i]);
+    consumeSoftBreakReturnOnShot(i);
+    consumePushOutOptionOnAction(i);
+    match.breakAndRunEligible=false;
+    match.runoutEligibleFor=null;
+    match.runoutEligibleReason=null;
+    match.stats[i].safeties=(match.stats[i].safeties||0)+1;
+    match.stats[i].trackedSafeties=(match.stats[i].trackedSafeties||0)+1;
+    if(success)match.stats[i].successfulSafeties=(match.stats[i].successfulSafeties||0)+1;
+    match.safetyEscapeEligibleFor=success ? 1-i : null;
+    match.consecutiveFouls[i]=0;
+    match.warnedTwoFouls[i]=false;
+    match.turn=1-i;
+
+    $('safetyResultModal').classList.remove('show');
+    if(match.useClock) resetClock(false,true);
+    renderMatch();
+  }
+
+  $('safetySuccessBtn').onclick=()=>finishSafetyResult(true);
+  $('safetyFailBtn').onclick=()=>finishSafetyResult(false);
+
+  let pendingSafetyEscapePlayer=null;
+
+  window.actionSafetyEscape = function(){
+    if(!match || match.counterMode==='simple')return;
+    const i=Number(match.turn||0);
+    if(match.safetyEscapeEligibleFor!==i){
+      toast('ÚNIK Z JISTOTY je dostupný pouze po skutečné nebo nechtěné jistotě soupeře.');
+      return;
+    }
+    pendingSafetyEscapePlayer=i;
+    if(match.useClock)stopTimer();
+    $('safetyEscapeResultText').textContent='Byl únik z jistoty hráče '+match.playerNames[i]+' úspěšný?';
+    $('safetyEscapeResultModal').classList.add('show');
+  };
+
+  function ensureSafetyEscapeStats(i){
+    match.stats[i].safetyEscapes=Number(match.stats[i].safetyEscapes||0);
+    match.stats[i].successfulSafetyEscapes=Number(match.stats[i].successfulSafetyEscapes||0);
+  }
+
+  function safetyEscapeSuccessful(){
+    if(!match || pendingSafetyEscapePlayer===null)return;
+    saveManualEntryUndoSnapshot('Únik z jistoty');
+    const i=pendingSafetyEscapePlayer;
+    $('safetyEscapeResultModal').classList.remove('show');
+    $('safetyEscapeContinueText').textContent='Jak dopadl úspěšný únik hráče '+match.playerNames[i]+'?';
+    $('safetyEscapeContinueModal').classList.add('show');
+  }
+
+  function safetyEscapeFailed(){
+    if(!match || pendingSafetyEscapePlayer===null)return;
+    saveManualEntryUndoSnapshot('Únik z jistoty');
+    const i=pendingSafetyEscapePlayer;
+    const other=1-i;
+    ensureSafetyEscapeStats(i);
+
+    addActionEvent('Neúspěšný únik z jistoty • faul • '+match.playerNames[i]);
+    match.stats[i].safetyEscapes++;
+    match.stats[i].fouls=Number(match.stats[i].fouls||0)+1;
+    match.isBreakShot=false;
+    match.breakAndRunEligible=false;
+    match.runoutEligibleFor=null;
+    match.safetyEscapeEligibleFor=null;
+    match.consecutiveFouls[i]=Number(match.consecutiveFouls[i]||0)+1;
+    match.warnedTwoFouls[i]=false;
+
+    $('safetyEscapeResultModal').classList.remove('show');
+    pendingSafetyEscapePlayer=null;
+
+    const threeFoulActive=!!match.useThreeFoul && (match.discipline==='9-ball'||match.discipline==='10-ball');
+    if(threeFoulActive && match.consecutiveFouls[i]===2){
+      match.warnedTwoFouls[i]=true;
+      toast('UPOZORNĚNÍ • '+match.playerNames[i]+' má 2 po sobě jdoucí fauly.');
+    }
+    if(threeFoulActive && match.consecutiveFouls[i]>=3){
+      match.stats[i].threeFoulLosses=Number(match.stats[i].threeFoulLosses||0)+1;
+      match.consecutiveFouls[i]=0;
+      match.warnedTwoFouls[i]=false;
+      addActionEvent('3 FAULY • rack pro '+match.playerNames[other]);
+      winRack(other,true,'3 Foul Rule');
+      return;
+    }
+
+    match.turn=other;
+    if(match.useClock)resetClock(false,true);
+    renderMatch();
+    autosaveCurrent();
+  }
+
+  function finishSafetyEscapeSuccess(outcome){
+    if(!match || pendingSafetyEscapePlayer===null)return;
+    const i=pendingSafetyEscapePlayer;
+    const other=1-i;
+    $('safetyEscapeContinueModal').classList.remove('show');
+    ensureSafetyEscapeStats(i);
+
+    const label=outcome==='continue'
+      ? 'Úspěšný únik z jistoty • potopená koule • '+match.playerNames[i]
+      : (outcome==='resafe'
+        ? 'RESAFE • '+match.playerNames[i]+' úspěšně unikl a zahrál novou jistotu na '+match.playerNames[other]
+        : 'Úspěšný únik z jistoty • bez potopené koule • '+match.playerNames[i]);
+    addActionEvent(label);
+
+    match.stats[i].safetyEscapes++;
+    match.stats[i].successfulSafetyEscapes++;
+    match.isBreakShot=false;
+    match.breakAndRunEligible=false;
+    match.runoutEligibleFor=null;
+    match.consecutiveFouls[i]=0;
+    match.warnedTwoFouls[i]=false;
+
+    if(outcome==='continue'){
+      match.safetyEscapeEligibleFor=null;
+      match.turn=i;
+    }else if(outcome==='resafe'){
+      match.stats[i].resafes=Number(match.stats[i].resafes||0)+1;
+      match.stats[i].safeties=Number(match.stats[i].safeties||0)+1;
+      match.stats[i].trackedSafeties=Number(match.stats[i].trackedSafeties||0)+1;
+      match.stats[i].successfulSafeties=Number(match.stats[i].successfulSafeties||0)+1;
+      match.safetyEscapeEligibleFor=other;
+      match.turn=other;
+    }else{
+      match.safetyEscapeEligibleFor=null;
+      match.turn=other;
+    }
+
+    pendingSafetyEscapePlayer=null;
+    if(match.useClock)resetClock(false,true);
+    renderMatch();
+  }
+
+  $('safetyEscapeSuccessBtn').onclick=safetyEscapeSuccessful;
+  $('safetyEscapeFailBtn').onclick=safetyEscapeFailed;
+  $('safetyEscapeContinueBtn').onclick=()=>finishSafetyEscapeSuccess('continue');
+  $('safetyEscapeEndBtn').onclick=()=>finishSafetyEscapeSuccess('end');
+  $('safetyEscapeResafeBtn').onclick=()=>finishSafetyEscapeSuccess('resafe');
+  $('safetyEscapeCancelBtn').onclick=()=>{
+    $('safetyEscapeResultModal').classList.remove('show');
+    pendingSafetyEscapePlayer=null;
+    if(match?.useClock)resetClock(false,true);
+  };
+
+  window.actionAccidentalSafety=function(){
+    if(!match || match.counterMode==='simple' || match.discipline==='14.1' || match.ghostMode)return;
+    const i=Number(match.turn||0);
+    const other=1-i;
+    if(match.isBreakShot || match.safetyEscapeEligibleFor===i)return;
+
+    saveManualEntryUndoSnapshot('Nechtěná jistota');
+    const st=match.stats[i]=match.stats[i]||blankMatchStats();
+    addActionEvent('MISS • nechtěná jistota • '+match.playerNames[i]+' schoval '+match.playerNames[other]);
+    st.matchOnlyMisses=Number(st.matchOnlyMisses||0)+1;
+    st.matchOnlyMissPot=Number(st.matchOnlyMissPot||0)+1;
+    st.accidentalSafeties=Number(st.accidentalSafeties||0)+1;
+    match.isBreakShot=false;
+    consumeSoftBreakReturnOnShot(i);
+    consumePushOutOptionOnAction(i);
+    match.breakAndRunEligible=false;
+    match.runoutEligibleFor=null;
+    match.runoutEligibleReason=null;
+    match.safetyEscapeEligibleFor=other;
+    match.consecutiveFouls[i]=0;
+    match.warnedTwoFouls[i]=false;
+    match.turn=other;
+    if(match.useClock)resetClock(false,true);
+    renderMatch();
+  };
+
+  let pendingMissPlayer=null;
+
+  window.actionMiss = function(){
+    if(!match || match.counterMode==='simple')return;
+    pendingMissPlayer=Number(match.turn||0);
+    if(match.useClock)stopTimer();
+    $('missReasonModal').classList.add('show');
+  };
+
+  let pendingMissReason=null;
+  function openMissBallChoice(reason){
+    if(!match || pendingMissPlayer===null)return;
+    pendingMissReason=reason;
+    const max=match.discipline==='9-ball'?9:10;
+    const possible=Array.from({length:max},(_,k)=>k+1).filter(n=>{
+      const rem=Array.isArray(match.rackRemainingBalls)?match.rackRemainingBalls:[];
+      return !rem.length || rem.includes(n);
+    });
+    $('missBallButtons').innerHTML='<div class="exact-ball-grid">'+possible.map(n=>exactBallButtonHtml(n,{onclick:`finishMissBallChoice(${n})`})).join('')+'</div>';
+    $('missBallModal').classList.add('show');
+  }
+  window.finishMissBallChoice=function(ball){
+    if(!match || pendingMissPlayer===null || !pendingMissReason)return;
+    const i=pendingMissPlayer; ball=Number(ball);
+    saveManualEntryUndoSnapshot('MISS');
+    const st=match.stats[i]=match.stats[i]||blankMatchStats();
+    const key='missBall'+ball; st[key]=Number(st[key]||0)+1;
+    inferRemainingFromMissBall(ball);
+    $('missBallModal').classList.remove('show');
+    const r=pendingMissReason; pendingMissReason=null;
+    registerMissReason(r,true,true,ball);
+  };
+  $('missBallCancelBtn').onclick=()=>{ pendingMissReason=null; $('missBallModal').classList.remove('show'); $('missReasonModal').classList.add('show'); };
+
+  function registerMissReason(reason,ballAlreadyLogged=false,skipUndoSave=false,missBall=null){
+    if(!match || pendingMissPlayer===null)return;
+    if(!skipUndoSave)saveManualEntryUndoSnapshot('MISS');
+    const i=pendingMissPlayer;
+    const s=match.stats[i];
+    const reasonLabel=reason==='bad_position' ? 'obtížná pozice' : 'špatně zahráno';
+
+    s.matchOnlyMisses=Number(s.matchOnlyMisses||0)+1;
+    if(reason==='bad_position'){
+      s.matchOnlyMissBadPosition=Number(s.matchOnlyMissBadPosition||0)+1;
+    }else{
+      s.matchOnlyMissPot=Number(s.matchOnlyMissPot||0)+1;
+    }
+    const ballPart=missBall!=null ? ' na '+Number(missBall) : '';
+    addActionEvent(match.playerNames[i]+' • MISS'+ballPart+' • '+reasonLabel);
+
+    match.consecutiveFouls[i]=0;
+    match.warnedTwoFouls[i]=false;
+    match.isBreakShot=false;
+    consumeSoftBreakReturnOnShot(i);
+    consumePushOutOptionOnAction(i);
+    match.breakAndRunEligible=false;
+    // Běžný MISS v průběhu racku nevytváří nárok na speciální DOHRÁVKU.
+    // Konkrétní koule se dál eviduje pro statistiky a stav racku.
+    match.runoutEligibleFor=null;
+    match.runoutEligibleReason=null;
+    match.safetyEscapeEligibleFor=null;
+    match.turn=1-i;
+
+    $('missReasonModal').classList.remove('show');
+    pendingMissPlayer=null;
+
+    if(match.useClock)resetClock(false,true);
+    renderMatch();
+  }
+
+  $('missReasonPositionBtn').onclick=()=>{ $('missReasonModal').classList.remove('show'); exactBallTrackingDiscipline()?openMissBallChoice('bad_position'):registerMissReason('bad_position'); };
+  $('missReasonPotBtn').onclick=()=>{ $('missReasonModal').classList.remove('show'); exactBallTrackingDiscipline()?openMissBallChoice('missed_ball'):registerMissReason('missed_ball'); };
+  $('missReasonCancelBtn').onclick=()=>{
+    $('missReasonModal').classList.remove('show');
+    pendingMissPlayer=null;
+    if(match?.useClock)resetClock(false,true);
+  };
+
+  $('confirmThreeFoul').onclick=()=>{
+    $('threeFoulModal').classList.remove('show');
+    const loser=pendingThreeFoulLoser, winner=1-loser;
+    match.stats[loser].threeFoulLosses++;
+    pendingThreeFoulLoser=null;
+    winRack(winner,true,'3 Foul Rule');
+  };
+
+
+
+  let lastManualEntrySnapshot=null;
+
+  function cloneForUndo(value){
+    try{return JSON.parse(JSON.stringify(value));}
+    catch(e){return null;}
+  }
+
+  function saveManualEntryUndoSnapshot(label='Změna'){
+    if(!match)return;
+    const snapshot=cloneForUndo(match);
+    if(!snapshot)return;
+    lastManualEntrySnapshot={match:snapshot,label,createdAt:Date.now()};
+  }
+
+  function restoreManualEntryUndoSnapshot(){
+    if(!lastManualEntrySnapshot?.match || !match){
+      toast('Není co vrátit.');
+      return;
+    }
+
+    const currentId=match.id;
+    const restored=cloneForUndo(lastManualEntrySnapshot.match);
+    if(!restored || (currentId && restored.id && currentId!==restored.id)){
+      toast('Poslední změnu už nelze vrátit.');
+      return;
+    }
+
+    match=restored;
+    lastManualEntrySnapshot=null;
+    saveDeviceActiveMatch(match);
+    renderMatch();
+    scheduleStreamSend?.();
+    toast('Poslední zadání bylo vráceno.');
+  }
+
+  window.restoreManualEntryUndoSnapshot=restoreManualEntryUndoSnapshot;
+
+  function simpleFinishRack(player,{statType=null,label='+1'}={}){
+    if(!match || match.counterMode!=='simple' || !editableMatchOwnedByCurrentUser(match))return;
+    if(match.endedAt || match.status==='complete'){
+      toast('Zápas už je ukončený.');
+      return;
+    }
+    player=Number(player);
+    if(player!==0 && player!==1)return;
+
+    saveManualEntryUndoSnapshot(label);
+    match.stats[player]=match.stats[player]||blankMatchStats();
+
+    if(statType==='breakAndRun'){
+      match.stats[player].breakAndRun=Number(match.stats[player].breakAndRun||0)+1;
+      addActionEvent('⭐ ČISTÁ HRA • Break & Run • '+match.playerNames[player]+' • jednoduché počítadlo');
+      playSpecialSound();
+    }else if(statType==='runout'){
+      match.stats[player].runouts=Number(match.stats[player].runouts||0)+1;
+      addActionEvent('DOHRÁVKA • '+match.playerNames[player]+' • jednoduché počítadlo');
+    }else{
+      addActionEvent('+1 • '+match.playerNames[player]);
+    }
+
+    // VÍTĚZ NA STOLE je nekonečná session bez Race to.
+    // Po bodu vítěz zůstává, poražený jde čekat a třetí hráč přichází na stůl.
+    if(match.winnerTableMode){
+      winRack(player,true,label);
+      return;
+    }
+
+    const target=normalRaceTarget(match);
+    match.target=target;
+    match.scores[player]=Math.min(target,Number(match.scores[player]||0)+1);
+    logEvent('Skóre '+match.scores[0]+':'+match.scores[1]);
+
+    if(match.scores[player]>=target){
+      finishMatch(player);
+      return;
+    }
+
+    advanceBreakerAfterRack(player);
+    match.rackNumber++;
+    beginRack();
+    renderMatch();
+  }
+
+  window.simpleAddPoint=function(player){
+    simpleFinishRack(player,{label:'+1'});
+  };
+
+  window.simpleAddBreakAndRun=function(){
+    if(!match || match.counterMode!=='simple')return;
+    const breaker=Number(match.breaker||0);
+    simpleFinishRack(breaker,{statType:'breakAndRun',label:'Čistá hra'});
+  };
+
+  window.simpleAddRunout=function(player){
+    simpleFinishRack(player,{statType:'runout',label:'Dohrávka'});
+  };
+
+  if($('simpleAddP1'))$('simpleAddP1').onclick=()=>simpleAddPoint(0);
+  if($('simpleAddP2'))$('simpleAddP2').onclick=()=>simpleAddPoint(1);
+  if($('simpleBreakRunBtn'))$('simpleBreakRunBtn').onclick=()=>simpleAddBreakAndRun();
+  if($('simpleRunoutP1'))$('simpleRunoutP1').onclick=()=>simpleAddRunout(0);
+  if($('simpleRunoutP2'))$('simpleRunoutP2').onclick=()=>simpleAddRunout(1);
+  if($('simpleUndoBtn'))$('simpleUndoBtn').onclick=restoreManualEntryUndoSnapshot;
+  if($('fullUndoBtn'))$('fullUndoBtn').onclick=restoreManualEntryUndoSnapshot;
+
+  window.adjustRackScore=function(player,delta){
+    if(!match || !editableMatchOwnedByCurrentUser(match))return;
+    if(match.endedAt || match.status==='complete'){
+      toast('Zápas už je ukončený.');
+      return;
+    }
+    if(match.discipline==='14.1' || match.ghostMode || match.winnerTableMode)return;
+
+    player=Number(player);
+    delta=Number(delta);
+    if((player!==0&&player!==1) || !delta)return;
+
+    // +/- je běžně určeno jednoduchému počítadlu.
+    // V rozšířeném režimu ho povolujeme navíc pouze u turnajových 8/9/10-ball zápasů.
+    const tournamentRackScoreAdjust=
+      !!match.tournamentLink &&
+      ['8-ball','9-ball','10-ball'].includes(match.discipline);
+
+    if(match.counterMode!=='simple' && !tournamentRackScoreAdjust)return;
+
+    if(delta>0){
+      saveManualEntryUndoSnapshot('Turnajové skóre +1');
+      winRack(player,false,'Bod');
+      return;
+    }
+
+    if(delta<0){
+      if((match.scores[player]||0)<=0){
+        toast('Skóre už je na nule.');
+        return;
+      }
+      saveManualEntryUndoSnapshot('Turnajové skóre −1');
+      addActionEvent('Oprava skóre −1 • '+match.playerNames[player]);
+      match.scores[player]=Math.max(0,(match.scores[player]||0)-1);
+      logEvent('Skóre '+match.scores[0]+':'+match.scores[1]);
+      renderMatch();
+      autosaveCurrent();
+    }
+  };
+
+
+  function openManualScoreCorrection(){
+    if(!match || match.counterMode==='simple' || match.discipline==='14.1' ||
+       match.ghostMode || match.winnerTableMode)return;
+    $('manualScoreCorrectionP1Label').textContent=match.playerNames?.[0]||'Hráč 1';
+    $('manualScoreCorrectionP2Label').textContent=match.playerNames?.[1]||'Hráč 2';
+    $('manualScoreCorrectionP1').value=Number(match.scores?.[0]||0);
+    $('manualScoreCorrectionP2').value=Number(match.scores?.[1]||0);
+    $('manualScoreCorrectionModal').classList.add('show');
+  }
+
+  if($('manualScoreCorrectionBtn')){
+    $('manualScoreCorrectionBtn').onclick=openManualScoreCorrection;
+  }
+
+  $('manualScoreCorrectionCancelBtn').onclick=()=>{
+    $('manualScoreCorrectionModal').classList.remove('show');
+  };
+
+  $('manualScoreCorrectionConfirmBtn').onclick=()=>{
+    if(!match)return;
+    const old0=Number(match.scores?.[0]||0);
+    const old1=Number(match.scores?.[1]||0);
+    const target=normalRaceTarget(match);
+
+    let n0=Math.max(0,parseInt($('manualScoreCorrectionP1').value||'0',10)||0);
+    let n1=Math.max(0,parseInt($('manualScoreCorrectionP2').value||'0',10)||0);
+    if(Number.isFinite(target) && target>0){
+      n0=Math.min(target,n0);
+      n1=Math.min(target,n1);
+    }
+
+    if(n0===old0 && n1===old1){
+      $('manualScoreCorrectionModal').classList.remove('show');
+      return;
+    }
+
+    saveManualEntryUndoSnapshot('Ruční oprava skóre');
+    match.scores=[n0,n1];
+    addActionEvent('RUČNÍ OPRAVA SKÓRE • '+old0+':'+old1+' → '+n0+':'+n1);
+    logEvent('Ruční oprava skóre '+old0+':'+old1+' → '+n0+':'+n1);
+    $('manualScoreCorrectionModal').classList.remove('show');
+    renderMatch();
+  };
+
+
+  function advanceBreakerAfterRack(winner){
+    if(!match)return;
+
+    const currentBreaker=Number(match.breaker||0);
+    const mode=String(match.breakMode||'alternate');
+
+    if(mode==='alternate'){
+      // Střídavý rozstřel po jednom racku – funguje stejně pro singl i dvojice.
+      match.breaker=1-currentBreaker;
+    }else if(mode==='alternate2'){
+      // Každá strana rozstřeluje dva racky po sobě.
+      // rackNumber je číslo právě dohraného racku.
+      match.breaker=(Number(match.rackNumber||1)%2===0)
+        ? 1-currentBreaker
+        : currentBreaker;
+    }else if(mode==='winner'){
+      match.breaker=Number(winner);
+    }else{
+      // Bezpečný fallback: u neznámého režimu raději střídavý break,
+      // aby jedna strana nezůstala omylem na rozstřelu.
+      match.breaker=1-currentBreaker;
+    }
+
+    if(match.doublesMode){
+      logEvent(
+        'DVOJICE • další rozstřel: '+match.playerNames[match.breaker]+
+        ' • '+breakModeLabel(mode)
+      );
+    }else{
+      logEvent('Další rozstřel • '+match.playerNames[match.breaker]);
+    }
+  }
+
+  window.winRack = function(winner, fromAction=false, reason='Rack'){
+    if(!match) return;
+    if(match.endedAt || match.status==='complete'){
+      toast('Zápas už je ukončený.');
+      return;
+    }
+
+    if(match.winnerTableMode){
+      if(!fromAction) addActionEvent(reason+' pro '+match.playerNames[winner]);
+
+      const wt=match.winnerTable;
+      const loser=1-winner;
+      const globalWinner=wt.active[winner];
+      const globalLoser=wt.active[loser];
+      const incoming=wt.waiting;
+
+      wt.wins[globalWinner]=(wt.wins[globalWinner]||0)+1;
+      if(!Array.isArray(wt.rackHistory))wt.rackHistory=[];
+      wt.rackHistory.push({rack:wt.rackHistory.length+1,winnerIndex:globalWinner,loserIndex:globalLoser,wins:wt.wins.slice(0,3).map(n=>Math.max(0,Number(n)||0)),ts:new Date().toISOString()});
+      logEvent(
+        wt.players[globalWinner].displayName+' vyhrává rack • celkem '+wt.wins[globalWinner]+' výher'
+      );
+
+      toast('Máš tam prácičku, '+wt.players[globalLoser].displayName+'.');
+
+      // Vítěz zůstává na stejné straně. Čekající nahradí poraženého.
+      wt.active[loser]=incoming;
+      wt.waiting=globalLoser;
+
+      // Nově příchozí hráč vždy rozstřeluje.
+      match.breaker=loser;
+      match.turn=loser;
+      match.rackNumber++;
+      syncWinnerTableSlots();
+
+      logEvent(
+        wt.players[globalLoser].displayName+' jde čekat a staví trojúhelník • '+
+        wt.players[incoming].displayName+' jde na stůl a rozstřeluje'
+      );
+
+      beginRack();
+      renderMatch();
+      return;
+    }
+
+    if(!fromAction) addActionEvent(reason+' pro '+match.playerNames[winner]);
+
+    const target=normalRaceTarget(match);
+    match.target=target;
+    match.scores[winner]=Math.min(target,Number(match.scores[winner]||0)+1);
+    logEvent('Skóre '+match.scores[0]+':'+match.scores[1]);
+
+    if(checkNormalRaceTarget()){
+      renderMatch();
+      return;
+    }
+
+    advanceBreakerAfterRack(winner);
+    match.rackNumber++;
+    beginRack();
+    renderMatch();
+  }
+
+  const SPECIAL_SOUND_SRC = "data:audio/mpeg;base64,SUQzBAAAAAABA1RYWFgAAAASAAADbWFqb3JfYnJhbmQAbXA0MgBUWFhYAAAAEQAAA21pbm9yX3ZlcnNpb24AMQBUWFhYAAAAIAAAA2NvbXBhdGlibGVfYnJhbmRzAGlzb21tcDQxbXA0MgBUU1NFAAAADgAAA0xhdmY2MS43LjEwMwAAAAAAAAAAAAAA//tQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAWGluZwAAAA8AAAAeAAAowAAXFxchISEqKioxMTExODg4QEBARkZGRk5OTlVVVV1dXV1lZWVvb293d3d3gICAiIiIkJCQkJiYmKCgoKenp6evr6+3t7fAwMDAx8fHz8/P19fX197e3ufn5+/v7+/39/f///8AAAAATGF2YzYxLjE5AAAAAAAAAAAAAAAAJAONAAAAAAAAKMA4Vm5qAAAAAAAAAAAAAAAAAAAAAP/7wGQAAAKdBM69GAAIAAANIKAAARjpOT35nAAAAAA0gwAAAASlAAAvgBCSYDAYDJ2XB8Hw+sHwfD8TvUCGsHwf6gTB8/B8EDkoCYPg+D7yfKHP4DB8P/5QEHeUcJwf/8EAQBAEATB8HwfD4IAgCAIAMHwfB8PggAiqmysZCqwirom5LHZdQAsCEOL7DRR0sBSArYBZggQAsGUSmITSA6YEkDQxoHGEOtNrjVZDRMibgzdL6LvMrSajgVSEtd7S4ZlN2ZQEL8UvqrBtotBBgQCGrK38WiIhTK5famthnD8XXjjEupM6RuD1vtKZTZh6BWlyCwyp2MYBis7JIHnK8KgCBZJMPrDEHYRmV1MM7sPZR+vuG5BKNu5ZpaLCkwf3GUUV6f1WjUdjs0/D84f/w+/+FfU12W//zNSMSe3NSDoGRBRkBQCDBBF2RHMxHdgAtQZoZntDiRUiDHxo1MC+YxBvImUgJlF9j80K0BCuejcEIaGIFGWPEiIzoBFQBBxUgdQ0ddOFEQIUmjkG/INXddar4g4galCZcageASgCOmRPGLMTKzJFK3DLblz0K01J4wAkKD1QsoLrYLbpZS+1LYVOsd+5yq17c00p0XJ7DUPUMolTtyNYkCeqRUjTIrEX9azGrbSeUMjuPpemLH34hFGJy/Br7vz7hNel8NNad76ztdfmOSvGfm57fPqqZr3LWMEljaRS9/tJa7OSmGYdwturRCsIgAClkvCYJA4wkLuqMlz1WA4RQpjCizHyETIkA0w/zdE0k9s6qdu1mMXaIr1gf5iqah1vni4eRY71sqyn84IcqIUWLZ1R5j0Yo2/VxzHYqQqzq953szhbVtUx4W54eLzUp85ZYEH0pWsSttR4MSH4u97+4Oq11mT5vnEaLTwPAu/cm2kZ/+z1ywNVZ4q4YgAAVLJuHZBpwqQ4SL3CbAcVIVM81Hm0P0OMAfBNJT/d0XJ8RUU6R4ON//uQZM4ABwVOU/5nRAAAAA0gwAAAEbkvU/2HgCAAADSDgAAEj5omAEPDYmkD4oIjSIRHzjQ4GZpW26m6sYRFm5//mFokqIdc5suSQNQ1pqDmYwzCT2nKvs0eWzsHlWnqQ/TmtXVahDz/Oar5S23OqSKS0wWnxrlGOYVYiYRBAAHJJOJGAmguKigcAkekQRPAwS8JdoLIdxWNjTD3AcQnnqCQCZ5RDl8SU46FU7BqkLpLL0RgbsuVKz2Epchtnqb12XDpYzE18y1FrNFdNgXJ60Y+WmO1GF0HYjjKViktEWpGCBIQSaOzpqaXu1hyh3PyWYkGnJirXLVI2iS8WpV1p6iEMABc0t4fwAsWyMpEAF9IakgFylaWSkSE90qy9zbRt04LlLtPWWBoRnoBF71kYcFyQTCbQTNka/JJoAHBQlgrqkm7KoHzZ2frqA2RLPPtoXoWNqBfNdLTTx6nxmZKEQJ+5pz7hfnD4Tg/zKtJMlZPO7FrKdKHaS3J0kWt45uw/kNjvCIAgG224AEwvFSkwKA4IWxoocKEhwWKg2WrcpBH//uAZNUA9BRLVHsPSrgAAA0gAAABEHkvT+wxD+AAADSAAAAEYp1yQPZkLoDDKMKhYRxlg2owXMNpyPg6egyqsalNmGzyoFWosJJIVE+W6O2yyOCNaE7tmEJIFlSMieIbNwcjgiF2o60iCaJKEmZDDGfK+JtLxnhl5px6KB2ROVRRi0mX6Zd6plMyIBWN2hsZnCjOFKhlC/QBkzN+QgjJUTb0oWEEgvAsVgjRAWAWUCwTxILLw5uoBYXpHVJCdabUOWrlFskpZRuFHtTlg8HnY5XJLRLzXQke209RAq8EbRbYT+a7Hvni+3rMfGc5jclMk9b92RjliDMQyZM4sKJS/LCozQhAAAKNR8O8NuGcGZDYGJUxGRVJjoCtrU1TPZIlpKANnZrDDwtLkcklq+eiQWVytVwDR2PiCOSGG7JJOOVPD+05eNitojgsO9luOL1QnIj+ZJxdxMKimZu/l9PY5tZ/JqIVrmHEHhcysgv/+3Bk9gD0FUvUewk0aAAADSAAAAEQJSlR7CTR6AAANIAAAATNII2kzNPf9/8rPPfKuf0+QpHViHh5ViAgXrd+GlAV4SVNcE5AgUsh8I00qVBBghBRctIoyo8qNzHDAcQoLA9YViuPUqyVc7iTN0Vji+kxavxfyMypCw8wfWZotMVqKrDh+/bEFdKeNmB2uXchXOO10Yj66ZRulGfGOSRtDJsRj6WxiUshiyrQQxZazUpMJMh/O4yEwdISyOzoIAABbknAIEpoW9FeFYGjHRDKGtlxDAhCUnJkspw2jRpeJB0IAahKQS+iMKgGOnAXIo5nryIwMSvFa6uVsrKtVdfobnE1XUhtA+j2B27iseOz4pmlrRGKGhEAqWMSMI0nGqg+3ZGYHIVgxkixHV2+fToxvBqkshk8d48k//tgZP6A89tH0/sMM1oAAA0gAAABD+UtS+yw0yAAADSAAAAE7AQ7kdcjCmZqiVISAFXS3hu4jopiZFj2EXwVUgGXVIlo5lmkJiw7ws8uQDVvvL0CBCSE4HjBHMhB4yID0pihEfgpBmzenVJ179CtG0KiJtZiZwXskG7sRKIZ3G2WkOVh3btJKObLadroqSPsCHUWZqPWDjZ2mFz3k5dC4c+KTCYJFgwAriaumMwEmWWzBpoAcD7KRaQWUuhizUNPllAciUEAIDqNPZ4/kZZb+iIjgrgJ6MIgvROWjUkBvUCKK3TGbYTjInbECFG9lD3yapve3HwY5zsbqIUF4llGkrE80Zat//twZPGA9BtK0/ssM/gAAA0gAAABEKE1R+wwz+AAADSAAAAEgkEWYUEmGoAPbPPYgjZNMEIIfdr3/L5GGIa0fJfdNjD3W4dVklh5UyEATIk6GSnkYwBTqLB6TagFgEAXuaqAhNibGnPCGUPfhFX7cQQgKCIgJj7axOjHDJpVAq2Ss0tE8nZqb5Q9PChKlQWGyCINh964gZiIhITrrwXWILa85qyjc0SLsbB6BMXfsdG7eqteh8lZXM2es9FMHxztd3KOpkJxW8x8arKroWjB1anZc5SZJYzICCBab4UqFOnEIiIDwvQTHbAgedlCgmgxxqLAXwb1pFVxHR0ogaEYkRCBGUPJLOYmoXYBZUD1dhnyNPxpMSI6SSprm0kniQ+jD0RSwRLGVgSMEkClQ3JsL2adYrh7OUbY8//7YGT3gPPqTVN7CRx4AAANIAAAAQ/9L0/sJNHoAAA0gAAABI5k+DocYp09RP8zyiPmQMHoXY98KlwgTDZLy3/sIJKJTmEZCLFyRaxRgIGFQCUx08ACxHyfZCUuMFhaNJNHgtA6vCRW+e64lLfsWTl8n+jxs3Y2lo7LXrtXTwlxI32J5TvM0pLEqopIjzNohOpahUpoXfeTHpt5iWFkTTTM/dI5L+XfPhr/z3S9dU7dyg7l+BWF9ytR5h1UQQptNzACTLLFliBQBATLHhMJWCQtFhNtFPQi4Y8U52xFnlAXb1uo5IhRmkFL5yYDNESTsHG0Qc0TJ5/s8IYpPIQIqWhtYgjdMP/7cGTpAPRaTNL7CWR4AAANIAAAAQ/5MUXsJRGAAAA0gAAABOnoLquJJJoUwopuruW1pQf5eKWj/8E5RfPCTVRhWpz3/+Q7oHy6KTwWMY4rli84nJpzZYpyIBBbTb4UNB0gYQAgEE0ZwgbNgoBuQkItMkQ/5bNUEJicE1UB9EZlk4WwBGUnhzDcmFltGvQvTrl3zTefUQZXW2fL9y4gIeStpazUdezcZ6PQiKJ0MPRKchk1XvkSkauIO1H/0Z8fuig04+6VWVpT4r5ZVHt8WU4cj8NBFgCBAADhIPybMzKgoBLiadEGGkuQkQGRTgqMwqhxwWdFkGDJCFkX7aKhwCA0RH3awi+WuJShx2h90fst30Z8dEjtwxFcaN0R56aZYcutRW5xZVyhBXiRB3nA1RoMeAkbQImZPqr/+3Bk7gDzzkxR6wwzcAAAD/AAAAEPcTNN7DzLIAmAYkAAAATuO4wVYOKPt6eq29ydqy1ib1kVmKr9Nl+K17yWZK6jv++E+iVisTbBLFkQh3OkRJ6LxctV9zaZCJjccvCwxgoUMDhkZWYOLJThQMNcmDfCYUAGQGEDgckKTUVZv+UrVvXfVAOBsNBUYNjESAUCtcjJxYHidGhJjRhG6DbmIFw6GF2FFjmkqi83XhGE6ZRSUMduEmFsxti3bLk3tFdKoQWWwzLb3ZAwYlP3MIvZavpJdNlKpF8+bWJkCS8KNZI/QD5BgAAAAAA/hhqemlBVkAyablu4MsKMgPQwDiQsyIABKCPnQPIEGACJh58pkgJoR46hMBgO0oQMeFXzux99WHQnKOTEclDpLtCFxZyGlyASIwuAMG1G//twZPyAc/9NUnsMM3gGwBmUAAABkbE1Sey9MWAMAGYUAAAGJPeJ1wTNigUIE20byckPEkL86YCgoMU2ogJGEmP1DDDLcoMJihhObeMWTuTI12EBLspznBRma+o2+QIIZCP6joMVsxRGrhC25wigScNhs3vRzAPkC0AAN6EvNPMQAgQCnfPwYUKDhDpGEWGFVItJomAGn4clAx8zFIzNPTaiVNxoUbN6dp4uIaYFJhUiED7JDOHL3waUBRtUVwmMrpit6szdzF5vixh96u2jNgAzELXhVQZG1e2oMFyXNOGoM5AJnCfiIk/ieljqPSDGHUS08CbCAhdk2PAUsAFmuCABVgmCQCXQwHGZAIchB/k+IAbJWvVg4XKG0qNNUeNrJtSLs738NML+nBdMhgp9cKsbLA7KEbCw6P/7cGT7ADRSTdNraTRoC4AabgAAAVOhOVXtYS7gJIAp+AAABPIlIRlTmUXUWJojH8dJSoeb3JvEJJQ/IycWgD4B+AAAAAAoe8GlGvd1CBAgAJO27g3XzcPYYZcRp+g7NB8KviOCHiywlAmAQCe4K7SQFV7T6q7Qa9A/fV5VMQCi+PitbMJq63rTAAREcIZwiZ1bCkkej8qOzNJPZJiR5OzkEILYjPPSaelU4h79oJ664xjNjtADo0+8c9IqVTXln0r3vLf+Gpymhy3jRQD5BcAADaODRWqnMAYAAQADkm4TBFOA45B04kL40ooEcOvwaISxaeXCXWz9koL3E4Pkzkw/bhcurQ3ELCmK8IaYm6tHXa74iiMInUYwsKDECSoiZG2VdR6WVeKRqpqgiobdiJFKDqroo+XzPLP/+5Bk54A2ok5Ua1h72AzAGn4AAAEQIS9h7LDRKCUAafgAAAS9EvrPla7qxxUOb2seRRmEztw44qvmRy2f2xxSJlbjoAbgEGBMAAAAABoQw0iCEAEAAAADvm4wHXXJBihnDIBHaEAwJhHj1qKKNFGQjBgXoMFiiUbKgEPsunnccqklkArKWa7bW4qyZv43bjvFE8dHCxYNjMijovcbpRe+6684997ZhXXrLzhmfNrUVvheXwPRWX9Z9BKj1u1f7y/Ucrui5pNMOIGmUeR2P5+CZTbd2KSo5z+hlFGHJF0SwCHg0GqCAgAAAAAAKc4LwmM9BQsmaog9oTHmGMd8RQirwxwxZ4lyYPinS2MzZVBswCdkKlkZfVCbelzipaiSppq32ViMAqtAFNXeGIQzKo8ggNEAOiaahWDE/EsKysyvPn4HYO5vH5+ptacAo7F+x0r/Zn7eu77av+mTzasonKTiuzt7Ceso09hMLIlUchmfssmK8/t92jzd3p6GrbSJSmsTwXmAYBAAEAIvpeHkC8R7QtZIQownAcqiEogMUABAYAb/+3Bk8AB0I01Wewk1uAugCY4AAAER0TVT7LDXIBEAY+AAAAQ4QbHz2VbG+Khxt9e9KVFtSbKCQwLvVLDKmVSb9YwX3l5uRteEIa3POq1hTVsFBHmy3hV2p5/rU2PhXszU4KQTofqGMqHubxcvN1YWUWQvqjyigP6sOav31jTF6vwHldXkX9Yk7EdXjDjlMYp07fOnscymUrFerbb/0s/dSJICACAAAEGx3gmgAqcvERZdMeZmhUMwAiqAlisEkO0wcHH37SS8PkqY+/PXJBGJuxNQUKhO9PMmzFVtoKvHs5K9ufhqAKN3SfMNni9zjOWIfRF969K+SQseH7xmBzJpXv4qG7J7ZBEoYkqHlHNcEjpMZwiTk6ZGQHUTYbUKyOEiOGqiYnQRNC9lLe0yRwMmYrsMIVpE59CU//uAZOkA9PRM0vs6YuoAAA/wAAABE3E3Vew9mmAAADSAAAAEx76L6ho6isflFCEIARkJNJ8ITAV0BhDQHERZQakObipEs3MmJiTIqUCFFI7RIblKeo+FyapXehmKxCH2BLMvxfB8L2Hasxe7yXFUJSsyKSQdJXOLe1srPuDFRUXNIu6fDMdseSiuLODJeKiqU9VxJvyNtN/D2tNPeIRZh22xBKrgnOaWETkUivqgjTW6W+tJT8MBnoaoWWoex7+rQVrZVCMAEyadlm4OCGGQDFjEnxRaNJKhUEDgBUpMFTcg+WEgwmBUjvQEYAULAtrVDtaLWlEXPpC5jPV54PPFprGFOB/UixXAOJmjSyJsfpsnPUD+0szSll32lpdHmMsxTdatrBrx1PzAP3vZ2V7auwU08MWpltBraBYHvS9lcy78GVicq9zNKzLzUVJz3pYO1/JOCAoEALlOabAAtFUyCYqGSsIWnNKPSbIkJEj/+4Bk8ID1AU1Vey9NSgAADSAAAAESrUFZ7LzY6AAANIAAAARL5zcmMaaBoARhQMFZ6EfhpBSxiOKtfnvajHe41H4Tvs87coqnxMQgwwRAu56PI8434/DVp6JIHCC7rHufc4gTiD0/8yk83EyHNeDt/q3LJPm95YEBCwtZnv077iH6L32L+mbf+d693+hex+P3RSgEBTAMte4Wsba1NkgYWKAYqnMQB07goFFmJQZmGQhQGjhG4FfULhyIblYXyhevSeRmOqTa6TyGZvW0G2G0kKYvM9ufu9SzOB6ZfI5zFnZB8ZhpoQ0FHvnynOSKk0L35bFGXX8YVoMSK2NZnz5TD/60rZzVwz60rqabPuEjBE4EVuTixIAgApbLwqUz2jCDCshCelwIhQau5YYatcaCfdJ0ZHQMBgrhSYyHyhixIpQ/Y2MsaghumElxk2t4Vt+VMDCHhKSoFTTBDFAgRJ0t/ohT7ZCXVkgpEkVg3f/7cGT6AfR3S1f7T2RIAAANIAAAAREBI1XtMNoIAAA/wAAABGd9ZFWJlsdN4RMqqPVZfJWkkSwqiCSclY7dsy8t/6sFvOo5svdzdF1Ve4Q5EmXkjGrEBhUQAQAEkd4AYRPEQHInkSzQck6Vc81QS4dVrCyUZVcMLXiloIjFMITEICajA2dHEoGpdStd7Cbd/VS/lqs7C9AzlHAOaOnIT5ZfrVxyFb16XQ/JStr+W19lDu5Dt2qI/jJLX69taPWt8G01IVhkcxSzTWJ+Y6/7UHK8SlTvN7JvNcpJZ1sfREoVyBiQBcj3CBgXIMRA2KzyUQJOSQWGVGCBBqCJNPLQJIFAsXaesCTHE0scW1cqWSC0QmSVQk4aR8Pc3kPyKpzTjhlliTikdn6XpYertoJWL6S8lJKQcWEiSCX/+3Bk+QD0D0nXe080ugCAGNAEAAERTTNV7L0w4AKAZIAQAAQ8+XtGXX8jfTk0oplzYnOTKOEZZJofHV9xzCGMWLd/e45nMdUaYullkE/dsyv1qsBtyAUSAAAAApHODMFNzMQIGgGa7wOEIlEOgWdAGJsEI5ekuMnJgt1Xsy06GKCx6ZQyidSsqoDoRTFUg4xNQP7pDS9u2BwE7C7TgBy2HPDUZAC3JqkVjMqLrDxjj5gzX08nXFY28OG60tDjOvn65/gZ1VB8ZGWT858OEDmYQxzhK5oZsurO++edWW1//jTfE/28zDiQ43YHAckN9wUAAQAAAmSqDAEgecLIAFSW1IkDbAwQYoOlWRAbrYCUWQB3kYe5SdQjEKwYv4qVT8WpwoSMkTUrmpcWE6ZaCFw16IDJ6LtkMMAS//twZPyE9FBMU/sMNkgAoBlABAABESUvT+y9MSADgCQAAAAFSlS9H4T5h7ckZhYuUkQC59qBGWbXjRqUtamdgo1k1+3nzxBoDA/y1RZOjcbzWrB4QeaktJkS4tur2+xnwgdrkwI3W5v3+yy+FeZWNgEAAAOJTgaUlbKgSWARwGCrUKjGAaAkw6FBC15pqDMKiLNGuyJbk+7z3UlOmmwws5S07YmUKXNZLZtoNOPA2AwFkc34lb3xNM/UcZw+mqunnFk1Su6+YFwjQSkPLtMD8wl1ssPV94vzjyHFWEAseEJAsPXEIF+Ep2FLySn/7qyfmCO8OFQJ7/0XkVw+MQ/qmxKAAAABMq8OgcTq3kkzQooI3QZYCDDZh5iwkcJhpzp5TMFOKka5kluvlhHkkCJzMG8eYs6mO8jWwP/7cGT8gPTBRFP7OHl6AOAIoAAAAVJpJU/tJXpgAAA/wAAABEgmwJBaeDStNXq1Z+C8KY7bw2qNwcrdScrkcavhABI7uNKZMojh5K2eKX6a1LOZLUQRADSCM40gImLE9ConRx0v/Q0eVi8rSjihkHlOm5qtaOKm59zZisQoFAEAAAOJThugplkAUGFZr9LMIXlZ0NiKqqjtpZMgKB0zjxhLdxarMX7jrxQGyBPeoyEJMkAw0RrA+A5atYjBCRmdt1g6MA4mzGnT7hZuSmzm9P/h4lx7CG7gKG6V1ad7GPr7UprIUTjyR1COS5CsZR2khurUJpxyf/nT/1Ps6lLc2o236fihxkQH9hgkIAAAAk1eAsCM4l0yS4PBtGsKFzxCSoGPCo9KptunYzahZBfcmi1pzIs+jJ33f6b/+3Bk8ID0iUjVeyxGmAAAD/AAAAESKS9V7BkaYAAANIAAAAQCjyANQR+RytgBgoKjKqpjAbijTS+SwgKmyQ+SNjTlmyo//1kJ1NTP+if/7/+fYznvu6RHCSkL3xtUsSKI5FKlS833k5X0rDxwnFaVWp3Tcet2WW9wyihbrT7quAc0AgAAAoU+FqgRECtIYnFx8rQlmGCjgVYBTFCe1lX6BBr1KhQ6bYYciT+OVLI4y4LvSZjAJOs0ufApFRHUaMNVGGjDU+TKFNU8BTGY0wFJ5w5NfZFFpXJ2EN+YoH1HV+PhH9U3dkES3G9ui5iGn3E83awfUTp8WDafoiB7PweHqmuUYu/rmj9MhuzYY7npF7+z/7D5tJ3bfkKIpCAAACgFQCODVJdYRqmsAsONBlmwCgqJn4QSIwy5//twZOmA9GBEVXsZTZoAAA0gAAABEYknVeylGSgAADSAAAAELeIStQ2Uo80bS5SzmNoJBERVrB1tD8TMRp8oIfPgZnJwI5lqisiQcLMPC9K328Z0u/UGvLTy/0n51U6Sp/k5Wv1Mv+tJh3oMkTjRTqCdGiRwmIn1Is6C0eqZuXSiaMm3OrU5jG/zEblV5QRFEgAAHIC+ANUG4twEUoNNacRDIgASgVEZIOCLCM3VleeD1YppDyYZjyBrTGFPOjFJEDliYFpEElYcda9D5KSTUPowJuQAPiKwjUk0b8vuyGka1ZbwPLM4nEjULltRr1ZOlWaiPOFLDpEHoSjOeLCTozoxZtaDEkxr2rf46ijFeRK5IQTkYAABtLnD+BoQ48DbjYSjgCTEdRI4wceARDGhK8bumyoAwXYXQ//7gGTngPTLSlP7WFr6AAANIAAAAREZEU/s4avoAAA0gAAABFGGYHbC3GDERYElTRSpVNVoEOmwQ0tnKmbRQsNwHkaUY8LNHWTQJxQNzdNzHtv5EMDMZiTa6HmmLWmbwyv//3QkkbXaW2j4kJbs2HcyUSRCqK36jIza4VXO/updhUeOHMDghYnGCBQhAQAEyV4AoR1LzpnOG7O6ImMAoDFRLaIQKyr8hsQgOtKGBwsQEs1gCZZe6zT2oXHQhwHSNabv0aCGp3ZWdCkzIg5FtW+HVANAy2IFAooxsf/ZfHsnU/M8DwIAqDJMygJ1s/7iq1WxysrmtAhBO55macpgi3qZ/7nmB2HuQp3wKmqwfntTTfEQUJhV06pnOkJIyQQAAWp7gxZIxpEzh4EJQJHGhYFOEgdGFGlPB3FUWRI6OpGVN6VEF74C0/rzV2gabm45iQLpM8a8jwsuGgjLQvW1HN0cnhakrZiDempf8hDR//twZPqA9BtEVPsnNrgAAA0gAAABEZURUezhaeAAADSAAAAEcktK05xXEc1okDCtet/97ncdNfGHr9dCJ+niBeaNr6mRzb+R7D2051TGedE8RG9LbdkNponjAki9MvJGXkj3B2c0QAAMaewBlJjSlC47UZHY+2uAdSBKiR4KVd9O1kzTkoG5Q7DzTigOGbWcgydew+KuUEUNtaAgAJdLtv0hSLIW+aEWxl8LVVvg+j/eML2PV+/9OB4BAITizZObTSRkRg9YrR6zc08mkqfKzLAgusU5kQlUwCLEhIUgPKrChgMBS7+mgi8nCYICkJkGiEhWBUC0k0KoeJjBJYnVH9gZRkeioq0kM+QtWMzEAA206CBEEMGUMYlhCuRjiyYJIAIxICLFsAfGFJULcic1cWHnrNuzDs3DEv/7cGT9APSKStR7KUYqAAANIAAAARI5OVXtMTZgAAA0gAAABJeFQRLOkftnQAPIs5mUe1tOu5E4Bi6r6eWvE3zz7zv/Pf/6TWCxBG7QiZNFaKaR+qR1ijZlLZNyp4+UJXIz0j5I6SZLdPs1yV/f0fb7LU3Ks6tSj862vGAkwUy2TkAVyQojVTAABEi+DCEKAVXgWQZtIsgNeIoxCCniRDx5aLmIPDwsFQ9KWBxvPHOCN16eae91IHgJTclEBAT9xWs+6K0sxka0izkYfCnZDDVTPLYxn/8SqA8XTSybvZhS/THTpmyOSDAwYsBj9A8dchyIghQ6R+eODySAhV7T3LYieRzoCgpBC1PaNLDqggAH5LwJBAFoAMmY+SyoSgQWOwl5RKEAxP4lShNRBdPN0mUYp/IiuWd9Fhz/+3Bk9gD1Nk5Vey9NmgAADSAAAAER0TFZ7KTaqAAANIAAAARHBjWEwviGCKmOlpTtCQxbH6exMi0bsJFVz5/Vv//xS1p10sFqkEQr2hwUzTO2sSij0aASJsoV8FkkrvhuFFLgLWmkcrg5G7/6NwJaSeHHgLfaPIz9Ob4cuOpbHTwa2RcSZSAAA+5eEJoKmQGmCEFiwmASxQDiIaUExs6qmqBVVHCo7lyC3dptVZ6GLFWPp+Jrv62Jq8DhCTJ2CqdAmSkTLNAU41LKNiQ05Jv7a//7PWyyYbCcB2FemjVpHaXjWnZVZNcOizT0CLyNsP0msJzT4JkO8RaEMffxX6aBwSOubbxkKrXVvcDRSprxjSd4SiSiAAAnk3CgJCUMKHrEh4JYh9C9i0QXKBzcPNOiQsCwene6ZU9Q//twZOWA9C9LVvspHpoAAA0gAAABEcEtXey8z+gAADSAAAAEWsNVoBpMbLcRAG0OXXn4dNm+6SLsZHhLssuKqjQt+albpOLe/6f//Oo7+EfRJznM5hKhAdtfmQoYuVUu3q6OW+vAJlWkC7FsZ2Fk4tFPUyzKRRjyTR+mYryURoQzeKp625vTmRR+7T+O/fid90sld0AgAbHMAxcRRsOERYHKA3punBGpAOlUMhOWtWOAwIWKvMVsJnp8UH2pVJovaj8OMlWfbgtnz3rOqSqGFRqWza52fkkFiXxoEeXiF/98kg+LJ86amlICu7FO4pjstLmHeZGUwgmVaxzknYXF8K7NzPa/pZdrRdTEcuwY1DWb1y9rrWJnLT5zTlvUk5fsrVWYyAANuWgqgGpCFYzNhMxlEsIUA14QoP/7gGTmAPR1TVb7L0W6AAANIAAAARKBN13svTpgAAA0gAAABGqDVrYVbV6LIfZ9Vtw6z1mNSM00KfrOXRlORvm3wTTRDRBX/AcHOOIAGWV3UCwKV9Vry2FwQwzXP//rOQL4iU5wMQ68nfxbY1saZBQS0sQJxYXRidxokgWOJsxxJgRF4qNXdZamZE3lGEUowuEKbjUcyNLQis3KVecaElRRAAeJ3gABgmBWUyawVcTFAUUESFUhK0iIp2ZqWoyr8isPSYhBQlQVar5xyzDECvIVAGKQGs+BDNDd1gGDmruXA90BMkRAVxBD8NYc2Zy/yxN/7g9JlxGFIbUso4hb95c0zNY7pGSRQjFH6kUAn9Rn123v7nFdkr1yb8EoVcQ0ntfKNDqdRAgRUinmGBmTKQAlKBEUcEDKDMFEl1YhCCDowECFgxomZQfVCgJWHZ+91RdLP5/OO0r/yiJNiZmXPV4WoHgHuM+BjcMMYfpV//twZPkA9HZLV3stZhoAAA0gAAABEkEpW+ydOigAADSAAAAEIiAhlYR9kJIsCv12VBWUMW/9v3n3/w1/6mI5WgWvBsmyy/HHn/j+Frffx/79iL36StrmFNl2WdoZz6n71dsZZfvLv9q6121hc+ta1njS/l/KuPbnfrXbX6q8mHIAgCcHcAcAYAcDGMwPCYCAwaTjQtdMCh4xCFjGRjMXA4wQhzAhJMOgSQhAmAoSMJD0wyEjD4iC4pEgeYQD5jj4YqLI3FyhADgYVCPUkoDWC0wEIfVqgjAmVRo6oANDiTuW8xwsAoEiCYMHmKEJgo4n4YuHGIJZwquawzlqCYraQXmAQEwdrUnMIHS4AgIwIIjwS5oMAEiEl3da2oC8KgrdHJkl+refaJT0bf9hCKLhAwBi8XcKBn1tUv/7cGTzAvR1Tlb7JzaYAAANIAAAARPBMVf1nIAoAAA0goAABL1Y7/e+VkiEV5MpJVjqUiaLK1yw4sNS0zwxqIxjLv/+98ybVl7F2DvCj1Ln8hm7NuDJn2qP9BcaoYrEZ3X//7///+595+HMN9z7/cK3KavTZ2atmtjWt1r9ftQcHnwsAHf1lRVJFrf+zqpMQU1FMy4xMDCqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqr/+4Bk5wAJFF7RfnNkIAAADSDAAAAAAAH+HAAAIAAANIOAAASqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqg==";
+  let specialSoundAudio = null;
+
+  function playSpecialSound(){
+    try{
+      if(!specialSoundAudio){
+        specialSoundAudio = new Audio(SPECIAL_SOUND_SRC);
+        specialSoundAudio.preload = 'auto';
+      }
+      specialSoundAudio.pause();
+      specialSoundAudio.currentTime = 0;
+      const p = specialSoundAudio.play();
+      if(p && typeof p.catch === 'function'){
+        p.catch(()=>toast('Klepni na tlačítko ještě jednou pro povolení zvuku.'));
+      }
+    }catch(e){
+      toast('Zvuk se nepodařilo přehrát.');
+    }
+  }
+
+  $('specialSoundBtn').onclick=playSpecialSound;
+  $('matchStatsSound').onclick=playSpecialSound;
+
+  let ghostCompleted=null;
+  let ghostUsedBIH=null;
+
+  function resetGhostModalState(){
+    ghostCompleted=null;
+    ghostUsedBIH=null;
+    $('ghostCompletedYes').classList.remove('active');
+    $('ghostCompletedNo').classList.remove('active');
+    $('ghostBIHYes').classList.remove('active');
+    $('ghostBIHNo').classList.remove('active');
+    $('ghostBIHBlock').classList.add('hidden');
+    $('ghostResultPreview').textContent='';
+  }
+
+  function updateGhostPreview(){
+    if(ghostCompleted===false){
+      $('ghostResultPreview').textContent='Výsledek: GHOST +1';
+    }else if(ghostCompleted===true && ghostUsedBIH===true){
+      $('ghostResultPreview').textContent='Výsledek: hráč +1';
+    }else if(ghostCompleted===true && ghostUsedBIH===false){
+      $('ghostResultPreview').textContent='Výsledek: hráč +2';
+    }else{
+      $('ghostResultPreview').textContent='';
+    }
+  }
+
+  function finishGhostRackOutcome(type,errorBall=null){
+    if(!match || !match.ghostMode)return;
+    if(!['dry','soft_break','break_foul','ace','failed','bih','clean'].includes(type))return;
+    if(type==='ace' && match.discipline!=='9-ball')return;
+
+    const rackNo=Math.max(1,Number(match.ghostRackNumber||1));
+    const label=
+      type==='clean'?'ČISTĚ DOHRÁNO':
+      type==='bih'?'DOHRÁVKA S BÍLOU V RUCE':
+      type==='ace'?'ESO • 9 Z BREAKU':
+      type==='break_foul'?'FAUL Z ROZSTŘELU':
+      type==='soft_break'?'SOFT BREAK':
+      type==='failed'?'NEDOHRÁNO':'DRY BREAK';
+
+    // Ghost one-tap musí být vždy vratný přes UNDO.
+    saveManualEntryUndoSnapshot('Ghost • Rack '+rackNo+' • '+label);
+
+    match.isBreakShot=false;
+    match.stats[0]=match.stats[0]||blankMatchStats();
+    if(!Array.isArray(match.ghostRackHistory))match.ghostRackHistory=[];
+
+    let playerDelta=0;
+    let ghostDelta=0;
+    const ball=type==='failed'?Number(errorBall||0):0;
+
+    if(type==='dry'){
+      ghostDelta=1;
+      match.scores[1]+=1;
+      match.stats[0].ghostDryBreaks=Number(match.stats[0].ghostDryBreaks||0)+1;
+    }else if(type==='break_foul'){
+      ghostDelta=1;
+      match.scores[1]+=1;
+      match.stats[0].breakFouls=Number(match.stats[0].breakFouls||0)+1;
+      match.stats[0].fouls=Number(match.stats[0].fouls||0)+1;
+      match.stats[0].ghostBreakFouls=Number(match.stats[0].ghostBreakFouls||0)+1;
+    }else if(type==='soft_break'){
+      ghostDelta=1;
+      match.scores[1]+=1;
+      match.stats[0].softBreaks=Number(match.stats[0].softBreaks||0)+1;
+      match.stats[0].ghostSoftBreaks=Number(match.stats[0].ghostSoftBreaks||0)+1;
+    }else if(type==='ace'){
+      playerDelta=2;
+      match.scores[0]+=2;
+      match.stats[0].aces=Number(match.stats[0].aces||0)+1;
+      match.stats[0].ghostAces=Number(match.stats[0].ghostAces||0)+1;
+    }else if(type==='failed'){
+      ghostDelta=1;
+      match.scores[1]+=1;
+      match.stats[0].ghostFailedRacks=Number(match.stats[0].ghostFailedRacks||0)+1;
+      if(ball){
+        match.stats[0].ghostMissesByBall=match.stats[0].ghostMissesByBall||{};
+        match.stats[0].ghostMissesByBall[ball]=Number(match.stats[0].ghostMissesByBall[ball]||0)+1;
+        match.ghostMissBall=ball;
+        match.lastMissBall=ball;
+      }
+    }else if(type==='bih'){
+      playerDelta=1;
+      match.scores[0]+=1;
+      match.stats[0].ghostBIHRunouts=Number(match.stats[0].ghostBIHRunouts||0)+1;
+    }else if(type==='clean'){
+      playerDelta=2;
+      match.scores[0]+=2;
+      match.stats[0].ghostCleanRunouts=Number(match.stats[0].ghostCleanRunouts||0)+1;
+    }
+
+    const detail=type==='failed' && ball ? ' • chyba na kouli '+ball : '';
+    const points=playerDelta ? ' • HRÁČ +'+playerDelta : ' • GHOST +'+ghostDelta;
+    addActionEvent('Ghost • Rack '+rackNo+' • '+label+detail+points);
+
+    match.ghostRackHistory.push({
+      rack:rackNo,
+      type,
+      label,
+      errorBall:ball||null,
+      playerDelta,
+      ghostDelta,
+      scorePlayer:Number(match.scores[0]||0),
+      scoreGhost:Number(match.scores[1]||0),
+      ts:new Date().toISOString()
+    });
+
+    logEvent('Skóre '+match.scores[0]+':'+match.scores[1]);
+    closeGhostMissBallPicker();
+    autosaveCurrent();
+    if(checkGhostTarget()){renderMatch();return;}
+    nextGhostRack();
+  }
+
+  if($('ghostCleanRunoutBtn'))$('ghostCleanRunoutBtn').onclick=()=>finishGhostRackOutcome('clean');
+  if($('ghostBIHRunoutBtn'))$('ghostBIHRunoutBtn').onclick=()=>finishGhostRackOutcome('bih');
+  if($('ghostAceBtn'))$('ghostAceBtn').onclick=()=>finishGhostRackOutcome('ace');
+  if($('ghostBreakFoulBtn'))$('ghostBreakFoulBtn').onclick=()=>finishGhostRackOutcome('break_foul');
+  if($('ghostSoftBreakBtn'))$('ghostSoftBreakBtn').onclick=()=>finishGhostRackOutcome('soft_break');
+  if($('ghostFailedRackBtn'))$('ghostFailedRackBtn').onclick=()=>{
+    openGhostMissBallPicker(ball=>finishGhostRackOutcome('failed',ball));
+  };
+  if($('ghostDryBreakBtn'))$('ghostDryBreakBtn').onclick=()=>finishGhostRackOutcome('dry');
+  if($('ghostScoringHelpBtn'))$('ghostScoringHelpBtn').onclick=()=>{
+    $('ghostScoringHelp')?.classList.toggle('hidden');
+  };
+
+  // Starý vícekrokový Ghost modal ponecháváme v HTML pouze kvůli kompatibilitě
+  // s případným rozehraným stavem starší verze; nové ovládání ho už nepoužívá.
+  if($('ghostEvaluateBtn'))$('ghostEvaluateBtn').onclick=()=>{};
+  if($('ghostCancel'))$('ghostCancel').onclick=()=>{$('ghostModal').classList.remove('show');};
+
+  function nextGhostRack(){
+    match.ghostRackNumber=(match.ghostRackNumber||1)+1;
+    match.turn=0;
+    match.breaker=0;
+    if(match.useClock) resetClock(true,true);
+    renderMatch();
+    autosaveCurrent();
+  }
+
+  function checkGhostTarget(){
+    if(match.scores[0]>=match.target){finishMatch(0);return true;}
+    if(match.scores[1]>=match.target){finishMatch(1);return true;}
+    return false;
+  }
+
+  function renderBallsChoices14(){
+    const wrap=$('ballsChoices14');
+    if(!wrap) return;
+    wrap.innerHTML='';
+    for(let n=1;n<=15;n++){
+      const b=document.createElement('button');
+      b.type='button';
+      b.className='btn';
+      b.textContent=String(n);
+      b.style.fontSize='20px';
+      b.style.fontWeight='950';
+      b.dataset.value=String(n);
+
+      if(String(n)===$('ballsRemaining14').value){
+        b.classList.add('active');
+      }
+
+      b.onclick=()=>{
+        $('ballsRemaining14').value=String(n);
+        [...wrap.children].forEach(x=>x.classList.remove('active'));
+        b.classList.add('active');
+        updateBallsCalc14();
+      };
+      wrap.appendChild(b);
+    }
+  }
+
+  function awardSolo14GhostError(reason){
+    if(!match?.solo14 || !match?.solo14GhostMode)return 0;
+    if(reason!=='miss' && reason!=='foul' && reason!=='opening_break_foul')return 0;
+
+    const pts=Math.max(1,Number(match.solo14GhostPointsPerError||0));
+    match.scores[1]=Number(match.scores[1]||0)+pts;
+    match.solo14GhostErrors=Number(match.solo14GhostErrors||0)+1;
+    addActionEvent('14.1 Ghost • chyba hráče • +'+pts+' bodů Ghost');
+    return pts;
+  }
+
+  function openEndInning14(reason){
+    if(!match || match.discipline!=='14.1') return;
+    if(match.ballsOnTable==null) match.ballsOnTable=15;
+    match.pendingEndReason14=reason;
+
+    const labels={miss:'MISS',safe:'SAFE',foul:'FAUL'};
+    $('inningReason14').textContent=labels[reason]||reason.toUpperCase();
+    $('ballsPrompt14').textContent=match.playerNames[match.turn]+' ukončil náběh jako '+(labels[reason]||reason)+'. Výpočtový stav je '+match.ballsOnTable+'. Zadej skutečný počet koulí, které zůstaly na stole.';
+    $('ballsRemaining14').value=String(Math.min(15,Math.max(1,match.ballsOnTable)));
+    renderBallsChoices14();
+    updateBallsCalc14();
+    $('ballsModal14').classList.add('show');
+  }
+
+  function updateBallsCalc14(){
+    if(!match || match.discipline!=='14.1') return;
+    let remaining=parseInt($('ballsRemaining14').value,10);
+    if(isNaN(remaining)) remaining=0;
+    remaining=Math.max(1,Math.min(15,remaining));
+    const calculationState=Number(match.ballsOnTable||0);
+    const potted=Math.max(0,calculationState-remaining);
+    $('ballsCalc14').textContent='Zahráno v náběhu: '+potted+' → +'+potted+' bodů';
+  }
+
+  $('endMiss14').onclick=()=>openEndInning14('miss');
+  $('endSafe14').onclick=()=>openEndInning14('safe');
+  $('endFoul14').onclick=()=>openEndInning14('foul');
+  $('cancelBalls14').onclick=()=>{match.pendingEndReason14=null;$('ballsModal14').classList.remove('show');};
+
+  $('confirmBalls14').onclick=()=>{
+    if(!match || match.discipline!=='14.1') return;
+    match.isBreakShot=false;
+    const before=match.ballsOnTable;
+    const remaining=parseInt($('ballsRemaining14').value,10);
+    if(isNaN(remaining)){ toast('Zadej počet koulí na stole.'); return; }
+    if(remaining<1 || remaining>15){ toast('Vyber počet koulí od 1 do 15.'); return; }
+
+    const i=match.turn;
+    const reason=match.pendingEndReason14||'miss';
+    const potted=before-remaining;
+
+    addActionEvent('14.1 náběh • '+match.playerNames[i]+' • '+reason.toUpperCase()+' • zahráno '+potted+' • na stole '+remaining);
+    match.scores[i]+=potted;
+    match.stats[i].innings14=(match.stats[i].innings14||0)+1;
+    match.stats[i].highRun14=Math.max(match.stats[i].highRun14||0,potted);
+
+    let penalty=0;
+
+    if(reason==='miss'){
+      match.stats[i].matchOnlyMisses=(match.stats[i].matchOnlyMisses||0)+1;
+      match.consecutiveFouls14[i]=0;
+    }else if(reason==='safe'){
+      match.stats[i].safeties++;
+      match.consecutiveFouls14[i]=0;
+    }else if(reason==='foul'){
+      match.stats[i].fouls++;
+      match.consecutiveFouls14[i]=(match.consecutiveFouls14[i]||0)+1;
+
+      if(match.consecutiveFouls14[i]>=3){
+        penalty=16;
+        match.stats[i].threeFoulPenalties14=(match.stats[i].threeFoulPenalties14||0)+1;
+        match.consecutiveFouls14[i]=0;
+        logEvent('14.1 • 3 po sobě jdoucí fauly • '+match.playerNames[i]+' −16 bodů');
+      }else{
+        penalty=1;
+      }
+
+      match.scores[i]-=penalty;
+      match.stats[i].foulPenaltyPoints14=(match.stats[i].foulPenaltyPoints14||0)+penalty;
+    }
+
+    if(match.solo14GhostMode && (reason==='miss' || reason==='foul')){
+      const ghostPts=awardSolo14GhostError(reason);
+      if(ghostPts>0)toast('GHOST +'+ghostPts+' bodů za chybu');
+    }
+
+    if(!Array.isArray(match.inningsHistory14))match.inningsHistory14=[];
+    match.inningsHistory14.push({
+      player:i,
+      playerName:match.playerNames[i],
+      run:potted,
+      reason,
+      penalty,
+      total:match.scores[i],
+      ts:new Date().toISOString()
+    });
+
+    match.ballsOnTable=remaining;
+    match.reracksInInning14=0;
+    match.pendingEndReason14=null;
+    match.openingBreakAvailable14=false;
+    $('ballsModal14').classList.remove('show');
+
+    if(penalty>0) toast('FAUL −'+penalty+' bod'+(penalty===1?'':'ů'));
+
+    if(checkFourteenOneTarget()){
+      renderMatch();
+      return;
+    }
+
+    match.turn=match.solo14 ? 0 : 1-i;
+    if(match.useClock) resetClock(false,true);
+    renderMatch();
+    autosaveCurrent();
+  };
+
+  $('openingBreakFoul14').onclick=()=>{
+    if(!match || match.discipline!=='14.1' || !match.openingBreakAvailable14) return;
+    match.isBreakShot=false;
+    const i=match.turn;
+    addActionEvent('14.1 • faul na úvodním rozstřelu • '+match.playerNames[i]+' −2 body');
+    match.scores[i]-=2;
+    match.stats[i].fouls++;
+    match.stats[i].openingBreakFouls14=(match.stats[i].openingBreakFouls14||0)+1;
+    match.stats[i].foulPenaltyPoints14=(match.stats[i].foulPenaltyPoints14||0)+2;
+    match.consecutiveFouls14[i]=(match.consecutiveFouls14[i]||0)+1;
+    match.openingBreakAvailable14=false;
+    if(!Array.isArray(match.inningsHistory14))match.inningsHistory14=[];
+    match.inningsHistory14.push({
+      player:i,
+      playerName:match.playerNames[i],
+      run:0,
+      reason:'opening_break_foul',
+      penalty:2,
+      total:match.scores[i],
+      ts:new Date().toISOString()
+    });
+    const openingGhostPts=awardSolo14GhostError('opening_break_foul');
+    toast('FAUL NA ÚVODNÍM ROZSTŘELU −2'+(openingGhostPts>0?' • GHOST +'+openingGhostPts:'') );
+    match.turn=match.solo14 ? 0 : 1-i;
+    if(match.useClock) resetClock(false,true);
+    renderMatch();
+    autosaveCurrent();
+  };
+
+
+  $('addRack14').onclick=()=>{
+    if(!match || match.discipline!=='14.1') return;
+    if(match.ballsOnTable==null) match.ballsOnTable=15;
+    if(match.reracksInInning14==null) match.reracksInInning14=0;
+
+    const before=match.ballsOnTable;
+
+    // Každý nový trojúhelník přidá do výpočtového stavu přesně 14 nových koulí.
+    // Koule, které už na stole jsou, se nijak neodečítají.
+    // Příklad: stav 3 -> nový trojúhelník -> 17.
+    match.ballsOnTable=before+14;
+
+    match.reracksInInning14++;
+    addActionEvent(
+      '14.1 • nový trojúhelník +14 • výpočtový stav '+before+' → '+match.ballsOnTable
+    );
+    renderMatch();
+    autosaveCurrent();
+  };
+
+  $('manualBreaker').onclick=()=>{
+    if(!match) return;
+    addActionEvent('Ruční změna rozstřelu');
+    match.breaker=1-match.breaker;
+    match.turn=match.breaker;
+    if(match.useClock) resetClock(true,true);
+    renderMatch();
+  };
+
+  $('resultConfirmationAccept').onclick=async()=>{
+    if(pendingOwnResultConfirmationResolve){
+      const resolve=pendingOwnResultConfirmationResolve;
+      pendingOwnResultConfirmationResolve=null;
+      $('resultConfirmationModal').classList.remove('show');
+      resolve(true);
+      return;
+    }
+    await respondToInboxMatchConfirmation('confirmed');
+  };
+
+  $('resultConfirmationReject').onclick=async()=>{
+    if(pendingOwnResultConfirmationResolve){
+      const resolve=pendingOwnResultConfirmationResolve;
+      pendingOwnResultConfirmationResolve=null;
+      $('resultConfirmationModal').classList.remove('show');
+      resolve(false);
+      return;
+    }
+    await respondToInboxMatchConfirmation('rejected');
+  };
+
+  if($('resultConfirmationLater')){
+    $('resultConfirmationLater').onclick=()=>{
+      const id=pendingInboxConfirmationMatchId;
+      if(id)postponedResultConfirmationIds.add(id);
+      pendingInboxConfirmationMatchId=null;
+      $('resultConfirmationModal').classList.remove('show');
+      $('resultConfirmationLater').classList.add('hidden');
+      $('resultConfirmationReject').disabled=false;
+      $('resultConfirmationAccept').disabled=false;
+      toast('Potvrzení bylo odloženo. Zobrazí se znovu po novém načtení aplikace.');
+    };
+  }
+
+  $('finishMatch').onclick=()=>{
+    if(!match) return;
+    const winner = (match.solo14||match.ghostMode||match.winnerTableMode) ? null : (match.scores[0]===match.scores[1] ? null : (match.scores[0]>match.scores[1]?0:1));
+    match.status=(match.solo14||match.ghostMode||match.winnerTableMode)?'complete':'incomplete';
+    finishMatch(winner,true);
+  };
+
+  $('cancelMatch').onclick=async()=>{
+    if(!match) return;
+    if(!confirm('Opravdu zrušit rozehraný zápas? Nebude uložen a žádné jeho statistiky se nezapočítají.')) return;
+    stopTimer();
+    stopLiveHeartbeat();
+    clearTimeout(activeMatchCloudSaveTimer);
+    const cancelledLiveId=match.id;
+    const hadStream=!!match.streamEnabled;
+    await removeLiveMatch(cancelledLiveId);
+    await removeActiveMatchCloudBackup(cancelledLiveId);
+    removeDeviceActiveMatch(cancelledLiveId);
+    if(hadStream)await clearStreamState();
+    match=null;
+    saveDeviceActiveMatch(null);
+    data.currentMatch=null;
+    saveData();
+    showScreen('setup');
+    renderLive();
+    toast('Zápas byl zrušen bez uložení.');
+  };
+
+  let tournamentAutoFinalizeInProgress=false;
+
+  async function autoFinalizeTournamentMatch(){
+    if(tournamentAutoFinalizeInProgress || !match?.tournamentLink)return;
+    tournamentAutoFinalizeInProgress=true;
+
+    const tournamentId=match.tournamentLink.tournamentId;
+    forcedTournamentReturnId=tournamentId;
+    postMatchReturnScreen='tournament';
+    postMatchTournamentId=tournamentId;
+
+    try{
+      const ok=await persistFinishedMatch();
+      if(!ok){
+        // Nenechávat uživatele na zamrzlém ukončeném zápase.
+        if(match){
+          match.endedAt=null;
+          match.status=null;
+          match.winner=null;
+          startLiveHeartbeat();
+          renderMatch();
+          autosaveCurrent();
+        }
+        tournamentAutoFinalizeInProgress=false;
+        toast('Výsledek se nepodařilo uložit do turnaje. Zápas jsem znovu odemkl.');
+        return;
+      }
+
+      removeDeviceActiveMatch(statsCardMatch?.id || match?.id);
+      const justSavedWasIncomplete=(match.status==='incomplete');
+      match=null;
+      // U NEDOHRANÉHO ponechává persistFinishedMatch snapshot v mapě rozehraných zápasů.
+      // Pouze zrušíme ukazatel právě otevřeného zápasu.
+      saveDeviceActiveMatch(null);
+      statsCardMatch=null;
+      statsCardIsCurrent=false;
+      $('matchStatsModal').classList.remove('show');
+      $('winnerModal').classList.remove('show');
+
+      renderHistory();
+      renderStats();
+      renderPlayers();
+
+      try{
+        await loadSecureMatches();
+        await loadSecureTournaments();
+        reconcileTournamentResultsFromMatches(tournamentId);
+      }catch(e){
+        console.error('Tournament auto-finalize refresh:',e);
+      }
+
+      renderTournament();
+      await returnToTournamentDetail(tournamentId);
+
+      // Pokud processTournamentResult vytvořil informační okno výsledku,
+      // necháme jej nad detailem turnaje zobrazené.
+      toast('Výsledek uložen. Pokračuj v turnaji.');
+    }finally{
+      tournamentAutoFinalizeInProgress=false;
+      postMatchReturnScreen=null;
+      postMatchTournamentId=null;
+    }
+  }
+
+
+  function linkedTournamentIdForMatch(m){
+    return m?.tournamentLink?.tournamentId || null;
+  }
+
+  function showTournamentReturnButtonForMatch(m){
+    const btn=$('backToTournamentAfterMatchBtn');
+    if(!btn)return;
+    const tid=linkedTournamentIdForMatch(m);
+    btn.classList.toggle('hidden',!tid);
+    if(tid){
+      btn.textContent='ZPĚT DO TURNAJE';
+      btn.dataset.tournamentId=tid;
+    }else{
+      delete btn.dataset.tournamentId;
+    }
+  }
+
+  function returnToTournamentAfterMatch(){
+    const btn=$('backToTournamentAfterMatchBtn');
+    const tid=btn?.dataset?.tournamentId || linkedTournamentIdForMatch(match);
+    if(!tid){
+      toast('Turnaj se nepodařilo určit.');
+      return;
+    }
+
+    selectedTournamentId=tid;
+    forcedTournamentReturnId=tid;
+
+    // Zavřeme případné výsledkové okno.
+    document.querySelectorAll('.modal.show').forEach(el=>el.classList.remove('show'));
+
+    // Načteme detail turnaje a zobrazíme jej.
+    const t=(data.tournaments||[]).find(x=>x.id===tid);
+    if(t){
+      showScreen('tournament-detail');
+      renderTournamentDetail();
+    }else{
+      showScreen('tournament');
+      renderTournament();
+      toast('Turnaj se obnovuje. Pokud se detail nezobrazí, použij AKTUALIZOVAT.');
+    }
+  }
+
+  if($('backToTournamentAfterMatchBtn')){
+    $('backToTournamentAfterMatchBtn').onclick=returnToTournamentAfterMatch;
+  }
+
+  function finishMatch(winner,manual=false){
+    if(!match)return;
+    if(match.endedAt && match.status==='complete')return;
+    stopTimer();
+    stopLiveHeartbeat();
+    match.endedAt=new Date().toISOString();
+    if(!manual) match.status='complete';
+    if(!match.status) match.status=manual?'incomplete':'complete';
+    if(winner!==null) match.winner=winner;
+    else match.winner=null;
+    logEvent(manual?'Zápas ukončen ručně':'Zápas dokončen');
+        showTournamentReturnButtonForMatch(match);
+
+$('winnerText').textContent = match.solo14
+      ? (match.solo14GhostMode
+          ? (match.status==='incomplete'
+              ? '14.1 sólo proti Ghostovi ukončeno za stavu '+match.scores[0]+':'+match.scores[1]+'.'
+              : (match.winner===0
+                  ? match.playerNames[0]+' poráží Ghosta • '+solo14GhostDifficultyLabel(match,false)+' • '+match.scores[0]+':'+match.scores[1]
+                  : 'Ghost vítězí • '+solo14GhostDifficultyLabel(match,false)+' • '+match.scores[1]+':'+match.scores[0]))
+          : (match.status==='incomplete'
+              ? 'Sólo trénink ukončen se skóre '+match.scores[0]+'.'
+              : 'Sólo 14.1 dokončeno • '+match.playerNames[0]+' • '+match.scores[0]+' bodů'))
+      : (match.ghostMode
+          ? 'Ghost session ukončena • '+match.playerNames[0]+' '+match.scores[0]+' : '+match.scores[1]+' GHOST'
+          : (match.winnerTableMode
+            ? 'Vítěz na stole ukončen • '+match.winnerTable.players.map((p,i)=>p.displayName+' '+(match.winnerTable.wins[i]||0)+' výher').join(' • ')
+            : (match.status==='incomplete'
+          ? 'Nedohraný zápas bude uložen za stavu '+match.scores[0]+':'+match.scores[1]+' a nebude započítán do dlouhodobých statistik.'
+          : (winner===null
+            ? 'Zápas ukončen za stavu '+match.scores[0]+':'+match.scores[1]
+            : match.playerNames[winner]+' vítězí '+match.scores[0]+':'+match.scores[1]))));
+
+    // Nejdřív překreslíme FINÁLNÍ skóre. renderMatch() už zápas znovu
+    // neukončí, protože endedAt/status jsou nastavené výše. Tím se nestane,
+    // že při race to 7 zůstane na počítadle vizuálně posledních 6 bodů.
+    renderMatch();
+
+    // Každý dokončený zápas potom automaticky ukáže finální rekapitulaci.
+    // Analytický panel je doplněk; případná chyba v něm nesmí zablokovat
+    // samotné dokončení ani zobrazení výsledku.
+    try{
+      openMatchStatsCard(match,true);
+    }catch(err){
+      console.error('Finální rekapitulace zápasu se nepodařila vykreslit:',err);
+      try{
+        statsCardMatch=match;
+        statsCardIsCurrent=true;
+        $('matchStatsTitle').textContent='REKAPITULACE ZÁPASU';
+        $('matchStatsResult').textContent=match.playerNames[0]+' '+match.scores[0]+' : '+match.scores[1]+' '+match.playerNames[1];
+        $('matchStatsBody').innerHTML=
+          '<div class="subpanel" style="text-align:center">'+
+          '<div style="font-size:20px;font-weight:950">🏆 '+esc(match.winner===0?match.playerNames[0]:match.playerNames[1])+'</div>'+
+          '<div class="muted" style="margin-top:6px">Zápas dokončen • '+esc(String(match.scores[0]))+':'+esc(String(match.scores[1]))+'</div>'+
+          '</div>'+playerStatsCardNormal(match,0)+playerStatsCardNormal(match,1);
+        $('matchStatsUndo').classList.remove('hidden');
+        $('matchStatsClose').textContent=match.tournamentLink?'ULOŽIT VÝSLEDEK A ZPĚT DO TURNAJE':'ULOŽIT A ZAVŘÍT';
+        $('winnerModal').classList.remove('show');
+        $('matchStatsModal').classList.add('show');
+      }catch(fallbackErr){
+        console.error('Ani záložní rekapitulaci se nepodařilo vykreslit:',fallbackErr);
+        $('winnerModal').classList.add('show');
+      }
+    }
+  }
+
+  $('winnerShare').onclick=()=>shareMatchStats(match);
+
+  $('winnerUndo').onclick=()=>{
+    if(!match) return;
+    // Re-open the match and undo the scoring action that caused the finish.
+    match.endedAt=null;
+    match.status=null;
+    match.winner=null;
+    $('winnerModal').classList.remove('show');
+    undo();
+    autosaveCurrent();
+    startLiveHeartbeat();
+  };
+  $('winnerClose').onclick=async()=>{
+    const completedTournamentId=
+      match?.tournamentLink?.tournamentId ||
+      forcedTournamentReturnId ||
+      null;
+    const completedLeagueId=match?.leagueLink?.leagueId || null;
+
+    postMatchReturnScreen=completedTournamentId?'tournament':(completedLeagueId?'league':'history');
+    postMatchTournamentId=completedTournamentId;
+    if(completedTournamentId)forcedTournamentReturnId=completedTournamentId;
+
+    $('winnerModal').classList.remove('show');
+
+    const ok=await persistFinishedMatch();
+    if(!ok){
+      $('winnerModal').classList.add('show');
+      return;
+    }
+
+    match=null;
+    saveDeviceActiveMatch(null);
+
+    renderHistory();
+    renderStats();
+    renderPlayers();
+
+    if(postMatchReturnScreen==='tournament'){
+      try{
+        await loadSecureMatches();
+        await loadSecureTournaments();
+        reconcileTournamentResultsFromMatches(postMatchTournamentId);
+      }catch(e){
+        console.error('Tournament post-match refresh:',e);
+      }
+
+      const targetTournamentId=postMatchTournamentId||selectedTournamentId||null;
+      renderTournament();
+      await returnToTournamentDetail(targetTournamentId);
+      toast('Výsledek uložen. Pokračuj v turnaji.');
+    }else if(postMatchReturnScreen==='league'){
+      renderLeague();
+      showScreen('league');
+      toast('Výsledek zapsán do Ligy Sever.');
+    }else{
+      showScreen('history');
+    }
+
+    postMatchReturnScreen=null;
+    postMatchTournamentId=null;
+  };
+
+  async function persistFinishedMatch(){
+    if(!match) return false;
+
+    const finished=JSON.parse(JSON.stringify(match));
+    if(!finished.createdByUid) finished.createdByUid=cloudUid||'';
+
+    const confirmationUids=matchConfirmationUids(finished);
+    const dualConfirmation=
+      finished.status==='complete' &&
+      !currentUserIsSystemAdmin() &&
+      !finished.tournamentLink &&
+      !finished.leagueLink &&
+      confirmationUids.length===2;
+
+    if(dualConfirmation){
+      const accepted=await showOwnResultConfirmation(finished);
+      if(!accepted){
+        toast('Výsledek zatím nebyl uložen.');
+        return false;
+      }
+
+      finished.confirmationRequired=true;
+      finished.confirmationUids=confirmationUids;
+      finished.confirmations=finished.confirmations||{};
+
+      // Pokud zapisuje jeden z hráčů, jeho potvrzení se uloží rovnou.
+      if(confirmationUids.includes(cloudUid)){
+        finished.confirmations[cloudUid]='confirmed';
+      }
+
+      finished.originalStatus='complete';
+      finished.status='pending_confirmation';
+      finished.confirmationState='pending';
+    }else{
+      // Nedohraný zápas se nikdy nepotvrzuje jako výsledek.
+      // U dokončeného zápasu zůstává současný způsob bez čekání.
+      finished.confirmationRequired=false;
+      finished.confirmationState=finished.status==='incomplete'?'not_applicable':'not_required';
+    }
+
+    try{
+      await saveSecureMatch(finished);
+    }catch(e){
+      console.error(e);
+      toast('Zápas se nepodařilo uložit do cloudu: '+String(e.message||e));
+      return false;
+    }
+
+    if(finished.tournamentLink && (finished.status||'complete')==='complete' && finished.winner!==null){
+      let linkedTournament=null;
+      try{
+        linkedTournament=processTournamentResult(finished);
+        if(!linkedTournament){
+          toast('Zápas je uložený, ale nepodařilo se propojit výsledek s turnajem.');
+          return false;
+        }
+
+        if(linkedTournament.ko)ensureSKOState(linkedTournament);
+
+        const linkedTm=findTournamentMatch(linkedTournament,finished.tournamentLink.tournamentMatchId);
+        forceFinalizeTournamentIfResolved(linkedTournament,linkedTm);
+
+        // Lokální turnaj uložíme ještě před cloudem, aby výsledek nezmizel
+        // ani u staršího pavouka.
+        try{localStorage.setItem(DB_KEY,JSON.stringify(data));}catch(e){}
+
+        await saveSecureTournament(linkedTournament);
+      }catch(e){
+        console.error('Tournament result processing/save:',e);
+        toast('Chyba při ukládání výsledku turnaje: '+String(e.message||e));
+        return false;
+      }
+    }
+
+    if(finished.leagueLink && (finished.status||'complete')==='complete' && finished.winner!==null){
+      try{
+        await processLeagueResult(finished);
+      }catch(e){
+        console.error('League result processing:',e);
+        toast('Zápas je uložený, ale nepodařilo se zapsat do Ligy Sever.');
+        return false;
+      }
+    }
+
+    data.currentMatch=null;
+
+    const isIncomplete=(finished.status==='incomplete');
+
+    if(isIncomplete){
+      // NEDOHRANÝ není definitivně ukončený. Uložíme archivní snapshot do Výsledků,
+      // ale zároveň zachováme plný stav pro pozdější pokračování.
+      const resumable=JSON.parse(JSON.stringify(finished));
+      resumable.endedAt=null;
+      resumable.status='playing';
+      resumable.winner=null;
+      resumable.updatedAt=new Date().toISOString();
+
+      if(Array.isArray(resumable.events) && resumable.events.length){
+        const last=resumable.events[resumable.events.length-1];
+        if(last && /Zápas ukončen ručně/i.test(String(last.text||''))){
+          resumable.events.pop();
+        }
+      }
+
+      saveDeviceActiveMatch(resumable);
+      // Právě otevřený ukazatel odstraníme, ale snapshot v mapě zůstane.
+      try{localStorage.removeItem(LOCAL_ACTIVE_MATCH_KEY);}catch(e){}
+    }else{
+      removeDeviceActiveMatch(finished.id);
+      saveDeviceActiveMatch(null);
+    }
+
+    stopLiveHeartbeat();
+
+    // Po opuštění počítadla musí být streamový overlay prázdný.
+    if(finished.streamEnabled)await clearStreamState();
+
+    // Z obrazovky LIVE ho po ručním odchodu odstraníme; pokračovat lze z Výsledků.
+    await removeLiveMatch(finished.id);
+
+    try{localStorage.setItem(DB_KEY,JSON.stringify(data));}catch(e){}
+    saveData();
+    return true;
+  }
+
+
+
+
+
+  function editableMatchOwnedByCurrentUser(m){
+    if(!m)return false;
+    if(currentUserIsSystemAdmin())return true;
+
+    // Offline režim: zápas vytvořený bez přihlášení patří tomuto zařízení.
+    // Bez této výjimky se nově založený offline zápas vyhodnotil jako cizí,
+    // renderMatch ho zrušil a následný kód pak mohl narazit na null objekt.
+    if(!cloudUid && !m.createdByUid)return true;
+
+    // Tvůrce běžného zápasu ho musí mít vždy možnost řídit, i když sám není hráčem.
+    // To je důležité pro zapisovatele / pořadatele, kteří počítají cizí zápas.
+    if(cloudUid && m.createdByUid===cloudUid)return true;
+
+    // Turnajové zápasy může řídit pořadatel / spolupořadatel turnaje.
+    if(m.tournamentLink?.tournamentId){
+      const t=(data.tournaments||[]).find(x=>x.id===m.tournamentLink.tournamentId);
+      return !!(t && canManageTournament(t));
+    }
+
+    // U běžného zápasu smí pokračovat pouze přihlášený hráč,
+    // který je skutečně jedním z účastníků zápasu.
+    if(!currentUserPlayerId)return false;
+
+    const participantIds=new Set();
+
+    (m.playerIds||[]).forEach(id=>{
+      if(id && id!=='__SOLO__' && id!=='__GHOST__')participantIds.add(id);
+    });
+
+    // Dvojice mají všechny čtyři hráče v teamPlayerIds.
+    (m.teamPlayerIds||[]).forEach(team=>{
+      (team||[]).forEach(id=>{if(id)participantIds.add(id);});
+    });
+
+    // Režim vítěz na stole má třetího hráče ve winnerTable.players.
+    (m.winnerTable?.players||[]).forEach(p=>{
+      if(p?.id)participantIds.add(p.id);
+    });
+
+    return participantIds.has(currentUserPlayerId);
+  }
+
+  function discardForeignLocalActiveMatch(){
+    if(!match)return false;
+    if(editableMatchOwnedByCurrentUser(match))return false;
+
+    const foreignId=match.id;
+    match=null;
+    data.currentMatch=null;
+    removeDeviceActiveMatch(foreignId);
+    saveDeviceActiveMatch(null);
+
+    console.warn('Foreign active match removed from editable state:',foreignId);
+    return true;
+  }
+
+  function liveTimestampMs(value){
+    const ts=Date.parse(value||'');
+    return Number.isFinite(ts)?ts:null;
+  }
+
+  function liveStartedLabel(m){
+    const ts=liveTimestampMs(m?.startedAt);
+    if(ts===null)return '—';
+    return new Date(ts).toLocaleString('cs-CZ',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'});
+  }
+
+  function liveUpdatedAgeMs(m){
+    const ts=liveTimestampMs(m?.updatedAt||m?.startedAt);
+    return ts===null?Infinity:Math.max(0,Date.now()-ts);
+  }
+
+  function liveUpdatedLabel(m){
+    const age=liveUpdatedAgeMs(m);
+    if(!Number.isFinite(age))return 'neznámý čas';
+    const sec=Math.floor(age/1000);
+    if(sec<10)return 'právě teď';
+    if(sec<60)return 'před '+sec+' s';
+    const min=Math.floor(sec/60);
+    if(min<60)return 'před '+min+' min';
+    const h=Math.floor(min/60);
+    if(h<24)return 'před '+h+' h';
+    const d=Math.floor(h/24);
+    return 'před '+d+' d';
+  }
+
+  function liveMayBeStale(m){
+    return liveUpdatedAgeMs(m)>LIVE_WARNING_MS;
+  }
+
+  function updateLiveNavStatus(){
+    const btn=$('liveNavBtn');
+    const modernTile=$('modernLiveTile');
+    const modernText=$('modernLiveTileText');
+    const count=activeLiveMatches().length;
+    const isLive=count>0;
+    const liveTitle=isLive
+      ? ('Právě probíhá '+count+' '+(count===1?'zápas':count<5?'zápasy':'zápasů'))
+      : 'Momentálně není evidovaný žádný LIVE zápas';
+
+    if(btn){
+      btn.classList.toggle('live-active',isLive);
+      btn.innerHTML=isLive
+        ? '<span class="live-nav-dot"></span>LIVESCORE • '+count+' LIVE'
+        : 'Livescore';
+      btn.title=liveTitle;
+    }
+
+    if(modernTile){
+      modernTile.classList.toggle('live-active',isLive);
+      modernTile.title=liveTitle;
+      modernTile.setAttribute('aria-label',isLive ? ('Livescore, '+count+' LIVE') : 'Livescore');
+    }
+    if(modernText){
+      modernText.textContent=isLive
+        ? (count===1 ? 'Právě probíhá 1 zápas LIVE' : 'Právě probíhají '+count+' zápasy LIVE')
+        : 'Živé zápasy a stream';
+    }
+  }
+
+  function hiddenLiveIdSet(){
+    try{
+      const raw=localStorage.getItem(LOCAL_HIDDEN_LIVE_IDS_KEY);
+      const arr=raw?JSON.parse(raw):[];
+      return new Set(Array.isArray(arr)?arr.filter(Boolean):[]);
+    }catch(e){
+      return new Set();
+    }
+  }
+
+  function saveHiddenLiveIdSet(set){
+    try{
+      localStorage.setItem(LOCAL_HIDDEN_LIVE_IDS_KEY,JSON.stringify([...set]));
+    }catch(e){}
+  }
+
+  window.hideLiveFromThisDevice=function(matchId){
+    if(!matchId)return;
+    const live=activeLiveMatches().find(m=>m?.id===matchId);
+    const label=live
+      ? (liveMatchPlayerName(live,0)+' '+liveMatchScore(live,0)+' : '+liveMatchScore(live,1)+' '+liveMatchPlayerName(live,1))
+      : 'tento LIVE zápas';
+
+    if(!confirm(
+      'Skrýt '+label+' z Livescore na tomto zařízení?\n\n'+
+      'Nic se nemaže z Firebase, historie ani rozehraného zápasu. Záznam lze kdykoli vrátit tlačítkem ZOBRAZIT SKRYTÉ.'
+    ))return;
+
+    const set=hiddenLiveIdSet();
+    set.add(matchId);
+    saveHiddenLiveIdSet(set);
+    renderLive();
+    updateLiveNavStatus();
+    toast('LIVE zápas byl na tomto zařízení skryt.');
+  };
+
+  window.restoreHiddenLivesOnThisDevice=async function(){
+    const set=hiddenLiveIdSet();
+    if(!set.size){
+      toast('Žádné LIVE zápasy nejsou skryté.');
+      return;
+    }
+    if(!confirm('Znovu zobrazit '+set.size+' skrytých LIVE záznamů?'))return;
+    saveHiddenLiveIdSet(new Set());
+    try{await loadCloudLiveMatches(true);}catch(e){}
+    renderLive();
+    updateLiveNavStatus();
+    toast('Skryté LIVE zápasy byly znovu zobrazeny.');
+  };
+
+  function activeLiveMatches(){
+    const secure=(data.matches||[]).filter(m=>m && !m.endedAt && (m.status==='playing' || m.status==='active'));
+    const local=Object.values(loadDeviceActiveMatches()).filter(m=>m && m.id && !m.endedAt);
+    const current=(match && !match.endedAt) ? [match] : [];
+    const map=new Map();
+
+    // Cloud poskytne LIVE z jiných zařízení, ale vlastní lokální snapshot má přednost,
+    // protože obsahuje kompletní editovatelný stav zápasu.
+    [...secure,...cloudLiveMatches,...local,...current].forEach(m=>{
+      if(m && m.id) map.set(m.id,m);
+    });
+
+    const hidden=hiddenLiveIdSet();
+    return [...map.values()].filter(m=>!hidden.has(m.id));
+  }
+
+  function liveMatchPlayerName(m,index){
+    try{
+      if(m.playerIds && m.playerIds[index]){
+        const p=data.players?.[m.playerIds[index]];
+        if(p) return playerDisplayName(p);
+      }
+    }catch(e){}
+    return m.players?.[index] || m.playerNames?.[index] || ('Hráč '+(index+1));
+  }
+
+  function liveMatchPlayerClub(m,index){
+    try{
+      if(m.playerIds && m.playerIds[index]){
+        const p=data.players?.[m.playerIds[index]];
+        return p?.club || '';
+      }
+    }catch(e){}
+    return '';
+  }
+
+  function liveMatchScore(m,index){
+    if(Array.isArray(m.scores)) return Number(m.scores[index]||0);
+    if(Array.isArray(m.score)) return Number(m.score[index]||0);
+    return 0;
+  }
+
+  function liveMatchDiscipline(m){
+    return m.discipline || m.game || '';
+  }
+
+  function liveMatchRaceTo(m){
+    return m.raceTo || m.target || '';
+  }
+
+  function activeLiveTournaments(){
+    const liveMatches=activeLiveMatches();
+
+    return (data.tournaments||[]).filter(t=>{
+      if(!t)return false;
+
+      // Jasně dokončený turnaj už mezi LIVE nepatří.
+      if(t.status==='complete')return false;
+
+      const all=allTournamentMatches(t);
+
+      // Turnaj je LIVE, pokud má alespoň jeden nedohraný zápas...
+      const hasUnfinished=all.some(m=>
+        m &&
+        m.status!=='done' &&
+        !m.winnerId &&
+        !m.loserId
+      );
+
+      // ...nebo pokud k němu existuje právě rozehraný live zápas.
+      const hasLiveMatch=liveMatches.some(m=>
+        m?.tournamentLink?.tournamentId===t.id
+      );
+
+      const awaitingPlayoff=!!(
+        ['groups_sko','groups_dko'].includes(t.format) &&
+        groupPhaseComplete(t) &&
+        !t.playoffStarted
+      );
+
+      return hasUnfinished || hasLiveMatch || awaitingPlayoff;
+    });
+  }
+
+
+  async function cleanupStaleLiveMatches(showToast=true){
+    if(!await ensureCloudToken()){
+      if(showToast)toast('Pro vyčištění Livescore je potřeba přihlášení.');
+      return 0;
+    }
+
+    try{
+      const now=Date.now();
+      const r=await fetch(cloudUrl('stream/liveMatches')+'&_cleanup='+now,{cache:'no-store'});
+      if(!r.ok)throw new Error('LIVE_CLEANUP_READ_'+r.status);
+
+      const raw=await r.json()||{};
+      const stale=Object.values(raw).filter(m=>{
+        if(!m||!m.id)return false;
+        // Bezpečnost: běžný uživatel smí uklízet jen vlastní LIVE záznamy.
+        if(!currentUserIsSystemAdmin() && m.createdByUid!==cloudUid)return false;
+        if(m.endedAt)return true;
+        const ts=Date.parse(m.updatedAt||m.startedAt||'');
+        return !Number.isFinite(ts) || (now-ts)>LIVE_STALE_MS;
+      });
+
+      for(const m of stale){
+        try{await liveMatchRequest(m.id,'DELETE');}catch(e){}
+      }
+
+      await loadCloudLiveMatches(true);
+      renderLive();
+
+      if(showToast){
+        toast(stale.length
+          ? 'Obnoveno • odstraněno '+stale.length+' neaktivních LIVE zápasů.'
+          : 'Obnoveno • skóre je aktuální.');
+      }
+
+      return stale.length;
+    }catch(e){
+      console.error('Livescore cleanup:',e);
+      if(showToast)toast('Livescore se nepodařilo vyčistit.');
+      return 0;
+    }
+  }
+
+  window.cleanupStaleLiveMatches=cleanupStaleLiveMatches;
+
+  function resumableMatchState(matchId){
+    if(!matchId)return null;
+    let best=null;
+
+    const current=(match&&match.id===matchId&&!match.endedAt)?match:null;
+    const local=getDeviceActiveMatch(matchId);
+    const archived=(data.matches||[]).find(m=>m&&m.id===matchId&& !['complete','pending_confirmation','needs_correction'].includes(m.status||''));
+    const recovery=loadActiveMatchRecovery(matchId);
+
+    [current,local,archived,...recovery].filter(Boolean).forEach(c=>{
+      best=betterResumableState(best,c);
+    });
+
+    if(!best)return null;
+    best.endedAt=null;
+    best.status='playing';
+    best.winner=null;
+    return JSON.parse(JSON.stringify(best));
+  }
+
+  function canResumeIncompleteMatch(m){
+    if(!m || (m.status||'complete')==='complete')return false;
+    if(['pending_confirmation','needs_correction'].includes(m.status))return false;
+    const state=resumableMatchState(m.id);
+    return !!(state && editableMatchOwnedByCurrentUser(state));
+  }
+
+  window.resumeLocalMatch=async function(matchId){
+    let saved=resumableMatchState(matchId);
+
+    // Před obnovením porovnáme i chráněnou cloudovou kopii /matches/{id}.
+    // LIVE payload je záměrně zkrácený a pro resume se nikdy nepoužívá.
+    try{
+      const cloud=await secureMatchRequest(matchId,'GET');
+      if(cloud && !cloud.endedAt && !['complete','pending_confirmation','needs_correction'].includes(cloud.status||'')){
+        saved=betterResumableState(saved,cloud);
+        if(cloud)recordActiveMatchRecoverySnapshot(cloud);
+      }
+    }catch(e){
+      console.warn('Resume cloud check:',e);
+    }
+
+    if(!saved){
+      toast('Tento nedohraný zápas už nemá obnovitelný stav.');
+      return;
+    }
+    if(!editableMatchOwnedByCurrentUser(saved)){
+      toast('Tento zápas může upravovat pouze hráč, který je jeho účastníkem.');
+      return;
+    }
+
+    if(match && !match.endedAt && match.id!==matchId){
+      saveDeviceActiveMatch(match);
+    }
+
+    if(match?.useClock)stopTimer();
+    stopLiveHeartbeat();
+
+    match=JSON.parse(JSON.stringify(saved));
+    match.endedAt=null;
+    match.status='playing';
+    match.winner=null;
+    match.resumedSafelyAt=new Date().toISOString();
+    data.currentMatch=null;
+    saveDeviceActiveMatch(match);
+
+    timer=null;
+    timerRunning=false;
+    timeLeft=match?.clock?.normal || match?.clock?.first || 30;
+    clockPhase='normal';
+
+    showScreen('match');
+    renderMatch();
+    startLiveHeartbeat();
+    autosaveCurrent();
+    toast('Rozehraný zápas byl bezpečně obnoven • '+(match.scores?.[0]||0)+':'+(match.scores?.[1]||0)+'.');
+  };
+
+  function renderLive(){
+    const matchesWrap=$('liveMatchesList');
+    const tournamentsWrap=$('liveTournamentsList');
+    if(!matchesWrap || !tournamentsWrap)return;
+
+    const matches=activeLiveMatches();
+    updateLiveNavStatus();
+    if(!matches.length){
+      matchesWrap.innerHTML='<div class="muted">Momentálně není rozehraný žádný zápas.</div>';
+    }else{
+      matchesWrap.innerHTML=matches.map(m=>{
+        const p1=esc(liveMatchPlayerName(m,0));
+        const p2=esc(liveMatchPlayerName(m,1));
+        const s1=liveMatchScore(m,0);
+        const s2=liveMatchScore(m,1);
+        const disc=esc(liveMatchDiscipline(m));
+        const rt=liveMatchRaceTo(m);
+        const table=m.tournamentLink?.tableNumber || '';
+        const tournamentName=m.tournamentLink
+          ? esc((data.tournaments||[]).find(t=>t.id===m.tournamentLink.tournamentId)?.name || 'Turnaj')
+          : '';
+        return `<div class="tournament-match">
+          <div style="display:flex;justify-content:space-between;gap:8px;align-items:center;margin-bottom:8px">
+            <span class="tournament-badge gold">${disc||'ZÁPAS'}</span>
+            <span class="muted">${table?'STŮL '+table:(rt?'RACE TO '+rt:'')}</span>
+          </div>
+          <div class="tm-row">
+            <div class="tm-p">${p1}</div>
+            <div class="tm-score">${s1} : ${s2}</div>
+            <div class="tm-p">${p2}</div>
+          </div>
+          ${tournamentName?`<div class="muted" style="margin-top:7px;text-align:center">${tournamentName}</div>`:''}
+          ${m.solo14GhostMode?`<div style="margin-top:7px;text-align:center;font-size:12px;font-weight:950;color:var(--gold2)">${esc(solo14GhostDifficultyLabel(m,true))}</div>`:''}
+          ${liveBreakModeLabel(m)?`<div style="margin-top:7px;text-align:center;font-size:11px;font-weight:950">ROZSTŘEL: ${esc(liveBreakModeLabel(m))}</div>`:''}
+          <div class="muted" style="margin-top:7px;text-align:center;font-size:11px;line-height:1.55">
+            Začátek: <strong>${esc(liveStartedLabel(m))}</strong> • Aktualizováno: <strong>${esc(liveUpdatedLabel(m))}</strong>
+            ${liveMayBeStale(m)?`<div class="live-stale-note">⚠ MOŽNÁ NEAKTUÁLNÍ</div>`:''}
+          </div>
+          <div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-top:10px">
+            ${canResumeIncompleteMatch(m) || (resumableMatchState(m.id) && editableMatchOwnedByCurrentUser(resumableMatchState(m.id)))
+              ? `<button class="btn primary" onclick="resumeLocalMatch('${m.id}')">POKRAČOVAT</button>`
+              : ''}
+            <button class="btn" onclick="openLiveScore('${m.id}')">LIVESCORE</button>
+            <button class="btn" onclick="hideLiveFromThisDevice('${m.id}')">SKRÝT Z LIVE</button>
+            ${currentUserIsSystemAdmin()
+              ? `<button class="btn danger" onclick="deleteTestMatchCompletely('${m.id}')">SMAZAT TEST ZCELA</button>`
+              : ''}
+            ${editableMatchOwnedByCurrentUser(m)
+              ? `<button class="btn danger" onclick="deleteLiveMatchFromLivescore('${m.id}')">SMAZAT Z LIVE</button>`
+              : ''}
+          </div>
+        </div>`;
+      }).join('');
+    }
+
+    const tours=activeLiveTournaments();
+    if(!tours.length){
+      tournamentsWrap.innerHTML='<div class="muted">Momentálně neprobíhá žádný turnaj.</div>';
+    }else{
+      tournamentsWrap.innerHTML=tours.map(t=>{
+        const all=allTournamentMatches(t);
+        const done=all.filter(m=>m.status==='done').length;
+        const linkedLive=matches.filter(m=>m.tournamentLink?.tournamentId===t.id);
+        const playingIds=new Set(linkedLive.map(m=>m.tournamentLink?.tournamentMatchId).filter(Boolean));
+        const playing=Math.max(
+          all.filter(m=>m.status==='playing').length,
+          playingIds.size
+        );
+        const total=all.length;
+        return `<div class="tournament-match">
+          <div style="display:flex;justify-content:space-between;gap:8px;align-items:center">
+            <strong>${esc(t.name||'Turnaj')}</strong>
+            <span class="tournament-badge gold">PROBÍHÁ</span>
+          </div>
+          <div class="muted" style="margin-top:8px">
+            ${esc(tournamentDisciplineSummary(t))} • odehráno ${done}/${total}
+            ${playing?` • právě hraje ${playing}`:''}
+            ${['groups_sko','groups_dko'].includes(t.format) && groupPhaseComplete(t) && !t.playoffStarted
+              ? ' • ČEKÁ NA NASAZENÍ PLAY-OFF'
+              : ''}
+            ${canManageTournament(t)?'':' • pouze ke sledování'}
+          </div>
+          <div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-top:10px">
+            <button class="btn" onclick="openTournamentFromLive('${t.id}')">${canManageTournament(t)?'OTEVŘÍT TURNAJ':'NÁHLED TURNAJE'}</button>
+            <button class="btn primary" onclick="openTournamentLiveScores('${t.id}')">LIVESCORE</button>
+          </div>
+        </div>`;
+      }).join('');
+    }
+  }
+
+  window.deleteTestMatchCompletely=async function(matchId){
+    if(!currentUserIsSystemAdmin()){
+      toast('Kompletní smazání testu může provést pouze SYSTEM ADMIN.');
+      return;
+    }
+
+    const live=activeLiveMatches().find(x=>x?.id===matchId)
+      || cloudLiveMatches.find(x=>x?.id===matchId)
+      || (data.matches||[]).find(x=>x?.id===matchId)
+      || getDeviceActiveMatch(matchId);
+
+    if(!live){
+      toast('Zápas s tímto ID už nebyl nalezen.');
+      return;
+    }
+
+    if(live.tournamentLink || live.leagueLink){
+      alert('Tento zápas je navázaný na turnaj nebo ligu. Kompletní servisní smazání je z bezpečnostních důvodů zablokované, aby se nerozbila soutěžní struktura.');
+      return;
+    }
+
+    const label=(liveMatchPlayerName(live,0)||'Hráč 1')+' '+liveMatchScore(live,0)+' : '+liveMatchScore(live,1)+' '+(liveMatchPlayerName(live,1)||'Hráč 2');
+    const ok=confirm(
+      'SMAZAT TESTOVACÍ ZÁPAS KOMPLETNĚ?\n\n'+
+      label+'\nID: '+matchId+
+      '\n\nBude odstraněn z LIVE, /matches, historie, lokálních aktivních stavů i recovery záloh. Tuto operaci nelze vrátit.'
+    );
+    if(!ok)return;
+
+    const typed=prompt('Pro potvrzení napiš přesně: SMAZAT');
+    if(typed!=='SMAZAT'){
+      toast('Mazání bylo zrušeno.');
+      return;
+    }
+
+    const errors=[];
+    const deletingCurrent=!!(match && match.id===matchId);
+
+    try{
+      if(deletingCurrent){
+        try{if(match.useClock)stopTimer();}catch(e){}
+        try{stopLiveHeartbeat();}catch(e){}
+        try{if(match.streamEnabled)await clearStreamState();}catch(e){}
+      }
+
+      try{
+        await liveMatchRequest(matchId,'DELETE');
+      }catch(e){
+        errors.push('LIVE: '+String(e.message||e));
+      }
+
+      try{
+        await secureMatchRequest(matchId,'DELETE');
+      }catch(e){
+        errors.push('/matches: '+String(e.message||e));
+      }
+
+      try{removeDeviceActiveMatch(matchId);}catch(e){errors.push('lokální aktivní stav');}
+      try{removeActiveMatchRecovery(matchId);}catch(e){errors.push('recovery');}
+
+      try{
+        const hidden=hiddenLiveIdSet();
+        if(hidden.delete(matchId))saveHiddenLiveIdSet(hidden);
+      }catch(e){}
+
+      data.matches=(data.matches||[]).filter(m=>m?.id!==matchId);
+      if(!Array.isArray(data.deletedMatchIds))data.deletedMatchIds=[];
+      if(!data.deletedMatchIds.includes(matchId))data.deletedMatchIds.push(matchId);
+
+      if(deletingCurrent){
+        match=null;
+        data.currentMatch=null;
+        try{localStorage.removeItem(LOCAL_ACTIVE_MATCH_KEY);}catch(e){}
+      }
+
+      try{localStorage.setItem(DB_KEY,JSON.stringify(data));}catch(e){}
+
+      cloudLiveMatches=cloudLiveMatches.filter(m=>m?.id!==matchId);
+
+      if(liveScoreSelectedId===matchId){
+        $('liveScoreModal')?.classList.remove('show');
+        liveScoreSelectedId=null;
+      }
+
+      try{await loadCloudLiveMatches(true);}catch(e){}
+      try{await loadSecureMatches();}catch(e){}
+
+      // loadSecureMatches může znovu načíst starou cache jen pokud DELETE selhal.
+      data.matches=(data.matches||[]).filter(m=>m?.id!==matchId);
+      try{localStorage.setItem(DB_KEY,JSON.stringify(data));}catch(e){}
+
+      renderLive();
+      renderHistory();
+      updateLiveNavStatus();
+      if(deletingCurrent)showScreen('setup');
+
+      const stillLive=activeLiveMatches().some(m=>m?.id===matchId);
+      if(stillLive || errors.length){
+        alert(
+          'Mazání nebylo dokončeno úplně.\n\n'+
+          (errors.length?errors.join('\n'):'Zápas se po smazání znovu objevil.')+
+          '\n\nID: '+matchId
+        );
+        return;
+      }
+
+      toast('Testovací zápas byl kompletně smazán.');
+    }catch(e){
+      console.error('Complete test match delete:',e);
+      alert('Kompletní smazání selhalo: '+String(e.message||e)+'\n\nID: '+matchId);
+    }
+  };
+
+  window.deleteLiveMatchFromLivescore=async function(matchId){
+    const live=activeLiveMatches().find(x=>x.id===matchId);
+    if(!live){
+      toast('Tento LIVE zápas už není aktivní.');
+      await loadCloudLiveMatches(true);
+      renderLive();
+      return;
+    }
+    if(!editableMatchOwnedByCurrentUser(live)){
+      toast('Tento LIVE zápas nemáš oprávnění smazat.');
+      return;
+    }
+
+    const label=(liveMatchPlayerName(live,0)||'Hráč 1')+' '+liveMatchScore(live,0)+' : '+liveMatchScore(live,1)+' '+(liveMatchPlayerName(live,1)||'Hráč 2');
+    if(!confirm('Opravdu odstranit rozehraný zápas z LIVESCORE?\n\n'+label+'\n\nRozehraný stav bude odstraněn a nepůjde v něm pokračovat.'))return;
+
+    const deletingCurrent=!!(match && match.id===matchId);
+    const hadStream=deletingCurrent && !!match.streamEnabled;
+
+    if(deletingCurrent){
+      if(match.useClock)stopTimer();
+      stopLiveHeartbeat();
+    }
+
+    clearTimeout(activeMatchCloudSaveTimer);
+    removeDeviceActiveMatch(matchId);
+
+    // Pokud už byla plná aktivní záloha načtena v data.matches, odstraníme ji i lokálně.
+    data.matches=(data.matches||[]).filter(m=>!(m?.id===matchId && ['playing','active'].includes(m.status)));
+    try{localStorage.setItem(DB_KEY,JSON.stringify(data));}catch(e){}
+
+    try{await removeLiveMatch(matchId);}catch(e){}
+    await removeActiveMatchCloudBackup(matchId);
+
+    if(deletingCurrent){
+      if(hadStream)try{await clearStreamState();}catch(e){}
+      match=null;
+      data.currentMatch=null;
+      saveDeviceActiveMatch(null);
+    }
+
+    if(liveScoreSelectedId===matchId){
+      $('liveScoreModal')?.classList.remove('show');
+      liveScoreSelectedId=null;
+    }
+
+    await loadCloudLiveMatches(true);
+    try{await loadSecureMatches();}catch(e){}
+    renderLive();
+    renderHistory();
+
+    if(deletingCurrent)showScreen('setup');
+    toast('Rozehraný LIVE zápas byl odstraněn.');
+  };
+
+  window.openTournamentFromLive=function(tid){
+    openTournamentDetail(tid);
+  };
+
+  window.openTournamentLiveScores=function(tid){
+    const live=activeLiveMatches().filter(m=>m.tournamentLink?.tournamentId===tid);
+    if(!live.length){
+      toast('V tomto turnaji právě není rozehraný žádný zápas.');
+      return;
+    }
+    openLiveScore(live[0].id);
+  };
+
+  window.openLiveScore=async function(matchId){
+    liveScoreSelectedId=matchId;
+    $('liveScoreModal').classList.add('show');
+
+    try{
+      await loadCloudLiveMatches(true);
+    }catch(e){}
+
+    renderLiveScoreModal();
+
+    // Běžně je LIVESCORE pouze náhled.
+    // Výjimkou je vlastní rozehraná 14.1 sólo hra, do které se její hráč může přímo vrátit.
+  };
+
+  function canEditSolo14FromLive(m){
+    if(!m || !m.solo14 || !currentUserPlayerId)return false;
+
+    // Úmyslně zde NENÍ admin výjimka:
+    // návrat do editace 14.1 sólo smí vždy jen hráč, který tuto sólo hru hraje.
+    const soloPlayerId=m.solo14PlayerId || m.playerIds?.[0] || '';
+    return !!soloPlayerId && soloPlayerId===currentUserPlayerId;
+  }
+
+  window.editSolo14FromLiveScore=async function(){
+    const live=activeLiveMatches().find(x=>x.id===liveScoreSelectedId);
+    if(!live || !canEditSolo14FromLive(live)){
+      toast('Tuto sólo hru může upravovat pouze hráč, který ji hraje.');
+      return;
+    }
+
+    // Preferujeme stav z tohoto zařízení. Na jiném vlastním zařízení načteme
+    // plnou resume kopii z chráněné /matches/{id}; do veřejného LIVE ji neposíláme.
+    let resume=getDeviceActiveMatch(live.id);
+    if(!resume){
+      try{ resume=await secureMatchRequest(live.id,'GET'); }catch(e){ console.warn('Secure solo14 resume:',e); }
+    }
+
+    if(!resume || resume.id!==live.id || !resume.solo14){
+      toast('Rozehraný stav 14.1 sólo se nepodařilo načíst.');
+      return;
+    }
+
+    // Kontrola hráče znovu i nad plným stavem.
+    const resumePlayerId=resume.playerIds?.[0]||'';
+    if(!currentUserPlayerId || resumePlayerId!==currentUserPlayerId){
+      toast('Tuto sólo hru může upravovat pouze hráč, který ji hraje.');
+      return;
+    }
+
+    match=resume;
+    saveDeviceActiveMatch(match);
+    $('liveScoreModal').classList.remove('show');
+    liveScoreSelectedId=null;
+    showScreen('match');
+    renderMatch();
+    toast('14.1 sólo je znovu otevřené k editaci.');
+  };
+
+  function liveMomentumData(m){
+    let scores=Array.isArray(m?.liveScoreProgress)?m.liveScoreProgress.filter(x=>/^\d+\s*:\s*\d+$/.test(String(x))):[];
+    let winners=Array.isArray(m?.liveRackWinners)?m.liveRackWinners.map(Number).filter(x=>x===0||x===1):[];
+
+    // Vlastní lokální/secure aktivní zápas může mít eventy, i když starší veřejný payload momentum ještě nemá.
+    if(!scores.length && Array.isArray(m?.events)){
+      const snap=liveMomentumSnapshotFromMatch(m);
+      scores=snap.scores;
+      winners=snap.winners;
+    }
+    return {scores,winners};
+  }
+
+  function liveMomentumHtml(m,p1,p2){
+    const md=liveMomentumData(m);
+    if(md.scores.length<2){
+      return `<div class="subpanel" style="margin-top:12px;padding:10px;text-align:center">
+        <div style="font-size:12px;font-weight:950">VÝVOJ SKÓRE</div>
+        <div class="muted" style="font-size:11px;margin-top:5px">Průběh rack po racku zatím není k dispozici.</div>
+      </div>`;
+    }
+
+    // Livescore momentum má být statický a čitelný i u dlouhého zápasu.
+    // Zobrazíme začátek + posledních 5 stavů; bez horizontálního scrollování.
+    let displayScores=md.scores.slice();
+    let compacted=false;
+    if(displayScores.length>7){
+      displayScores=[displayScores[0],...displayScores.slice(-5)];
+      compacted=true;
+    }
+    const progressParts=[];
+    displayScores.forEach((x,idx)=>{
+      if(compacted && idx===1){
+        progressParts.push('<span class="muted" style="font-weight:900">…</span>');
+      }
+      progressParts.push(`<span style="white-space:nowrap;font-weight:900">${esc(String(x))}</span>`);
+    });
+    const progress=progressParts.join('<span class="muted" style="padding:0 4px">→</span>');
+    const recent=md.winners.slice(-8);
+    const dotRow=(player,name)=>{
+      const dots=recent.map(w=>`<span title="${esc(name)}${w===player?' vyhrál':' nevyhrál'} rack" style="display:inline-block;width:10px;height:10px;border-radius:50%;margin:0 2px;${w===player?'background:var(--gold2);':'border:1px solid var(--muted);opacity:.38;'}"></span>`).join('');
+      return `<div style="display:flex;align-items:center;justify-content:center;gap:7px;margin-top:4px"><span class="muted" style="font-size:10px;min-width:72px;text-align:right">${esc(name)}</span><span style="white-space:nowrap">${dots}</span></div>`;
+    };
+
+    let streakWinner=null,streak=0;
+    for(let i=md.winners.length-1;i>=0;i--){
+      if(streakWinner===null){streakWinner=md.winners[i];streak=1;}
+      else if(md.winners[i]===streakWinner)streak++;
+      else break;
+    }
+    const streakText=streakWinner===0||streakWinner===1
+      ? `Aktuální série: <strong>${esc(streakWinner===0?p1:p2)} • ${streak} ${streak===1?'rack':'racky'}</strong>`
+      : '';
+
+    return `<div class="subpanel" style="margin-top:12px;padding:10px;text-align:center">
+      <div style="font-size:12px;font-weight:950">VÝVOJ SKÓRE</div>
+      <div style="margin-top:6px;font-size:12px;line-height:1.65;display:flex;align-items:center;justify-content:center;gap:0;flex-wrap:wrap;white-space:normal">${progress}</div>
+      ${recent.length?`<div style="margin-top:7px">${dotRow(0,p1)}${dotRow(1,p2)}</div>`:''}
+      ${streakText?`<div class="muted" style="font-size:11px;margin-top:7px">${streakText}</div>`:''}
+    </div>`;
+  }
+
+  function renderLiveScoreModal(){
+    const m=activeLiveMatches().find(x=>x.id===liveScoreSelectedId);
+    if(!m){
+      $('liveScoreEditSolo14')?.classList.add('hidden');
+      if($('liveScoreModeLabel'))$('liveScoreModeLabel').textContent='LIVESCORE • POUZE KE SLEDOVÁNÍ';
+      $('liveScoreTitle').textContent='Zápas už není aktivní';
+      $('liveScoreMeta').textContent='';
+      $('liveScoreP1').textContent='—';
+      $('liveScoreP2').textContent='—';
+      $('liveScoreP1Club').textContent='';
+      $('liveScoreP2Club').textContent='';
+      $('liveScoreValue').textContent='—';
+      $('liveScoreRace').textContent='';
+      $('liveScoreExtra').innerHTML='<div class="muted">Zápas už byl ukončen nebo není dostupný.</div>';
+      return;
+    }
+
+    const canSoloEdit=canEditSolo14FromLive(m);
+    $('liveScoreEditSolo14')?.classList.toggle('hidden',!canSoloEdit);
+    if($('liveScoreModeLabel')){
+      $('liveScoreModeLabel').textContent=canSoloEdit
+        ? 'LIVESCORE • TVOJE ROZEHRANÁ 14.1 SÓLO'
+        : 'LIVESCORE • POUZE KE SLEDOVÁNÍ';
+    }
+
+    const p1=liveMatchPlayerName(m,0);
+    const p2=liveMatchPlayerName(m,1);
+    const s1=liveMatchScore(m,0);
+    const s2=liveMatchScore(m,1);
+    const discipline=liveMatchDiscipline(m);
+    const raceTo=liveMatchRaceTo(m);
+
+    $('liveScoreTitle').textContent=(m.tournamentLink?'Turnajový zápas':'Aktuální zápas');
+    $('liveScoreMeta').textContent=[
+      discipline,
+      raceTo ? 'Race to '+raceTo : '',
+      m.solo14GhostMode ? solo14GhostDifficultyLabel(m,true) : '',
+      liveBreakModeLabel(m) ? 'Rozstřel: '+liveBreakModeLabel(m) : '',
+      m.tournamentLink?.tableNumber ? 'Stůl '+m.tournamentLink.tableNumber : ''
+    ].filter(Boolean).join(' • ');
+
+    $('liveScoreP1').textContent=p1;
+    $('liveScoreP2').textContent=p2;
+    $('liveScoreP1Club').textContent=liveMatchPlayerClub(m,0);
+    $('liveScoreP2Club').textContent=liveMatchPlayerClub(m,1);
+    $('liveScoreValue').textContent=s1+' : '+s2;
+    $('liveScoreRace').textContent=raceTo ? 'Race to '+raceTo : '';
+
+    const turnIndex=(typeof m.turn==='number'?m.turn:(typeof m.currentPlayer==='number'?m.currentPlayer:null));
+    const turnText=turnIndex===0 ? p1 : turnIndex===1 ? p2 : '';
+    const clock=(m.clock?.remaining ?? m.shotClockRemaining ?? null);
+    const clockText=(clock!==null && clock!==undefined) ? String(clock)+' s' : '';
+
+    $('liveScoreExtra').innerHTML=`
+      <div style="display:flex;justify-content:${m.useClock?'space-between':'center'};gap:12px;flex-wrap:wrap">
+        <div><span class="muted">Na tahu:</span> <strong>${esc(turnText||'—')}</strong></div>
+        ${m.useClock?`<div><span class="muted">Shot clock:</span> <strong>${esc(clockText||'—')}</strong></div>`:''}
+      </div>
+      <div class="muted" style="margin-top:12px;text-align:center;font-size:12px;line-height:1.6">
+        Začátek: <strong>${esc(liveStartedLabel(m))}</strong><br>
+        Aktualizováno: <strong>${esc(liveUpdatedLabel(m))}</strong>
+        ${liveMayBeStale(m)?`<div class="live-stale-note" style="margin-top:3px">⚠ MOŽNÁ NEAKTUÁLNÍ</div>`:''}
+      </div>
+      ${liveMomentumHtml(m,p1,p2)}
+    `;
+  }
+
+  if($('cleanupStaleLiveBtn')){
+    $('cleanupStaleLiveBtn').onclick=()=>cleanupStaleLiveMatches(true);
+  }
+  if($('restoreHiddenLiveBtn')){
+    $('restoreHiddenLiveBtn').onclick=()=>restoreHiddenLivesOnThisDevice();
+  }
+
+    if($('liveScoreEditSolo14'))$('liveScoreEditSolo14').onclick=editSolo14FromLiveScore;
+
+$('liveScoreClose').onclick=()=>{
+    $('liveScoreModal').classList.remove('show');
+    liveScoreSelectedId=null;
+  };
+
+  // ===== TURNAJOVÝ MÓD =====
+  function shuffleArray(arr){
+    const a=[...arr];
+    for(let i=a.length-1;i>0;i--){
+      const j=Math.floor(Math.random()*(i+1));
+      [a[i],a[j]]=[a[j],a[i]];
+    }
+    return a;
+  }
+
+  function tournamentPlayerName(id,t=null){
+    const p=data.players[id];
+    if(p) return playerDisplayName(p);
+    if(t && t.guests && t.guests[id]) return t.guests[id].name;
+    for(const tour of (data.tournaments||[])){
+      if(tour.guests && tour.guests[id]) return tour.guests[id].name;
+    }
+    const draft=tournamentGuestDrafts.find(g=>g.id===id);
+    return draft ? draft.name : 'Neznámý hráč';
+  }
+
+  function tournamentParticipant(t,id){
+    const p=data.players[id];
+    if(p) return {id,name:p.name,displayName:playerDisplayName(p),guest:false};
+    if(t && t.guests && t.guests[id]) return {id,name:t.guests[id].name,displayName:t.guests[id].name,guest:true};
+    const draft=tournamentGuestDrafts.find(g=>g.id===id);
+    if(draft) return {id,name:draft.name,displayName:draft.name,guest:true};
+    return {id,name:'Neznámý hráč',displayName:'Neznámý hráč',guest:true};
+  }
+
+  function normalizePlaceholderPlayerName(name){
+    return String(name||'')
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g,'')
+      .replace(/\s+/g,' ')
+      .trim()
+      .toLowerCase();
+  }
+
+  function splitPlaceholderName(name){
+    const parts=String(name||'').replace(/\s+/g,' ').trim().split(' ').filter(Boolean);
+    if(parts.length<=1)return {firstName:parts[0]||'',lastName:''};
+    return {firstName:parts.slice(0,-1).join(' '),lastName:parts[parts.length-1]};
+  }
+
+  function findReusablePlaceholderPlayer(name){
+    const key=normalizePlaceholderPlayerName(name);
+    if(!key)return null;
+    return Object.values(data.players||{}).find(p=>
+      p &&
+      !p.ownerUid &&
+      normalizePlaceholderPlayerName(p.name)===key
+    )||null;
+  }
+
+  function buildPlaceholderPlayer(name){
+    const clean=String(name||'').replace(/\s+/g,' ').trim();
+    const parts=splitPlaceholderName(clean);
+    return {
+      id:uid(),
+      name:clean,
+      firstName:parts.firstName,
+      lastName:parts.lastName,
+      nickname:'',
+      identifier:'',
+      useNicknameInMatch:false,
+      club:'',
+      clubId:'',
+      ownerUid:'',
+      note:'Profil byl předpřipraven z turnajového výsledku. Po registraci si ho hráč může převzít.',
+      equipment:'',
+      achievements:'',
+      photo:'',
+      active:true,
+      placeholderProfile:true,
+      profileSource:'tournament_guest',
+      createdAt:new Date().toISOString()
+    };
+  }
+
+  async function ensurePlaceholderPlayer(name){
+    const existing=findReusablePlaceholderPlayer(name);
+    if(existing)return existing;
+
+    const p=buildPlaceholderPlayer(name);
+    data.players[p.id]=p;
+
+    try{
+      await saveSecurePlayer(p);
+    }catch(e){
+      delete data.players[p.id];
+      throw e;
+    }
+
+    return p;
+  }
+
+  let legacyGuestPromotionInProgress=false;
+  async function promoteLegacyTournamentGuestsToProfiles(){
+    if(legacyGuestPromotionInProgress)return 0;
+    if(!cloudAuthenticated || !currentUserIsSystemAdmin())return 0;
+
+    const tournaments=(data.tournaments||[]).filter(t=>t && t.guests && Object.keys(t.guests).length);
+    if(!tournaments.length)return 0;
+
+    legacyGuestPromotionInProgress=true;
+    let converted=0;
+
+    try{
+      for(const t of tournaments){
+        let tournamentChanged=false;
+        const guestEntries=Object.entries(t.guests||{});
+
+        for(const [guestId,guest] of guestEntries){
+          // Nové hosty necháváme jako hosty konkrétního turnaje.
+          // Automatická migrace je pouze pro stará data.
+          if(guest?.preserveGuest===true)continue;
+
+          const guestName=String(guest?.name||'').trim();
+          if(!guestName)continue;
+
+          let p=findReusablePlaceholderPlayer(guestName);
+          if(!p){
+            p=buildPlaceholderPlayer(guestName);
+            data.players[p.id]=p;
+            try{
+              await saveSecurePlayer(p);
+            }catch(e){
+              console.warn('Legacy guest profile save:',guestName,e);
+              delete data.players[p.id];
+              continue;
+            }
+          }
+
+          const affectedMatches=(data.matches||[]).filter(m=>
+            m?.tournamentLink?.tournamentId===t.id &&
+            Array.isArray(m.playerIds) &&
+            m.playerIds.includes(guestId)
+          );
+
+          replaceTournamentParticipantId(t,guestId,p.id);
+          relinkHistoricalGuestMatches(t,guestId,p.id);
+          delete t.guests[guestId];
+          tournamentChanged=true;
+          converted++;
+
+          for(const m of affectedMatches){
+            try{
+              await saveSecureMatch(m);
+            }catch(e){
+              console.warn('Legacy guest historical match save:',m?.id,e);
+            }
+          }
+        }
+
+        if(tournamentChanged){
+          t.updatedAt=new Date().toISOString();
+          try{
+            await saveSecureTournament(t);
+          }catch(e){
+            console.warn('Legacy guest tournament save:',t.id,e);
+          }
+        }
+      }
+
+      if(converted){
+        try{localStorage.setItem(DB_KEY,JSON.stringify(data));}catch(e){}
+        renderPlayers();
+        renderTournament();
+        renderResultsTournaments();
+        renderResultsSeries();
+        renderSeriesList();
+      }
+
+      return converted;
+    }finally{
+      legacyGuestPromotionInProgress=false;
+    }
+  }
+
+  function renderTournamentGuestDrafts(){
+    const wrap=$('tournamentGuestDraftList');
+    if(!wrap) return;
+    if(!tournamentGuestDrafts.length){
+      wrap.innerHTML='<div class="muted">Žádní hosté zatím nepřidáni.</div>';
+      return;
+    }
+    tournamentGuestDrafts.forEach(g=>ensureTournamentCheckinEntry(g.id));
+    wrap.innerHTML=tournamentGuestDrafts.map(g=>`
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;padding:8px 10px;border:1px solid #303034;border-radius:10px;margin-top:6px">
+        <label style="display:flex;align-items:center;gap:9px;flex:1">
+          <input type="checkbox" class="tournament-player-check tournament-guest-check" value="${esc(g.id)}" checked>
+          <span><strong>${esc(g.name)}</strong><br><span class="muted">HOST</span></span>
+        </label>
+        <div style="display:flex;gap:7px;align-items:center;flex-wrap:wrap">
+          ${tournamentHandicapEnabled()?`<label style="display:flex;align-items:center;gap:6px;font-size:12px;font-weight:900">HCP <input type="number" min="0" value="${tournamentPlayerHandicap(g.id)}" style="width:72px" onchange="setTournamentPlayerHandicap('${g.id}',this.value)" ${tournamentCheckinClosed?'disabled':''}></label>`:''}
+          <button class="btn ${tournamentCheckin[g.id]?.paid?'primary':''}" onclick="toggleTournamentPaid('${g.id}')" ${tournamentCheckinClosed?'disabled':''}>${tournamentCheckin[g.id]?.paid?'✓ ZAPLACENO':'NEZAPLACENO'}</button>
+          <button class="btn danger" onclick="removeTournamentGuestDraft('${g.id}')" ${tournamentCheckinClosed?'disabled':''}>ODEBRAT</button>
+        </div>
+      </div>
+    `).join('');
+    wrap.querySelectorAll('.tournament-guest-check').forEach(x=>x.addEventListener('change',()=>{invalidateTournamentDraw();updateTournamentSelectedCount();renderTournamentSeedOrder();}));
+  }
+
+  function renderTournamentPlayerPicker(){
+    const select=$('tournamentPlayerDropdown');
+    if(!select)return;
+
+    const players=Object.values(data.players||{})
+      .filter(p=>p && p.active!==false && p.hiddenFromPlayers!==true)
+      .sort((a,b)=>{
+        const ap=currentUserPlayerPriority(a)?0:1;
+        const bp=currentUserPlayerPriority(b)?0:1;
+        if(ap!==bp)return ap-bp;
+        return String(a.club||'').localeCompare(String(b.club||''),'cs') ||
+          playerDisplayName(a).localeCompare(playerDisplayName(b),'cs') ||
+          String(a.identifier||'').localeCompare(String(b.identifier||''),'cs');
+      });
+
+    const available=players.filter(p=>!tournamentSelectedPlayerIds.includes(p.id));
+
+    select.innerHTML='<option value="">— vyber hráče —</option>'+
+      available.map(p=>`<option value="${esc(p.id)}">${esc(playerSelectionLabel(p))}</option>`).join('');
+
+    renderTournamentSelectedPlayers();
+    renderTournamentGuestDrafts();
+    updateTournamentSelectedCount();
+    renderTournamentSeedOrder();
+  }
+
+  function tournamentAllCheckinIds(){
+    const guestIds=[...document.querySelectorAll('.tournament-guest-check:checked')]
+      .map(x=>x.value).filter(Boolean);
+    return [...tournamentSelectedPlayerIds,...guestIds];
+  }
+
+  function ensureTournamentCheckinEntry(id){
+    if(!id)return;
+    if(!tournamentCheckin[id]) tournamentCheckin[id]={paid:false,arrived:true,handicap:0};
+    if(tournamentCheckin[id].handicap==null)tournamentCheckin[id].handicap=0;
+  }
+
+  function tournamentHandicapEnabled(){
+    return !!$('tournamentHandicapEnabled')?.checked;
+  }
+
+  function tournamentPlayerHandicap(id){
+    ensureTournamentCheckinEntry(id);
+    return Math.max(0,Math.floor(Number(tournamentCheckin[id]?.handicap||0)));
+  }
+
+  window.setTournamentPlayerHandicap=function(id,value){
+    if(tournamentCheckinClosed){toast('Nejdřív znovu otevři prezenci.');return;}
+    ensureTournamentCheckinEntry(id);
+    tournamentCheckin[id].handicap=Math.max(0,Math.floor(Number(value||0)));
+    saveTournamentCheckinDraft();
+  };
+
+  function tournamentPaidPlayerIds(){
+    return tournamentAllCheckinIds().filter(id=>tournamentCheckin[id]?.paid===true);
+  }
+
+  function saveTournamentCheckinDraft(){
+    try{
+      localStorage.setItem(TOURNAMENT_CHECKIN_DRAFT_KEY,JSON.stringify({
+        playerIds:tournamentSelectedPlayerIds,
+        guestDrafts:tournamentGuestDrafts,
+        checkin:tournamentCheckin,
+        closed:tournamentCheckinClosed,
+        entryFee:Number($('tournamentEntryFee')?.value||0),
+        prizeMoney:tournamentPrizeMoney,
+        drawNumbers:tournamentDrawNumbers,
+        manualSeedOrder:manualTournamentSeedOrder,
+        handicapEnabled:tournamentHandicapEnabled()
+      }));
+    }catch(e){}
+  }
+
+  function clearTournamentCheckinDraft(){
+    try{localStorage.removeItem(TOURNAMENT_CHECKIN_DRAFT_KEY);}catch(e){}
+  }
+
+  function restoreTournamentCheckinDraft(){
+    try{
+      const raw=localStorage.getItem(TOURNAMENT_CHECKIN_DRAFT_KEY);
+      if(!raw)return;
+      const d=JSON.parse(raw);
+      if(Array.isArray(d.playerIds)) tournamentSelectedPlayerIds=[...d.playerIds];
+      if(Array.isArray(d.guestDrafts)){
+        tournamentGuestDrafts=d.guestDrafts
+          .filter(g=>g&&g.id&&g.name)
+          .map(g=>({id:String(g.id),name:String(g.name),createdAt:g.createdAt||''}));
+      }
+      if(d.checkin && typeof d.checkin==='object') tournamentCheckin=d.checkin;
+      tournamentCheckinClosed=!!d.closed;
+      if(d.drawNumbers && typeof d.drawNumbers==='object') tournamentDrawNumbers=d.drawNumbers;
+      if($('tournamentHandicapEnabled'))$('tournamentHandicapEnabled').checked=!!d.handicapEnabled;
+      if(Array.isArray(d.manualSeedOrder)) manualTournamentSeedOrder=d.manualSeedOrder;
+      if(d.prizeMoney && typeof d.prizeMoney==='object') tournamentPrizeMoney=d.prizeMoney;
+      if($('tournamentEntryFee') && Number.isFinite(Number(d.entryFee))) $('tournamentEntryFee').value=String(Math.max(0,Number(d.entryFee)));
+      syncTournamentPrizeMoneyForm();
+    }catch(e){console.warn('Tournament check-in draft restore:',e);}
+  }
+
+  function normalizeTournamentPrizeMoney(){
+    tournamentPrizeMoney=tournamentPrizeMoney&&typeof tournamentPrizeMoney==='object'?tournamentPrizeMoney:{};
+    tournamentPrizeMoney.mode=tournamentPrizeMoney.mode==='fixed'?'fixed':'percent';
+    tournamentPrizeMoney.returnPercent=Math.max(0,Math.min(100,Number(tournamentPrizeMoney.returnPercent??100)||0));
+    tournamentPrizeMoney.fixedAmount=Math.max(0,Number(tournamentPrizeMoney.fixedAmount||0));
+    tournamentPrizeMoney.bonus=Math.max(0,Number(tournamentPrizeMoney.bonus||0));
+    if(!Array.isArray(tournamentPrizeMoney.payouts)||!tournamentPrizeMoney.payouts.length){
+      tournamentPrizeMoney.payouts=[{label:'1. místo',count:1,percent:50},{label:'2. místo',count:1,percent:30},{label:'3. místo',count:1,percent:20}];
+    }
+    tournamentPrizeMoney.payouts=tournamentPrizeMoney.payouts.map((x,i)=>({
+      label:String(x?.label||((i+1)+'. místo')),
+      count:Math.max(1,Math.floor(Number(x?.count||1))),
+      percent:Math.max(0,Number(x?.percent||0))
+    }));
+  }
+
+  function syncTournamentPrizeMoneyForm(){
+    normalizeTournamentPrizeMoney();
+    if($('tournamentPrizeMode'))$('tournamentPrizeMode').value=tournamentPrizeMoney.mode;
+    if($('tournamentPrizeReturnPercent'))$('tournamentPrizeReturnPercent').value=String(tournamentPrizeMoney.returnPercent);
+    if($('tournamentPrizeFixedAmount'))$('tournamentPrizeFixedAmount').value=String(tournamentPrizeMoney.fixedAmount);
+    if($('tournamentPrizeBonus'))$('tournamentPrizeBonus').value=String(tournamentPrizeMoney.bonus);
+    $('tournamentPrizePercentField')?.classList.toggle('hidden',tournamentPrizeMoney.mode!=='percent');
+    $('tournamentPrizeFixedField')?.classList.toggle('hidden',tournamentPrizeMoney.mode!=='fixed');
+    renderTournamentPrizeMoney();
+  }
+
+  function tournamentPrizeCollected(){
+    const fee=Math.max(0,Number($('tournamentEntryFee')?.value||0));
+    return tournamentPaidPlayerIds().length*fee;
+  }
+
+  function tournamentPrizeBaseFromEntries(collected=tournamentPrizeCollected()){
+    normalizeTournamentPrizeMoney();
+    return tournamentPrizeMoney.mode==='fixed'
+      ? Math.min(collected,Math.max(0,Number(tournamentPrizeMoney.fixedAmount||0)))
+      : collected*Math.max(0,Math.min(100,Number(tournamentPrizeMoney.returnPercent||0)))/100;
+  }
+
+  function tournamentPrizeTotalPercent(){
+    normalizeTournamentPrizeMoney();
+    return tournamentPrizeMoney.payouts.reduce((sum,row)=>sum+(Math.max(1,Number(row.count||1))*Math.max(0,Number(row.percent||0))),0);
+  }
+
+  function tournamentPrizePool(){
+    return tournamentPrizeBaseFromEntries()+Math.max(0,Number(tournamentPrizeMoney.bonus||0));
+  }
+
+  function renderTournamentPrizeMoney(){
+    normalizeTournamentPrizeMoney();
+    const collected=tournamentPrizeCollected();
+    const fromEntries=tournamentPrizeBaseFromEntries(collected);
+    const bonus=Math.max(0,Number(tournamentPrizeMoney.bonus||0));
+    const pool=fromEntries+bonus;
+    const organizer=Math.max(0,collected-fromEntries);
+    const pct=tournamentPrizeTotalPercent();
+    if($('tournamentPrizeMoneySummary')){
+      $('tournamentPrizeMoneySummary').innerHTML=`
+        <div class="grid four">
+          <div>${statBox('VYBRÁNO',Math.round(collected).toLocaleString('cs-CZ')+' Kč')}</div>
+          <div>${statBox('ZE STARTOVNÉHO DO PRIZE',Math.round(fromEntries).toLocaleString('cs-CZ')+' Kč')}</div>
+          <div>${statBox('BONUS',Math.round(bonus).toLocaleString('cs-CZ')+' Kč')}</div>
+          <div>${statBox('PRIZE MONEY CELKEM',Math.round(pool).toLocaleString('cs-CZ')+' Kč')}</div>
+        </div>
+        <div class="muted" style="margin-top:8px">Na náklady / pořadateli zůstává ze startovného: <strong>${Math.round(organizer).toLocaleString('cs-CZ')} Kč</strong>.</div>`;
+    }
+    if($('tournamentPrizeMoneyStatus')){
+      $('tournamentPrizeMoneyStatus').textContent=Math.abs(pct-100)<0.001?'100 % ROZDĚLENO':(pct<100?'CHYBÍ '+(100-pct).toLocaleString('cs-CZ',{maximumFractionDigits:2})+' %':'PŘEKROČENO O '+(pct-100).toLocaleString('cs-CZ',{maximumFractionDigits:2})+' %');
+      $('tournamentPrizeMoneyStatus').classList.toggle('gold',Math.abs(pct-100)<0.001);
+    }
+    const rows=$('tournamentPrizePayoutRows');
+    if(rows){
+      rows.innerHTML=tournamentPrizeMoney.payouts.map((row,i)=>{
+        const each=pool*Math.max(0,Number(row.percent||0))/100;
+        const total=each*Math.max(1,Number(row.count||1));
+        return `<div style="display:grid;grid-template-columns:minmax(130px,1.6fr) 90px 110px minmax(120px,1fr) auto;gap:8px;align-items:end;margin-top:8px">
+          <div><label>Umístění</label><input value="${esc(row.label)}" onchange="updateTournamentPrizePayout(${i},'label',this.value)"></div>
+          <div><label>Hráčů</label><input type="number" min="1" step="1" value="${Math.max(1,Number(row.count||1))}" onchange="updateTournamentPrizePayout(${i},'count',this.value)"></div>
+          <div><label>% / hráč</label><input type="number" min="0" max="100" step="0.5" value="${Number(row.percent||0)}" onchange="updateTournamentPrizePayout(${i},'percent',this.value)"></div>
+          <div style="padding-bottom:9px"><strong>${Math.round(each).toLocaleString('cs-CZ')} Kč / hráč</strong>${Number(row.count||1)>1?`<div class="muted">celkem ${Math.round(total).toLocaleString('cs-CZ')} Kč</div>`:''}</div>
+          <button class="btn danger" onclick="removeTournamentPrizePayout(${i})" ${tournamentPrizeMoney.payouts.length<=1?'disabled':''}>×</button>
+        </div>`;
+      }).join('');
+    }
+    saveTournamentCheckinDraft();
+  }
+
+  window.updateTournamentPrizePayout=function(i,key,value){
+    normalizeTournamentPrizeMoney();
+    const row=tournamentPrizeMoney.payouts[i]; if(!row)return;
+    if(key==='label')row.label=String(value||'').trim()||((i+1)+'. místo');
+    else if(key==='count')row.count=Math.max(1,Math.floor(Number(value||1)));
+    else if(key==='percent')row.percent=Math.max(0,Number(value||0));
+    renderTournamentPrizeMoney();
+  };
+  window.removeTournamentPrizePayout=function(i){
+    normalizeTournamentPrizeMoney();
+    if(tournamentPrizeMoney.payouts.length<=1)return;
+    tournamentPrizeMoney.payouts.splice(i,1);
+    renderTournamentPrizeMoney();
+  };
+
+  function renderTournamentCheckinSummary(){
+    const ids=tournamentAllCheckinIds();
+    ids.forEach(ensureTournamentCheckinEntry);
+    Object.keys(tournamentCheckin).forEach(id=>{if(!ids.includes(id))delete tournamentCheckin[id];});
+    const paid=ids.filter(id=>tournamentCheckin[id]?.paid).length;
+    const fee=Math.max(0,Number($('tournamentEntryFee')?.value||0));
+    if($('tournamentCheckinPresent'))$('tournamentCheckinPresent').textContent=String(ids.length);
+    if($('tournamentCheckinPaid'))$('tournamentCheckinPaid').textContent=paid+' / '+ids.length;
+    if($('tournamentCheckinMoney'))$('tournamentCheckinMoney').textContent='Vybráno: '+(paid*fee).toLocaleString('cs-CZ')+' Kč'+(fee>0?' • očekáváno při platbě všech: '+(ids.length*fee).toLocaleString('cs-CZ')+' Kč':'');
+    if($('tournamentCheckinState')){
+      $('tournamentCheckinState').textContent=tournamentCheckinClosed?'UZAVŘENO':'OTEVŘENO';
+      $('tournamentCheckinState').classList.toggle('gold',tournamentCheckinClosed);
+    }
+    $('tournamentCloseCheckinBtn')?.classList.toggle('hidden',tournamentCheckinClosed);
+    $('tournamentReopenCheckinBtn')?.classList.toggle('hidden',!tournamentCheckinClosed);
+    if($('tournamentMarkAllPaidBtn'))$('tournamentMarkAllPaidBtn').disabled=tournamentCheckinClosed || ids.length===0;
+    if($('addTournamentPlayerBtn'))$('addTournamentPlayerBtn').disabled=tournamentCheckinClosed;
+    if($('addTournamentGuestBtn'))$('addTournamentGuestBtn').disabled=tournamentCheckinClosed;
+    if($('tournamentPlayerDropdown'))$('tournamentPlayerDropdown').disabled=tournamentCheckinClosed;
+    if($('tournamentGuestName'))$('tournamentGuestName').disabled=tournamentCheckinClosed;
+    if($('tournamentCheckinHint'))$('tournamentCheckinHint').textContent=tournamentCheckinClosed
+      ? 'Prezence uzavřena • do nasazení vstupuje '+paid+' zaplacených hráčů.'
+      : 'Po uzavření prezence se odemkne nasazení a elektronický los.';
+    renderTournamentPrizeMoney();
+    saveTournamentCheckinDraft();
+  }
+
+  window.toggleTournamentPaid=function(id){
+    if(tournamentCheckinClosed){toast('Nejdřív znovu otevři prezenci.');return;}
+    ensureTournamentCheckinEntry(id);
+    tournamentCheckin[id].paid=!tournamentCheckin[id].paid;
+    invalidateTournamentDraw();
+    renderTournamentPlayerPicker();
+  };
+
+  function renderTournamentSelectedPlayers(){
+    const wrap=$('tournamentSelectedPlayersList');
+    if(!wrap)return;
+
+    if(!tournamentSelectedPlayerIds.length){
+      wrap.innerHTML='<div class="muted">Zatím není zapsaný žádný příchozí hráč.</div>';
+      renderTournamentCheckinSummary();
+      return;
+    }
+
+    tournamentSelectedPlayerIds.forEach(ensureTournamentCheckinEntry);
+    wrap.innerHTML=tournamentSelectedPlayerIds.map((id,i)=>{
+      const paid=!!tournamentCheckin[id]?.paid;
+      return `
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;padding:9px 0;border-bottom:1px solid #29292d;flex-wrap:wrap">
+        <span>
+          <strong>${i+1}.</strong> ${esc(tournamentPlayerName(id))}
+          ${data.players?.[id]?.placeholderProfile && !data.players?.[id]?.ownerUid
+            ? '<span class="tournament-badge" style="margin-left:6px">PROFIL K PŘEVZETÍ</span>'
+            : ''}
+        </span>
+        <div style="display:flex;gap:7px;align-items:center;flex-wrap:wrap">
+          ${tournamentHandicapEnabled()?`<label style="display:flex;align-items:center;gap:6px;font-size:12px;font-weight:900">HCP <input type="number" min="0" value="${tournamentPlayerHandicap(id)}" style="width:72px" onchange="setTournamentPlayerHandicap('${id}',this.value)" ${tournamentCheckinClosed?'disabled':''}></label>`:''}
+          <button class="btn ${paid?'primary':''}" onclick="toggleTournamentPaid('${id}')" ${tournamentCheckinClosed?'disabled':''}>${paid?'✓ ZAPLACENO':'NEZAPLACENO'}</button>
+          <button class="btn danger" onclick="removeTournamentSelectedPlayer('${id}')" ${tournamentCheckinClosed?'disabled':''}>ODEBRAT</button>
+        </div>
+      </div>`;
+    }).join('');
+    renderTournamentCheckinSummary();
+  }
+
+  window.removeTournamentSelectedPlayer=function(id){
+    if(tournamentCheckinClosed){toast('Nejdřív znovu otevři prezenci.');return;}
+    tournamentSelectedPlayerIds=tournamentSelectedPlayerIds.filter(x=>x!==id);
+    manualTournamentSeedOrder=manualTournamentSeedOrder.filter(x=>x!==id);
+    delete tournamentCheckin[id];
+    invalidateTournamentDraw();
+    renderTournamentPlayerPicker();
+  };
+
+
+  function updateTournamentSelectedCount(){
+    const guestCount=document.querySelectorAll('.tournament-guest-check:checked').length;
+    const n=tournamentSelectedPlayerIds.length+guestCount;
+    if($('tournamentSelectedCount')) $('tournamentSelectedCount').textContent=n+' příchozích';
+    renderTournamentCheckinSummary();
+  }
+
+  $('addTournamentPlayerBtn').onclick=()=>{
+    const select=$('tournamentPlayerDropdown');
+    const id=select?.value||'';
+    if(!id)return;
+
+    if(!tournamentSelectedPlayerIds.includes(id)){
+      tournamentSelectedPlayerIds.push(id);
+      ensureTournamentCheckinEntry(id);
+      invalidateTournamentDraw();
+    }
+
+    renderTournamentPlayerPicker();
+  };
+
+  $('tournamentPlayerDropdown').addEventListener('keydown',e=>{
+    if(e.key==='Enter'){
+      e.preventDefault();
+      $('addTournamentPlayerBtn').click();
+    }
+  });
+
+
+  $('addTournamentGuestBtn').onclick=async()=>{
+    const input=$('tournamentGuestName');
+    const btn=$('addTournamentGuestBtn');
+    const name=String(input?.value||'').replace(/\s+/g,' ').trim();
+
+    if(!name){toast('Zadej jméno neregistrovaného hráče.');return;}
+
+    const normalized=normalizePlaceholderPlayerName(name);
+    const exactProfiles=Object.values(data.players||{}).filter(p=>
+      normalizePlaceholderPlayerName(p?.name)===normalized
+    );
+
+    // Pokud už skutečný profil existuje, hosta neduplikujeme.
+    if(exactProfiles.length){
+      toast('Hráč s tímto jménem už má profil. Vyber ho ze seznamu hráčů.');
+      return;
+    }
+
+    // Stejného hosta nepřidáme do rozepsané prezence dvakrát.
+    if(tournamentGuestDrafts.some(g=>normalizePlaceholderPlayerName(g?.name)===normalized)){
+      toast('Tento host už je v seznamu příchozích.');
+      return;
+    }
+
+    btn.disabled=true;
+    try{
+      const guest={
+        id:'guest_'+uid(),
+        name,
+        createdAt:new Date().toISOString()
+      };
+      tournamentGuestDrafts.push(guest);
+      ensureTournamentCheckinEntry(guest.id);
+      invalidateTournamentDraw();
+      input.value='';
+      saveTournamentCheckinDraft();
+      renderTournamentPlayerPicker();
+      toast('Host byl přidán do turnaje.');
+    }catch(e){
+      console.error('Create tournament guest:',e);
+      toast('Hosta se nepodařilo přidat.');
+    }finally{
+      btn.disabled=false;
+    }
+  };
+
+  $('tournamentGuestName').addEventListener('keydown',e=>{
+    if(e.key==='Enter'){e.preventDefault();$('addTournamentGuestBtn').click();}
+  });
+
+  window.removeTournamentGuestDraft=function(id){
+    if(tournamentCheckinClosed){toast('Nejdřív znovu otevři prezenci.');return;}
+    tournamentGuestDrafts=tournamentGuestDrafts.filter(g=>g.id!==id);
+    manualTournamentSeedOrder=manualTournamentSeedOrder.filter(x=>x!==id);
+    delete tournamentCheckin[id];
+    delete tournamentDrawNumbers[id];
+    invalidateTournamentDraw();
+    saveTournamentCheckinDraft();
+    renderTournamentGuestDrafts();
+    updateTournamentSelectedCount();
+    renderTournamentSeedOrder();
+  };
+
+
+  function selectedTournamentPlayerIds(){
+    const guestIds=[...document.querySelectorAll('.tournament-guest-check:checked')]
+      .map(x=>x.value)
+      .filter(Boolean);
+    return [...tournamentSelectedPlayerIds,...guestIds];
+  }
+
+  function tournamentSeedingPlayerIds(){
+    return tournamentCheckinClosed ? tournamentPaidPlayerIds() : [];
+  }
+
+  function invalidateTournamentDraw(){
+    tournamentDrawNumbers={};
+  }
+
+  function tournamentDrawIsComplete(ids=selectedTournamentPlayerIds()){
+    const selected=[...(ids||[])];
+    if(!selected.length)return false;
+    const nums=selected.map(id=>Number(tournamentDrawNumbers[id]));
+    if(nums.some(n=>!Number.isInteger(n) || n<1 || n>selected.length))return false;
+    return new Set(nums).size===selected.length;
+  }
+
+  function tournamentIdsSortedByDraw(ids){
+    return [...(ids||[])].sort((a,b)=>
+      Number(tournamentDrawNumbers[a]||999999)-Number(tournamentDrawNumbers[b]||999999)
+    );
+  }
+
+  window.drawTournamentNumbers=function(){
+    if(!tournamentCheckinClosed){toast('Nejdřív uzavři prezenci.');return;}
+    const ids=tournamentSeedingPlayerIds();
+    if(ids.length<2){
+      toast('Pro losování vyber alespoň 2 hráče.');
+      return;
+    }
+
+    const numbers=Array.from({length:ids.length},(_,i)=>i+1);
+    for(let i=numbers.length-1;i>0;i--){
+      const j=Math.floor(Math.random()*(i+1));
+      [numbers[i],numbers[j]]=[numbers[j],numbers[i]];
+    }
+
+    tournamentDrawNumbers={};
+    ids.forEach((id,i)=>tournamentDrawNumbers[id]=numbers[i]);
+    renderTournamentSeedOrder();
+    updateTournamentCreateButtonLabel();
+    toast('Čísla byla vylosována.');
+  };
+
+  window.drawTournamentNumberFor=function(id){
+    const ids=tournamentSeedingPlayerIds();
+    if(!tournamentCheckinClosed){toast('Nejdřív uzavři prezenci.');return;}
+    if(!ids.includes(id)){toast('Hráč není mezi potvrzenými účastníky.');return;}
+    if(tournamentDrawNumbers[id])return;
+    const used=new Set(Object.values(tournamentDrawNumbers).map(Number).filter(Boolean));
+    const available=Array.from({length:ids.length},(_,i)=>i+1).filter(n=>!used.has(n));
+    if(!available.length)return;
+    const n=available[Math.floor(Math.random()*available.length)];
+    tournamentDrawNumbers[id]=n;
+    saveTournamentCheckinDraft();
+    renderTournamentSeedOrder();
+    updateTournamentCreateButtonLabel();
+    toast(tournamentPlayerName(id)+' • vylosováno číslo '+n);
+  };
+
+  window.resetTournamentIndividualDraw=function(){
+    if(!confirm('Zrušit dosavadní elektronický los?'))return;
+    tournamentDrawNumbers={};
+    saveTournamentCheckinDraft();
+    renderTournamentSeedOrder();
+    updateTournamentCreateButtonLabel();
+  };
+
+  function tournamentEloValue(id){
+    // ELO nasazení používá stejné celkové ELO, které se zobrazuje v profilech hráčů.
+    // Host / neregistrovaný hráč nemá historii a dostane výchozí hodnotu 1500.
+    if(String(id||'').startsWith('guest_') || !data.players?.[id])return ELO_START;
+    return playerElo(id);
+  }
+
+  function tournamentIdsSortedByElo(ids){
+    return [...(ids||[])].sort((a,b)=>{
+      const ea=tournamentEloValue(a), eb=tournamentEloValue(b);
+      if(eb!==ea)return eb-ea;
+      return tournamentPlayerName(a).localeCompare(tournamentPlayerName(b),'cs');
+    });
+  }
+
+  function eloSnakeGroups(ids,groupCount){
+    const sorted=tournamentIdsSortedByElo(ids);
+    const count=Math.max(1,Math.min(Number(groupCount||1),sorted.length||1));
+    const groups=Array.from({length:count},()=>[]);
+    let index=0,dir=1;
+
+    sorted.forEach(id=>{
+      groups[index].push(id);
+      if(count===1)return;
+      if(dir===1){
+        if(index===count-1)dir=-1;
+        else index++;
+      }else{
+        if(index===0)dir=1;
+        else index--;
+      }
+    });
+    return groups;
+  }
+
+  function updateTournamentCreateButtonLabel(){
+    const btn=$('createTournamentBtn');
+    if(!btn)return;
+    const mode=$('tournamentSeedingMode')?.value||'random';
+    btn.textContent=mode==='manual'
+      ? 'NASADIT DLE RUČNÍHO POŘADÍ'
+      : (mode==='elo'
+          ? 'NASADIT DLE ELO'
+          : ((mode==='draw'||mode==='draw_individual') ? 'VYTVOŘIT TURNAJ DLE LOSU' : 'ROZLOSOVAT TURNAJ'));
+    btn.disabled=!tournamentCheckinClosed;
+  }
+
+  function manualGroupSeedLayout(ids,groupCount){
+    const count=Math.max(1,Math.min(Number(groupCount||1),ids.length||1));
+    const base=Math.floor(ids.length/count);
+    const remainder=ids.length%count;
+    const groups=[];
+    let offset=0;
+
+    for(let gi=0;gi<count;gi++){
+      const size=base+(gi<remainder?1:0);
+      groups.push({
+        index:gi,
+        label:String.fromCharCode(65+gi),
+        ids:ids.slice(offset,offset+size)
+      });
+      offset+=size;
+    }
+    return groups;
+  }
+
+  function renderTournamentSeedOrder(){
+    const panel=$('tournamentManualSeedingPanel');
+    const wrap=$('tournamentSeedOrder');
+    if(!panel || !wrap)return;
+
+    const mode=$('tournamentSeedingMode')?.value||'random';
+    const manual=mode==='manual';
+    const eloMode=mode==='elo';
+    const drawMode=mode==='draw';
+    const drawIndividualMode=mode==='draw_individual';
+    panel.classList.toggle('hidden',!(manual||eloMode||drawMode||drawIndividualMode));
+    if(!(manual||eloMode||drawMode||drawIndividualMode))return;
+
+    const selected=tournamentSeedingPlayerIds();
+    if(!tournamentCheckinClosed){
+      wrap.innerHTML='<div class="muted">Nejdřív uzavři prezenci. Potom se odemkne nasazení a los.</div>';
+      return;
+    }
+
+    if(drawIndividualMode){
+      const help=$('tournamentManualSeedingHelp');
+      const complete=tournamentDrawIsComplete(selected);
+      panel.querySelector('strong').textContent='INDIVIDUÁLNÍ ELEKTRONICKÝ LOS';
+      if(help)help.textContent='Hráči losují postupně. Každý dostane jedno náhodné číslo z dosud volných čísel 1 až '+selected.length+'.';
+      const ordered=[...selected].sort((a,b)=>{
+        const na=Number(tournamentDrawNumbers[a]||999999), nb=Number(tournamentDrawNumbers[b]||999999);
+        if(na!==nb)return na-nb;
+        return tournamentPlayerName(a).localeCompare(tournamentPlayerName(b),'cs');
+      });
+      wrap.innerHTML=`
+        <div style="display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-bottom:10px">
+          <span class="muted">Vylosováno ${selected.filter(id=>tournamentDrawNumbers[id]).length} / ${selected.length}</span>
+          <button class="btn" onclick="resetTournamentIndividualDraw()" ${Object.keys(tournamentDrawNumbers).length?'':'disabled'}>↻ ZRUŠIT LOS</button>
+        </div>
+        ${ordered.map(id=>{
+          const n=Number(tournamentDrawNumbers[id]||0);
+          return `<div style="display:flex;justify-content:space-between;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid #29292d;flex-wrap:wrap">
+            <strong>${esc(tournamentPlayerName(id))}</strong>
+            ${n
+              ? `<span class="tournament-badge gold" style="font-size:15px">ČÍSLO ${n}</span>`
+              : `<button class="btn primary" onclick="drawTournamentNumberFor('${id}')">🎲 LOSOVAT</button>`}
+          </div>`;
+        }).join('')}
+        ${complete?'<div style="margin-top:12px;font-weight:950;color:var(--gold2)">✓ LOS JE KOMPLETNÍ</div>':''}
+      `;
+      return;
+    }
+
+    if(drawMode){
+      const help=$('tournamentManualSeedingHelp');
+      const complete=tournamentDrawIsComplete(selected);
+      panel.querySelector('strong').textContent='LOSOVÁNÍ ČÍSEL';
+      if(help)help.textContent='Každý hráč dostane náhodně jedno unikátní číslo od 1 do počtu účastníků. Podle vylosovaného čísla se následně určí pořadí nasazení.';
+      wrap.innerHTML=`
+        <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:10px">
+          <span class="muted">${selected.length ? 'Rozsah losu: 1–'+selected.length : 'Nejdřív vyber hráče.'}</span>
+          <button class="btn primary" onclick="drawTournamentNumbers()" ${selected.length<2?'disabled':''}>🎲 ${complete?'LOSOVAT ZNOVU':'VYLOSOVAT ČÍSLA'}</button>
+        </div>
+        ${complete
+          ? tournamentIdsSortedByDraw(selected).map(id=>`
+              <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid #29292d">
+                <span>${esc(tournamentPlayerName(id))}</span>
+                <span class="tournament-badge gold" style="font-size:15px">ČÍSLO ${Number(tournamentDrawNumbers[id])}</span>
+              </div>`).join('')
+          : '<div class="muted">Čísla zatím nejsou vylosována.</div>'}
+      `;
+      return;
+    }
+
+    panel.querySelector('strong').textContent=manual?'RUČNÍ NASAZENÍ':'NASAZENÍ DLE ELO';
+
+    if(eloMode){
+      const sorted=tournamentIdsSortedByElo(selected);
+      const format=$('tournamentFormat')?.value||'dko';
+      const groupMode=['groups','groups_sko','groups_dko'].includes(format);
+      const groupCount=format==='groups'
+        ? 1
+        : Math.max(1,parseInt($('tournamentGroupCount')?.value||'2',10));
+
+      $('tournamentManualSeedingHelp').textContent=groupMode && groupCount>1
+        ? 'Hráči jsou seřazeni podle celkového ELO od nejvyššího. Do skupin se rozdělí hadovitě, aby byly co nejvyrovnanější.'
+        : (['sko','dko'].includes(format)
+            ? 'Hráči jsou seřazeni podle celkového ELO. Nejvýše nasazení jsou rozmístěni do různých částí pavouka.'
+            : 'Hráči jsou seřazeni podle celkového ELO od nejvyššího. Toto pořadí určuje výchozí nasazení.');
+
+      if(groupMode && groupCount>1){
+        const groups=eloSnakeGroups(sorted,groupCount);
+        wrap.innerHTML=groups.map((ids,gi)=>`
+          <div class="subpanel" style="margin-bottom:12px;border-color:rgba(212,175,55,.38)">
+            <strong style="color:var(--gold2)">SKUPINA ${String.fromCharCode(65+gi)}</strong>
+            <div style="margin-top:7px">
+              ${ids.map((id,pos)=>`
+                <div style="display:flex;justify-content:space-between;gap:10px;padding:7px 0;border-bottom:1px solid #29292d">
+                  <span><strong>${pos+1}.</strong> ${esc(tournamentPlayerName(id))}</span>
+                  <span class="elo-badge">ELO ${tournamentEloValue(id)}</span>
+                </div>`).join('')}
+            </div>
+          </div>`).join('');
+      }else{
+        wrap.innerHTML=sorted.map((id,pos)=>`
+          <div style="display:flex;justify-content:space-between;gap:10px;align-items:center;padding:8px 0;border-bottom:1px solid #29292d">
+            <span><strong>${pos+1}.</strong> ${esc(tournamentPlayerName(id))}</span>
+            <span class="elo-badge">ELO ${tournamentEloValue(id)}</span>
+          </div>`).join('');
+      }
+      return;
+    }
+
+    
+    manualTournamentSeedOrder=manualTournamentSeedOrder.filter(id=>selected.includes(id));
+    selected.forEach(id=>{if(!manualTournamentSeedOrder.includes(id))manualTournamentSeedOrder.push(id);});
+
+    const format=$('tournamentFormat')?.value||'dko';
+    const directKO=['sko','dko'].includes(format);
+    const swissMode=format==='swiss';
+    const groupMode=['groups','groups_sko','groups_dko'].includes(format);
+    const help=$('tournamentManualSeedingHelp');
+
+    if(help){
+      help.textContent=directKO
+        ? 'Pořadí určuje přímo pozice v 1. kole pavouka: 1 vs 2, 3 vs 4, 5 vs 6… Hráče můžeš posouvat nahoru a dolů.'
+        : (swissMode
+            ? 'Pořadí určuje výchozí nasazení pro 1. kolo. V dalších kolech se hráči párují podle aktuálních bodů a pokud možno bez opakovaného soupeře.'
+            : 'Každá skupina má vlastní nasazení od pozice 1. Hráče řadíš zvlášť ve skupině A, B, C…');
+    }
+
+    if(groupMode){
+      const groupCount=format==='groups'
+        ? 1
+        : Math.max(1,parseInt($('tournamentGroupCount')?.value||'2',10));
+      const groups=manualGroupSeedLayout(manualTournamentSeedOrder,groupCount);
+
+      wrap.innerHTML=groups.map(g=>`
+        <div class="subpanel" style="margin-bottom:12px;border-color:rgba(212,175,55,.38)">
+          <div style="display:flex;justify-content:space-between;gap:8px;align-items:center;margin-bottom:8px">
+            <strong style="color:var(--gold2);font-size:17px">SKUPINA ${g.label}</strong>
+            <span class="muted">${g.ids.length} hráčů</span>
+          </div>
+          ${g.ids.map((id,pos)=>{
+            const globalIndex=manualTournamentSeedOrder.indexOf(id);
+            const firstGlobal=manualTournamentSeedOrder.indexOf(g.ids[0]);
+            const lastGlobal=manualTournamentSeedOrder.indexOf(g.ids[g.ids.length-1]);
+            return `
+              <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid #29292d">
+                <span><strong>${pos+1}.</strong> ${esc(tournamentPlayerName(id))}</span>
+                <span style="display:flex;gap:6px">
+                  <button class="btn" ${globalIndex===firstGlobal?'disabled':''} onclick="moveTournamentSeedInGroup('${id}',-1)">↑</button>
+                  <button class="btn" ${globalIndex===lastGlobal?'disabled':''} onclick="moveTournamentSeedInGroup('${id}',1)">↓</button>
+                </span>
+              </div>`;
+          }).join('')}
+        </div>
+      `).join('');
+      return;
+    }
+
+    wrap.innerHTML=manualTournamentSeedOrder.map((id,i)=>{
+      const matchNo=Math.floor(i/2)+1;
+      const side=i%2===0?'A':'B';
+      const slotLabel=directKO?`Zápas ${matchNo} • pozice ${side}`:`Pozice ${i+1}`;
+      return `
+        <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;padding:7px 0;border-bottom:1px solid #29292d">
+          <span>
+            <strong>${i+1}.</strong> ${esc(tournamentPlayerName(id))}
+            <span class="muted" style="margin-left:8px">${esc(slotLabel)}</span>
+          </span>
+          <span style="display:flex;gap:6px">
+            <button class="btn" ${i===0?'disabled':''} onclick="moveTournamentSeed('${id}',-1)">↑</button>
+            <button class="btn" ${i===manualTournamentSeedOrder.length-1?'disabled':''} onclick="moveTournamentSeed('${id}',1)">↓</button>
+          </span>
+        </div>`;
+    }).join('');
+
+    if(directKO && manualTournamentSeedOrder.length){
+      const pairs=[];
+      for(let i=0;i<manualTournamentSeedOrder.length;i+=2){
+        const a=manualTournamentSeedOrder[i];
+        const b=manualTournamentSeedOrder[i+1];
+        pairs.push(`<div style="padding:6px 0;border-bottom:1px solid #29292d">
+          <strong>Zápas ${Math.floor(i/2)+1}:</strong>
+          ${esc(tournamentPlayerName(a))} <span class="muted">vs</span> ${b?esc(tournamentPlayerName(b)):'BYE'}
+        </div>`);
+      }
+      wrap.innerHTML+=`<div class="subpanel" style="margin-top:10px">
+        <strong>NÁHLED 1. KOLA</strong>
+        <div style="margin-top:6px">${pairs.join('')}</div>
+      </div>`;
+    }
+  }
+
+  window.moveTournamentSeed=function(id,dir){
+    const i=manualTournamentSeedOrder.indexOf(id);
+    const j=i+dir;
+    if(i<0||j<0||j>=manualTournamentSeedOrder.length)return;
+    [manualTournamentSeedOrder[i],manualTournamentSeedOrder[j]]=[manualTournamentSeedOrder[j],manualTournamentSeedOrder[i]];
+    renderTournamentSeedOrder();
+  };
+
+  window.moveTournamentSeedInGroup=function(id,dir){
+    const groupCount=Math.max(1,parseInt($('tournamentGroupCount')?.value||'2',10));
+    const groups=manualGroupSeedLayout(manualTournamentSeedOrder,groupCount);
+    const group=groups.find(g=>g.ids.includes(id));
+    if(!group)return;
+
+    const localIndex=group.ids.indexOf(id);
+    const targetLocal=localIndex+dir;
+    if(targetLocal<0||targetLocal>=group.ids.length)return;
+
+    const otherId=group.ids[targetLocal];
+    const i=manualTournamentSeedOrder.indexOf(id);
+    const j=manualTournamentSeedOrder.indexOf(otherId);
+    if(i<0||j<0)return;
+
+    [manualTournamentSeedOrder[i],manualTournamentSeedOrder[j]]=[manualTournamentSeedOrder[j],manualTournamentSeedOrder[i]];
+    renderTournamentSeedOrder();
+  };
+
+  $('tournamentSeedingMode').addEventListener('change',()=>{
+    renderTournamentSeedOrder();
+    updateTournamentCreateButtonLabel();
+  });
+  if($('tournamentGroupCount')){
+    $('tournamentGroupCount').addEventListener('change',renderTournamentSeedOrder);
+    $('tournamentGroupCount').addEventListener('input',renderTournamentSeedOrder);
+  }
+  if($('tournamentVariableRace')){
+    $('tournamentVariableRace').addEventListener('change',()=>{
+      $('tournamentVariableRaceFields')?.classList.toggle('hidden',!$('tournamentVariableRace').checked);
+    });
+  }
+
+
+  function tournamentMatchObject(player1Id,player2Id,roundLabel,bracket=''){
+    return {id:uid(),player1Id,player2Id,roundLabel,bracket,status:'pending',tableNumber:null,score1:null,score2:null,winnerId:null,loserId:null,scoreboardMatchId:null};
+  }
+
+  function tournamentRaceStageSettingsFromForm(){
+    if(!$('tournamentVariableRace')?.checked)return null;
+    const read=id=>{
+      const raw=String($(id)?.value||'').trim();
+      if(!raw)return null;
+      const n=parseInt(raw,10);
+      return Number.isFinite(n)&&n>0?n:null;
+    };
+    return {
+      groups:read('raceStageGroups'),
+      last32:read('raceStage32'),
+      last16:read('raceStage16'),
+      last8:read('raceStage8'),
+      semifinal:read('raceStage4'),
+      final:read('raceStage2'),
+      bronze:read('raceStageBronze')
+    };
+  }
+
+  function tournamentMatchIsGroupMatch(t,m){
+    if(!t||!m||!Array.isArray(t.groups))return false;
+    return t.groups.some(g=>(g.matches||[]).some(x=>x.id===m.id));
+  }
+
+  function tournamentRoundContainingMatch(t,m){
+    if(!t||!m)return null;
+    for(const r of (t.ko?.rounds||[])){
+      if((r.matches||[]).some(x=>x.id===m.id))return r;
+    }
+    for(const r of (t.dko?.rounds||[])){
+      if((r.matches||[]).some(x=>x.id===m.id))return r;
+    }
+    for(const r of (t.swiss?.rounds||[])){
+      if((r.matches||[]).some(x=>x.id===m.id))return r;
+    }
+    return null;
+  }
+
+  function tournamentStageForMatch(t,m){
+    if(!t||!m)return null;
+    if(tournamentMatchIsGroupMatch(t,m))return 'groups';
+    if(m.bracket==='3P')return 'bronze';
+    if(m.bracket==='F'||m.bracket==='GF')return 'final';
+
+    const round=tournamentRoundContainingMatch(t,m);
+    if(round){
+      const ids=new Set();
+      (round.matches||[]).forEach(x=>{
+        if(x.player1Id)ids.add(x.player1Id);
+        if(x.player2Id)ids.add(x.player2Id);
+      });
+      (round.byes||[]).forEach(x=>{if(x.playerId)ids.add(x.playerId);});
+      const count=ids.size;
+      if(count<=2)return 'final';
+      if(count<=4)return 'semifinal';
+      if(count<=8)return 'last8';
+      if(count<=16)return 'last16';
+      if(count<=32)return 'last32';
+    }
+
+    // Záloha pro dynamické DKO vlny: počet dosud aktivních hráčů.
+    let activeCount=0;
+    if(t.dko){
+      activeCount=(t.dko.participantIds||t.playerIds||[]).filter(id=>(t.dko.losses?.[id]||0)<2).length;
+    }else if(t.ko){
+      activeCount=(t.ko.participantIds||t.playerIds||[]).filter(id=>!(t.ko.eliminatedIds||[]).includes(id)).length;
+    }
+    if(activeCount<=2)return 'final';
+    if(activeCount<=4)return 'semifinal';
+    if(activeCount<=8)return 'last8';
+    if(activeCount<=16)return 'last16';
+    if(activeCount<=32)return 'last32';
+    return null;
+  }
+
+  function tournamentHandicapForPlayer(t,id){
+    return t?.handicapEnabled ? Math.max(0,Number(t.playerHandicaps?.[id]||0)) : 0;
+  }
+
+  function tournamentRaceForMatch(t,m){
+    const base=Math.max(1,Number(t?.raceTo||1));
+    if(!t?.variableRaceEnabled || !t?.raceByStage)return base;
+    const stage=tournamentStageForMatch(t,m);
+    const n=stage?Number(t.raceByStage[stage]||0):0;
+    return Number.isFinite(n)&&n>0?n:base;
+  }
+
+  function tournamentDisciplineForMatch(t,m){
+    if(!t)return '9-ball';
+    const base=t.groupDiscipline||t.discipline||'9-ball';
+    const isHybrid=['groups_sko','groups_dko'].includes(t.format);
+    if(!isHybrid)return t.discipline||base;
+
+    return tournamentMatchIsGroupMatch(t,m)
+      ? base
+      : (t.playoffDiscipline||t.discipline||base);
+  }
+
+  function tournamentDisciplineSummary(t){
+    if(!t)return '';
+    const base=(t.groupDiscipline||t.discipline||'').toUpperCase();
+    const isHybrid=['groups_sko','groups_dko'].includes(t.format);
+    if(!isHybrid)return (t.discipline||base||'').toUpperCase();
+
+    const playoff=(t.playoffDiscipline||t.discipline||base||'').toUpperCase();
+    return base===playoff
+      ? base
+      : ('SKUPINY '+base+' → PAVOUK '+playoff);
+  }
+
+  function tournamentStageLabel(stage){
+    return {
+      groups:'Skupiny',
+      last32:'Last 32',
+      last16:'Last 16',
+      last8:'Last 8',
+      semifinal:'Semifinále',
+      final:'Finále',
+      bronze:'O 3. místo'
+    }[stage]||'';
+  }
+
+
+  function tournamentHasGroups(t){
+    return !!(t && ['groups','groups_sko','groups_dko'].includes(t.format));
+  }
+
+  function tournamentHasSwiss(t){
+    return !!(t && t.format==='swiss' && t.swiss);
+  }
+
+  function tournamentHasSKO(t){
+    return !!(t && (t.format==='sko'||t.format==='groups_sko'||(t.format==='dko'&&t.ko)) && t.ko);
+  }
+
+  function tournamentHasDKO(t){
+    return !!(t && (t.format==='dko'||t.format==='groups_dko') && t.dko);
+  }
+
+  function tournamentFormatLabel(t){
+    if(!t)return '';
+    if(t.format==='swiss' && Number(t.swiss?.advanceToSko||0)>=2){
+      return 'Švýcarský systém → SKO';
+    }
+    if(t.format==='dko' && Number(t.dko?.skoCut||0)>0){
+      return 'DKO → SKO • Last '+Number(t.dko.skoCut);
+    }
+    return {
+      sko:'SKO – jedna prohra',
+      dko:'DKO – dvojité vyřazení',
+      groups:'Skupiny – každý s každým',
+      groups_sko:'Skupiny → SKO',
+      groups_dko:'Skupiny → DKO',
+      swiss:'Švýcarský systém'
+    }[t.format]||t.format||'Turnaj';
+  }
+
+  function playoffParticipantIds(t){
+    if(t?.format==='groups_dko')return t.dko?.participantIds||[];
+    if(t?.format==='groups_sko')return t.ko?.participantIds||[];
+    return t?.playerIds||[];
+  }
+
+  function eliminationBand(place){
+    const p=Math.max(1,Number(place||1));
+    if(p<=4)return {from:p,to:p};
+    let upper=8;
+    while(p>upper)upper*=2;
+    return {from:upper/2+1,to:upper};
+  }
+
+  function genericPlacementLabel(place){
+    const p=Math.max(1,Number(place||1));
+    if(p<=4)return p+'. místo';
+    const r=eliminationBand(p);
+    return r.from+'.–'+r.to+'. místo';
+  }
+
+
+  function ensureSKOState(t){
+    if(!t?.ko)return null;
+    const k=t.ko;
+
+    if(!Array.isArray(k.participantIds)){
+      k.participantIds=[...(t.playerIds||[])];
+    }
+    if(!Array.isArray(k.rounds))k.rounds=[];
+    if(!Array.isArray(k.eliminatedIds))k.eliminatedIds=[];
+    if(!Array.isArray(k.eliminations))k.eliminations=[];
+    if(typeof k.wave!=='number')k.wave=0;
+    if(k.championId===undefined)k.championId=null;
+    if(k.runnerUpId===undefined)k.runnerUpId=null;
+    if(k.thirdPlacePlayoff===undefined)k.thirdPlacePlayoff=!!t.thirdPlacePlayoff;
+    if(k.thirdPlaceWinnerId===undefined)k.thirdPlaceWinnerId=null;
+    if(k.thirdPlaceLoserId===undefined)k.thirdPlaceLoserId=null;
+
+    return k;
+  }
+
+  function knockoutRegisterElimination(t,playerId,matchId){
+    const k=ensureSKOState(t);
+    if(!k)return null;
+    const old=k.eliminations.find(e=>e.playerId===playerId);
+    if(old)return old.place;
+    const activeAfter=(k.participantIds||t.playerIds||[]).filter(id=>!k.eliminatedIds.includes(id)).length;
+    const place=activeAfter+1;
+    k.eliminations.push({playerId,place,matchId,at:new Date().toISOString()});
+    return place;
+  }
+
+  function knockoutThirdCandidates(t){
+    const k=ensureSKOState(t);
+    return [...(k?.eliminations||[])]
+      .filter(e=>Number(e.place||999)<=4)
+      .sort((a,b)=>Number(a.place||999)-Number(b.place||999))
+      .slice(0,2)
+      .map(e=>e.playerId);
+  }
+
+  function knockoutThirdMatch(t){
+    const k=ensureSKOState(t);
+    for(const r of (k?.rounds||[])){
+      const m=(r.matches||[]).find(x=>x.bracket==='3P');
+      if(m)return m;
+    }
+    return null;
+  }
+
+  function knockoutFinalMatch(t){
+    const k=ensureSKOState(t);
+    for(const r of (k?.rounds||[])){
+      const m=(r.matches||[]).find(x=>x.bracket==='F');
+      if(m)return m;
+    }
+    return null;
+  }
+
+  function knockoutCreateWave(t){
+    const k=ensureSKOState(t);
+    if(!k || t.status==='complete')return;
+
+    const unfinished=(k.rounds||[]).flatMap(r=>r.matches||[])
+      .some(m=>m.status!=='done'&&!m.winnerId&&!m.loserId);
+    if(unfinished)return;
+
+    const active=(k.participantIds||t.playerIds||[]).filter(id=>!k.eliminatedIds.includes(id));
+    if(active.length<=1){
+      k.championId=active[0]||k.championId||null;
+      if(k.championId && (!k.thirdPlacePlayoff || (knockoutThirdMatch(t)?.status==='done'))){
+        t.status='complete';
+      }
+      return;
+    }
+
+    k.wave=(k.wave||0)+1;
+
+    if(active.length===2){
+      const matches=[tournamentMatchObject(active[0],active[1],'Finále','F')];
+      if(k.thirdPlacePlayoff && !knockoutThirdMatch(t)){
+        const bronze=knockoutThirdCandidates(t);
+        if(bronze.length===2 && bronze[0]!==bronze[1]){
+          matches.push(tournamentMatchObject(bronze[0],bronze[1],'Zápas o 3. místo','3P'));
+        }
+      }
+      k.rounds.push({id:uid(),label:'Finálové zápasy',type:'FINAL',matches,byes:[]});
+      return;
+    }
+
+    const matches=[],byes=[];
+
+    // Skupiny → SKO s 8 postupujícími:
+    // při ručním nasazení lze zvolit i přesné napojení QF do SF.
+    // Výchozí ruční varianta je QF1×QF3 a QF2×QF4.
+    const previousRound=(k.rounds||[])[k.rounds.length-1]||null;
+    const previousMatches=(previousRound?.matches||[]);
+
+    if(
+      t.format==='groups_sko' &&
+      k.participantIds?.length===8 &&
+      active.length===4 &&
+      previousMatches.length===4 &&
+      previousMatches.every(m=>m.status==='done'||m.winnerId)
+    ){
+      const qfWinners=previousMatches.map(m=>m.winnerId).filter(Boolean);
+      if(qfWinners.length===4){
+        const routing=k.semifinalRouting||'cross13';
+        const pairs=routing==='cross14'
+          ? [[0,3],[1,2]]
+          : (routing==='adjacent' ? [[0,1],[2,3]] : [[0,2],[1,3]]);
+
+        matches.push(tournamentMatchObject(qfWinners[pairs[0][0]],qfWinners[pairs[0][1]],'Semifinále','SF'));
+        matches.push(tournamentMatchObject(qfWinners[pairs[1][0]],qfWinners[pairs[1][1]],'Semifinále','SF'));
+        k.rounds.push({id:uid(),label:'Semifinále',type:'KO',matches,byes:[]});
+        return;
+      }
+    }
+
+    const pool=[...active];
+    for(let i=0;i+1<pool.length;i+=2){
+      matches.push(tournamentMatchObject(pool[i],pool[i+1],'SKO • kolo '+k.wave,'KO'));
+    }
+    if(pool.length%2)byes.push({playerId:pool[pool.length-1],bracket:'KO'});
+    k.rounds.push({id:uid(),label:'SKO • kolo '+k.wave,type:'KO',matches,byes});
+  }
+
+  function generateSKOTournament(name,playerIds,discipline,raceTo,breakMode,guests={},tableCount=1,seedingMode='random',thirdPlacePlayoff=false){
+    const ids=(seedingMode==='manual' || seedingMode==='draw')
+      ? [...playerIds]
+      : (seedingMode==='elo'
+          ? swissSeedBracketOrder(tournamentIdsSortedByElo(playerIds))
+          : shuffleArray(playerIds));
+    const t={
+      id:uid(),createdByUid:cloudUid||'',managerUids:{},name,format:'sko',discipline,raceTo,breakMode,seedingMode,
+      tableCount:Math.max(1,tableCount),createdAt:new Date().toISOString(),status:'active',
+      playerIds:[...ids],guests:JSON.parse(JSON.stringify(guests)),
+      ko:{participantIds:[...ids],rounds:[],wave:0,seedingMode,eliminatedIds:[],eliminations:[],championId:null,runnerUpId:null,
+          thirdPlacePlayoff:!!thirdPlacePlayoff,thirdPlaceWinnerId:null,thirdPlaceLoserId:null}
+    };
+    knockoutCreateWave(t);
+    assignTournamentTables(t);
+    return t;
+  }
+
+  function groupPhaseComplete(t){
+    const groupMatches=(t.groups||[]).flatMap(g=>g.matches||[]);
+    return !!groupMatches.length && groupMatches.every(m=>m.status==='done'||m.winnerId||m.loserId);
+  }
+
+  function rawGroupRows(group){
+    const rows=(group.players||[]).map(id=>({id,z:0,v:0,p:0,rf:0,ra:0,diff:0}));
+    const map=Object.fromEntries(rows.map(r=>[r.id,r]));
+    (group.matches||[]).filter(m=>m.status==='done'||m.winnerId||m.loserId).forEach(m=>{
+      const a=map[m.player1Id],b=map[m.player2Id]; if(!a||!b)return;
+      a.z++;b.z++;
+      a.rf+=Number(m.score1||0);a.ra+=Number(m.score2||0);
+      b.rf+=Number(m.score2||0);b.ra+=Number(m.score1||0);
+      if(m.winnerId===a.id){a.v++;b.p++;}
+      else if(m.winnerId===b.id){b.v++;a.p++;}
+    });
+    rows.forEach(r=>r.diff=r.rf-r.ra);
+    return rows;
+  }
+
+  function groupHeadToHeadMini(group,ids){
+    const idSet=new Set(ids||[]);
+    const rows=(ids||[]).map(id=>({id,v:0,p:0,rf:0,ra:0,diff:0}));
+    const map=Object.fromEntries(rows.map(r=>[r.id,r]));
+    (group.matches||[]).filter(m=>
+      (m.status==='done'||m.winnerId||m.loserId) &&
+      idSet.has(m.player1Id) && idSet.has(m.player2Id)
+    ).forEach(m=>{
+      const a=map[m.player1Id],b=map[m.player2Id]; if(!a||!b)return;
+      a.rf+=Number(m.score1||0);a.ra+=Number(m.score2||0);
+      b.rf+=Number(m.score2||0);b.ra+=Number(m.score1||0);
+      if(m.winnerId===a.id){a.v++;b.p++;}
+      else if(m.winnerId===b.id){b.v++;a.p++;}
+    });
+    rows.forEach(r=>r.diff=r.rf-r.ra);
+    return rows;
+  }
+
+  function unresolvedGroupPenaltyTie(t){
+    if(!t?.groupPenaltyTieBreak || !groupPhaseComplete(t))return null;
+
+    const advance=Math.max(1,Number(t.advancePerGroup||2));
+    const tieRule=t.groupAdvanceTieRule||'points';
+    t.groupPenaltyWinners=t.groupPenaltyWinners||{};
+
+    for(const g of (t.groups||[])){
+      const rows=rawGroupRows(g);
+      const seedIndex=id=>{
+        const i=(g.players||[]).indexOf(id);
+        return i<0?999:i;
+      };
+
+      // Nejprve seřadíme jen podle základního kritéria bodů/výher.
+      // Záměrně zde nepoužíváme skóre jako skrytý tie-break, pokud je zvoleno
+      // "vzájemný zápas -> penalty".
+      rows.sort((a,b)=>b.v-a.v||seedIndex(a.id)-seedIndex(b.id));
+
+      const winValues=[...new Set(rows.map(r=>r.v))].sort((a,b)=>b-a);
+      let rankStart=0;
+
+      for(const wins of winValues){
+        const cohort=rows.filter(r=>r.v===wins);
+        const cohortStart=rankStart;
+        const cohortEnd=rankStart+cohort.length-1;
+        rankStart+=cohort.length;
+
+        // Kolik míst z této shodné skupiny ještě leží v postupové části?
+        const qualifyingSlots=Math.max(
+          0,
+          Math.min(cohortEnd,advance-1)-cohortStart+1
+        );
+        if(qualifyingSlots<=0 || cohort.length<=1)continue;
+
+        let tiedIds=cohort.map(r=>r.id);
+
+        if(tieRule==='head_to_head'){
+          const mini=groupHeadToHeadMini(g,tiedIds);
+
+          // Rozdělíme hráče podle počtu výher ve vzájemných zápasech.
+          // Každou stále nerozhodnutou podskupinu posuzujeme samostatně.
+          const byMiniWins=new Map();
+          mini.forEach(r=>{
+            if(!byMiniWins.has(r.v))byMiniWins.set(r.v,[]);
+            byMiniWins.get(r.v).push(r.id);
+          });
+
+          const miniWinValues=[...byMiniWins.keys()].sort((a,b)=>b-a);
+          let miniRankOffset=0;
+
+          for(const miniWins of miniWinValues){
+            const subgroup=byMiniWins.get(miniWins);
+            const subgroupStart=cohortStart+miniRankOffset;
+            const subgroupEnd=subgroupStart+subgroup.length-1;
+            miniRankOffset+=subgroup.length;
+
+            const subgroupQualifyingSlots=Math.max(
+              0,
+              Math.min(subgroupEnd,advance-1)-subgroupStart+1
+            );
+
+            if(subgroupQualifyingSlots<=0 || subgroup.length<=1)continue;
+
+            // Penalty musí určit nejen posledního postupujícího, ale i pořadí
+            // postupujících pro nasazení do pavouka.
+            //
+            // Příklad: 3 hráči jsou shodně na 2.–4. místě a všichni postupují.
+            // Pro přesné nasazení je potřeba určit 1. a 2. hráče z této trojice;
+            // třetí pořadí pak vznikne automaticky.
+            const selectionsNeeded=Math.min(
+              subgroup.length-1,
+              subgroupQualifyingSlots
+            );
+
+            const already=(t.groupPenaltyWinners[g.id]||[])
+              .filter(id=>subgroup.includes(id));
+
+            if(already.length>=selectionsNeeded)continue;
+
+            const candidates=subgroup.filter(id=>!already.includes(id));
+
+            return {
+              groupId:g.id,
+              group:g,
+              candidates,
+              tiedIds:subgroup,
+              slotsNeeded:selectionsNeeded,
+              alreadySelected:already,
+              selectionNumber:already.length+1,
+              tieRule,
+              seedingTie:true
+            };
+          }
+
+          continue;
+        }
+
+        // Varianta "body / skóre": pokud skóre stále nerozhodne, mohou následovat penalty.
+        const byScore=new Map();
+        cohort.forEach(r=>{
+          const key=`${r.diff}|${r.rf}`;
+          if(!byScore.has(key))byScore.set(key,[]);
+          byScore.get(key).push(r.id);
+        });
+
+        let scoreOffset=0;
+        const scoreGroups=[...byScore.entries()]
+          .map(([key,ids])=>{
+            const [diff,rf]=key.split('|').map(Number);
+            return {diff,rf,ids};
+          })
+          .sort((a,b)=>b.diff-a.diff||b.rf-a.rf);
+
+        for(const sg of scoreGroups){
+          const subgroup=sg.ids;
+          const subgroupStart=cohortStart+scoreOffset;
+          const subgroupEnd=subgroupStart+subgroup.length-1;
+          scoreOffset+=subgroup.length;
+
+          const subgroupQualifyingSlots=Math.max(
+            0,
+            Math.min(subgroupEnd,advance-1)-subgroupStart+1
+          );
+          if(subgroupQualifyingSlots<=0 || subgroup.length<=1)continue;
+
+          const selectionsNeeded=Math.min(
+            subgroup.length-1,
+            subgroupQualifyingSlots
+          );
+
+          const already=(t.groupPenaltyWinners[g.id]||[])
+            .filter(id=>subgroup.includes(id));
+
+          if(already.length>=selectionsNeeded)continue;
+
+          return {
+            groupId:g.id,
+            group:g,
+            candidates:subgroup.filter(id=>!already.includes(id)),
+            tiedIds:subgroup,
+            slotsNeeded:selectionsNeeded,
+            alreadySelected:already,
+            selectionNumber:already.length+1,
+            tieRule,
+            seedingTie:true
+          };
+        }
+      }
+    }
+
+    return null;
+  }
+
+  function groupPenaltyTiesResolved(t){
+    return !unresolvedGroupPenaltyTie(t);
+  }
+
+  let activeGroupPenaltyContext=null;
+
+  function openGroupPenaltyPrompt(t){
+    const ctx=unresolvedGroupPenaltyTie(t);
+    if(!ctx)return false;
+
+    activeGroupPenaltyContext={tournamentId:t.id,...ctx};
+    $('groupPenaltyTitle').textContent='Skupina '+ctx.groupId+' • rozhodnutí o postupu';
+    $('groupPenaltyHelp').textContent=
+      (ctx.tieRule==='head_to_head'
+        ? 'Vzájemné zápasy nerozhodly o pořadí. '
+        : 'Zvolené kritérium nerozhodlo o pořadí. ')+
+      (ctx.seedingTie
+        ? 'Penalty nyní určí pořadí hráčů pro nasazení do play-off. '
+        : '')+
+      'Vyber vítěze penalt'+
+      (ctx.slotsNeeded>1 ? ' • krok '+ctx.selectionNumber+' z '+ctx.slotsNeeded+'.' : '.');
+
+    $('groupPenaltyPlayers').innerHTML=ctx.candidates.map(id=>`
+      <button class="btn primary big" onclick="selectGroupPenaltyWinner('${t.id}','${ctx.groupId}','${id}')">
+        ${esc(tournamentPlayerName(id,t))}
+      </button>
+    `).join('');
+
+    $('groupPenaltyModal').classList.add('show');
+    return true;
+  }
+
+  window.selectGroupPenaltyWinner=async function(tournamentId,groupId,playerId){
+    let t=(data.tournaments||[]).find(x=>x.id===tournamentId);
+    if(!t||!canManageTournament(t))return;
+
+    t.groupPenaltyWinners=t.groupPenaltyWinners||{};
+    t.groupPenaltyWinners[groupId]=t.groupPenaltyWinners[groupId]||[];
+    if(!t.groupPenaltyWinners[groupId].includes(playerId)){
+      t.groupPenaltyWinners[groupId].push(playerId);
+    }
+    t.updatedAt=new Date().toISOString();
+
+    try{
+      await saveSecureTournament(t);
+    }catch(e){
+      console.error('Penalty winner save:',e);
+      toast('Výsledek penalt se nepodařilo uložit.');
+      return;
+    }
+
+    $('groupPenaltyModal').classList.remove('show');
+
+    const next=unresolvedGroupPenaltyTie(t);
+    if(next){
+      openGroupPenaltyPrompt(t);
+      return;
+    }
+
+    if(t.format==='groups'){
+      t.status='complete';
+    }else if(!t.playoffStarted){
+      startHybridPlayoff(t);
+    }
+
+    try{
+      await saveSecureTournament(t);
+    }catch(e){
+      console.error('Penalty playoff save:',e);
+      toast('Penalty jsou uložené, ale navazující pavouk se nepodařilo uložit.');
+    }
+
+    renderTournament();
+    renderTournamentDetail();
+    toast('Penalty rozhodnuty • postupující byli zařazeni do pavouka.');
+  };
+
+  function groupPlayoffSeeds(t){
+    const advance=Math.max(1,Number(t.advancePerGroup||2));
+    const qualifiers=[];
+    (t.groups||[]).forEach((g,gi)=>{
+      const st=groupStandings(g,t);
+      st.slice(0,advance).forEach((r,pos)=>qualifiers.push({id:r.id,group:g.id,pos:pos+1,gi}));
+    });
+    qualifiers.sort((a,b)=>a.pos-b.pos||a.gi-b.gi);
+
+    // High vs low seed, with a simple swap to avoid same-group rematch in first playoff round.
+    const out=[];
+    const remaining=[...qualifiers];
+    while(remaining.length){
+      const a=remaining.shift();
+      if(!remaining.length){out.push(a);break;}
+      let idx=remaining.length-1;
+      if(remaining[idx].group===a.group){
+        const alt=remaining.findIndex((x,i)=>i>=Math.floor(remaining.length/2)&&x.group!==a.group);
+        if(alt>=0)idx=alt;
+      }
+      const b=remaining.splice(idx,1)[0];
+      out.push(a,b);
+    }
+    return out.map(x=>x.id);
+  }
+
+  function generateHybridTournament(name,playerIds,discipline,raceTo,breakMode,groupCount,advancePerGroup,playoffType,guests={},tableCount=1,seedingMode='random',thirdPlacePlayoff=false){
+    const base=generateGroupTournament(name,playerIds,discipline,raceTo,breakMode,groupCount,guests,tableCount,seedingMode);
+    base.format=playoffType==='dko'?'groups_dko':'groups_sko';
+    base.advancePerGroup=Math.max(1,Number(advancePerGroup||2));
+    base.seedingMode=seedingMode;
+    base.playoffType=playoffType;
+    base.playoffStarted=false;
+    base.groupEliminations=[];
+    base.thirdPlacePlayoff=!!thirdPlacePlayoff;
+    return base;
+  }
+
+  function startHybridPlayoff(t,manualOrder=null){
+    const manual=Array.isArray(manualOrder) && manualOrder.length>0;
+    if(!tournamentHasGroups(t) || t.playoffStarted)return false;
+    if(!groupPhaseComplete(t))return false;
+
+    // Při ručním nasazení rozhoduje organizátor. Shoda ve skupině,
+    // vzájemné zápasy ani penalty nesmí ruční vytvoření pavouka blokovat.
+    if(!manual && t.groupPenaltyTieBreak && !groupPenaltyTiesResolved(t))return false;
+    const seeds=Array.isArray(manualOrder) && manualOrder.length
+      ? [...manualOrder]
+      : groupPlayoffSeeds(t);
+    const qualifierSet=new Set(seeds);
+    const nonQualifiers=(t.playerIds||[]).filter(id=>!qualifierSet.has(id));
+
+    const nonQualifierOrder=[...nonQualifiers].sort((a,b)=>{
+      const sa=seriesGroupPhaseScore(t,a), sb=seriesGroupPhaseScore(t,b);
+      if(Number(sb.diff||0)!==Number(sa.diff||0))return Number(sb.diff||0)-Number(sa.diff||0);
+
+      const h2h=seriesHeadToHeadRanks(t,[a,b]);
+      const aw=Number(h2h[a]?.wins||0), bw=Number(h2h[b]?.wins||0);
+      if(bw!==aw)return bw-aw;
+
+      return seriesTournamentGroupPlace(t,a)-seriesTournamentGroupPlace(t,b) ||
+        String(tournamentPlayerName(a,t)||'').localeCompare(String(tournamentPlayerName(b,t)||''),'cs');
+    });
+
+    // Důležité: pavouk se musí generovat už ve stavu ACTIVE.
+    // Starší kód nastavoval ACTIVE až po knockoutCreateWave(), což u turnaje
+    // označeného COMPLETE zablokovalo vytvoření prvního kola.
+    t.status='active';
+
+    // Players who do not qualify are classified behind the playoff field.
+    const basePlace=seeds.length+1;
+    const groupRankKey=id=>{
+      const sc=seriesGroupPhaseScore(t,id);
+      const sameScore=nonQualifierOrder.filter(pid=>Number(seriesGroupPhaseScore(t,pid).diff||0)===Number(sc.diff||0));
+      const h2h=seriesHeadToHeadRanks(t,sameScore);
+      return Number(sc.diff||0)+'|h2h:'+Number(h2h[id]?.wins||0)+'|group:'+seriesTournamentGroupPlace(t,id);
+    };
+    let prevGroupKey=null,prevGroupPlace=null;
+    t.groupEliminations=nonQualifierOrder.map((id,i)=>{
+      const key=groupRankKey(id);
+      const place=(i>0 && key===prevGroupKey) ? prevGroupPlace : basePlace+i;
+      prevGroupKey=key;
+      prevGroupPlace=place;
+      return {playerId:id,place,sharedPlace:nonQualifierOrder.filter(pid=>groupRankKey(pid)===key).length>1};
+    });
+
+    if(t.format==='groups_sko'){
+      t.ko={
+        participantIds:[...seeds],rounds:[],wave:0,eliminatedIds:[],eliminations:[],championId:null,runnerUpId:null,
+        thirdPlacePlayoff:!!t.thirdPlacePlayoff,thirdPlaceWinnerId:null,thirdPlaceLoserId:null,
+        semifinalRouting:t.manualGroupPlayoffSemiRouting||'cross13'
+      };
+      knockoutCreateWave(t);
+    }else if(t.format==='groups_dko'){
+      const losses={};seeds.forEach(id=>losses[id]=0);
+      t.dko={
+        participantIds:[...seeds],losses,rounds:[],wave:0,championId:null,runnerUpId:null,finalResetNeeded:false,
+        thirdPlacePlayoff:!!t.thirdPlacePlayoff,thirdPlaceWinnerId:null,thirdPlaceLoserId:null,eliminations:[]
+      };
+      dkoCreateWave(t);
+    }
+    t.playoffStarted=true;
+    t.awaitingPlayoffSeeding=false;
+    t.status='active';
+
+    // Pojistka: první kolo musí po ručním nasazení skutečně existovat.
+    if(t.format==='groups_sko' && !(t.ko?.rounds||[]).length){
+      knockoutCreateWave(t);
+    }else if(t.format==='groups_dko' && !(t.dko?.rounds||[]).length){
+      dkoCreateWave(t);
+    }
+
+    assignTournamentTables(t);
+    return true;
+  }
+
+
+
+  function roundRobinSchedule(playerIds){
+    const ids=[...(playerIds||[])];
+    if(ids.length<2)return [];
+
+    // Pro lichý počet přidáme BYE. Kruh se pak otáčí po každém kole.
+    if(ids.length%2===1) ids.push(null);
+
+    const fixed=ids[0];
+    let rotating=ids.slice(1);
+    const rounds=[];
+
+    for(let round=0; round<ids.length-1; round++){
+      const lineup=[fixed,...rotating];
+      const pairs=[];
+
+      for(let i=0;i<lineup.length/2;i++){
+        const a=lineup[i];
+        const b=lineup[lineup.length-1-i];
+        if(a && b){
+          // Pro trochu přirozenější střídání prohodíme orientaci dvojic ob kolo.
+          pairs.push(round%2===0 ? [a,b] : [b,a]);
+        }
+      }
+
+      rounds.push(pairs);
+
+      // Circle method: poslední hráč jde dopředu, první zůstává fixní.
+      rotating=[rotating[rotating.length-1],...rotating.slice(0,-1)];
+    }
+
+    return rounds;
+  }
+
+
+  function swissRecommendedRounds(playerCount){
+    const n=Math.max(4,Number(playerCount||4));
+    return Math.max(3,Math.ceil(Math.log2(n)));
+  }
+
+  function swissPlayedPairKey(a,b){
+    return [String(a),String(b)].sort().join('|');
+  }
+
+  function swissAllPlayedPairs(t){
+    const set=new Set();
+    (t?.swiss?.rounds||[]).forEach(r=>(r.matches||[]).forEach(m=>{
+      if(m.player1Id&&m.player2Id)set.add(swissPlayedPairKey(m.player1Id,m.player2Id));
+    }));
+    return set;
+  }
+
+  function swissStandings(t){
+    const ids=[...(t?.playerIds||[])];
+    const seedIndex=new Map(ids.map((id,i)=>[id,i]));
+    const rows=ids.map(id=>({
+      id,played:0,wins:0,losses:0,points:0,
+      rf:0,ra:0,diff:0,buchholz:0,byeCount:0,opponents:[]
+    }));
+    const map=Object.fromEntries(rows.map(r=>[r.id,r]));
+
+    (t?.swiss?.rounds||[]).forEach(r=>{
+      if(r.byePlayerId && map[r.byePlayerId]){
+        map[r.byePlayerId].points+=1;
+        map[r.byePlayerId].byeCount+=1;
+      }
+      (r.matches||[]).filter(m=>m.status==='done'||m.winnerId).forEach(m=>{
+        const a=map[m.player1Id],b=map[m.player2Id];
+        if(!a||!b)return;
+        const s1=Number(m.score1||0),s2=Number(m.score2||0);
+        a.played++;b.played++;
+        a.rf+=s1;a.ra+=s2;b.rf+=s2;b.ra+=s1;
+        a.opponents.push(b.id);b.opponents.push(a.id);
+        if(m.winnerId===a.id){a.wins++;a.points++;b.losses++;}
+        else if(m.winnerId===b.id){b.wins++;b.points++;a.losses++;}
+      });
+    });
+
+    rows.forEach(r=>r.diff=r.rf-r.ra);
+    rows.forEach(r=>{
+      r.buchholz=r.opponents.reduce((sum,id)=>sum+Number(map[id]?.points||0),0);
+    });
+
+    rows.sort((a,b)=>
+      b.points-a.points ||
+      b.buchholz-a.buchholz ||
+      b.diff-a.diff ||
+      b.rf-a.rf ||
+      (seedIndex.get(a.id)??999)-(seedIndex.get(b.id)??999)
+    );
+    rows.forEach((r,i)=>r.place=i+1);
+    return rows;
+  }
+
+  function swissCreateFirstRound(t){
+    const s=t.swiss;
+    if((s.rounds||[]).length)return false;
+
+    const order=[...(s.seedOrder||t.playerIds||[])];
+    let byePlayerId=null;
+    if(order.length%2){
+      byePlayerId=order[order.length-1];
+      order.pop();
+    }
+
+    const half=order.length/2;
+    const top=order.slice(0,half);
+    const bottom=order.slice(half);
+    const matches=top.map((id,i)=>
+      tournamentMatchObject(id,bottom[i],`Švýcarský systém • 1. kolo`,'SWISS')
+    );
+
+    s.rounds.push({
+      id:uid(),number:1,label:'1. kolo',matches,byePlayerId,
+      createdAt:new Date().toISOString()
+    });
+    s.currentRound=1;
+    assignTournamentTables(t);
+    return true;
+  }
+
+  function swissChooseBye(t,orderedIds){
+    if(orderedIds.length%2===0)return null;
+    const previousBye=new Set((t.swiss.rounds||[]).map(r=>r.byePlayerId).filter(Boolean));
+
+    // Volno dostane co nejníže postavený hráč, který ho ještě neměl.
+    for(let i=orderedIds.length-1;i>=0;i--){
+      if(!previousBye.has(orderedIds[i]))return orderedIds[i];
+    }
+    return orderedIds[orderedIds.length-1];
+  }
+
+  function swissPairRound(t){
+    const standings=swissStandings(t);
+    let pool=standings.map(r=>r.id);
+    const played=swissAllPlayedPairs(t);
+    const byePlayerId=swissChooseBye(t,pool);
+    if(byePlayerId)pool=pool.filter(id=>id!==byePlayerId);
+
+    const points=Object.fromEntries(standings.map(r=>[r.id,r.points]));
+    const matches=[];
+
+    while(pool.length>=2){
+      const a=pool.shift();
+
+      let bestIndex=-1;
+      let bestScore=Infinity;
+      for(let i=0;i<pool.length;i++){
+        const b=pool[i];
+        const rematch=played.has(swissPlayedPairKey(a,b)) ? 10000 : 0;
+        const pointGap=Math.abs(Number(points[a]||0)-Number(points[b]||0))*100;
+        const rankGap=i;
+        const score=rematch+pointGap+rankGap;
+        if(score<bestScore){bestScore=score;bestIndex=i;}
+      }
+
+      if(bestIndex<0)bestIndex=0;
+      const b=pool.splice(bestIndex,1)[0];
+      matches.push(tournamentMatchObject(
+        a,b,
+        `Švýcarský systém • ${Number(t.swiss.currentRound||0)+1}. kolo`,
+        'SWISS'
+      ));
+    }
+
+    const number=Number(t.swiss.currentRound||0)+1;
+    t.swiss.rounds.push({
+      id:uid(),number,label:number+'. kolo',matches,byePlayerId,
+      createdAt:new Date().toISOString()
+    });
+    t.swiss.currentRound=number;
+    assignTournamentTables(t);
+    return true;
+  }
+
+  function swissCurrentRound(t){
+    return (t?.swiss?.rounds||[])[(t?.swiss?.rounds||[]).length-1]||null;
+  }
+
+  function swissRoundComplete(round){
+    if(!round)return false;
+    return (round.matches||[]).every(m=>m.status==='done'||m.winnerId);
+  }
+
+  function swissSeedBracketOrder(ids){
+    const list=[...(ids||[])];
+    const n=list.length;
+    if(n<=1)return list;
+    let size=1;
+    while(size<n)size*=2;
+
+    const build=size=>{
+      if(size===1)return [1];
+      const prev=build(size/2);
+      const out=[];
+      prev.forEach(seed=>{
+        out.push(seed);
+        out.push(size+1-seed);
+      });
+      return out;
+    };
+
+    return build(size).map(seed=>list[seed-1]||null).filter(Boolean);
+  }
+
+  function swissStartPlayoff(t){
+    if(!tournamentHasSwiss(t))return false;
+    const count=Math.max(0,Number(t.swiss?.advanceToSko||0));
+    if(count<2)return false;
+
+    const standings=swissStandings(t);
+    const qualifiers=standings.slice(0,count).map(r=>r.id);
+    if(qualifiers.length<2)return false;
+
+    const ordered=swissSeedBracketOrder(qualifiers);
+
+    // Hráči mimo postupové místo mají konečné pořadí podle švýcarské části.
+    t.groupEliminations=standings.slice(qualifiers.length).map(r=>({
+      playerId:r.id,
+      place:r.place
+    }));
+
+    t.ko={
+      participantIds:[...ordered],
+      rounds:[],
+      wave:0,
+      eliminatedIds:[],
+      eliminations:[],
+      championId:null,
+      runnerUpId:null,
+      thirdPlacePlayoff:false,
+      thirdPlaceWinnerId:null,
+      thirdPlaceLoserId:null
+    };
+
+    t.swiss.playoffStarted=true;
+    t.swiss.qualifierIds=[...qualifiers];
+    t.swiss.qualifierCount=qualifiers.length;
+    t.status='active';
+
+    knockoutCreateWave(t);
+    assignTournamentTables(t);
+    return true;
+  }
+
+  function swissFinalRecapHtml(t){
+    if(!t)return '';
+
+    if(t.ko && t.status==='complete'){
+      const records=tournamentPlacementRecords(t)
+        .slice()
+        .sort((a,b)=>Number(a.value||999)-Number(b.value||999));
+      if(!records.length)return '';
+
+      return `<div class="subpanel" style="margin-top:14px;border-color:rgba(212,175,55,.45)">
+        <strong>KONEČNÉ POŘADÍ TURNAJE</strong>
+        <div style="margin-top:9px">
+          ${records.map(r=>`
+            <div style="display:flex;justify-content:space-between;gap:10px;padding:7px 0;border-bottom:1px solid #28282c">
+              <span><strong>${esc(r.label)}</strong></span>
+              <span>${esc(tournamentPlayerName(r.playerId,t))}</span>
+            </div>
+          `).join('')}
+        </div>
+      </div>`;
+    }
+
+    if(!t.ko && t.status==='complete'){
+      const standings=swissStandings(t);
+      return `<div class="subpanel" style="margin-top:14px;border-color:rgba(212,175,55,.45)">
+        <strong>KONEČNÉ POŘADÍ TURNAJE</strong>
+        <div style="margin-top:9px">
+          ${standings.map(r=>`
+            <div style="display:flex;justify-content:space-between;gap:10px;padding:7px 0;border-bottom:1px solid #28282c">
+              <span><strong>${r.place}. místo</strong></span>
+              <span>${esc(tournamentPlayerName(r.id,t))} • ${r.points} b.</span>
+            </div>
+          `).join('')}
+        </div>
+      </div>`;
+    }
+
+    return '';
+  }
+
+  function swissAdvanceIfReady(t){
+    if(!tournamentHasSwiss(t))return false;
+    const round=swissCurrentRound(t);
+    if(!round || !swissRoundComplete(round))return false;
+
+    if(Number(t.swiss.currentRound||0)>=Number(t.swiss.roundsTotal||0)){
+      t.swiss.completedAt=new Date().toISOString();
+
+      if(Number(t.swiss.advanceToSko||0)>=2){
+        const started=swissStartPlayoff(t);
+        if(started)return true;
+      }
+
+      t.status='complete';
+      return true;
+    }
+
+    swissPairRound(t);
+    t.status='active';
+    return true;
+  }
+
+  function generateSwissTournament(name,playerIds,discipline,raceTo,breakMode,guests={},tableCount=1,seedingMode='random',roundsRequested=0,advanceToSko=0){
+    const seedOrder=(seedingMode==='manual' || seedingMode==='draw')
+      ? [...playerIds]
+      : (seedingMode==='elo' ? tournamentIdsSortedByElo(playerIds) : shuffleArray(playerIds));
+    const roundsTotal=Number(roundsRequested||0)>0
+      ? Math.max(1,Math.min(12,Number(roundsRequested)))
+      : swissRecommendedRounds(seedOrder.length);
+
+    const t={
+      id:uid(),createdByUid:cloudUid||'',managerUids:{},
+      name,format:'swiss',discipline,raceTo,breakMode,seedingMode,
+      tableCount:Math.max(1,tableCount),
+      createdAt:new Date().toISOString(),status:'active',
+      playerIds:[...playerIds],
+      guests:JSON.parse(JSON.stringify(guests)),
+      swiss:{
+        roundsTotal,currentRound:0,rounds:[],
+        seedOrder:[...seedOrder],
+        advanceToSko:Math.max(0,Number(advanceToSko||0)),
+        playoffStarted:false,
+        qualifierIds:[]
+      }
+    };
+    swissCreateFirstRound(t);
+    return t;
+  }
+
+  function renderSwissTournament(t){
+    const s=t.swiss||{};
+    const standings=swissStandings(t);
+
+    const table=`<div class="table-wrap"><table>
+      <thead><tr>
+        <th>#</th><th>Hráč</th><th>Z</th><th>V</th><th>P</th><th>Body</th><th>Buchholz</th><th>+/-</th>
+      </tr></thead>
+      <tbody>${standings.map(r=>`<tr>
+        <td class="num"><strong>${r.place}</strong></td>
+        <td><strong>${esc(tournamentPlayerName(r.id,t))}</strong>${r.byeCount?` <span class="muted">• volno ${r.byeCount}×</span>`:''}</td>
+        <td class="num">${r.played}</td>
+        <td class="num">${r.wins}</td>
+        <td class="num">${r.losses}</td>
+        <td class="num"><strong>${r.points}</strong></td>
+        <td class="num">${r.buchholz}</td>
+        <td class="num">${r.diff>=0?'+':''}${r.diff}</td>
+      </tr>`).join('')}</tbody>
+    </table></div>`;
+
+    const rounds=(s.rounds||[]).map(r=>`
+      <div class="subpanel" style="margin-top:12px">
+        <div style="display:flex;justify-content:space-between;gap:10px;align-items:center;flex-wrap:wrap">
+          <strong>${r.number}. KOLO</strong>
+          <span class="muted">${swissRoundComplete(r)?'DOHRÁNO':'PROBÍHÁ'}</span>
+        </div>
+        ${r.byePlayerId?`<div class="muted" style="margin-top:7px">VOLNO: <strong>${esc(tournamentPlayerName(r.byePlayerId,t))}</strong> • +1 bod</div>`:''}
+        <div style="margin-top:9px">${(r.matches||[]).map(m=>renderTournamentMatch(t,m)).join('')}</div>
+      </div>
+    `).join('');
+
+    const playoffInfo=Number(s.advanceToSko||0)>=2
+      ? `<div class="muted" style="margin-top:5px">
+          Do následného SKO postupuje <strong>${s.advanceToSko}</strong> nejlepších hráčů.
+        </div>`
+      : `<div class="muted" style="margin-top:5px">Turnaj končí po švýcarské části.</div>`;
+
+    const playoff=t.ko
+      ? `<div class="hr"></div>
+         <h2 style="margin:0 0 10px">NÁSLEDNÉ SKO</h2>
+         ${renderSKOTournament(t)}`
+      : '';
+
+    return `<div class="subpanel" style="margin-bottom:12px">
+      <strong>ŠVÝCARSKÝ SYSTÉM • ${s.currentRound||0}/${s.roundsTotal||0} KOL</strong>
+      <div class="muted" style="margin-top:5px">
+        Výhra = 1 bod • volno = 1 bod. Pořadí: body → Buchholz → rozdíl racků → vyhrané racky.
+        V dalších kolech se párují hráči s podobným počtem bodů a aplikace se snaží zabránit opakovanému soupeři.
+      </div>
+      ${playoffInfo}
+    </div>${table}${rounds}${playoff}${swissFinalRecapHtml(t)}`;
+  }
+
+  function generateGroupTournament(name,playerIds,discipline,raceTo,breakMode,groupCount,guests={},tableCount=1,seedingMode='random'){
+    const shuffled=(seedingMode==='manual' || seedingMode==='draw')
+      ? [...playerIds]
+      : (seedingMode==='elo' ? tournamentIdsSortedByElo(playerIds) : shuffleArray(playerIds));
+    groupCount=Math.max(1,Math.min(groupCount,shuffled.length));
+    const groups=Array.from({length:groupCount},(_,i)=>({id:String.fromCharCode(65+i),players:[],matches:[]}));
+
+    if(seedingMode==='manual' || seedingMode==='draw'){
+      // Ruční nasazení a los čísel používají pořadí po samostatných blocích:
+      // nejdřív kompletní skupina A, potom B, C...
+      const layout=manualGroupSeedLayout(shuffled,groupCount);
+      layout.forEach((g,gi)=>{
+        groups[gi].players.push(...g.ids);
+        groups[gi].seedOrder=[...g.ids];
+      });
+    }else if(seedingMode==='elo'){
+      // ELO nasazení rozděluje hráče hadovitě mezi skupiny, aby byly vyrovnané.
+      const layout=eloSnakeGroups(shuffled,groupCount);
+      layout.forEach((ids,gi)=>{
+        groups[gi].players.push(...ids);
+        groups[gi].seedOrder=[...ids];
+      });
+    }else{
+      // Náhodné losování zůstává rovnoměrně rozdělené mezi skupiny.
+      shuffled.forEach((pid,i)=>groups[i%groupCount].players.push(pid));
+    }
+    groups.forEach(g=>{
+      const rr=roundRobinSchedule(g.players);
+      rr.forEach((pairs,roundIndex)=>{
+        pairs.forEach(([p1,p2],matchIndex)=>{
+          g.matches.push({
+            id:uid(),
+            player1Id:p1,
+            player2Id:p2,
+            status:'pending',
+            tableNumber:null,
+            score1:0,
+            score2:0,
+            winnerId:null,
+            loserId:null,
+            roundNumber:roundIndex+1,
+            roundOrder:matchIndex+1,
+            roundLabel:'Kolo '+(roundIndex+1)
+          });
+        });
+      });
+    });
+    const t={id:uid(),createdByUid:cloudUid||'',managerUids:{},name,format:'groups',discipline,raceTo,breakMode,seedingMode,tableCount:Math.max(1,tableCount),createdAt:new Date().toISOString(),status:'active',playerIds:[...playerIds],guests:JSON.parse(JSON.stringify(guests)),groups};
+    assignTournamentTables(t);
+    return t;
+  }
+
+  function repairDKOInvalidFutureMatches(t){
+    if(!t || !t.dko) return false;
+    const d=t.dko;
+    let changed=false;
+
+    // Starší chybná verze mohla vytvořit budoucí zápas dříve, než skončilo
+    // předchozí kolo. Pokud je některý účastník už OUT (2 prohry), takový
+    // ještě nerozehraný zápas odstraníme.
+    (d.rounds||[]).forEach(r=>{
+      const before=(r.matches||[]).length;
+      r.matches=(r.matches||[]).filter(m=>{
+        if(m.status==='done') return true;
+        const p1Out=(d.losses[m.player1Id]||0)>=2;
+        const p2Out=(d.losses[m.player2Id]||0)>=2;
+
+        // Rozehraný zápas na jiném telefonu automaticky nemažeme; při pokusu
+        // o pokračování ho ale níže zablokujeme.
+        if(m.status==='playing') return true;
+
+        if(p1Out||p2Out){
+          changed=true;
+          return false;
+        }
+        return true;
+      });
+      if(before!==r.matches.length) changed=true;
+    });
+
+    // Prázdné uměle vytvořené vlny bez BYE můžeme odstranit.
+    const beforeRounds=(d.rounds||[]).length;
+    d.rounds=(d.rounds||[]).filter(r=>{
+      if(r.type==='GF' && !(r.matches||[]).length) return false;
+      if(r.type==='WAVE' && !(r.matches||[]).length && !(r.byes||[]).length) return false;
+      return true;
+    });
+    if(beforeRounds!==d.rounds.length) changed=true;
+
+    if(changed){
+      assignTournamentTables(t);
+    }
+    return changed;
+  }
+
+  function dkoPlayerIsOut(t,id){
+    return !!(t && t.dko && (t.dko.losses[id]||0)>=2);
+  }
+
+  function tournamentPlayersHaveMet(t,a,b){
+    if(!t||!a||!b)return false;
+    return allTournamentMatches(t).some(m=>{
+      const done=m && (m.status==='done'||m.winnerId||m.loserId);
+      return done && ((m.player1Id===a&&m.player2Id===b)||(m.player1Id===b&&m.player2Id===a));
+    });
+  }
+
+  function dkoSkoSeedOrder(t,active){
+    const d=t.dko||{};
+    const unbeaten=active.filter(id=>(d.losses[id]||0)===0);
+    const oneLoss=active.filter(id=>(d.losses[id]||0)===1);
+    const order=[];
+    const remaining=[...oneLoss];
+
+    // Pokud je to možné, postavíme hráče z A strany proti hráči z B strany
+    // a současně se snažíme vyhnout okamžité odvetě z předchozí DKO fáze.
+    unbeaten.forEach(a=>{
+      if(!remaining.length){order.push(a);return;}
+      let idx=remaining.findIndex(b=>!tournamentPlayersHaveMet(t,a,b));
+      if(idx<0)idx=0;
+      const b=remaining.splice(idx,1)[0];
+      order.push(a,b);
+    });
+    remaining.forEach(id=>order.push(id));
+
+    // Pokud poměr A/B není vyrovnaný, doplníme všechny zbývající aktivní hráče.
+    active.forEach(id=>{if(!order.includes(id))order.push(id);});
+    return order;
+  }
+
+  function dkoTryStartSkoCut(t){
+    if(!t?.dko || t.ko)return false;
+    const d=t.dko;
+    const cut=Math.max(0,Number(d.skoCut||0));
+    if(!cut)return false;
+
+    const unfinished=(d.rounds||[]).flatMap(r=>r.matches||[])
+      .some(m=>m.status!=='done'&&!m.winnerId&&!m.loserId);
+    if(unfinished)return false;
+
+    const active=(d.participantIds||t.playerIds||[]).filter(id=>(d.losses[id]||0)<2);
+    if(active.length>cut || active.length<2)return false;
+
+    const seedOrder=dkoSkoSeedOrder(t,active);
+    d.skoStarted=true;
+    d.skoStartedAt=new Date().toISOString();
+    d.skoParticipantIds=[...seedOrder];
+    d.skoActualCount=seedOrder.length;
+
+    t.ko={
+      participantIds:[...seedOrder],rounds:[],wave:0,seedingMode:'dko_cut',
+      eliminatedIds:[],eliminations:[],championId:null,runnerUpId:null,
+      thirdPlacePlayoff:!!d.thirdPlacePlayoff,thirdPlaceWinnerId:null,thirdPlaceLoserId:null
+    };
+    t.status='active';
+    knockoutCreateWave(t);
+    assignTournamentTables(t);
+    return true;
+  }
+
+  function dkoCreateWave(t){
+    const d=t.dko;
+    if(t.status==='complete' || d.championId) return;
+
+    const latestRound=(d.rounds||[])[d.rounds.length-1];
+    if(latestRound && (latestRound.matches||[]).some(m=>m.status!=='done' && !m.winnerId && !m.loserId)){
+      return;
+    }
+
+    const active=(d.participantIds||t.playerIds||[]).filter(id=>(d.losses[id]||0)<2);
+    if(active.length<=1){
+      d.championId=active[0]||null;
+      t.status='complete';
+      return;
+    }
+
+    // Další DKO vlna smí vzniknout až ve chvíli, kdy jsou opravdu dohrané
+    // VŠECHNY zápasy předchozích vln. Stav "assigned" znamená jen přidělený stůl,
+    // nikoliv dokončený zápas.
+    const unfinished=d.rounds
+      .flatMap(r=>r.matches||[])
+      .some(m=>{
+        const finished=(m.status==='done'||!!m.winnerId||!!m.loserId);
+        if(finished) return false;
+        return m.status==='pending'||m.status==='assigned'||m.status==='playing';
+      });
+
+    if(unfinished) return;
+
+    // Volitelný přechod DKO → SKO je nezávislý na velikosti startovního pavouka.
+    if(dkoTryStartSkoCut(t)) return;
+
+    if(active.length===2){
+      const label='Finálové zápasy';
+      const finalMatches=[tournamentMatchObject(active[0],active[1],'Grand Final','GF')];
+
+      if(d.thirdPlacePlayoff && !dkoThirdPlaceMatch(t)){
+        const bronze=dkoThirdPlaceCandidates(t);
+        if(bronze.length===2 && bronze[0]!==bronze[1]){
+          finalMatches.push(tournamentMatchObject(bronze[0],bronze[1],'Zápas o 3. místo','3P'));
+        }
+      }
+
+      d.rounds.push({id:uid(),label,type:'FINAL',byes:[],matches:finalMatches});
+      return;
+    }
+
+    const firstWave=(d.wave||0)===0;
+    const unbeatenBase=active.filter(id=>(d.losses[id]||0)===0);
+    const oneLossBase=active.filter(id=>(d.losses[id]||0)===1);
+    const unbeaten=(firstWave && d.seedingMode==='manual') ? [...unbeatenBase] : shuffleArray(unbeatenBase);
+    const oneLoss=(firstWave && d.seedingMode==='manual') ? [...oneLossBase] : shuffleArray(oneLossBase);
+    const matches=[],byes=[];
+    d.wave=(d.wave||0)+1;
+
+    function pair(pool,bracket,label){
+      for(let i=0;i+1<pool.length;i+=2) matches.push(tournamentMatchObject(pool[i],pool[i+1],label,bracket));
+      if(pool.length%2===1) byes.push({playerId:pool[pool.length-1],bracket});
+    }
+
+    pair(unbeaten,'W','Winner Bracket • kolo '+d.wave);
+    pair(oneLoss,'L','Loser Bracket • kolo '+d.wave);
+
+    d.rounds.push({id:uid(),label:'DKO • kolo '+d.wave,type:'WAVE',matches,byes});
+
+    if(!matches.length){
+      const still=(d.participantIds||t.playerIds||[]).filter(id=>(d.losses[id]||0)<2);
+      if(still.length===2){
+        const finalMatches=[tournamentMatchObject(still[0],still[1],'Grand Final','GF')];
+        if(d.thirdPlacePlayoff && !dkoThirdPlaceMatch(t)){
+          const bronze=dkoThirdPlaceCandidates(t);
+          if(bronze.length===2 && bronze[0]!==bronze[1]){
+            finalMatches.push(tournamentMatchObject(bronze[0],bronze[1],'Zápas o 3. místo','3P'));
+          }
+        }
+        d.rounds.push({id:uid(),label:'Finálové zápasy',type:'FINAL',byes:[],matches:finalMatches});
+      }
+    }
+  }
+
+  function generateDKOTournament(name,playerIds,discipline,raceTo,breakMode,guests={},tableCount=1,seedingMode='random',thirdPlacePlayoff=false,skoCut=0){
+    const ids=(seedingMode==='manual' || seedingMode==='draw')
+      ? [...playerIds]
+      : (seedingMode==='elo'
+          ? swissSeedBracketOrder(tournamentIdsSortedByElo(playerIds))
+          : shuffleArray(playerIds)),
+      losses={};
+    ids.forEach(id=>losses[id]=0);
+    const t={id:uid(),createdByUid:cloudUid||'',managerUids:{},name,format:'dko',discipline,raceTo,breakMode,seedingMode,tableCount:Math.max(1,tableCount),createdAt:new Date().toISOString(),status:'active',playerIds:ids,guests:JSON.parse(JSON.stringify(guests)),dko:{participantIds:[...ids],losses,rounds:[],wave:0,seedingMode,championId:null,finalResetNeeded:false,thirdPlacePlayoff:!!thirdPlacePlayoff,thirdPlaceWinnerId:null,thirdPlaceLoserId:null,eliminations:[],skoCut:Math.max(0,Number(skoCut||0)),skoStarted:false,skoParticipantIds:[]}};
+    dkoCreateWave(t);
+    assignTournamentTables(t);
+    return t;
+  }
+
+  function tournamentBusyTables(t){
+    const busy=new Set();
+    allTournamentMatches(t).forEach(m=>{
+      // Stůl blokuje pouze skutečně rozehraný zápas.
+      // Stav "assigned" je jen doporučené pořadí, ne rezervace stolu.
+      if(m.status==='playing' && m.tableNumber){
+        busy.add(Number(m.tableNumber));
+      }
+    });
+    return busy;
+  }
+
+  function nextFreeTournamentTable(t){
+    const busy=tournamentBusyTables(t);
+    const count=Math.max(1,Number(t.tableCount||1));
+    for(let i=1;i<=count;i++){
+      if(!busy.has(i)) return i;
+    }
+    return null;
+  }
+
+
+  function tournamentPlayerBusy(t,playerId,excludeMatchId=null){
+    if(!t || !playerId)return false;
+
+    const allMatches=allTournamentMatches(t);
+
+    return allMatches.some(m=>{
+      if(!m || m.id===excludeMatchId)return false;
+      const active=m.status==='playing' && m.status!=='done';
+      if(!active)return false;
+      return m.player1Id===playerId || m.player2Id===playerId;
+    });
+  }
+
+  function tournamentMatchHasBusyPlayer(t,m){
+    if(!t || !m)return false;
+    return tournamentPlayerBusy(t,m.player1Id,m.id) || tournamentPlayerBusy(t,m.player2Id,m.id);
+  }
+
+  function assignTournamentTables(t){
+    if(!t || t.status==='complete')return;
+
+    const tableCount=Math.max(1,Number(t.tableCount||1));
+
+    const allMatches=allTournamentMatches(t);
+
+    const playing=allMatches.filter(m=>m.status==='playing' && m.status!=='done');
+
+    const usedTables=new Set(
+      playing
+        .map(m=>Number(m.tableNumber||0))
+        .filter(n=>n>0)
+    );
+
+    const busyPlayers=new Set();
+    playing.forEach(m=>{
+      if(m.player1Id)busyPlayers.add(m.player1Id);
+      if(m.player2Id)busyPlayers.add(m.player2Id);
+    });
+
+    // Všechny nehraně "assigned" zápasy znovu přepočítáme.
+    allMatches.forEach(m=>{
+      if(m.status==='assigned'){
+        m.status='pending';
+        m.tableNumber=null;
+      }
+    });
+
+    let waiting=allMatches.filter(m=>
+      m.status!=='done' &&
+      m.status!=='playing' &&
+      m.player1Id &&
+      m.player2Id
+    );
+
+    if(tournamentHasGroups(t) && (!t.playoffStarted || t.format==='groups')){
+      (t.groups||[]).forEach(ensureGroupRoundOrder);
+
+      // Hraje se vždy nejnižší ještě nedokončené kolo.
+      const unfinishedRounds=waiting
+        .map(m=>groupRoundNumberForMatch(t,m))
+        .filter(Number.isFinite);
+
+      const currentRound=unfinishedRounds.length ? Math.min(...unfinishedRounds) : null;
+
+      if(currentRound!==null){
+        waiting=waiting
+          .filter(m=>groupRoundNumberForMatch(t,m)===currentRound)
+          .sort((a,b)=>Number(a.roundOrder||999)-Number(b.roundOrder||999));
+      }
+    }
+
+    // Přidělení stolu je jen vizuální návrh.
+    // Opravdovou rezervaci udělá až startTournamentMatch.
+    const suggestedTables=[];
+    for(let n=1;n<=tableCount;n++){
+      if(!usedTables.has(n)) suggestedTables.push(n);
+    }
+
+    let suggestionIndex=0;
+    for(const m of waiting){
+      if(busyPlayers.has(m.player1Id) || busyPlayers.has(m.player2Id)){
+        m.status='pending';
+        m.tableNumber=null;
+        continue;
+      }
+
+      if(suggestionIndex < suggestedTables.length){
+        m.tableNumber=suggestedTables[suggestionIndex++];
+        m.status='assigned';
+      }else{
+        m.tableNumber=null;
+        m.status='pending';
+      }
+    }
+  }
+
+  function releaseTournamentTable(t,m){
+    if(!t||!m)return;
+    m.tableNumber=null;
+    assignTournamentTables(t);
+  }
+
+  function findTournamentMatch(t,matchId){
+    if(tournamentHasGroups(t)){
+      for(const g of (t.groups||[])){
+        const m=(g.matches||[]).find(x=>x.id===matchId);
+        if(m)return m;
+      }
+    }
+    if(t.ko){
+      for(const r of (t.ko.rounds||[])){const m=(r.matches||[]).find(x=>x.id===matchId);if(m)return m;}
+    }
+    if(t.dko){
+      for(const r of (t.dko.rounds||[])){const m=(r.matches||[]).find(x=>x.id===matchId);if(m)return m;}
+    }
+    if(t.swiss){
+      for(const r of (t.swiss.rounds||[])){const m=(r.matches||[]).find(x=>x.id===matchId);if(m)return m;}
+    }
+    return null;
+  }
+
+  function allTournamentMatches(t){
+    const out=[];
+    if(tournamentHasGroups(t))out.push(...(t.groups||[]).flatMap(g=>g.matches||[]));
+    if(t.ko)out.push(...(t.ko.rounds||[]).flatMap(r=>r.matches||[]));
+    if(t.dko)out.push(...(t.dko.rounds||[]).flatMap(r=>r.matches||[]));
+    if(t.swiss)out.push(...(t.swiss.rounds||[]).flatMap(r=>r.matches||[]));
+    return out;
+  }
+
+  function groupStandings(group,t){
+    const rows=rawGroupRows(group);
+    const penaltyOrder=(t?.groupPenaltyWinners?.[group.id]||[]);
+    const penaltyIndex=id=>{
+      const i=penaltyOrder.indexOf(id);
+      return i<0?999:i;
+    };
+    const seedIndex=id=>{
+      const i=(group.players||[]).indexOf(id);
+      return i<0?999:i;
+    };
+
+    const tieRule=t?.groupAdvanceTieRule||'points';
+
+    // Nejprve vytvoříme pořadí po bodech/výhrách.
+    const byWins=new Map();
+    rows.forEach(r=>{
+      if(!byWins.has(r.v))byWins.set(r.v,[]);
+      byWins.get(r.v).push(r);
+    });
+
+    const ordered=[];
+    [...byWins.keys()].sort((a,b)=>b-a).forEach(wins=>{
+      const cohort=byWins.get(wins);
+
+      if(tieRule==='head_to_head' && cohort.length>1){
+        const miniMap=Object.fromEntries(groupHeadToHeadMini(group,cohort.map(r=>r.id)).map(r=>[r.id,r]));
+        cohort.sort((a,b)=>{
+          const av=miniMap[a.id]?.v||0, bv=miniMap[b.id]?.v||0;
+          if(bv!==av)return bv-av;
+
+          if(t?.groupPenaltyTieBreak){
+            const ai=penaltyIndex(a.id),bi=penaltyIndex(b.id);
+            if(ai!==bi)return ai-bi;
+          }
+
+          // Pokud vzájemné zápasy nerozhodnou (např. kruh 1-1-1),
+          // před penaltami nevymýšlíme další sportovní kritérium.
+          // Pouze stabilně zachováme nasazení.
+          return seedIndex(a.id)-seedIndex(b.id);
+        });
+      }else{
+        cohort.sort((a,b)=>{
+          if(t?.groupPenaltyTieBreak){
+            const ai=penaltyIndex(a.id),bi=penaltyIndex(b.id);
+            if(ai!==bi)return ai-bi;
+          }
+          if(b.diff!==a.diff)return b.diff-a.diff;
+          if(b.rf!==a.rf)return b.rf-a.rf;
+          return seedIndex(a.id)-seedIndex(b.id);
+        });
+      }
+
+      ordered.push(...cohort);
+    });
+
+    return ordered;
+  }
+
+  function isTournamentOwner(t){
+    return !!(t && cloudUid && t.createdByUid && t.createdByUid===cloudUid);
+  }
+
+  function canManageTournamentOrganizers(t){
+    if(!t)return false;
+    if(currentUserIsSystemAdmin())return true;
+    return isTournamentOwner(t);
+  }
+
+  function canManageTournament(t){
+    if(!t)return false;
+    if(currentUserIsSystemAdmin())return true;
+    if(isTournamentOwner(t))return true;
+    return !!(cloudUid && t.managerUids && t.managerUids[cloudUid]===true);
+  }
+
+  function tournamentCanHistoricalReseed(t){
+    return !!(
+      t &&
+      ['groups_sko','groups_dko'].includes(t.format) &&
+      groupPhaseComplete(t) &&
+      (t.status==='complete' || !!t.playoffStarted || !!t.ko || !!t.dko) &&
+      canManageTournament(t)
+    );
+  }
+
+  let activeEditTournamentId=null;
+
+  window.openActiveTournamentEdit=function(tid){
+    const t=(data.tournaments||[]).find(x=>x.id===tid);
+    if(!t || !canManageTournament(t)){
+      toast('Tento turnaj teď nelze upravit.');
+      return;
+    }
+
+    // Hybrid po skupinách může být opravován/nasazován i pokud starší verze
+    // omylem uložila status COMPLETE.
+    if(t.status==='complete' && !(['groups_sko','groups_dko'].includes(t.format) && groupPhaseComplete(t))){
+      toast('Tento turnaj teď nelze upravit.');
+      return;
+    }
+
+    repairHybridWaitingState(t);
+
+    activeEditTournamentId=tid;
+    const hybrid=['groups_sko','groups_dko'].includes(t.format);
+
+    $('activeTournamentGroupRulesBox').classList.toggle('hidden',!hybrid);
+    $('activeTournamentSaveRulesBtn').classList.toggle('hidden',!hybrid);
+
+    if(hybrid){
+      $('activeTournamentTieRule').value=t.groupAdvanceTieRule||'points';
+      $('activeTournamentPenaltyTieBreak').checked=!!t.groupPenaltyTieBreak;
+
+      const groupsDone=groupPhaseComplete(t);
+      const playoffStarted=!!(t.playoffStarted || t.ko || t.dko);
+
+      if(!groupsDone){
+        $('activeTournamentEditInfo').textContent='Skupiny ještě nejsou dohrané. Můžeš změnit pravidla, podle kterých se později určí postupující.';
+        $('activeTournamentEditActions').innerHTML='';
+      }else if(!playoffStarted){
+        $('activeTournamentEditInfo').textContent='Skupiny jsou dohrané a play-off ještě nezačalo. Můžeš upravit pravidla nebo ručně vybrat postupující hráče ze seznamu a vložit je přímo do pavouka.';
+        $('activeTournamentEditActions').innerHTML=`
+          <button class="btn primary" onclick="closeActiveTournamentEdit();renderTournamentDetail();setTimeout(()=>document.getElementById('inlineManualPlayoffEditor_${t.id}')?.scrollIntoView({behavior:'smooth',block:'center'}),80)">RUČNĚ NASADIT PLAY-OFF</button>`;
+      }else{
+        $('activeTournamentEditInfo').textContent='Play-off už bylo vytvořené. Můžeš ho ručně přenasadit podle papírového turnaje. Dosavadní pavouk se nejdřív uloží do zálohy.';
+        $('activeTournamentEditActions').innerHTML=`
+          <button class="btn danger" onclick="closeActiveTournamentEdit();prepareManualPlayoffReseed('${t.id}')">RUČNĚ PŘENASADIT PLAY-OFF</button>
+          <button class="btn" onclick="closeActiveTournamentEdit();openTournamentHistoricalEdit('${t.id}')">PŘENASADIT PODLE PRAVIDEL</button>`;
+      }
+    }else{
+      $('activeTournamentEditInfo').textContent='U tohoto formátu zatím nejsou k dispozici dodatečná pravidla skupinového postupu.';
+      $('activeTournamentEditActions').innerHTML='';
+    }
+
+    $('activeTournamentEditModal').classList.add('show');
+  };
+
+  window.closeActiveTournamentEdit=function(){
+    $('activeTournamentEditModal').classList.remove('show');
+    activeEditTournamentId=null;
+  };
+
+  async function saveActiveTournamentRules(){
+    const t=(data.tournaments||[]).find(x=>x.id===activeEditTournamentId);
+    if(!t || !canManageTournament(t) || t.status==='complete')return;
+
+    if(['groups_sko','groups_dko'].includes(t.format)){
+      t.groupAdvanceTieRule=$('activeTournamentTieRule').value||'points';
+      t.groupPenaltyTieBreak=!!$('activeTournamentPenaltyTieBreak').checked;
+      t.groupPenaltyWinners={};
+      t.updatedAt=new Date().toISOString();
+
+      try{
+        await saveSecureTournament(t);
+      }catch(e){
+        console.error('Active tournament rules save:',e);
+        toast('Pravidla se nepodařilo uložit.');
+        return;
+      }
+
+      renderTournament();
+      renderTournamentDetail();
+      toast('Pravidla turnaje byla uložena.');
+    }
+
+    closeActiveTournamentEdit();
+  }
+
+  let historicalEditTournamentId=null;
+  let historicalScoreContext=null;
+
+  window.openTournamentHistoricalEdit=function(tid){
+    const t=(data.tournaments||[]).find(x=>x.id===tid);
+    if(!t || !tournamentCanHistoricalReseed(t)){
+      toast('Play-off tohoto turnaje teď nelze znovu nasadit.');
+      return;
+    }
+    historicalEditTournamentId=tid;
+    $('historicalTieRule').value=t.groupAdvanceTieRule||'points';
+    $('historicalPenaltyTieBreak').checked=!!t.groupPenaltyTieBreak;
+    $('tournamentHistoricalEditModal').classList.add('show');
+  };
+
+  function archiveCurrentTournamentPlayoff(t){
+    t.playoffRevisionHistory=t.playoffRevisionHistory||[];
+    t.playoffRevisionHistory.push({
+      archivedAt:new Date().toISOString(),
+      status:t.status,
+      groupAdvanceTieRule:t.groupAdvanceTieRule||'points',
+      groupPenaltyTieBreak:!!t.groupPenaltyTieBreak,
+      groupPenaltyWinners:JSON.parse(JSON.stringify(t.groupPenaltyWinners||{})),
+      groupEliminations:JSON.parse(JSON.stringify(t.groupEliminations||[])),
+      playoffStarted:!!t.playoffStarted,
+      ko:t.ko?JSON.parse(JSON.stringify(t.ko)):null,
+      dko:t.dko?JSON.parse(JSON.stringify(t.dko)):null
+    });
+    if(t.playoffRevisionHistory.length>5){
+      t.playoffRevisionHistory=t.playoffRevisionHistory.slice(-5);
+    }
+  }
+
+  window.prepareManualPlayoffReseed=async function(tid){
+    const t=(data.tournaments||[]).find(x=>x.id===tid);
+    if(!t || !['groups_sko','groups_dko'].includes(t.format) || !groupPhaseComplete(t) || !canManageTournament(t)){
+      toast('Tento turnaj teď nelze ručně přenasadit.');
+      return;
+    }
+
+    // Pokud už pavouk existuje, bezpečně ho archivujeme.
+    if(t.playoffStarted || t.ko || t.dko){
+      archiveCurrentTournamentPlayoff(t);
+    }
+
+    // Odstraníme pouze turnajový stav play-off. Skupiny a uložené zápasy/statistiky zůstávají.
+    t.groupEliminations=[];
+    t.playoffStarted=false;
+    t.ko=null;
+    t.dko=null;
+    t.status='active';
+    t.historicalEditMode=true;
+    t.historicalEditStartedAt=new Date().toISOString();
+    t.updatedAt=new Date().toISOString();
+
+    try{
+      await saveSecureTournament(t);
+    }catch(e){
+      console.error('Manual playoff reseed preparation:',e);
+      toast('Původní pavouk se nepodařilo bezpečně uložit. Změna nebyla provedena.');
+      return;
+    }
+
+    renderTournament();
+    renderResultsTournaments();
+    renderTournamentDetail();
+
+    // Otevřeme rovnou ruční režim – bez dalšího přepínání.
+    openGroupPlayoffSeedModal(t.id,'manual');
+  };
+
+  async function applyHistoricalTournamentReseed(){
+    const t=(data.tournaments||[]).find(x=>x.id===historicalEditTournamentId);
+    if(!t || !tournamentCanHistoricalReseed(t))return;
+
+    archiveCurrentTournamentPlayoff(t);
+
+    t.groupAdvanceTieRule=$('historicalTieRule').value||'points';
+    t.groupPenaltyTieBreak=!!$('historicalPenaltyTieBreak').checked;
+    t.groupPenaltyWinners={};
+    t.groupEliminations=[];
+    t.playoffStarted=false;
+    t.ko=null;
+    t.dko=null;
+    t.status='active';
+    t.historicalEditMode=true;
+    t.historicalEditStartedAt=new Date().toISOString();
+    t.updatedAt=new Date().toISOString();
+
+    const unresolved=t.groupPenaltyTieBreak ? unresolvedGroupPenaltyTie(t) : null;
+    if(!unresolved){
+      startHybridPlayoff(t);
+    }
+
+    try{
+      await saveSecureTournament(t);
+    }catch(e){
+      console.error('Historical tournament reseed save:',e);
+      toast('Změnu turnaje se nepodařilo uložit.');
+      return;
+    }
+
+    $('tournamentHistoricalEditModal').classList.remove('show');
+    historicalEditTournamentId=null;
+
+    renderTournament();
+    renderResultsTournaments();
+    renderTournamentDetail();
+
+    if(unresolved){
+      toast('Pravidla byla změněna. Před vytvořením pavouka je nutné rozhodnout penalty.');
+      openGroupPenaltyPrompt(t);
+    }else{
+      toast('Play-off bylo znovu nasazeno podle aktuálních pravidel.');
+    }
+  }
+
+  window.openHistoricalTournamentScore=function(tid,matchId){
+    const t=(data.tournaments||[]).find(x=>x.id===tid);
+    const m=t?findTournamentMatch(t,matchId):null;
+    if(!t || !m || !canManageTournament(t) || m.status==='done' || m.winnerId || m.loserId)return;
+
+    historicalScoreContext={tournamentId:tid,matchId};
+    $('historicalTournamentScorePlayers').textContent=tournamentPlayerName(m.player1Id,t)+' vs '+tournamentPlayerName(m.player2Id,t);
+    $('historicalTournamentP1Label').textContent=tournamentPlayerName(m.player1Id,t);
+    $('historicalTournamentP2Label').textContent=tournamentPlayerName(m.player2Id,t);
+    $('historicalTournamentScore1').value=0;
+    $('historicalTournamentScore2').value=0;
+
+    const info=$('historicalTournamentScoreModal')?.querySelector('.muted');
+    if(info){
+      info.textContent=t.historicalEditMode
+        ? 'Výsledek se zapíše přímo do turnaje bez spuštění počítadla. Nevytvoří podrobné herní statistiky.'
+        : 'Výsledek se zapíše přímo do turnaje bez spuštění počítadla. Započítá se do tabulky a dalšího průběhu turnaje, ale nevytvoří podrobné herní statistiky.';
+    }
+
+    $('historicalTournamentScoreModal').classList.add('show');
+  };
+
+  async function saveHistoricalTournamentScore(){
+    const ctx=historicalScoreContext;
+    const t=ctx?(data.tournaments||[]).find(x=>x.id===ctx.tournamentId):null;
+    const tm=t?findTournamentMatch(t,ctx.matchId):null;
+    if(!t || !tm || !canManageTournament(t))return;
+    if(tm.status==='done' || tm.winnerId || tm.loserId){
+      toast('Tento zápas už je dohraný.');
+      return;
+    }
+
+    const s1=Math.max(0,Number($('historicalTournamentScore1').value||0));
+    const s2=Math.max(0,Number($('historicalTournamentScore2').value||0));
+    if(s1===s2){
+      toast('Výsledek nemůže skončit remízou.');
+      return;
+    }
+
+    const race=Math.max(1,Number(tournamentRaceForMatch(t,tm)||t.raceTo||1));
+    const winnerScore=Math.max(s1,s2);
+    if(winnerScore!==race){
+      const ok=confirm('Turnaj je nastavený na Race to '+race+', ale vítěz má '+winnerScore+'. Opravdu tento výsledek uložit?');
+      if(!ok)return;
+    }
+
+    const synthetic={
+      id:'manual_tournament_'+Date.now(),
+      tournamentLink:{tournamentId:t.id,tournamentMatchId:tm.id},
+      endedAt:new Date().toISOString(),
+      playerIds:[tm.player1Id,tm.player2Id],
+      scores:[s1,s2],
+      winner:s1>s2?0:1,
+      source:'tournament_manual',
+      evidenceMode:'basic'
+    };
+
+    processTournamentResult(synthetic);
+    tm.manualResult=true;
+    tm.manualResultAt=new Date().toISOString();
+    tm.manualResultByUid=cloudUid||'';
+    t.updatedAt=new Date().toISOString();
+
+    try{
+      await saveSecureTournament(t);
+    }catch(e){
+      console.error('Manual tournament score save:',e);
+      toast('Výsledek se nepodařilo uložit.');
+      return;
+    }
+
+    $('historicalTournamentScoreModal').classList.remove('show');
+    historicalScoreContext=null;
+    renderTournament();
+    renderResultsTournaments();
+    renderTournamentDetail();
+    toast('Výsledek byl zapsán do turnaje.');
+  }
+
+  let groupPlayoffSeedTournamentId=null;
+
+  function repairHybridWaitingState(t){
+    if(!t || !['groups_sko','groups_dko'].includes(t.format))return false;
+    if(!groupPhaseComplete(t))return false;
+
+    const playoffMatches=t.format==='groups_sko'
+      ? (t.ko?.rounds||[]).flatMap(r=>r.matches||[])
+      : (t.dko?.rounds||[]).flatMap(r=>r.matches||[]);
+
+    const playoffHasPlayedMatch=playoffMatches.some(m=>
+      m && (m.status==='done' || m.winnerId || m.loserId)
+    );
+
+    // Opravujeme pouze STARÝ chybný stav, kdy byl hybridní turnaj po skupinách
+    // omylem označen jako COMPLETE bez odehraného play-off.
+    //
+    // Důležité: nově vytvořený ruční pavouk je ACTIVE a zatím samozřejmě nemá
+    // odehraný žádný play-off zápas. Ten se NESMÍ při renderu/refreshi smazat.
+    if(!playoffHasPlayedMatch && t.status==='complete'){
+      t.playoffStarted=false;
+      t.ko=null;
+      t.dko=null;
+      t.groupEliminations=[];
+      t.status='active';
+      t.awaitingPlayoffSeeding=true;
+      t.updatedAt=new Date().toISOString();
+      return true;
+    }
+
+    if(!t.playoffStarted && !t.ko && !t.dko){
+      if(t.status!=='active' || !t.awaitingPlayoffSeeding){
+        t.status='active';
+        t.awaitingPlayoffSeeding=true;
+        t.updatedAt=new Date().toISOString();
+        return true;
+      }
+    }
+
+    return false;
+  }
+
+  function tournamentCanSeedFromGroups(t){
+    return !!(
+      t &&
+      ['groups_sko','groups_dko'].includes(t.format) &&
+      groupPhaseComplete(t) &&
+      !t.playoffStarted &&
+      canManageTournament(t)
+    );
+  }
+
+  function groupPlayerOriginInfo(t,playerId){
+    if(!t || !Array.isArray(t.groups) || !playerId)return null;
+    for(const g of t.groups){
+      if(!(g.players||[]).includes(playerId))continue;
+      const rows=groupStandings(g,t);
+      const idx=rows.findIndex(r=>r.id===playerId);
+      return {
+        groupId:g.id,
+        groupName:g.name||('Skupina '+g.id),
+        place:idx>=0?idx+1:null
+      };
+    }
+    return null;
+  }
+
+  function groupPlayerOriginLabel(t,playerId){
+    const info=groupPlayerOriginInfo(t,playerId);
+    if(!info)return '';
+    return `${info.groupId}${info.place?info.place+'.':''}`;
+  }
+
+  function groupPlayerOriginText(t,playerId){
+    const info=groupPlayerOriginInfo(t,playerId);
+    if(!info)return '';
+    return `${info.groupName}${info.place?' • '+info.place+'. místo':''}`;
+  }
+
+  function buildManualGroupSeedEditor(t){
+    const wrap=$('groupPlayoffManualList');
+    if(!wrap)return;
+
+    const advance=Math.max(1,Number(t.advancePerGroup||2));
+    const playoffSlots=Math.max(2,(t.groups||[]).length*advance);
+
+    // Ruční režim nabízí všechny hráče ze skupin.
+    // Aktuální pořadí skupiny se zobrazuje pouze jako informace, ale neomezuje výběr.
+    const candidates=[];
+    for(const g of (t.groups||[])){
+      const rows=groupStandings(g,t);
+      rows.forEach((r,i)=>candidates.push({
+        id:r.id,
+        groupId:g.id,
+        groupName:g.name||('Skupina '+g.id),
+        place:i+1
+      }));
+    }
+
+    const candidateIds=candidates.map(q=>q.id);
+    const existing=(t.manualGroupPlayoffOrder||[]).filter(id=>candidateIds.includes(id));
+
+    // Výchozí návrh je jen pomůcka. Při shodě ve skupině nic nerozhodujeme za organizátora;
+    // ruční výběr může být libovolný.
+    const suggested=[];
+    for(const g of (t.groups||[])){
+      groupStandings(g,t).slice(0,advance).forEach(r=>suggested.push(r.id));
+    }
+    const order=existing.length===playoffSlots ? existing : suggested.slice(0,playoffSlots);
+
+    const options=candidates.map(q=>`
+      <option value="${q.id}">
+        ${escapeHtml(tournamentPlayerName(q.id,t))} • ${escapeHtml(q.groupName)} • ${q.place}. místo
+      </option>`).join('');
+
+    const pairCount=Math.floor(playoffSlots/2);
+    let html=`
+      <div class="subpanel" style="margin-bottom:12px;border-color:rgba(212,175,55,.25)">
+        <strong>POSTUPUJÍCÍ DO PLAY-OFF: ${playoffSlots}</strong>
+        <div class="muted" style="margin-top:5px">
+          Výběr není omezen automatickým pořadím ve skupině. Můžeš zvolit přesně stejné postupující jako v papírovém turnaji.
+        </div>
+      </div>`;
+
+    for(let pair=0;pair<pairCount;pair++){
+      const aIndex=pair*2;
+      const bIndex=aIndex+1;
+      const label=playoffSlots===8
+        ? 'QF '+(pair+1)
+        : (playoffSlots===4 ? 'SF '+(pair+1) : 'ZÁPAS '+(pair+1));
+
+      html+=`
+        <div class="subpanel" style="margin-bottom:10px;border-color:rgba(212,175,55,.38)">
+          <strong>${label}</strong>
+          <div class="grid two" style="margin-top:8px">
+            <div>
+              <label>Hráč 1</label>
+              <select class="manual-playoff-slot" data-slot="${aIndex}">
+                <option value="">— vyber hráče —</option>
+                ${options}
+              </select>
+            </div>
+            <div>
+              <label>Hráč 2</label>
+              <select class="manual-playoff-slot" data-slot="${bIndex}">
+                <option value="">— vyber hráče —</option>
+                ${options}
+              </select>
+            </div>
+          </div>
+        </div>`;
+    }
+
+    wrap.innerHTML=html;
+
+    order.forEach((id,i)=>{
+      const sel=wrap.querySelector(`select[data-slot="${i}"]`);
+      if(sel)sel.value=id;
+    });
+
+    const semiBox=$('groupPlayoffSemiRoutingBox');
+    const showSemi=t.format==='groups_sko' && playoffSlots===8;
+    if(semiBox)semiBox.classList.toggle('hidden',!showSemi);
+    if(showSemi && $('groupPlayoffSemiRouting')){
+      $('groupPlayoffSemiRouting').value=t.manualGroupPlayoffSemiRouting||'cross13';
+    }
+  }
+
+  window.openGroupPlayoffSeedModal=function(tid,initialMode='rules'){
+    const t=(data.tournaments||[]).find(x=>x.id===tid);
+    if(!t || !tournamentCanSeedFromGroups(t)){
+      toast('Skupiny ještě nejsou připravené k nasazení.');
+      return;
+    }
+    groupPlayoffSeedTournamentId=tid;
+
+    const manual=initialMode==='manual';
+    $('groupPlayoffSeedMode').value=manual?'manual':'rules';
+    $('groupPlayoffTieRule').value=t.groupAdvanceTieRule||'points';
+    $('groupPlayoffPenaltyTieBreak').checked=!!t.groupPenaltyTieBreak;
+    $('groupPlayoffSeedRulesBox').classList.toggle('hidden',manual);
+    $('groupPlayoffManualBox').classList.toggle('hidden',!manual);
+
+    buildManualGroupSeedEditor(t);
+
+    const status=$('groupPlayoffSeedStatus');
+    if(status)status.textContent='';
+
+    const applyBtn=$('groupPlayoffSeedApplyBtn');
+    if(applyBtn){
+      applyBtn.disabled=false;
+      applyBtn.onclick=async()=>{
+        if(status)status.textContent='Kliknutí zachyceno • nasazuji play-off…';
+        applyBtn.disabled=true;
+        try{
+          await applyGroupPlayoffSeedingInternal();
+        }catch(e){
+          console.error('Manual playoff apply fatal:',e);
+          const msg='Chyba při nasazení: '+String(e?.message||e||'neznámá chyba');
+          if(status)status.textContent=msg;
+          toast(msg);
+        }finally{
+          applyBtn.disabled=false;
+        }
+      };
+    }
+
+    $('groupPlayoffSeedModal').classList.add('show');
+  };
+
+  function collectManualPlayoffOrder(t){
+    const advance=Math.max(1,Number(t.advancePerGroup||2));
+    const playoffSlots=Math.max(2,(t.groups||[]).length*advance);
+    const allowedIds=(t.groups||[]).flatMap(g=>g.players||[]);
+
+    const selects=[...($('groupPlayoffManualList')?.querySelectorAll('.manual-playoff-slot')||[])]
+      .sort((a,b)=>Number(a.dataset.slot)-Number(b.dataset.slot));
+
+    const order=selects.map(sel=>sel.value||'');
+
+    if(order.length!==playoffSlots || order.some(id=>!id)){
+      return {error:'Vyber hráče do všech pozic prvního kola play-off.'};
+    }
+
+    if(new Set(order).size!==order.length){
+      return {error:'Jeden hráč nemůže být nasazen do play-off dvakrát.'};
+    }
+
+    const allowed=new Set(allowedIds);
+    if(order.some(id=>!allowed.has(id))){
+      return {error:'Do play-off lze vybrat pouze hráče z tohoto turnaje.'};
+    }
+
+    return {order};
+  }
+
+  async function applyGroupPlayoffSeedingInternal(){
+    const status=$('groupPlayoffSeedStatus');
+    const setStatus=msg=>{if(status)status.textContent=msg;};
+
+    const t=(data.tournaments||[]).find(x=>x.id===groupPlayoffSeedTournamentId);
+    const mode=$('groupPlayoffSeedMode')?.value||'rules';
+
+    setStatus('Kontroluji turnaj…');
+
+    if(!t){
+      setStatus('Turnaj se nepodařilo najít.'); toast('Turnaj se nepodařilo najít.');
+      return;
+    }
+    if(!['groups_sko','groups_dko'].includes(t.format)){
+      setStatus('Tento formát nelze ručně nasadit.'); toast('Ruční nasazení je dostupné pouze pro Skupiny → SKO / DKO.');
+      return;
+    }
+    if(!canManageTournament(t)){
+      setStatus('Nemáš oprávnění upravovat turnaj.'); toast('Tento turnaj nemůžeš upravovat.');
+      return;
+    }
+    if(!groupPhaseComplete(t)){
+      setStatus('Nejsou dohrané všechny zápasy ve skupinách.'); toast('Nejdřív musí být zapsané výsledky všech zápasů ve skupinách.');
+      return;
+    }
+
+    // U ručního režimu záměrně nevyžadujeme jednoznačné pořadí skupin.
+    // Kruhová shoda / vzájemné porážky se vyřeší tím, koho organizátor sám vybere.
+    if(mode!=='manual' && !tournamentCanSeedFromGroups(t)){
+      toast('Automatické nasazení zatím nelze vytvořit. Zkus ruční nasazení.');
+      return;
+    }
+
+    let manualOrder=null;
+
+    if(mode==='manual'){
+      const selects=[...($('groupPlayoffManualList')?.querySelectorAll('.manual-playoff-slot')||[])];
+      if(!selects.length){
+        setStatus('Ruční seznam hráčů se nenačetl.'); toast('Ruční seznam hráčů se nenačetl. Zavři okno a otevři RUČNĚ NASADIT PLAY-OFF znovu.');
+        return;
+      }
+    }
+
+    if(mode==='rules'){
+      t.groupAdvanceTieRule=$('groupPlayoffTieRule').value||'points';
+      t.groupPenaltyTieBreak=!!$('groupPlayoffPenaltyTieBreak').checked;
+      t.groupPenaltyWinners={};
+
+      const unresolved=t.groupPenaltyTieBreak ? unresolvedGroupPenaltyTie(t) : null;
+      if(unresolved){
+        $('groupPlayoffSeedModal').classList.remove('show');
+        groupPlayoffSeedTournamentId=null;
+        await saveSecureTournament(t);
+        renderTournamentDetail();
+        openGroupPenaltyPrompt(t);
+        return;
+      }
+    }else{
+      const collected=collectManualPlayoffOrder(t);
+      if(collected.error){
+        setStatus(collected.error);
+        toast(collected.error);
+        return;
+      }
+
+      manualOrder=collected.order;
+
+      // Pokud by se sem už existující pavouk dostal jinou cestou,
+      // nejdřív ho zazálohujeme a teprve pak ručně vytvoříme nový.
+      if(t.playoffStarted || t.ko || t.dko){
+        archiveCurrentTournamentPlayoff(t);
+      }
+      t.playoffStarted=false;
+      t.ko=null;
+      t.dko=null;
+      t.groupEliminations=[];
+
+      t.manualGroupPlayoffOrder=[...manualOrder];
+      t.manualGroupPlayoffSemiRouting=$('groupPlayoffSemiRouting')?.value||'cross13';
+      t.groupAdvanceTieRule='manual';
+      t.groupPenaltyTieBreak=false;
+      t.groupPenaltyWinners={};
+    }
+
+    const started=startHybridPlayoff(t,manualOrder);
+    if(!started){
+      const msg=mode==='manual'
+        ? 'Play-off se nepodařilo vytvořit. Zkontroluj dohrání skupin a všechny pozice.'
+        : 'Play-off se zatím nepodařilo vytvořit.';
+      setStatus(msg);
+      toast(msg);
+      return;
+    }
+
+    setStatus('Pavouk vytvořen • ukládám do cloudu…');
+    toast('Pavouk vytvořen • ukládám…');
+    t.updatedAt=new Date().toISOString();
+
+    try{
+      await saveSecureTournament(t);
+    }catch(e){
+      console.error('Group playoff seeding save:',e);
+      setStatus('Pavouk vznikl, ale nepodařilo se ho uložit do cloudu.');
+      toast('Nasazení play-off se nepodařilo uložit.');
+      return;
+    }
+
+    setStatus(mode==='manual'?'Hotovo • play-off bylo nasazeno ručně.':'Hotovo • play-off bylo nasazeno podle pravidel.');
+    groupPlayoffSeedTournamentId=null;
+    renderTournament();
+    renderResultsTournaments();
+    renderTournamentDetail();
+    toast(mode==='manual'?'Play-off bylo nasazeno ručně.':'Play-off bylo nasazeno podle zvolených pravidel.');
+    setTimeout(()=>$('groupPlayoffSeedModal').classList.remove('show'),450);
+  }
+
+  let swissScoreContext=null;
+
+  window.openSwissScore=function(tid,matchId){
+    const t=(data.tournaments||[]).find(x=>x.id===tid);
+    const m=t?findTournamentMatch(t,matchId):null;
+
+    if(!t || t.format!=='swiss' || !m || !canManageTournament(t)){
+      toast('Tento výsledek nelze upravit.');
+      return;
+    }
+    if(m.status==='done' || m.winnerId){
+      toast('Tento zápas už je dohraný.');
+      return;
+    }
+
+    swissScoreContext={tournamentId:tid,matchId};
+    const p1=tournamentPlayerName(m.player1Id,t);
+    const p2=tournamentPlayerName(m.player2Id,t);
+
+    $('swissScorePlayers').textContent=p1+' vs '+p2;
+    $('swissScoreP1Label').textContent=p1;
+    $('swissScoreP2Label').textContent=p2;
+    $('swissScore1').value=0;
+    $('swissScore2').value=0;
+    $('swissScoreModal').classList.add('show');
+  };
+
+  async function saveSwissScore(){
+    const ctx=swissScoreContext;
+    const t=ctx?(data.tournaments||[]).find(x=>x.id===ctx.tournamentId):null;
+    const tm=t?findTournamentMatch(t,ctx.matchId):null;
+
+    if(!t || t.format!=='swiss' || !tm || !canManageTournament(t))return;
+
+    const s1=Math.max(0,Number($('swissScore1').value||0));
+    const s2=Math.max(0,Number($('swissScore2').value||0));
+
+    if(s1===s2){
+      toast('Výsledek nemůže skončit remízou.');
+      return;
+    }
+
+    const synthetic={
+      id:'swiss_manual_'+Date.now(),
+      tournamentLink:{
+        tournamentId:t.id,
+        tournamentMatchId:tm.id
+      },
+      endedAt:new Date().toISOString(),
+      playerIds:[tm.player1Id,tm.player2Id],
+      playerNames:[
+        tournamentPlayerName(tm.player1Id,t),
+        tournamentPlayerName(tm.player2Id,t)
+      ],
+      scores:[s1,s2],
+      winner:s1>s2?0:1
+    };
+
+    processTournamentResult(synthetic);
+    t.updatedAt=new Date().toISOString();
+
+    try{
+      await saveSecureTournament(t);
+    }catch(e){
+      console.error('Swiss manual result save:',e);
+      toast('Výsledek se nepodařilo uložit.');
+      return;
+    }
+
+    $('swissScoreModal').classList.remove('show');
+    swissScoreContext=null;
+
+    renderTournament();
+    renderResultsTournaments();
+    renderTournamentDetail();
+
+    toast('Výsledek byl zapsán.');
+  }
+
+  function renderTournamentMatch(t,m){
+    const done=(m.status==='done'||!!m.winnerId||!!m.loserId),playing=(!done&&m.status==='playing'&&!!m.scoreboardMatchId);
+    const invalidDKO=!done && !!t.dko && (dkoPlayerIsOut(t,m.player1Id)||dkoPlayerIsOut(t,m.player2Id));
+    return `<div class="tournament-match ${done?'done':''}" ${invalidDKO?'style="opacity:.55"':''}>
+      <div style="display:flex;justify-content:space-between;gap:8px;align-items:center;margin-bottom:7px">
+        <span class="tournament-badge ${m.bracket==='W'||m.bracket==='GF'?'gold':''}">${esc(m.roundLabel||m.bracket||'Zápas')} • RT ${tournamentRaceForMatch(t,m)}</span>
+        <span class="muted">${done?'DOHRÁNO':(invalidDKO?'NEPLATNÝ – HRÁČ OUT':(playing?'ROZEHRÁNO':(tournamentMatchHasBusyPlayer(t,m)?'ČEKÁ NA HRÁČE':(m.tableNumber?'STŮL '+m.tableNumber:'PŘIPRAVENO'))))}</span>
+      </div>
+      <div class="tm-row">
+        <div class="tm-p">
+          ${esc(tournamentPlayerName(m.player1Id,t))}
+          ${['groups_sko','groups_dko'].includes(t.format) && !tournamentMatchIsGroupMatch(t,m)
+            ? `<div class="muted" style="font-size:11px;margin-top:4px">${esc(groupPlayerOriginText(t,m.player1Id))}</div>`
+            : ''}
+        </div>
+        <div class="tm-score">${done?(m.score1+' : '+m.score2):'VS'}</div>
+        <div class="tm-p">
+          ${esc(tournamentPlayerName(m.player2Id,t))}
+          ${['groups_sko','groups_dko'].includes(t.format) && !tournamentMatchIsGroupMatch(t,m)
+            ? `<div class="muted" style="font-size:11px;margin-top:4px">${esc(groupPlayerOriginText(t,m.player2Id))}</div>`
+            : ''}
+        </div>
+      </div>
+      ${!done?`<div style="display:flex;justify-content:center;align-items:center;gap:8px;margin-top:9px;flex-wrap:wrap">
+        ${m.tableNumber?`<span class="tournament-badge gold">STŮL ${m.tableNumber}</span>`:''}
+        ${canManageTournament(t)
+          ? `${t.format==='swiss'
+              ? `<div style="display:flex;gap:7px;flex-wrap:wrap">
+                  <button class="btn primary" onclick="startTournamentMatch('${t.id}','${m.id}')">${playing?'POKRAČOVAT':'HRÁT PŘES POČÍTADLO'}</button>
+                  <button class="btn" onclick="openSwissScore('${t.id}','${m.id}')">ZAPSAT JEN VÝSLEDEK</button>
+                </div>`
+              : (t.historicalEditMode
+                  ? `<button class="btn primary" ${invalidDKO?`disabled title="Hráč už má 2 prohry a je vyřazen"`:''} onclick="openHistoricalTournamentScore('${t.id}','${m.id}')">${invalidDKO?'OUT':'ZAPSAT VÝSLEDEK'}</button>`
+                  : `<div style="display:flex;gap:7px;flex-wrap:wrap;justify-content:center">
+                      <button class="btn primary" ${invalidDKO?`disabled title="Hráč už má 2 prohry a je vyřazen"`:''} onclick="startTournamentMatch('${t.id}','${m.id}')">${invalidDKO?'OUT':(playing?'POKRAČOVAT':'HRÁT PŘES POČÍTADLO')}</button>
+                      <button class="btn" ${invalidDKO?`disabled title="Hráč už má 2 prohry a je vyřazen"`:''} onclick="openHistoricalTournamentScore('${t.id}','${m.id}')">${invalidDKO?'OUT':'ZADAT VÝSLEDEK'}</button>
+                    </div>`
+                )
+            }`
+          : `<span class="muted">${playing?'PROBÍHÁ • pouze ke sledování':'Pouze ke sledování'}</span>`
+        }
+      </div>`:''}
+    </div>`;
+  }
+
+
+  function ensureGroupRoundOrder(group){
+    if(!group || !(group.players||[]).length)return;
+
+    const schedule=roundRobinSchedule(group.players);
+    const pairMap=new Map();
+
+    schedule.forEach((pairs,roundIndex)=>{
+      pairs.forEach(([a,b],matchIndex)=>{
+        const key=[a,b].sort().join('|');
+        pairMap.set(key,{
+          roundNumber:roundIndex+1,
+          roundOrder:matchIndex+1,
+          roundLabel:'Kolo '+(roundIndex+1)
+        });
+      });
+    });
+
+    (group.matches||[]).forEach(m=>{
+      if(m.roundNumber)return;
+      const key=[m.player1Id,m.player2Id].sort().join('|');
+      const meta=pairMap.get(key);
+      if(meta)Object.assign(m,meta);
+    });
+  }
+
+  function groupRoundNumberForMatch(t,m){
+    if(!t || t.format!=='groups' || !m)return Number.MAX_SAFE_INTEGER;
+    for(const g of (t.groups||[])){
+      const found=(g.matches||[]).find(x=>x.id===m.id);
+      if(found)return Number(found.roundNumber||Number.MAX_SAFE_INTEGER);
+    }
+    return Number.MAX_SAFE_INTEGER;
+  }
+
+  function roundRobinOverallStandings(t){
+    if(!t || !Array.isArray(t.groups))return [];
+
+    // U čistého "každý s každým" je každá skupina samostatná tabulka.
+    // Pokud je jen jedna skupina, pořadí je jednoznačné 1., 2., 3. ...
+    if(t.groups.length===1){
+      const st=groupStandings(t.groups[0],t);
+      return st.map((r,i)=>({
+        playerId:r.id,
+        place:i+1,
+        label:(i+1)+'. místo',
+        z:r.z,v:r.v,p:r.p,rf:r.rf,ra:r.ra,diff:r.diff
+      }));
+    }
+
+    // Starší čisté skupinové turnaje s více skupinami nemají play-off,
+    // proto nelze korektně určit absolutní pořadí napříč skupinami.
+    return [];
+  }
+
+  function renderRoundRobinFinalSummary(t){
+    if(!t || t.format!=='groups' || t.status!=='complete')return '';
+
+    const rows=roundRobinOverallStandings(t);
+
+    if(rows.length){
+      return `<div class="subpanel" style="margin-bottom:12px;border-color:var(--gold)">
+        <div style="display:flex;justify-content:space-between;gap:10px;align-items:center;flex-wrap:wrap">
+          <strong>KONEČNÉ POŘADÍ TURNAJE</strong>
+          <span class="tournament-badge gold">TURNAJ DOHRÁN</span>
+        </div>
+        <div style="overflow:auto;margin-top:10px">
+          <table class="stats-table">
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Hráč</th>
+                <th>Z</th>
+                <th>V</th>
+                <th>P</th>
+                <th>Racky</th>
+                <th>+/-</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${rows.map(r=>`<tr>
+                <td class="standings-pos">${r.place}.</td>
+                <td><strong>${esc(tournamentPlayerName(r.playerId,t))}</strong></td>
+                <td class="num">${r.z}</td>
+                <td class="num">${r.v}</td>
+                <td class="num">${r.p}</td>
+                <td class="num">${r.rf}:${r.ra}</td>
+                <td class="num">${r.diff>0?'+':''}${r.diff}</td>
+              </tr>`).join('')}
+            </tbody>
+          </table>
+        </div>
+      </div>`;
+    }
+
+    return `<div class="subpanel" style="margin-bottom:12px;border-color:var(--gold)">
+      <div style="display:flex;justify-content:space-between;gap:10px;align-items:center;flex-wrap:wrap">
+        <strong>KONEČNÉ VÝSLEDKY SKUPIN</strong>
+        <span class="tournament-badge gold">TURNAJ DOHRÁN</span>
+      </div>
+      <div class="muted" style="margin-top:6px">
+        Tento starší turnaj obsahuje více samostatných skupin bez následného play-off, takže z dat nelze korektně určit jedno společné 1.–N. místo.
+      </div>
+    </div>`;
+  }
+
+  function renderGroupTournament(t){
+    const finalSummary=renderRoundRobinFinalSummary(t);
+    return `${finalSummary}<div class="tournament-columns">${t.groups.map(g=>{
+      ensureGroupRoundOrder(g);
+      const st=groupStandings(g,t);
+
+      const roundMap=new Map();
+      (g.matches||[])
+        .slice()
+        .sort((a,b)=>
+          Number(a.roundNumber||999)-Number(b.roundNumber||999) ||
+          Number(a.roundOrder||999)-Number(b.roundOrder||999)
+        )
+        .forEach(m=>{
+          const rn=Number(m.roundNumber||999);
+          if(!roundMap.has(rn))roundMap.set(rn,[]);
+          roundMap.get(rn).push(m);
+        });
+
+      const roundsHtml=[...roundMap.entries()].map(([rn,matches])=>`
+        <div class="subpanel" style="margin-top:12px">
+          <div style="font-weight:900;color:var(--gold2);margin-bottom:8px">KOLO ${rn}</div>
+          ${matches.map(m=>renderTournamentMatch(t,m)).join('')}
+        </div>
+      `).join('');
+
+      return `<div class="tournament-round">
+        <h4>SKUPINA ${esc(g.id)}</h4>
+        <div style="overflow:auto"><table class="stats-table">
+          <thead><tr><th>#</th>${t.seedingMode==='manual'?'<th>Nasazení</th>':''}<th>Hráč</th><th>Z</th><th>V</th><th>P</th><th>Racky</th><th>+/-</th></tr></thead>
+          <tbody>${st.map((r,i)=>{
+            const seedPos=(g.players||[]).indexOf(r.id)+1;
+            return `<tr>
+              <td class="standings-pos">${i+1}${t.format!=='groups'&&i<Number(t.advancePerGroup||0)?' Q':''}</td>
+              ${t.seedingMode==='manual'?`<td class="num">${esc(g.id)}${seedPos}</td>`:''}
+              <td><strong>${esc(tournamentPlayerName(r.id,t))}</strong></td>
+              <td class="num">${r.z}</td><td class="num">${r.v}</td><td class="num">${r.p}</td>
+              <td class="num">${r.rf}:${r.ra}</td><td class="num">${r.diff>0?'+':''}${r.diff}</td>
+            </tr>`;
+          }).join('')}</tbody>
+        </table></div>
+        <div style="margin-top:12px">${roundsHtml}</div>
+      </div>`;
+    }).join('')}</div>`;
+  }
+
+
+  function knockoutPlacementRows(t){
+    const k=t.ko;
+    const rows=[];
+    if(k.championId)rows.push({place:'1. místo',ids:[k.championId]});
+    if(k.runnerUpId)rows.push({place:'2. místo',ids:[k.runnerUpId]});
+
+    if(k.thirdPlacePlayoff){
+      if(k.thirdPlaceWinnerId)rows.push({place:'3. místo',ids:[k.thirdPlaceWinnerId]});
+      if(k.thirdPlaceLoserId)rows.push({place:'4. místo',ids:[k.thirdPlaceLoserId]});
+    }else{
+      const bronze=(k.eliminations||[]).filter(e=>Number(e.place||999)<=4).slice(0,2);
+      if(bronze.length)rows.push({place:'3. místo',ids:bronze.map(e=>e.playerId)});
+    }
+
+    const bands=new Map();
+    (k.eliminations||[]).forEach(e=>{
+      if(Number(e.place||0)<=4)return;
+      const label=genericPlacementLabel(e.place);
+      if(!bands.has(label))bands.set(label,[]);
+      bands.get(label).push(e.playerId);
+    });
+    bands.forEach((ids,place)=>rows.push({place,ids}));
+
+    (t.groupEliminations||[]).forEach(e=>{
+      const label=genericPlacementLabel(e.place);
+      let row=rows.find(r=>r.place===label);
+      if(!row){row={place:label,ids:[]};rows.push(row);}
+      if(!row.ids.includes(e.playerId))row.ids.push(e.playerId);
+    });
+    return rows;
+  }
+
+  function renderTournamentBye(t,b,label='VOLNÝ LOS'){
+    if(!b?.playerId)return '';
+    return `<div class="tournament-match done" style="border-color:rgba(212,175,55,.48);background:rgba(212,175,55,.06)">
+      <div style="display:flex;justify-content:space-between;gap:8px;align-items:center;margin-bottom:7px">
+        <span class="tournament-badge gold">${esc(label)}</span>
+        <span class="muted">POSTUP BEZ ZÁPASU</span>
+      </div>
+      <div style="text-align:center;font-size:18px;font-weight:950;color:var(--gold2);padding:8px 4px">
+        ${esc(tournamentPlayerName(b.playerId,t))}
+      </div>
+    </div>`;
+  }
+
+function renderSKOTournament(t){
+    const k=t.ko;
+    const rows=knockoutPlacementRows(t);
+    return `
+      ${k.championId?`<div class="subpanel" style="text-align:center;border-color:var(--gold);margin-bottom:12px">
+        <div class="muted">VÍTĚZ TURNAJE</div>
+        <div style="font-size:30px;font-weight:950;color:var(--gold2)">${esc(tournamentPlayerName(k.championId,t))}</div>
+      </div>`:''}
+
+      ${rows.length?`<div class="subpanel" style="margin-bottom:12px;${t.status==='complete'?'border-color:var(--gold);':''}">
+        <strong>${t.status==='complete'?'KONEČNÁ TABULKA VÝSLEDKŮ':'PRŮBĚŽNÉ POŘADÍ'}</strong>
+        <div style="overflow:auto;margin-top:10px"><table class="stats-table">
+          <thead><tr><th>Pořadí</th><th>Hráč / hráči</th></tr></thead>
+          <tbody>${rows.map(r=>`<tr><td><strong style="color:var(--gold2)">${esc(r.place)}</strong></td><td>${r.ids.map(id=>esc(tournamentPlayerName(id,t))).join(', ')}</td></tr>`).join('')}</tbody>
+        </table></div>
+      </div>`:''}
+
+      <div class="subpanel" style="margin-bottom:12px">
+        <strong>Stav SKO</strong>
+        <div class="muted" style="margin-top:3px">Jedna prohra = vyřazení • ${k.thirdPlacePlayoff?'hraje se o 3. místo':'bez zápasu o 3. místo = dvě 3. místa'}.</div>
+      </div>
+
+      <div class="tournament-columns">${(k.rounds||[]).map(r=>`<div class="tournament-round">
+        <h4>${esc(r.label)}</h4>
+        ${(r.byes||[]).map(b=>renderTournamentBye(t,b,'VOLNÝ LOS • BYE')).join('')}
+        ${(r.matches||[]).map(m=>renderTournamentMatch(t,m)).join('')}
+      </div>`).join('')}</div>`;
+  }
+
+
+  function inlineManualPlayoffEditorHtml(t){
+    if(!t || !['groups_sko','groups_dko'].includes(t.format) || !groupPhaseComplete(t) || t.playoffStarted)return '';
+
+    const advance=Math.max(1,Number(t.advancePerGroup||2));
+    const playoffSlots=Math.max(2,(t.groups||[]).length*advance);
+
+    const candidates=[];
+    for(const g of (t.groups||[])){
+      const rows=groupStandings(g,t);
+      rows.forEach((r,i)=>candidates.push({
+        id:r.id,
+        groupName:g.name||('Skupina '+g.id),
+        place:i+1
+      }));
+    }
+
+    const candidateIds=candidates.map(x=>x.id);
+    const existing=(t.manualGroupPlayoffOrder||[]).filter(id=>candidateIds.includes(id));
+
+    const suggested=[];
+    for(const g of (t.groups||[])){
+      groupStandings(g,t).slice(0,advance).forEach(r=>suggested.push(r.id));
+    }
+    const order=existing.length===playoffSlots ? existing : suggested.slice(0,playoffSlots);
+
+    function optionsForSlot(slotIndex){
+      return candidates.map(q=>`
+        <option value="${esc(q.id)}" ${order[slotIndex]===q.id?'selected':''}>
+          ${esc(tournamentPlayerName(q.id,t))} • ${esc(q.groupName)} • ${q.place}. místo
+        </option>`).join('');
+    }
+
+    const pairCount=Math.floor(playoffSlots/2);
+    let pairsHtml='';
+
+    for(let pair=0;pair<pairCount;pair++){
+      const a=pair*2,b=a+1;
+      const label=playoffSlots===8?'QF '+(pair+1):(playoffSlots===4?'SF '+(pair+1):'ZÁPAS '+(pair+1));
+      pairsHtml+=`
+        <div class="subpanel" style="margin-bottom:10px;border-color:rgba(212,175,55,.35)">
+          <strong>${label}</strong>
+          <div class="grid two" style="margin-top:8px">
+            <div>
+              <label>Hráč 1</label>
+              <select class="inline-manual-playoff-slot" data-tournament-id="${esc(t.id)}" data-slot="${a}">
+                <option value="">— vyber hráče —</option>
+                ${optionsForSlot(a)}
+              </select>
+            </div>
+            <div>
+              <label>Hráč 2</label>
+              <select class="inline-manual-playoff-slot" data-tournament-id="${esc(t.id)}" data-slot="${b}">
+                <option value="">— vyber hráče —</option>
+                ${optionsForSlot(b)}
+              </select>
+            </div>
+          </div>
+        </div>`;
+    }
+
+    const routing=t.manualGroupPlayoffSemiRouting||'cross13';
+
+    return `
+      <details class="subpanel" open style="margin-top:14px;border-color:var(--gold)">
+        <summary style="cursor:pointer;font-weight:950;font-size:18px">RUČNÍ NASAZENÍ PLAY-OFF</summary>
+        <div class="muted" style="margin-top:8px">
+          Vyber postupující přímo ze seznamu všech hráčů ve skupinách. Shody ve skupinách ruční nasazení neblokují.
+        </div>
+
+        <div id="inlineManualPlayoffEditor_${esc(t.id)}" style="margin-top:12px">
+          ${pairsHtml}
+        </div>
+
+        ${t.format==='groups_sko' && playoffSlots===8 ? `
+          <div class="subpanel" style="margin-top:12px">
+            <label>Napojení čtvrtfinále do semifinále</label>
+            <select id="inlineSemiRouting_${esc(t.id)}">
+              <option value="cross13" ${routing==='cross13'?'selected':''}>Vítěz QF1 × vítěz QF3 • vítěz QF2 × vítěz QF4</option>
+              <option value="cross14" ${routing==='cross14'?'selected':''}>Vítěz QF1 × vítěz QF4 • vítěz QF2 × vítěz QF3</option>
+              <option value="adjacent" ${routing==='adjacent'?'selected':''}>Vítěz QF1 × vítěz QF2 • vítěz QF3 × vítěz QF4</option>
+            </select>
+          </div>` : ''}
+
+        <div id="inlineManualPlayoffStatus_${esc(t.id)}" class="muted" style="margin-top:10px;min-height:20px"></div>
+        <button class="btn primary big inline-manual-playoff-apply" data-tournament-id="${esc(t.id)}" type="button" style="width:100%;margin-top:10px">
+          VYTVOŘIT PLAY-OFF PODLE TOHOTO NASAZENÍ
+        </button>
+      </details>`;
+  }
+
+  async function applyInlineManualPlayoff(tid){
+    const status=$('inlineManualPlayoffStatus_'+tid);
+    const setStatus=msg=>{if(status)status.textContent=msg;};
+
+    const t=(data.tournaments||[]).find(x=>x.id===tid);
+    if(!t){
+      setStatus('Turnaj nebyl nalezen.');
+      return;
+    }
+    if(!['groups_sko','groups_dko'].includes(t.format)){
+      setStatus('Tento formát nepodporuje ruční nasazení ze skupin.');
+      return;
+    }
+    if(!canManageTournament(t)){
+      setStatus('Nemáš oprávnění turnaj upravovat.');
+      return;
+    }
+    if(!groupPhaseComplete(t)){
+      setStatus('Nejdřív musí být dohrané všechny zápasy ve skupinách.');
+      return;
+    }
+
+    const selects=[...document.querySelectorAll('.inline-manual-playoff-slot[data-tournament-id="'+CSS.escape(tid)+'"]')]
+      .sort((a,b)=>Number(a.dataset.slot)-Number(b.dataset.slot));
+    const order=selects.map(s=>s.value||'');
+
+    const advance=Math.max(1,Number(t.advancePerGroup||2));
+    const playoffSlots=Math.max(2,(t.groups||[]).length*advance);
+    const allowedIds=(t.groups||[]).flatMap(g=>g.players||[]);
+
+    if(order.length!==playoffSlots || order.some(id=>!id)){
+      setStatus('Vyber hráče do všech pozic play-off.');
+      return;
+    }
+    if(new Set(order).size!==order.length){
+      setStatus('Jeden hráč je vybraný vícekrát.');
+      return;
+    }
+    if(order.some(id=>!allowedIds.includes(id))){
+      setStatus('Vybraný hráč není účastníkem tohoto turnaje.');
+      return;
+    }
+
+    setStatus('Vytvářím pavouk…');
+
+    if(t.playoffStarted || t.ko || t.dko){
+      archiveCurrentTournamentPlayoff(t);
+    }
+
+    t.playoffStarted=false;
+    t.ko=null;
+    t.dko=null;
+    t.groupEliminations=[];
+    t.status='active';
+    t.awaitingPlayoffSeeding=true;
+
+    t.manualGroupPlayoffOrder=[...order];
+    t.manualGroupPlayoffSemiRouting=$('inlineSemiRouting_'+tid)?.value||'cross13';
+    t.groupAdvanceTieRule='manual';
+    t.groupPenaltyTieBreak=false;
+    t.groupPenaltyWinners={};
+
+    const started=startHybridPlayoff(t,order);
+    if(!started){
+      setStatus('Pavouk se nepodařilo vytvořit.');
+      return;
+    }
+
+    setStatus('Pavouk vytvořen • ukládám…');
+    try{
+      await saveSecureTournament(t);
+    }catch(e){
+      console.error('Inline manual playoff save:',e);
+      setStatus('Pavouk vznikl, ale nepodařilo se ho uložit do cloudu.');
+      return;
+    }
+
+    const playoffMatchCount=t.format==='groups_sko'
+      ? (t.ko?.rounds||[]).flatMap(r=>r.matches||[]).length
+      : (t.dko?.rounds||[]).flatMap(r=>r.matches||[]).length;
+
+    renderTournament();
+    renderResultsTournaments();
+    renderTournamentDetail();
+    renderLive();
+
+    toast(playoffMatchCount
+      ? 'Play-off bylo nasazeno ručně • vytvořeno '+playoffMatchCount+' zápasů.'
+      : 'Play-off bylo nasazeno, ale nebyl vytvořen žádný zápas.');
+  }
+
+  document.addEventListener('click',e=>{
+    const btn=e.target.closest('.inline-manual-playoff-apply');
+    if(!btn)return;
+    const tid=btn.dataset.tournamentId;
+    if(!tid)return;
+
+    btn.disabled=true;
+    Promise.resolve(applyInlineManualPlayoff(tid))
+      .catch(err=>{
+        console.error('Inline manual playoff fatal:',err);
+        const status=$('inlineManualPlayoffStatus_'+tid);
+        if(status)status.textContent='Chyba: '+String(err?.message||err||'neznámá chyba');
+      })
+      .finally(()=>{btn.disabled=false;});
+  });
+
+  function renderHybridTournament(t){
+    const groupHtml=renderGroupTournament(t);
+    if(!t.playoffStarted){
+      return `${groupHtml}<div class="subpanel" style="margin-top:14px"><strong>PLAY-OFF</strong><div class="muted" style="margin-top:5px">
+        ${groupPhaseComplete(t)
+          ? '<strong>Skupiny jsou dohrané • čeká se na nasazení play-off.</strong>'
+          : `Po dohrání všech skupin postoupí ${t.advancePerGroup||2} hráči z každé skupiny do ${t.format==='groups_dko'?'DKO':'SKO'}.`}
+        <div style="margin-top:5px">
+          Shoda bodů: <strong>${t.groupAdvanceTieRule==='head_to_head'?'vzájemný zápas':(t.groupAdvanceTieRule==='manual'?'ruční nasazení':'body / skóre ve skupině')}</strong>
+          ${t.groupPenaltyTieBreak?' • pokud nerozhodne, následují penalty':''}.
+        </div>
+      </div>
+      </div>
+      ${groupPhaseComplete(t) ? inlineManualPlayoffEditorHtml(t) : ''}`;
+    }
+    const playoff=t.format==='groups_dko'?renderDKOTournament(t):renderSKOTournament(t);
+    return `<div class="subpanel" style="margin-bottom:12px">
+      <strong>SKUPINOVÁ FÁZE</strong>
+      <div class="muted" style="margin-top:5px">
+        Shoda bodů: <strong>${t.groupAdvanceTieRule==='head_to_head'?'vzájemný zápas':'body / skóre ve skupině'}</strong>
+        ${t.groupPenaltyTieBreak?' • pokud nerozhodne, následují penalty':''}.
+      </div>
+    </div>${groupHtml}
+      <div class="hr"></div><h2 style="margin:0 0 10px">PLAY-OFF • ${t.format==='groups_dko'?'DKO':'SKO'}</h2>${playoff}`;
+  }
+
+  function renderDKOTournament(t){
+    const d=t.dko,eliminated=(d.participantIds||t.playerIds||[]).filter(id=>(d.losses[id]||0)>=2);
+
+    const finalRows=[];
+    if(d.championId){
+      finalRows.push({label:'1. místo',id:d.championId});
+      const gf=dkoFinalMatch(t);
+      const runner=d.runnerUpId||gf?.loserId||null;
+      if(runner)finalRows.push({label:'2. místo',id:runner});
+    }
+
+    if(d.thirdPlacePlayoff){
+      if(d.thirdPlaceWinnerId)finalRows.push({label:'3. místo',id:d.thirdPlaceWinnerId});
+      if(d.thirdPlaceLoserId)finalRows.push({label:'4. místo',id:d.thirdPlaceLoserId});
+    }else{
+      const bronze=(d.eliminations||[])
+        .filter(e=>Number(e.place||999)<=4)
+        .sort((a,b)=>Number(a.place||999)-Number(b.place||999));
+      bronze.forEach(e=>finalRows.push({label:'3. místo',id:e.playerId}));
+    }
+
+    const lowerGroups=new Map();
+    (d.eliminations||[]).forEach(e=>{
+      if(Number(e.place||0)<=4)return;
+      const label=dkoPlacementLabel(t,e.place,e.playerId);
+      if(!lowerGroups.has(label))lowerGroups.set(label,[]);
+      lowerGroups.get(label).push(e.playerId);
+    });
+    (t.groupEliminations||[]).forEach(e=>{
+      const label=genericPlacementLabel(e.place);
+      if(!lowerGroups.has(label))lowerGroups.set(label,[]);
+      if(!lowerGroups.get(label).includes(e.playerId))lowerGroups.get(label).push(e.playerId);
+    });
+
+    const recalculated=t.status==='complete'
+      ? tournamentPlacementRecords(t).slice().sort((a,b)=>Number(a.value||999)-Number(b.value||999))
+      : [];
+
+    const standingsRows=recalculated.length
+      ? recalculated.map(r=>({
+          place:r.label,
+          players:[tournamentPlayerName(r.playerId,t)]
+        }))
+      : [
+          ...finalRows.map(r=>({
+            place:r.label,
+            players:[tournamentPlayerName(r.id,t)]
+          })),
+          ...[...lowerGroups.entries()].map(([label,ids])=>({
+            place:label,
+            players:ids.map(id=>tournamentPlayerName(id,t))
+          }))
+        ];
+
+    const standingsHtml=standingsRows.length?`
+      <div class="subpanel" style="margin-bottom:12px;${t.status==='complete'?'border-color:var(--gold);':''}">
+        <div style="display:flex;justify-content:space-between;gap:10px;align-items:center;flex-wrap:wrap">
+          <strong>${t.status==='complete'?'KONEČNÁ TABULKA VÝSLEDKŮ':'PRŮBĚŽNÉ POŘADÍ'}</strong>
+          ${t.status==='complete'?'<span class="tournament-badge gold">TURNAJ DOHRÁN</span>':''}
+        </div>
+        ${t.status==='complete' && tournamentPlacementSeriesRule(t)
+          ? '<div class="muted" style="margin-top:6px">Pořadí hráčů ve stejné výsledkové fázi je přepočítáno podle pravidla série: skóre → vzájemný zápas → umístění ve skupině.</div>'
+          : ''}
+
+        <div style="margin-top:10px;overflow-x:auto">
+          <table style="width:100%;border-collapse:collapse;min-width:420px">
+            <thead>
+              <tr>
+                <th style="text-align:left;padding:9px 10px;border-bottom:1px solid var(--border)">Pořadí</th>
+                <th style="text-align:left;padding:9px 10px;border-bottom:1px solid var(--border)">Hráč / hráči</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${standingsRows.map(r=>`
+                <tr>
+                  <td style="padding:9px 10px;border-bottom:1px solid var(--border);font-weight:950;color:var(--gold2)">${esc(r.place)}</td>
+                  <td style="padding:9px 10px;border-bottom:1px solid var(--border)">${r.players.map(esc).join(', ')}</td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+        </div>
+      </div>`:'';
+
+    return `${d.championId?`<div class="subpanel" style="text-align:center;border-color:var(--gold);margin-bottom:12px"><div class="muted">VÍTĚZ TURNAJE</div><div style="font-size:30px;font-weight:950;color:var(--gold2)">${esc(tournamentPlayerName(d.championId,t))}</div></div>`:''}
+      ${standingsHtml}
+      <div class="subpanel" style="margin-bottom:12px">
+        <strong>Stav DKO</strong>
+        <div class="muted" style="margin-top:3px">
+          2 prohry = vyřazení z hlavního pavouka • ${d.thirdPlacePlayoff?'hraje se samostatný zápas o 3. místo':'bez zápasu o 3. místo = dvě 3. místa'} • další pořadí 5.–8., 9.–16., 17.–32. …
+        </div>
+        <div style="display:flex;flex-wrap:wrap;gap:7px;margin-top:9px">
+          ${(d.participantIds||t.playerIds||[]).map(id=>{const l=d.losses[id]||0;return `<span class="tournament-badge ${l===0?'gold':''}">${esc(tournamentPlayerName(id,t))} • ${l} prohra${l===1?'':'y'}${l>=2?' • OUT':''}</span>`}).join('')}
+        </div>
+      </div>
+      ${Number(d.skoCut||0)>0?`<div class="subpanel" style="margin-bottom:12px;border-color:${d.skoStarted?'var(--gold)':'rgba(212,175,55,.35)'}">
+        <strong>DKO → SKO • NASTAVENO LAST ${Number(d.skoCut)}</strong>
+        <div class="muted" style="margin-top:5px">
+          ${d.skoStarted
+            ? `DKO fáze je uzavřena • do SKO přešlo <strong>${Number(d.skoActualCount||d.skoParticipantIds?.length||0)}</strong> hráčů. Od této chvíle jedna prohra znamená konec.`
+            : `DKO pokračuje až do okamžiku, kdy zůstane nejvýše ${Number(d.skoCut)} aktivních hráčů. Velikost startovního pavouka tento přechod neomezuje.`}
+        </div>
+      </div>`:''}
+      <div class="tournament-columns">${d.rounds.map(r=>`<div class="tournament-round"><h4>${esc(r.label)}</h4>
+      ${(r.byes||[]).map(b=>renderTournamentBye(t,b,'VOLNÝ LOS • '+(b.bracket==='W'?'A STRANA':'B STRANA'))).join('')}
+      ${r.matches.map(m=>renderTournamentMatch(t,m)).join('')}</div>`).join('')}</div>
+      ${eliminated.length?`<div class="muted" style="margin-top:12px">Vyřazeni v DKO fázi: ${eliminated.map(id=>tournamentPlayerName(id,t)).map(esc).join(', ')}</div>`:''}
+      ${t.ko?`<div class="hr"></div><h2 style="margin:0 0 10px">SKO • LAST ${Number(d.skoCut||d.skoActualCount||0)}</h2>${renderSKOTournament(t)}`:''}`;
+  }
+
+
+  function bracketMatchHtml(t,m){
+    const done=(m.status==='done'||!!m.winnerId||!!m.loserId);
+    const p1=tournamentPlayerName(m.player1Id,t);
+    const p2=tournamentPlayerName(m.player2Id,t);
+    const p1Winner=done&&m.winnerId===m.player1Id;
+    const p2Winner=done&&m.winnerId===m.player2Id;
+    const p1Out=!!t.dko&&dkoPlayerIsOut(t,m.player1Id);
+    const p2Out=!!t.dko&&dkoPlayerIsOut(t,m.player2Id);
+    const status=done?'DOHRÁNO':(m.status==='playing'?'HRAJE SE':(m.tableNumber?'STŮL '+m.tableNumber:'ČEKÁ'));
+    return `<div class="bracket-match ${done?'done':''}">
+      <div class="bracket-match-head"><span>${esc(m.roundLabel||m.bracket||'Zápas')}</span><span>${esc(status)}</span></div>
+      <div class="bracket-player ${p1Winner?'winner':''} ${p1Out?'out':''}">
+        <span>${esc(p1)}</span><span class="bracket-score">${done?(m.score1??'–'):'–'}</span>
+      </div>
+      <div class="bracket-player ${p2Winner?'winner':''} ${p2Out?'out':''}">
+        <span>${esc(p2)}</span><span class="bracket-score">${done?(m.score2??'–'):'–'}</span>
+      </div>
+    </div>`;
+  }
+
+  function bracketRoundHtml(t,r,title){
+    const matches=(r.matches||[]).map(m=>bracketMatchHtml(t,m)).join('');
+    const byes=(r.byes||[]).map(b=>`<div class="bracket-bye"><strong>${esc(tournamentPlayerName(b.playerId,t))}</strong> • VOLNÝ LOS / BYE</div>`).join('');
+    return `<div class="bracket-round"><h4>${esc(title||r.label||'KOLO')}</h4>${matches}${byes}</div>`;
+  }
+
+  function buildDKOBracketHtml(t){
+    const winnerRounds=[],loserRounds=[],finalRounds=[];
+    (t.dko?.rounds||[]).forEach((r,ri)=>{
+      const w=(r.matches||[]).filter(m=>m.bracket==='W');
+      const l=(r.matches||[]).filter(m=>m.bracket==='L');
+      const gf=(r.matches||[]).filter(m=>m.bracket==='GF'||m.bracket==='3P');
+      const wb=(r.byes||[]).filter(b=>b.bracket==='W');
+      const lb=(r.byes||[]).filter(b=>b.bracket==='L');
+
+      if(w.length||wb.length) winnerRounds.push({...r,matches:w,byes:wb,_title:'A • '+(r.label||('kolo '+(ri+1)))});
+      if(l.length||lb.length) loserRounds.push({...r,matches:l,byes:lb,_title:'B • '+(r.label||('kolo '+(ri+1)))});
+      if(gf.length) finalRounds.push({...r,matches:gf,byes:[],_title:r.label||'Finálové zápasy'});
+    });
+
+    const section=(title,sub,rounds,empty)=>`
+      <div class="bracket-section">
+        <div class="bracket-section-title"><strong>${title}</strong><span class="muted">${sub}</span></div>
+        <div class="bracket-columns">${rounds.length?rounds.map(r=>bracketRoundHtml(t,r,r._title)).join(''):`<div class="muted">${empty}</div>`}</div>
+      </div>`;
+
+    return `<div class="bracket-wrap">
+      ${section('A STRANA • WINNER BRACKET','vítěz zůstává na A straně',winnerRounds,'Další zápasy A strany zatím nejsou určené.')}
+      ${section('B STRANA • LOSER BRACKET','1. prohra přesouvá hráče sem',loserRounds,'B strana se doplní podle výsledků.')}
+      ${section('FINÁLE','Grand Final'+(t.dko?.thirdPlacePlayoff?' + zápas o 3. místo':''),finalRounds,'Finálové zápasy zatím nejsou určené.')}
+      <div class="bracket-legend">
+        <span><strong style="color:var(--gold2)">Zlatě</strong> = vítěz zápasu</span>
+        <span>Přeškrtnutý = 2 prohry / OUT</span>
+      </div>
+      <div class="bracket-note">
+        Současné DKO vytváří další dvojice až podle skutečných výsledků. Pavouk proto ukazuje všechny již známé cesty a nepředstírá budoucího soupeře, dokud není opravdu určen.
+      </div>
+    </div>`;
+  }
+
+  function buildSKOBracketHtml(t){
+    return `<div class="bracket-wrap">
+      <div class="bracket-section">
+        <div class="bracket-section-title"><strong>SKO PAVOUK</strong><span class="muted">jedna prohra = konec</span></div>
+        <div class="bracket-columns">${(t.ko?.rounds||[]).map(r=>bracketRoundHtml(t,r,r.label)).join('')}</div>
+      </div>
+    </div>`;
+  }
+
+  window.openSKOBracket=function(tid){
+    const t=(data.tournaments||[]).find(x=>x.id===tid);
+    if(!t||!t.ko)return;
+    $('bracketModalTitle').textContent=t.name+' • SKO';
+    $('bracketModalBody').innerHTML=buildSKOBracketHtml(t);
+    $('bracketModal').classList.add('show');
+  };
+
+  window.openTournamentBracket=function(tid){
+    const t=(data.tournaments||[]).find(x=>x.id===tid);
+    if(!t)return;
+    if(!t.dko){toast('DKO pavouk není v tomto turnaji dostupný.');return;}
+    $('bracketModalTitle').textContent=t.name+' • DKO';
+    $('bracketModalBody').innerHTML=buildDKOBracketHtml(t);
+    $('bracketModal').classList.add('show');
+  };
+
+  $('bracketCloseBtn').onclick=()=> $('bracketModal').classList.remove('show');
+  $('bracketModal').addEventListener('click',e=>{if(e.target===$('bracketModal'))$('bracketModal').classList.remove('show');});
+  $('bracketFullscreenBtn').onclick=async()=>{
+    const card=$('bracketModal').querySelector('.bracket-modal-card');
+    try{
+      if(!document.fullscreenElement) await card.requestFullscreen();
+      else await document.exitFullscreen();
+    }catch(e){toast('Celou obrazovku se nepodařilo otevřít.');}
+  };
+
+
+
+  function reconcileTournamentResultsFromMatches(targetTournamentId=null){
+    let changed=false;
+    const completed=(data.matches||[]).filter(m=>
+      m &&
+      m.tournamentLink &&
+      m.tournamentLink.tournamentId &&
+      m.tournamentLink.tournamentMatchId &&
+      m.endedAt &&
+      (m.winner===0||m.winner===1)
+    );
+
+    (data.tournaments||[]).forEach(t=>{
+      if(targetTournamentId && t.id!==targetTournamentId) return;
+
+      completed
+        .filter(sm=>sm.tournamentLink.tournamentId===t.id)
+        .forEach(sm=>{
+          const tm=findTournamentMatch(t,sm.tournamentLink.tournamentMatchId);
+          if(!tm)return;
+
+          const winnerId=sm.playerIds?.[sm.winner]||null;
+          const loserId=sm.playerIds?.[1-sm.winner]||null;
+
+          const needsUpdate=
+            tm.status!=='done' ||
+            tm.scoreboardMatchId!==sm.id ||
+            tm.score1!==sm.scores?.[0] ||
+            tm.score2!==sm.scores?.[1] ||
+            tm.winnerId!==winnerId ||
+            tm.loserId!==loserId;
+
+          if(!needsUpdate)return;
+
+          tm.status='done';
+          tm.tableNumber=null;
+          tm.resumable=false;
+          tm.finishedAt=sm.endedAt;
+          tm.scoreboardMatchId=sm.id;
+          tm.score1=sm.scores?.[0]??tm.score1;
+          tm.score2=sm.scores?.[1]??tm.score2;
+          tm.winnerId=winnerId;
+          tm.loserId=loserId;
+          changed=true;
+        });
+
+      if(changed && t.dko){
+        // Rebuild DKO losses from actual completed tournament matches.
+        const losses={};
+        (t.playerIds||[]).forEach(id=>losses[id]=0);
+        (t.dko?.rounds||[]).forEach(r=>(r.matches||[]).forEach(tm=>{
+          if(tm.status==='done' && tm.loserId){
+            losses[tm.loserId]=(losses[tm.loserId]||0)+1;
+          }
+        }));
+        if(t.dko)t.dko.losses=losses;
+
+        repairDKOInvalidFutureMatches(t);
+        assignTournamentTables(t);
+      }else if(changed && tournamentHasGroups(t)){
+        assignTournamentTables(t);
+      }
+
+      if(forceFinalizeTournamentIfResolved(t)){
+        changed=true;
+      }
+    });
+
+    if(changed){
+      try{localStorage.setItem(DB_KEY,JSON.stringify(data));}catch(e){}
+    }
+    return changed;
+  }
+
+  async function refreshTournamentFromCloud(tid){
+    toast('Obnovuji turnaj…');
+    try{
+      await loadSecureMatches();
+      await loadSecureTournaments();
+
+      let changed=reconcileTournamentResultsFromMatches(tid);
+      const t=(data.tournaments||[]).find(x=>x.id===tid);
+
+      if(t && rebuildSKOStateFromFinishedMatches(t))changed=true;
+
+      if(changed && t){
+        try{await saveSecureTournament(t);}catch(e){console.error('Tournament resave:',e);}
+      }
+
+      renderHistory();
+      renderStats();
+      renderPlayers();
+      renderTournament();
+
+      toast(changed?'Turnaj obnoven podle odehraných zápasů.':'Turnaj je aktuální.');
+    }catch(e){
+      console.error(e);
+      toast('Turnaj se nepodařilo obnovit: '+String(e.message||e));
+    }
+  }
+
+
+
+  async function cleanupEmptyTournaments(){
+    const empty=(data.tournaments||[]).filter(t=>
+      !(data.matches||[]).some(m=>m.tournamentLink && m.tournamentLink.tournamentId===t.id)
+    );
+
+    if(!empty.length){
+      toast('Žádné prázdné turnaje k odstranění.');
+      return;
+    }
+
+    if(!confirm('Smazat '+empty.length+' turnajů bez uložených zápasů?'))return;
+
+    try{
+      for(const t of empty){
+        await deleteSecureTournament(t.id);
+      }
+      await loadSecureTournaments();
+      renderTournament();
+      toast('Prázdné testovací turnaje byly smazány.');
+    }catch(e){
+      console.error(e);
+      toast('Údržba turnajů selhala: '+String(e.message||e));
+    }
+  }
+
+
+  
+
+  async function returnToTournamentDetail(tid){
+    if(!tid){
+      showScreen('tournament');
+      return;
+    }
+
+    forcedTournamentReturnId=tid;
+    selectedTournamentId=tid;
+    updateCurrentTournamentShortcut();
+
+    let t=(data.tournaments||[]).find(x=>x.id===tid);
+    if(!t){
+      try{
+        await loadSecureTournaments();
+        t=(data.tournaments||[]).find(x=>x.id===tid);
+      }catch(e){
+        console.error('Return to tournament detail:',e);
+      }
+    }
+
+    if(t){
+      renderTournamentDetail();
+      showScreen('tournament-detail');
+    }else{
+      renderTournament();
+      showScreen('tournament');
+      toast('Turnaj se nepodařilo znovu načíst.');
+    }
+  }
+
+  function updateCurrentTournamentShortcut(){
+    const btn=$('currentTournamentNavBtn');
+    if(!btn)return;
+    const t=(data.tournaments||[]).find(x=>x.id===selectedTournamentId);
+    btn.classList.toggle('hidden',!t);
+    if(t)btn.textContent='Aktuální: '+(t.name||'Turnaj');
+  }
+
+window.openTournamentDetail=async function(tid){
+    if(preserveTournamentDetailReturn){
+      preserveTournamentDetailReturn=false;
+    }else{
+      tournamentDetailReturnScreen='tournament';
+    }
+    selectedTournamentId=tid;
+    updateCurrentTournamentShortcut();
+
+    let t=(data.tournaments||[]).find(x=>x.id===tid);
+
+    // Cloud načítáme pouze tehdy, když turnaj opravdu není lokálně.
+    if(!t){
+      try{
+        await loadSecureTournaments();
+        t=(data.tournaments||[]).find(x=>x.id===tid);
+      }catch(e){
+        console.error('Open tournament detail:',e);
+      }
+    }
+
+    if(!t){
+      toast('Turnaj se nepodařilo načíst.');
+      renderTournament();
+      showScreen('tournament');
+      return false;
+    }
+
+    renderTournamentDetail();
+    showScreen('tournament-detail');
+    return true;
+  };
+
+  function organizerCandidates(excludeUids={}){
+    return Object.values(data.players||{})
+      .filter(p=>p && p.ownerUid && p.active!==false && p.hiddenFromPlayers!==true && !excludeUids[p.ownerUid])
+      .sort((a,b)=>playerSelectionLabel(a).localeCompare(playerSelectionLabel(b),'cs'));
+  }
+
+  function organizerNameByUid(uid){
+    if(!uid)return '—';
+    const p=Object.values(data.players||{}).find(x=>x && x.ownerUid===uid);
+    if(p)return playerSelectionLabel(p);
+    return 'Uživatel '+String(uid).slice(0,8);
+  }
+
+  function tournamentOrganizerHtml(t){
+    const managers=Object.keys(t.managerUids||{}).filter(uid=>t.managerUids[uid]===true);
+    const excluded={...(t.managerUids||{})};
+    if(t.createdByUid)excluded[t.createdByUid]=true;
+    const candidates=organizerCandidates(excluded);
+    const canEdit=canManageTournamentOrganizers(t);
+
+    return `<div class="subpanel" style="margin-bottom:12px">
+      <strong>POŘADATELÉ</strong>
+      <div class="muted" style="margin-top:5px">Zakladatel: ${esc(organizerNameByUid(t.createdByUid))}</div>
+      <div style="display:flex;gap:7px;flex-wrap:wrap;margin-top:9px">
+        ${managers.length?managers.map(uid=>`<span class="tournament-badge gold">${esc(organizerNameByUid(uid))}${canEdit?` <button onclick="removeTournamentOrganizer('${t.id}','${uid}')" style="border:0;background:transparent;color:inherit;font-weight:950;cursor:pointer">×</button>`:''}</span>`).join(''):'<span class="muted">Bez spolupořadatelů.</span>'}
+      </div>
+      ${canEdit?`<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px">
+        <select id="tournamentOrganizerSelect_${t.id}" style="flex:1;min-width:220px">
+          <option value="">— vyber registrovaného hráče —</option>
+          ${candidates.map(p=>`<option value="${esc(p.ownerUid)}">${esc(playerSelectionLabel(p))}</option>`).join('')}
+        </select>
+        <button class="btn" onclick="addTournamentOrganizer('${t.id}')">+ PŘIDAT SPOLUPOŘADATELE</button>
+      </div>`:''}
+    </div>`;
+  }
+
+  window.addTournamentOrganizer=async function(tournamentId){
+    const t=(data.tournaments||[]).find(x=>x.id===tournamentId);
+    if(!t||!canManageTournamentOrganizers(t))return;
+    const sel=$('tournamentOrganizerSelect_'+t.id);
+    const uid=sel?.value||'';
+    if(!uid)return;
+    t.managerUids=t.managerUids||{};
+    t.managerUids[uid]=true;
+    try{
+      await saveSecureTournament(t);
+      renderTournamentDetail();
+      renderTournament();
+      toast('Spolupořadatel byl přidán.');
+    }catch(e){
+      delete t.managerUids[uid];
+      toast('Spolupořadatele se nepodařilo uložit. Zkontroluj Firebase pravidla.');
+    }
+  };
+
+  window.removeTournamentOrganizer=async function(tournamentId,uid){
+    const t=(data.tournaments||[]).find(x=>x.id===tournamentId);
+    if(!t||!canManageTournamentOrganizers(t))return;
+    const backup=!!t.managerUids?.[uid];
+    if(t.managerUids)delete t.managerUids[uid];
+    try{
+      await saveSecureTournament(t);
+      renderTournamentDetail();
+      renderTournament();
+      toast('Spolupořadatel byl odebrán.');
+    }catch(e){
+      if(backup){t.managerUids=t.managerUids||{};t.managerUids[uid]=true;}
+      toast('Změnu pořadatelů se nepodařilo uložit.');
+    }
+  };
+
+  let tournamentDetailReturnScreen='tournament';
+  let preserveTournamentDetailReturn=false;
+
+  
+  function tournamentScheduleEntries(t){
+    if(!t)return [];
+    if(!t.schedule)t.schedule={startAt:'',slotMinutes:45,tableCount:Number(t.tableCount||1),entries:[]};
+    if(!Array.isArray(t.schedule.entries))t.schedule.entries=[];
+    return t.schedule.entries;
+  }
+
+  function tournamentSchedulableMatches(t){
+    return allTournamentMatches(t)
+      .filter(m=>m && m.id && m.status!=='done' && !m.winnerId && !m.loserId && m.player1Id && m.player2Id)
+      .slice()
+      .sort((a,b)=>{
+        const ar=Number(a.roundNumber||9999), br=Number(b.roundNumber||9999);
+        if(ar!==br)return ar-br;
+        const ao=Number(a.roundOrder||9999), bo=Number(b.roundOrder||9999);
+        if(ao!==bo)return ao-bo;
+        return String(a.roundLabel||a.bracket||'').localeCompare(String(b.roundLabel||b.bracket||''),'cs');
+      });
+  }
+
+  function scheduleLocalValue(date){
+    const p=n=>String(n).padStart(2,'0');
+    return date.getFullYear()+'-'+p(date.getMonth()+1)+'-'+p(date.getDate())+'T'+p(date.getHours())+':'+p(date.getMinutes());
+  }
+
+  function scheduleTimeLabel(value){
+    if(!value)return '—';
+    const d=new Date(value);
+    if(Number.isNaN(d.getTime()))return value;
+    return d.toLocaleString('cs-CZ',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'});
+  }
+
+  function scheduleHasCollision(entries,current){
+    return entries.some(e=>
+      e.matchId!==current.matchId &&
+      e.startAt===current.startAt &&
+      (Number(e.tableNumber)===Number(current.tableNumber) ||
+       (current.playerIds||[]).some(id=>(e.playerIds||[]).includes(id)))
+    );
+  }
+
+  function renderTournamentSchedule(t){
+    if(!t || t.status==='complete')return '';
+    const schedule=t.schedule||{};
+    const entries=tournamentScheduleEntries(t).slice().sort((a,b)=>
+      String(a.startAt||'').localeCompare(String(b.startAt||'')) ||
+      Number(a.tableNumber||0)-Number(b.tableNumber||0)
+    );
+    const canEdit=canManageTournament(t);
+
+    if(!canEdit && !entries.length)return '';
+
+    const controls=canEdit?`
+      <div class="grid three" style="margin-top:10px">
+        <div><label>Začátek harmonogramu</label><input id="scheduleStartAt" type="datetime-local" value="${esc(schedule.startAt||'')}"></div>
+        <div><label>Počet stolů</label><input id="scheduleTableCount" type="number" min="1" max="32" value="${Number(schedule.tableCount||t.tableCount||1)}"></div>
+        <div><label>Délka slotu (min)</label><input id="scheduleSlotMinutes" type="number" min="10" max="240" step="5" value="${Number(schedule.slotMinutes||45)}"></div>
+      </div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px">
+        <button class="btn primary" onclick="generateTournamentSchedule('${t.id}')">AUTOMATICKY VYTVOŘIT</button>
+        ${entries.length?`<button class="btn danger" onclick="clearTournamentSchedule('${t.id}')">SMAZAT HARMONOGRAM</button>`:''}
+      </div>
+      <div class="muted" style="margin-top:7px">Naplánují se pouze zápasy, u kterých už jsou známí oba hráči. Aplikace nepovolí stejný stůl ani stejného hráče ve stejném čase.</div>
+    `:'';
+
+    const rows=entries.length?entries.map(e=>{
+      const m=allTournamentMatches(t).find(x=>x.id===e.matchId);
+      if(!m)return '';
+      const collision=scheduleHasCollision(entries,e);
+      return `<tr>
+        <td>${canEdit?`<input type="datetime-local" value="${esc(e.startAt||'')}" onchange="updateTournamentScheduleEntry('${t.id}','${e.matchId}','time',this.value)">`:esc(scheduleTimeLabel(e.startAt))}</td>
+        <td>${canEdit?`<input type="number" min="1" max="${Number(schedule.tableCount||t.tableCount||32)}" value="${Number(e.tableNumber||1)}" style="width:80px" onchange="updateTournamentScheduleEntry('${t.id}','${e.matchId}','table',this.value)">`:'Stůl '+Number(e.tableNumber||1)}</td>
+        <td><strong>${esc(tournamentPlayerName(m.player1Id,t))}</strong> – <strong>${esc(tournamentPlayerName(m.player2Id,t))}</strong><div class="muted">${esc(m.roundLabel||m.bracket||'')}</div></td>
+        <td>${collision?'<span class="tournament-badge">KOLIZE</span>':'<span class="muted">OK</span>'}</td>
+      </tr>`;
+    }).join(''):'<tr><td colspan="4" class="muted">Harmonogram zatím není vytvořen.</td></tr>';
+
+    return `<details class="subpanel" style="margin-bottom:14px;border-color:rgba(212,175,55,.55)">
+      <summary style="cursor:pointer;list-style:none;display:flex;justify-content:space-between;gap:10px;align-items:center;flex-wrap:wrap">
+        <div>
+          <strong>ČASOVÝ HARMONOGRAM</strong>
+          <span class="muted" style="margin-left:8px">volitelné • kliknutím rozbalit</span>
+        </div>
+        ${entries.length?`<span class="tournament-badge gold">${entries.length} zápasů</span>`:''}
+      </summary>
+      <div class="muted" style="margin-top:8px">Orientační plán zápasů a stolů.</div>
+      ${controls}
+      <div style="overflow:auto;margin-top:12px">
+        <table class="stats-table">
+          <thead><tr><th>Čas</th><th>Stůl</th><th>Zápas</th><th>Kontrola</th></tr></thead>
+          <tbody>${rows}</tbody>
+        </table>
+      </div>
+    </details>`;
+  }
+
+  window.generateTournamentSchedule=async function(tournamentId){
+    const t=(data.tournaments||[]).find(x=>x.id===tournamentId);
+    if(!t || !canManageTournament(t))return;
+
+    const startValue=$('scheduleStartAt')?.value||'';
+    const tableCount=Math.max(1,Number($('scheduleTableCount')?.value||t.tableCount||1));
+    const slotMinutes=Math.max(10,Number($('scheduleSlotMinutes')?.value||45));
+    if(!startValue){toast('Nastav začátek harmonogramu.');return;}
+
+    const start=new Date(startValue);
+    if(Number.isNaN(start.getTime())){toast('Neplatný čas začátku.');return;}
+
+    const matches=tournamentSchedulableMatches(t);
+    if(!matches.length){toast('Není žádný zápas se známými oběma hráči k naplánování.');return;}
+
+    const entries=[];
+    let slotIndex=0;
+
+    for(const m of matches){
+      let placed=false;
+      let guard=0;
+      while(!placed && guard<1000){
+        const slotStart=new Date(start.getTime()+slotIndex*slotMinutes*60000);
+        const startAt=scheduleLocalValue(slotStart);
+
+        for(let table=1;table<=tableCount;table++){
+          const candidate={matchId:m.id,startAt,tableNumber:table,playerIds:[m.player1Id,m.player2Id]};
+          if(!scheduleHasCollision(entries,candidate)){
+            entries.push(candidate);
+            placed=true;
+            break;
+          }
+        }
+        if(!placed)slotIndex++;
+        guard++;
+      }
+
+      // Pokud je aktuální časový slot zaplněn všemi stoly, posuň další hledání.
+      const currentTime=entries.length?entries[entries.length-1].startAt:'';
+      if(entries.filter(e=>e.startAt===currentTime).length>=tableCount)slotIndex++;
+    }
+
+    t.schedule={startAt:startValue,tableCount,slotMinutes,entries};
+    try{
+      const saved=await saveSecureTournament(t);
+      const pos=(data.tournaments||[]).findIndex(x=>x.id===saved.id);
+      if(pos>=0)data.tournaments[pos]=saved;
+      renderTournamentDetail();
+      toast('Harmonogram byl vytvořen.');
+    }catch(e){
+      console.error('Generate schedule:',e);
+      toast('Harmonogram se nepodařilo uložit.');
+    }
+  };
+
+  window.updateTournamentScheduleEntry=async function(tournamentId,matchId,field,value){
+    const t=(data.tournaments||[]).find(x=>x.id===tournamentId);
+    if(!t || !canManageTournament(t))return;
+    const entries=tournamentScheduleEntries(t);
+    const e=entries.find(x=>x.matchId===matchId);
+    if(!e)return;
+
+    if(field==='time')e.startAt=value;
+    if(field==='table')e.tableNumber=Math.max(1,Number(value||1));
+
+    const collision=scheduleHasCollision(entries,e);
+    if(collision){
+      toast('Pozor: vznikla kolize hráče nebo stolu.');
+    }
+
+    try{
+      await saveSecureTournament(t);
+      renderTournamentDetail();
+    }catch(err){
+      console.error('Update schedule:',err);
+      toast('Změnu harmonogramu se nepodařilo uložit.');
+    }
+  };
+
+  window.clearTournamentSchedule=async function(tournamentId){
+    const t=(data.tournaments||[]).find(x=>x.id===tournamentId);
+    if(!t || !canManageTournament(t))return;
+    if(!confirm('Smazat celý časový harmonogram turnaje?'))return;
+    t.schedule={startAt:'',slotMinutes:45,tableCount:Number(t.tableCount||1),entries:[]};
+    try{
+      await saveSecureTournament(t);
+      renderTournamentDetail();
+      toast('Harmonogram byl smazán.');
+    }catch(e){
+      toast('Harmonogram se nepodařilo smazat.');
+    }
+  };
+
+function renderTournamentDetail(){
+    const current=(data.tournaments||[]).find(x=>x.id===selectedTournamentId);
+    if(current){
+      try{repairHybridWaitingState(current);}catch(e){}
+    }
+    updateCurrentTournamentShortcut();
+
+    const body=$('tournamentDetailBody');
+    const title=$('tournamentDetailTitle');
+    if(!body || !title)return;
+
+    const t=(data.tournaments||[]).find(x=>x.id===selectedTournamentId);
+    if(t && forcedTournamentReturnId===selectedTournamentId){
+      forcedTournamentReturnId=null;
+    }
+
+    if(!selectedTournamentId){
+      title.textContent='Aktuální turnaj';
+      body.innerHTML=`
+        <div class="subpanel">
+          <div class="muted">Není vybraný žádný turnaj.</div>
+          <button class="btn" style="margin-top:10px" onclick="forcedTournamentReturnId=null;showScreen('tournament')">← VŠECHNY TURNAJE</button>
+        </div>`;
+      return;
+    }
+
+    if(!t){
+      title.textContent='Načítám turnaj…';
+      body.innerHTML=`
+        <div class="subpanel">
+          <div class="muted">Turnaj zatím není načtený v tomto zařízení.</div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px">
+            <button class="btn primary" onclick="openTournamentDetail('${selectedTournamentId}')">↻ NAČÍST TURNAJ</button>
+            <button class="btn" onclick="forcedTournamentReturnId=null;showScreen('tournament')">← VŠECHNY TURNAJE</button>
+          </div>
+        </div>`;
+      return;
+    }
+
+    if(t.ko)ensureSKOState(t);
+    const repairedOnOpen=rebuildSKOStateFromFinishedMatches(t);
+    if(repairedOnOpen){
+      try{localStorage.setItem(DB_KEY,JSON.stringify(data));}catch(e){}
+      saveSecureTournament(t).catch(e=>console.error('Tournament auto-repair save:',e));
+      renderTournament();
+      renderResultsTournaments();
+    }
+
+    title.textContent=t.name||'Turnaj';
+    if($('backToTournamentListBtn')){
+      $('backToTournamentListBtn').textContent=tournamentDetailReturnScreen==='results-tournaments'?'← VÝSLEDKY TURNAJŮ':'← VŠECHNY TURNAJE';
+    }
+
+    const all=allTournamentMatches(t);
+    const done=all.filter(m=>m.status==='done'||m.winnerId||m.loserId).length;
+    const playing=all.filter(m=>m.status==='playing').length;
+
+    body.innerHTML=`
+      <div class="subpanel" style="margin-bottom:12px">
+        <div style="display:flex;justify-content:space-between;gap:12px;align-items:flex-start;flex-wrap:wrap">
+          <div>
+            <div class="muted">
+              ${esc(tournamentFormatLabel(t))}
+              • ${esc(tournamentDisciplineSummary(t))}
+              • Race to ${t.raceTo}
+              • ${breakModeLabel(t.breakMode).toLowerCase()}
+              • ${t.tableCount||1} ${(t.tableCount||1)===1?'stůl':'stoly'}
+            </div>
+            <div class="muted" style="margin-top:6px">
+              Odehráno ${done}/${all.length}${playing?` • právě hraje ${playing}`:''}
+            </div>
+          </div>
+          <div style="display:flex;gap:7px;flex-wrap:wrap;align-items:center">
+            ${t.historicalEditMode?'<span class="tournament-badge gold">HISTORICKÁ EDITACE</span>':''}
+            <span class="tournament-badge ${t.status==='complete'?'gold':''}">
+              ${t.status==='complete'?'DOKONČENO':'AKTIVNÍ'}
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <div class="subpanel" style="margin-bottom:12px">
+        <strong>ÚČASTNÍCI • ${(t.playerIds||[]).length}</strong>
+        <div style="display:flex;flex-wrap:wrap;gap:7px;margin-top:9px">
+          ${(t.playerIds||[]).map(id=>`
+            <span class="tournament-badge ${String(id).startsWith('guest_')?'':'gold'}">
+              ${esc(tournamentPlayerName(id,t))}${String(id).startsWith('guest_')?' • HOST':''}
+            </span>
+          `).join('')}
+        </div>
+      </div>
+
+      ${tournamentOrganizerHtml(t)}
+
+      ${renderTournamentSchedule(t)}
+
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px">
+        <button class="btn primary" onclick="shareTournament('${t.id}')">↗ SDÍLET TURNAJ</button>
+        ${t.dko?`<button class="btn primary" onclick="openTournamentBracket('${t.id}')">DKO PAVOUK</button>`:''}
+        ${t.ko?`<button class="btn primary" onclick="openSKOBracket('${t.id}')">SKO PAVOUK</button>`:''}
+        ${canManageTournament(t) && t.status!=='complete'?`<button class="btn" onclick="openActiveTournamentEdit('${t.id}')">UPRAVIT TURNAJ</button>`:''}
+        ${tournamentCanSeedFromGroups(t)?`<span class="tournament-badge gold">ČEKÁ NA RUČNÍ NASAZENÍ PLAY-OFF</span>`:''}
+        ${t.status==='complete' && tournamentCanHistoricalReseed(t)?`<button class="btn" onclick="openTournamentHistoricalEdit('${t.id}')">UPRAVIT / ZNOVU NASADIT PLAY-OFF</button>`:''}
+        ${canManageTournament(t)?`
+          ${canManageTournamentOrganizers(t)?`
+            <button class="btn danger" onclick="deleteTournament('${t.id}')">SMAZAT TURNAJ</button>
+            <button class="btn danger" onclick="deleteTournamentWithMatches('${t.id}')">SMAZAT VČ. ZÁPASŮ</button>
+          `:`<span class="muted">Jsi spolupořadatel • můžeš řídit turnaj, ale ne mazat ani měnit pořadatele.</span>`}
+        `:`<span class="muted">Tento turnaj je pouze ke sledování.</span>`}
+      </div>
+
+      <div>${t.format==='dko'?renderDKOTournament(t):
+        t.format==='sko'?renderSKOTournament(t):
+        t.format==='swiss'?renderSwissTournament(t):
+        ['groups_sko','groups_dko'].includes(t.format)?renderHybridTournament(t):
+        renderGroupTournament(t)}</div>
+    `;
+  }
+  if($('tournamentDetailRefreshBtn')){
+    $('tournamentDetailRefreshBtn').onclick=async()=>{
+      if(!selectedTournamentId){
+        showScreen('tournament');
+        return;
+      }
+      await refreshTournamentById(selectedTournamentId,$('tournamentDetailRefreshBtn'));
+    };
+  }
+
+
+  let selectedSeriesId=null;
+
+  function isSeriesOwner(s){
+    return !!(s && cloudUid && s.createdByUid && s.createdByUid===cloudUid);
+  }
+
+  function canManageSeriesOrganizers(s){
+    if(!s)return false;
+    if(currentUserIsSystemAdmin())return true;
+    return isSeriesOwner(s);
+  }
+
+  function canManageSeries(s){
+    if(!s)return false;
+    if(currentUserIsSystemAdmin())return true;
+    if(isSeriesOwner(s))return true;
+    return !!(cloudUid && s.managerUids && s.managerUids[cloudUid]===true);
+  }
+
+  function renderTournamentSeriesSelect(){
+    const el=$('tournamentSeriesSelect');
+    if(!el)return;
+    const old=el.value;
+    const list=(data.tournamentSeries||[]).slice().sort((a,b)=>String(a.name||'').localeCompare(String(b.name||''),'cs'));
+    el.innerHTML='<option value="">— bez série —</option>'+list.map(s=>`<option value="${esc(s.id)}">${esc(s.name)}${s.season?' • '+esc(s.season):''}</option>`).join('');
+    if(list.some(s=>s.id===old))el.value=old;
+  }
+
+  function parseCustomSeriesPoints(value){
+    const exact={};
+    const ranges=[];
+    String(value||'')
+      .split(/[,\n;]+/)
+      .map(x=>x.trim())
+      .filter(Boolean)
+      .forEach(part=>{
+        const m=part.match(/^(\d+)\s*(?:[-–—]\s*(\d+))?\s*[:=]\s*(-?\d+(?:[.,]\d+)?)$/);
+        if(!m)return;
+        const from=Math.max(1,Number(m[1]));
+        const to=m[2]?Math.max(from,Number(m[2])):from;
+        const points=Number(String(m[3]).replace(',','.'));
+        if(!Number.isFinite(points))return;
+        if(from===to)exact[from]=points;
+        else ranges.push({from,to,points});
+      });
+    ranges.sort((a,b)=>(a.to-a.from)-(b.to-b.from)||a.from-b.from);
+    return {exact,ranges};
+  }
+
+  function seriesCustomPointsText(s){
+    if(s?.customPointsText)return String(s.customPointsText);
+    const custom=s?.customPoints||{};
+    const exact=custom.exact||{};
+    const ranges=custom.ranges||[];
+    return [
+      ...Object.keys(exact).map(Number).sort((a,b)=>a-b).map(p=>p+'='+exact[p]),
+      ...ranges.slice().sort((a,b)=>a.from-b.from).map(r=>r.from+'-'+r.to+'='+r.points)
+    ].join(', ');
+  }
+
+  function placementRangeFromRecord(record){
+    const label=String(record?.label||'');
+    const m=label.match(/(\d+)\s*\.\s*[–—-]\s*(\d+)\s*\./);
+    if(m)return {from:Number(m[1]),to:Number(m[2])};
+    const value=Number(record?.value);
+    if(Number.isInteger(value) && value>=1)return {from:value,to:value};
+    return null;
+  }
+
+  function customSeriesPointsForPlacement(s,record,t=null){
+    const custom=s?.customPoints || parseCustomSeriesPoints(s?.customPointsText||'');
+    const exact=custom.exact||{};
+    const ranges=custom.ranges||[];
+
+    // Vlastní bodovací tabulka se řídí INDIVIDUÁLNÍM pořadím hráče.
+    // Např. value=5 => pravidlo "5=6", value=6 => "6=5" atd.
+    // To platí i tehdy, když turnaj vizuálně zobrazuje pásmo "5.–8. místo".
+    const exactPlace=Number(record?.value);
+    if(Number.isInteger(exactPlace) && exactPlace>=1){
+      if(Object.prototype.hasOwnProperty.call(exact,exactPlace)){
+        return Number(exact[exactPlace]||0);
+      }
+
+      // Pokud není konkrétní místo zadané jednotlivě, může ho pokrýt rozsah.
+      const coveringRange=ranges.find(r=>
+        exactPlace>=Number(r.from) && exactPlace<=Number(r.to)
+      );
+      if(coveringRange)return Number(coveringRange.points||0);
+
+      return 0;
+    }
+
+    // Fallback pouze pro starší data, kde přesné individuální pořadí nebylo uloženo.
+    const placement=placementRangeFromRecord(record);
+    if(!placement)return 0;
+
+    if(placement.from===placement.to && Object.prototype.hasOwnProperty.call(exact,placement.from)){
+      return Number(exact[placement.from]||0);
+    }
+
+    const exactRange=ranges.find(r=>
+      Number(r.from)===placement.from && Number(r.to)===placement.to
+    );
+    if(exactRange)return Number(exactRange.points||0);
+
+    return 0;
+  }
+
+  function seriesPointsForPlacement(s,record,t=null){
+    const canonicalPlace=Number(record?.seriesTieBreak?.canonicalPlace);
+    if(Number.isFinite(canonicalPlace) && canonicalPlace>0 && canonicalPlace!==Number(record.value)){
+      record={...record,value:canonicalPlace};
+    }
+
+    if((s.scoringMode||'bands')==='custom'){
+      return customSeriesPointsForPlacement(s,record,t);
+    }
+    const p=Number(record.value||999);
+    const top=s.pointsTop||[100,80,65,55];
+    const bands=s.pointsBands||[45,25,10,5];
+    if(p<=1)return Number(top[0]||0);
+    if(p<=2)return Number(top[1]||0);
+    if(p<=3)return Number(top[2]||0);
+    if(p<=4)return Number(top[3]||0);
+    if(p<=8)return Number(bands[0]||0);
+    if(p<=16)return Number(bands[1]||0);
+    if(p<=32)return Number(bands[2]||0);
+    if(p<=64)return Number(bands[3]||0);
+    return 0;
+  }
+
+  function seriesTournamentPlayerScore(t,playerId){
+    let rf=0,ra=0;
+    allTournamentMatches(t)
+      .filter(m=>m && (m.status==='done'||m.winnerId||m.loserId) && m.player1Id && m.player2Id && (m.player1Id===playerId||m.player2Id===playerId))
+      .forEach(m=>{
+        const s1=Number(m.score1||0),s2=Number(m.score2||0);
+        if(m.player1Id===playerId){rf+=s1;ra+=s2;}
+        else{rf+=s2;ra+=s1;}
+      });
+    return {rf,ra,diff:rf-ra};
+  }
+
+  function seriesTournamentGroupPlace(t,playerId){
+    for(const g of (t.groups||[])){
+      if(!(g.players||[]).includes(playerId))continue;
+      const st=groupStandings(g,t);
+      const idx=st.findIndex(r=>r.id===playerId);
+      return idx>=0?idx+1:999;
+    }
+    return 999;
+  }
+
+  function seriesHeadToHeadRanks(t,playerIds){
+    const ids=[...(playerIds||[])];
+    const idSet=new Set(ids);
+    const rows=Object.fromEntries(ids.map(id=>[id,{id,wins:0,losses:0,played:0}]));
+    allTournamentMatches(t)
+      .filter(m=>m && (m.status==='done'||m.winnerId||m.loserId) && idSet.has(m.player1Id) && idSet.has(m.player2Id))
+      .forEach(m=>{
+        const winnerId=m.winnerId || (Number(m.score1)>Number(m.score2)?m.player1Id:(Number(m.score2)>Number(m.score1)?m.player2Id:null));
+        if(!winnerId)return;
+        const loserId=winnerId===m.player1Id?m.player2Id:m.player1Id;
+        if(rows[winnerId]){rows[winnerId].wins++;rows[winnerId].played++;}
+        if(rows[loserId]){rows[loserId].losses++;rows[loserId].played++;}
+      });
+    return rows;
+  }
+
+  function seriesPlacementTieBreakMode(s){
+    if(s?.placementTieBreak)return s.placementTieBreak;
+    const normalized=String(s?.name||'')
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g,'')
+      .toLowerCase();
+    return normalized.includes('loun') ? 'score_h2h_group' : 'legacy';
+  }
+
+  function seriesPlacementStageInfo(t,record){
+    const p=Number(record?.value||0);
+    if(!p)return null;
+
+    const groupEliminated=!!(t?.groupEliminations||[]).some(e=>e.playerId===record?.playerId);
+    if(groupEliminated){
+      const places=(t.groupEliminations||[])
+        .map(e=>Number(e.place||0))
+        .filter(n=>n>0)
+        .sort((a,b)=>a-b);
+      return {
+        key:'stage:group-eliminated',
+        from:places[0]||p,
+        to:places[places.length-1]||p,
+        label:'nepostup ze skupiny'
+      };
+    }
+
+    // 1. a 2. místo jsou vždy jednoznačné.
+    if(p<=2)return null;
+
+    // Pokud se hraje samostatný zápas o 3. místo, 3./4. jsou také jednoznačné.
+    const hasBronze=!!(t?.ko?.thirdPlacePlayoff || t?.dko?.thirdPlacePlayoff);
+    if(hasBronze && p<=4)return null;
+
+    let from,to;
+    if(p<=4){
+      // Bez bronze match jsou oba semifinalisté stejná výsledková fáze.
+      from=3;to=4;
+    }else{
+      const range=t?.dko ? dkoPlacementRange(p) : eliminationBand(p);
+      from=Number(range.from);to=Number(range.to);
+    }
+
+    return {
+      key:'stage:'+from+'-'+to,
+      from,to,
+      label:from===to ? from+'. místo' : from+'.–'+to+'. místo'
+    };
+  }
+
+  function seriesGroupPhaseScore(t,playerId){
+    for(const g of (t?.groups||[])){
+      if(!(g.players||[]).includes(playerId))continue;
+      const row=rawGroupRows(g).find(r=>r.id===playerId);
+      if(!row)break;
+      return {
+        for:Number(row.rf||0),
+        against:Number(row.ra||0),
+        diff:Number(row.diff||0),
+        wins:Number(row.v||0),
+        losses:Number(row.p||0),
+        found:true,
+        source:'group'
+      };
+    }
+    return {for:0,against:0,diff:0,wins:0,losses:0,found:false,source:'group'};
+  }
+
+  function seriesTournamentGroupStats(t,playerId){
+    for(const g of (t?.groups||[])){
+      if(!(g.players||[]).includes(playerId))continue;
+      const raw=rawGroupRows(g).find(r=>r.id===playerId)||{v:0,p:0,rf:0,ra:0,diff:0};
+      const standings=groupStandings(g,t);
+      const idx=standings.findIndex(r=>r.id===playerId);
+      return {
+        groupId:String(g.id||''),
+        place:idx>=0?idx+1:999,
+        wins:Number(raw.v||0),
+        losses:Number(raw.p||0),
+        rf:Number(raw.rf||0),
+        ra:Number(raw.ra||0),
+        diff:Number(raw.diff||0)
+      };
+    }
+    return {groupId:'',place:999,wins:0,losses:0,rf:0,ra:0,diff:0};
+  }
+
+  function seriesPlayoffScore(t,playerId){
+    let rf=0,ra=0,played=0;
+    allTournamentMatches(t)
+      .filter(m=>
+        m &&
+        !tournamentMatchIsGroupMatch(t,m) &&
+        (m.status==='done'||m.winnerId||m.loserId) &&
+        m.player1Id && m.player2Id &&
+        (m.player1Id===playerId||m.player2Id===playerId)
+      )
+      .forEach(m=>{
+        const s1=Number(m.score1||0),s2=Number(m.score2||0);
+        if(m.player1Id===playerId){rf+=s1;ra+=s2;}
+        else{rf+=s2;ra+=s1;}
+        played++;
+      });
+    return {for:rf,against:ra,diff:rf-ra,played,found:played>0,source:'playoff'};
+  }
+
+  function seriesGroupHeadToHeadRanks(t,playerIds){
+    const ids=[...(playerIds||[])];
+    const idSet=new Set(ids);
+    const rows=Object.fromEntries(ids.map(id=>[id,{id,wins:0,losses:0,played:0}]));
+
+    for(const g of (t?.groups||[])){
+      const inGroup=ids.filter(id=>(g.players||[]).includes(id));
+      if(inGroup.length<2)continue;
+      const inGroupSet=new Set(inGroup);
+      (g.matches||[])
+        .filter(m=>
+          m &&
+          (m.status==='done'||m.winnerId||m.loserId) &&
+          inGroupSet.has(m.player1Id) &&
+          inGroupSet.has(m.player2Id)
+        )
+        .forEach(m=>{
+          const winnerId=m.winnerId || (
+            Number(m.score1)>Number(m.score2)?m.player1Id:
+            (Number(m.score2)>Number(m.score1)?m.player2Id:null)
+          );
+          if(!winnerId)return;
+          const loserId=winnerId===m.player1Id?m.player2Id:m.player1Id;
+          if(rows[winnerId]){rows[winnerId].wins++;rows[winnerId].played++;}
+          if(rows[loserId]){rows[loserId].losses++;rows[loserId].played++;}
+        });
+    }
+    return rows;
+  }
+
+  function seriesRefineTournamentPlacements(s,t,records){
+    if(seriesPlacementTieBreakMode(s)!=='score_h2h_group')return records;
+
+    const out=(records||[]).map(r=>({...r}));
+    const cohorts=new Map();
+
+    out.forEach(r=>{
+      const stage=seriesPlacementStageInfo(t,r);
+      if(!stage)return;
+      if(!cohorts.has(stage.key))cohorts.set(stage.key,[]);
+      cohorts.get(stage.key).push(r);
+    });
+
+    cohorts.forEach(cohort=>{
+      if(cohort.length<=1)return;
+
+      const availablePlaces=cohort.map(r=>Number(r.value||999)).sort((a,b)=>a-b);
+      const groupEliminatedIds=new Set((t.groupEliminations||[]).map(e=>e.playerId));
+      const groupStats=Object.fromEntries(cohort.map(r=>[r.playerId,seriesTournamentGroupStats(t,r.playerId)]));
+      const playoffScores=Object.fromEntries(cohort.map(r=>[r.playerId,seriesPlayoffScore(t,r.playerId)]));
+      const ordered=[];
+      const finalRankKeyByPlayer={};
+
+      if(cohort.every(r=>groupEliminatedIds.has(r.playerId))){
+        // Nepostupující: umístění ve skupině -> body/výhry -> vzájemný zápas.
+        const byBase=new Map();
+        cohort.forEach(r=>{
+          const gs=groupStats[r.playerId]||{};
+          const key='group|place:'+Number(gs.place||999)+'|wins:'+Number(gs.wins||0);
+          if(!byBase.has(key))byBase.set(key,[]);
+          byBase.get(key).push(r);
+        });
+
+        [...byBase.keys()]
+          .sort((ka,kb)=>{
+            const a=byBase.get(ka)?.[0],b=byBase.get(kb)?.[0];
+            const ga=groupStats[a?.playerId]||{},gb=groupStats[b?.playerId]||{};
+            return Number(ga.place||999)-Number(gb.place||999) ||
+                   Number(gb.wins||0)-Number(ga.wins||0);
+          })
+          .forEach(baseKey=>{
+            const tied=byBase.get(baseKey);
+            const h2h=seriesGroupHeadToHeadRanks(t,tied.map(r=>r.playerId));
+            const byH2H=new Map();
+            tied.forEach(r=>{
+              const wins=Number(h2h[r.playerId]?.wins||0);
+              if(!byH2H.has(wins))byH2H.set(wins,[]);
+              byH2H.get(wins).push(r);
+            });
+            [...byH2H.keys()].sort((a,b)=>b-a).forEach(wins=>{
+              const rows=byH2H.get(wins);
+              rows.sort((a,b)=>String(tournamentPlayerName(a.playerId,t)||'').localeCompare(String(tournamentPlayerName(b.playerId,t)||''),'cs'));
+              rows.forEach(r=>{
+                finalRankKeyByPlayer[r.playerId]=baseKey+'|h2h:'+Number(wins);
+              });
+              ordered.push(...rows);
+            });
+          });
+      }else{
+        // Play-off: dosažená fáze je daná cohortou.
+        // Dále rozhoduje CELKOVÝ rozdíl racků ze všech play-off zápasů,
+        // potom body/výhry ve skupině a pak vzájemný zápas pouze ze skupiny.
+        const byScore=new Map();
+        cohort.forEach(r=>{
+          const sc=playoffScores[r.playerId]||{};
+          const diff=Number(sc.diff||0);
+          if(!byScore.has(diff))byScore.set(diff,[]);
+          byScore.get(diff).push(r);
+        });
+
+        [...byScore.keys()].sort((a,b)=>b-a).forEach(diff=>{
+          const scoreRows=byScore.get(diff);
+          const byGroupWins=new Map();
+          scoreRows.forEach(r=>{
+            const wins=Number(groupStats[r.playerId]?.wins||0);
+            if(!byGroupWins.has(wins))byGroupWins.set(wins,[]);
+            byGroupWins.get(wins).push(r);
+          });
+
+          [...byGroupWins.keys()].sort((a,b)=>b-a).forEach(groupWins=>{
+            const tied=byGroupWins.get(groupWins);
+            const h2h=seriesGroupHeadToHeadRanks(t,tied.map(r=>r.playerId));
+            const byH2H=new Map();
+            tied.forEach(r=>{
+              const wins=Number(h2h[r.playerId]?.wins||0);
+              if(!byH2H.has(wins))byH2H.set(wins,[]);
+              byH2H.get(wins).push(r);
+            });
+
+            [...byH2H.keys()].sort((a,b)=>b-a).forEach(h2hWins=>{
+              const rows=byH2H.get(h2hWins);
+              rows.sort((a,b)=>String(tournamentPlayerName(a.playerId,t)||'').localeCompare(String(tournamentPlayerName(b.playerId,t)||''),'cs'));
+              rows.forEach(r=>{
+                finalRankKeyByPlayer[r.playerId]=
+                  'playoff|diff:'+Number(diff)+
+                  '|groupWins:'+Number(groupWins)+
+                  '|h2h:'+Number(h2hWins);
+              });
+              ordered.push(...rows);
+            });
+          });
+        });
+      }
+
+      const rankKeyCounts={};
+      const rankKeyFirstIndex={};
+      ordered.forEach((r,i)=>{
+        const key=finalRankKeyByPlayer[r.playerId]||('fallback:'+r.playerId);
+        rankKeyCounts[key]=Number(rankKeyCounts[key]||0)+1;
+        if(rankKeyFirstIndex[key]===undefined)rankKeyFirstIndex[key]=i;
+      });
+
+      const canonicalPlaceByRankKey={};
+      Object.keys(rankKeyFirstIndex).forEach(key=>{
+        const firstIndex=Number(rankKeyFirstIndex[key]||0);
+        canonicalPlaceByRankKey[key]=availablePlaces[firstIndex]??null;
+      });
+
+      ordered.forEach((r,i)=>{
+        const rankKey=finalRankKeyByPlayer[r.playerId]||('fallback:'+r.playerId);
+        const shared=Number(rankKeyCounts[rankKey]||0)>1;
+        const canonical=canonicalPlaceByRankKey[rankKey];
+        const gs=groupStats[r.playerId]||{};
+        const ps=playoffScores[r.playerId]||{};
+
+        r.value=canonical!=null ? canonical : (availablePlaces[i]??r.value);
+        r.sharedPlace=shared;
+        r.label=Number(r.value)+'. místo'+(shared?' (dělené)':'');
+        const stage=seriesPlacementStageInfo(t,r);
+        r.seriesTieBreak={
+          stage:stage?.label||'',
+          sharedPlace:shared,
+          rankKey,
+          canonicalPlace:Number(r.value),
+          scoreSource:groupEliminatedIds.has(r.playerId)?'group-placement':'playoff-total',
+          scoreDiff:Number(ps.diff||0),
+          scoreFor:Number(ps.for||0),
+          scoreAgainst:Number(ps.against||0),
+          groupPlace:Number(gs.place||999),
+          groupWins:Number(gs.wins||0),
+          groupDiff:Number(gs.diff||0)
+        };
+      });
+    });
+
+    return out;
+  }
+
+  function seriesTournamentPlacementRecords(s,t){
+    const rows=seriesRefineTournamentPlacements(s,t,baseTournamentPlacementRecords(t));
+
+    // Poslední pojistka pro historicky opravované turnaje:
+    // hráči se stejným finálním rankKey musí mít vždy stejné value.
+    const byRankKey=new Map();
+    rows.forEach(r=>{
+      const key=r?.seriesTieBreak?.rankKey;
+      if(!key)return;
+      if(!byRankKey.has(key))byRankKey.set(key,[]);
+      byRankKey.get(key).push(r);
+    });
+    byRankKey.forEach(group=>{
+      if(group.length<2)return;
+      const sharedPlace=Math.min(...group.map(r=>Number(r.value||999)));
+      group.forEach(r=>{
+        r.value=sharedPlace;
+        r.sharedPlace=true;
+        r.label=sharedPlace+'. místo (dělené)';
+        r.seriesTieBreak={...(r.seriesTieBreak||{}),sharedPlace:true,canonicalPlace:sharedPlace};
+      });
+    });
+
+    return rows;
+  }
+
+  function normalizeSeriesHistoricalName(value){
+    return String(value||'')
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g,'')
+      .toLowerCase()
+      .replace(/\s+/g,' ')
+      .trim();
+  }
+
+  function seriesHistoricalPlayerMatch(name){
+    const target=normalizeSeriesHistoricalName(name);
+    if(!target)return null;
+    return Object.values(data.players||{}).find(p=>{
+      const names=[];
+      try{names.push(playerDisplayName(p));}catch(e){}
+      names.push(p?.name||'',p?.nickname||'');
+      return names.some(x=>normalizeSeriesHistoricalName(x)===target);
+    })||null;
+  }
+
+  function seriesStandings(s){
+    const byPlayer=new Map();
+    const tournaments=(s.tournamentIds||[])
+      .map(id=>(data.tournaments||[]).find(t=>t.id===id))
+      .filter(t=>t&&t.status==='complete');
+
+    tournaments.forEach(t=>{
+      seriesTournamentPlacementRecords(s,t).forEach(r=>{
+        if(!r.playerId)return;
+
+        const registered=!!data.players?.[r.playerId];
+        const displayName=tournamentPlayerName(r.playerId,t);
+        const club=registered ? (data.players[r.playerId]?.club||'') : '';
+        const guest=String(r.playerId).startsWith('guest_') || !registered;
+
+        // Registrovaný hráč se slučuje podle playerId.
+        // Hosté / neregistrovaní se slučují alespoň podle normalizovaného jména,
+        // aby stejný člověk nebyl v sérii pokaždé jako nový řádek.
+        const key=registered
+          ? 'player:'+r.playerId
+          : 'guest:'+String(displayName||r.playerId)
+              .normalize('NFD')
+              .replace(/[\u0300-\u036f]/g,'')
+              .toLowerCase()
+              .trim();
+
+        if(!byPlayer.has(key)){
+          byPlayer.set(key,{
+            key,
+            playerId:r.playerId,
+            displayName:displayName||r.playerId,
+            club,
+            guest,
+            results:[],
+            wins:0,
+            seconds:0,
+            thirds:0
+          });
+        }
+
+        const row=byPlayer.get(key);
+
+        // Když se později stejný člověk objeví jako registrovaný hráč,
+        // upřednostníme jeho aktuální zobrazované jméno/klub.
+        if(registered){
+          row.playerId=r.playerId;
+          row.displayName=playerSelectionLabel(data.players[r.playerId]);
+          row.club=data.players[r.playerId]?.club||row.club||'';
+          row.guest=false;
+        }
+
+        const pts=seriesPointsForPlacement(s,r,t);
+        row.results.push({
+          tournamentId:t.id,
+          tournamentName:t.name,
+          label:r.label,
+          value:r.value,
+          points:pts,
+          seriesTieBreak:r.seriesTieBreak||null
+        });
+
+        if(r.value===1)row.wins++;
+        if(r.value===2)row.seconds++;
+        if(r.value===3)row.thirds++;
+      });
+    });
+
+    const historical=Array.isArray(s.historicalTournaments)?s.historicalTournaments:[];
+    historical.forEach(ht=>{
+      (Array.isArray(ht.results)?ht.results:[]).forEach(r=>{
+        const place=Math.max(1,Math.floor(Number(r.place||r.value||999)));
+        if(!Number.isFinite(place)||place>=999)return;
+
+        const registered=!!(r.playerId && data.players?.[r.playerId]);
+        const displayName=registered
+          ? playerSelectionLabel(data.players[r.playerId])
+          : String(r.displayName||r.name||r.playerId||'Host');
+        const playerId=registered ? r.playerId : String(r.playerId||('histguest_'+normalizeSeriesHistoricalName(displayName)));
+        const key=registered
+          ? 'player:'+playerId
+          : 'guest:'+normalizeSeriesHistoricalName(displayName);
+
+        if(!byPlayer.has(key)){
+          byPlayer.set(key,{
+            key,
+            playerId,
+            displayName,
+            club:registered?(data.players[playerId]?.club||''):'',
+            guest:!registered,
+            results:[],
+            wins:0,
+            seconds:0,
+            thirds:0
+          });
+        }
+
+        const row=byPlayer.get(key);
+        if(registered){
+          row.playerId=playerId;
+          row.displayName=playerSelectionLabel(data.players[playerId]);
+          row.club=data.players[playerId]?.club||row.club||'';
+          row.guest=false;
+        }
+
+        const shared=(ht.results||[]).filter(x=>Number(x.place||x.value)===place).length>1;
+        const placementRecord={
+          playerId,
+          value:place,
+          label:place+'. místo'+(shared?' (dělené)':''),
+          sharedPlace:shared
+        };
+        const pts=seriesPointsForPlacement(s,placementRecord,null);
+        row.results.push({
+          tournamentId:ht.id,
+          tournamentName:ht.name||'Historický turnaj',
+          label:placementRecord.label,
+          value:place,
+          points:pts,
+          historical:true,
+          seriesTieBreak:shared?{sharedPlace:true,canonicalPlace:place}:null
+        });
+
+        if(place===1)row.wins++;
+        if(place===2)row.seconds++;
+        if(place===3)row.thirds++;
+      });
+    });
+
+    const bestCount=Math.max(0,Number(s.bestCount||0));
+    const rows=[...byPlayer.values()].map(r=>{
+      const sorted=[...r.results].sort((a,b)=>b.points-a.points||a.value-b.value);
+      const counted=bestCount>0?sorted.slice(0,bestCount):sorted;
+      r.points=counted.reduce((sum,x)=>sum+x.points,0);
+      r.counted=counted.length;
+      r.tournaments=r.results.length;
+      return r;
+    });
+
+    rows.sort((a,b)=>
+      b.points-a.points ||
+      b.wins-a.wins ||
+      b.seconds-a.seconds ||
+      b.thirds-a.thirds ||
+      String(a.displayName||'').localeCompare(String(b.displayName||''),'cs')
+    );
+
+    return rows;
+  }
+
+  function renderSeriesList(){
+    const wrap=$('tournamentSeriesList');
+    if(!wrap)return;
+    const list=(data.tournamentSeries||[]).slice().sort((a,b)=>String(b.season||'').localeCompare(String(a.season||''))||String(a.name||'').localeCompare(String(b.name||''),'cs'));
+    if(!list.length){
+      wrap.innerHTML='<div class="muted">Zatím není vytvořená žádná série.</div>';
+      return;
+    }
+    wrap.innerHTML=list.map(s=>{
+      const included=(s.tournamentIds||[]).map(id=>(data.tournaments||[]).find(t=>t.id===id)).filter(Boolean);
+      const historical=Array.isArray(s.historicalTournaments)?s.historicalTournaments:[];
+      const completed=included.filter(t=>t.status==='complete').length+historical.length;
+      const total=included.length+historical.length;
+      const players=seriesStandings(s).length;
+      return `<div class="subpanel" style="margin-bottom:8px">
+        <div style="display:flex;justify-content:space-between;gap:10px;align-items:center;flex-wrap:wrap">
+          <div><strong style="font-size:18px">${esc(s.name)}</strong>
+            <div class="muted">${esc(s.club||'')}${s.season?' • '+esc(s.season):''} • ${completed}/${total} turnajů • ${players} hráčů</div>
+          </div>
+          <button class="btn primary" onclick="openTournamentSeries('${s.id}')">OTEVŘÍT SÉRII</button>
+        </div>
+      </div>`;
+    }).join('');
+  }
+
+  function parsePointList(value,defaults){
+    const nums=String(value||'').split(',').map(x=>Number(x.trim())).filter(Number.isFinite);
+    return defaults.map((d,i)=>Number.isFinite(nums[i])?nums[i]:d);
+  }
+
+  window.openTournamentSeries=function(seriesId){
+    selectedSeriesId=seriesId;
+    const s=(data.tournamentSeries||[]).find(x=>x.id===seriesId);
+    if(!s)return;
+    $('seriesModalTitle').textContent=s.name+(s.season?' • '+s.season:'');
+    renderSeriesModal();
+    $('seriesModal').classList.add('show');
+  };
+
+  function seriesOrganizerHtml(s){
+    const managers=Object.keys(s.managerUids||{}).filter(uid=>s.managerUids[uid]===true);
+    const excluded={...(s.managerUids||{})};
+    if(s.createdByUid)excluded[s.createdByUid]=true;
+    const candidates=organizerCandidates(excluded);
+    const canEdit=canManageSeriesOrganizers(s);
+
+    return `<div class="subpanel" style="margin-top:10px">
+      <strong>POŘADATELÉ SÉRIE</strong>
+      <div class="muted" style="margin-top:5px">Zakladatel: ${esc(organizerNameByUid(s.createdByUid))}</div>
+      <div style="display:flex;gap:7px;flex-wrap:wrap;margin-top:9px">
+        ${managers.length?managers.map(uid=>`<span class="tournament-badge gold">${esc(organizerNameByUid(uid))}${canEdit?` <button onclick="removeSeriesOrganizer('${s.id}','${uid}')" style="border:0;background:transparent;color:inherit;font-weight:950;cursor:pointer">×</button>`:''}</span>`).join(''):'<span class="muted">Bez spolupořadatelů.</span>'}
+      </div>
+      ${canEdit?`<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px">
+        <select id="seriesOrganizerSelect_${s.id}" style="flex:1;min-width:220px">
+          <option value="">— vyber registrovaného hráče —</option>
+          ${candidates.map(p=>`<option value="${esc(p.ownerUid)}">${esc(playerSelectionLabel(p))}</option>`).join('')}
+        </select>
+        <button class="btn" onclick="addSeriesOrganizer('${s.id}')">+ PŘIDAT SPOLUPOŘADATELE</button>
+      </div>`:''}
+    </div>`;
+  }
+
+  window.addSeriesOrganizer=function(seriesId){
+    const s=(data.tournamentSeries||[]).find(x=>x.id===seriesId);
+    if(!s||!canManageSeriesOrganizers(s))return;
+    const uid=$('seriesOrganizerSelect_'+s.id)?.value||'';
+    if(!uid)return;
+    s.managerUids=s.managerUids||{};
+    s.managerUids[uid]=true;
+    s.updatedAt=new Date().toISOString();
+    saveData();renderSeriesList();renderSeriesModal();
+    toast('Spolupořadatel série byl přidán.');
+  };
+
+  window.removeSeriesOrganizer=function(seriesId,uid){
+    const s=(data.tournamentSeries||[]).find(x=>x.id===seriesId);
+    if(!s||!canManageSeriesOrganizers(s))return;
+    if(s.managerUids)delete s.managerUids[uid];
+    s.updatedAt=new Date().toISOString();
+    saveData();renderSeriesList();renderSeriesModal();
+    toast('Spolupořadatel série byl odebrán.');
+  };
+
+  function renderSeriesModal(){
+    const s=(data.tournamentSeries||[]).find(x=>x.id===selectedSeriesId);
+    const body=$('seriesModalBody');
+    if(!s||!body)return;
+
+    const included=(s.tournamentIds||[]).map(id=>(data.tournaments||[]).find(t=>t.id===id)).filter(Boolean);
+    const available=(data.tournaments||[]).filter(t=>t.status==='complete'&&!(s.tournamentIds||[]).includes(t.id));
+    const historical=Array.isArray(s.historicalTournaments)?s.historicalTournaments:[];
+    const standings=seriesStandings(s);
+
+    body.innerHTML=`
+      <div class="subpanel">
+        <div><strong>${esc(s.club||'Klub')}</strong>${s.season?' • '+esc(s.season):''}</div>
+        <div class="muted" style="margin-top:5px">Bodování: ${(s.scoringMode||'bands')==='custom'
+          ? 'vlastní • '+esc(seriesCustomPointsText(s)||'bez pravidel')
+          : `1. ${s.pointsTop?.[0]??100} • 2. ${s.pointsTop?.[1]??80} • 3. ${s.pointsTop?.[2]??65} • 4. ${s.pointsTop?.[3]??55} • 5.–8. ${s.pointsBands?.[0]??45} • 9.–16. ${s.pointsBands?.[1]??25} • 17.–32. ${s.pointsBands?.[2]??10} • 33.–64. ${s.pointsBands?.[3]??5}`}
+          ${s.bestCount?` • počítá se nejlepších ${s.bestCount}`:' • počítají se všechny'}</div>
+      </div>
+
+      ${canManageSeries(s)?`
+      <div class="subpanel" style="margin-top:10px">
+        <strong>BODOVÁNÍ SÉRIE</strong>
+        <div class="grid two" style="margin-top:9px">
+          <div>
+            <label>Způsob bodování</label>
+            <select id="seriesEditScoringMode_${s.id}" onchange="toggleSeriesEditScoring('${s.id}')">
+              <option value="bands" ${(s.scoringMode||'bands')==='bands'?'selected':''}>Po pásmech</option>
+              <option value="custom" ${(s.scoringMode||'bands')==='custom'?'selected':''}>Vlastní body za umístění</option>
+            </select>
+          </div>
+          <div>
+            <label>Počítat nejlepších X turnajů</label>
+            <input id="seriesEditBestCount_${s.id}" type="number" min="0" value="${Number(s.bestCount||0)}">
+          </div>
+        </div>
+        <div style="margin-top:9px">
+          <label>Pořadí při stejné výsledkové fázi</label>
+          <select id="seriesEditPlacementTieBreak_${s.id}">
+            <option value="legacy" ${seriesPlacementTieBreakMode(s)==='legacy'?'selected':''}>Standardní pořadí turnaje</option>
+            <option value="score_h2h_group" ${seriesPlacementTieBreakMode(s)==='score_h2h_group'?'selected':''}>Skóre → vzájemný zápas → umístění ve skupině</option>
+          </select>
+          <div class="muted" style="margin-top:5px">Skóre = výsledek zápasu, ve kterém hráč v dané fázi vypadl (např. 1:2 je lepší než 0:2). U nepostupujících ze skupin se jako skóre bere rozdíl racků ve skupině. Pokud jsou hráči shodní i po všech kritériích, mají dělené místo (např. 5., 5., 7.) a oba vždy dostanou stejné body za dělené místo. Přepočet používá aktuální odehrané play-off zápasy, takže se promítne i dodatečná oprava historického turnaje. Pokud nerozhodne skóre, použije se vzájemný zápas a potom umístění ve skupině.</div>
+        </div>
+        <div id="seriesEditBands_${s.id}" class="${(s.scoringMode||'bands')==='custom'?'hidden':''} grid two" style="margin-top:9px">
+          <div><label>1. / 2. / 3. / 4.</label><input id="seriesEditTop_${s.id}" value="${esc((s.pointsTop||[100,80,65,55]).join(','))}"></div>
+          <div><label>5–8 / 9–16 / 17–32 / 33–64</label><input id="seriesEditBandsPts_${s.id}" value="${esc((s.pointsBands||[45,25,10,5]).join(','))}"></div>
+        </div>
+        <div id="seriesEditCustom_${s.id}" class="${(s.scoringMode||'bands')==='custom'?'':'hidden'}" style="margin-top:9px">
+          <label>Vlastní bodovací tabulka</label>
+          <textarea id="seriesEditCustomPts_${s.id}" rows="4">${esc(seriesCustomPointsText(s))}</textarea>
+          <div class="muted" style="margin-top:5px">
+            Např. 1=100, 2=85, 3=70, 4=60, 5-8=45.
+            Pokud má turnaj vizuálně pásmo (např. 5.–8.), série stále použije skutečné individuální pořadí hráče:
+            5. místo dostane body za 5., 6. místo za 6. atd.
+          </div>
+        </div>
+        <div style="display:flex;justify-content:flex-end;margin-top:10px">
+          <button class="btn primary" onclick="saveSeriesScoring('${s.id}')">ULOŽIT BODOVÁNÍ</button>
+        </div>
+      </div>`:''}
+
+      ${seriesOrganizerHtml(s)}
+
+      <h3>CELKOVÉ POŘADÍ</h3>
+      ${standings.length?`<div style="overflow:auto"><table class="stats-table">
+        <thead><tr><th>#</th><th>Hráč</th><th>Turnaje</th><th>1.</th><th>2.</th><th>3.</th><th>Body</th></tr></thead>
+        <tbody>${standings.map((r,i)=>`<tr>
+          <td class="standings-pos">${i+1}</td>
+          <td>
+            <strong>${esc(r.displayName||r.playerId)}</strong>
+            ${r.guest?'<span class="tournament-badge" style="margin-left:6px">HOST</span>':''}
+          </td>
+          <td class="num">${r.tournaments}</td><td class="num">${r.wins}</td><td class="num">${r.seconds}</td><td class="num">${r.thirds}</td>
+          <td class="num"><strong style="color:var(--gold2)">${r.points}</strong></td>
+        </tr>`).join('')}</tbody>
+      </table></div>`:'<div class="muted">Série zatím nemá dokončené výsledky.</div>'}
+
+      <h3 style="margin-top:18px">TURNAJE V SÉRII</h3>
+      ${included.length?included.map(t=>`<div class="subpanel" style="margin-top:8px">
+        <div style="display:flex;justify-content:space-between;gap:8px;align-items:center;flex-wrap:wrap">
+          <div><strong>${esc(t.name)}</strong><div class="muted">${esc(tournamentFormatLabel(t))} • ${esc(tournamentDisciplineSummary(t))}</div></div>
+          <div style="display:flex;gap:6px">
+            <button class="btn" onclick="openTournamentDetail('${t.id}');$('seriesModal').classList.remove('show')">VÝSLEDKY</button>
+            ${canManageSeries(s)?`<button class="btn danger" onclick="removeTournamentFromSeries('${s.id}','${t.id}')">ODEBRAT</button>`:''}
+          </div>
+        </div>
+      </div>`).join(''):'<div class="muted">Zatím žádný běžný turnaj.</div>'}
+
+      ${historical.length?`<h3 style="margin-top:18px">HISTORICKY ZADANÉ TURNAJE</h3>
+        ${historical.slice().sort((a,b)=>String(b.date||'').localeCompare(String(a.date||''))).map(ht=>`<div class="subpanel" style="margin-top:8px">
+          <div style="display:flex;justify-content:space-between;gap:8px;align-items:center;flex-wrap:wrap">
+            <div>
+              <strong>${esc(ht.name||'Historický turnaj')}</strong>
+              <div class="muted">${ht.date?esc(new Date(ht.date+'T12:00:00').toLocaleDateString('cs-CZ'))+' • ':''}${(ht.results||[]).length} hráčů • ručně zadaný výsledek</div>
+            </div>
+            ${canManageSeries(s)?`<button class="btn danger" onclick="deleteHistoricalSeriesTournament('${s.id}','${ht.id}')">SMAZAT</button>`:''}
+          </div>
+          <div class="muted" style="margin-top:5px">${ht.statsComplete?('Kompletní W/L • '+Number((ht.matches||[]).length)+' zápasů'):'Pouze konečné pořadí • W/L neúplné'}</div>
+          <div class="muted" style="margin-top:7px">${(ht.results||[]).slice().sort((a,b)=>Number(a.place)-Number(b.place)).map(r=>esc(String(r.place)+'. '+String(r.displayName||r.name||r.playerId||'Hráč'))).join(' • ')}</div>
+        </div>`).join('')}`:''}
+
+      ${canManageSeries(s)?`<h3 style="margin-top:18px">PŘIDAT HISTORICKÝ TURNAJ</h3>
+        <div class="subpanel">
+          <div class="grid two">
+            <div><label>Název turnaje</label><input id="seriesHistoricalName_${s.id}" placeholder="např. Lounská tour – květen"></div>
+            <div><label>Datum</label><input id="seriesHistoricalDate_${s.id}" type="date"></div>
+          </div>
+          <div style="margin-top:10px">
+            <label>Způsob zadání</label>
+            <select id="seriesHistoricalMode_${s.id}" onchange="toggleSeriesHistoricalMode('${s.id}')">
+              <option value="full" selected>Kompletní turnaj – zadat odehrané zápasy</option>
+              <option value="placements">Pouze konečné pořadí – neúplné W/L statistiky</option>
+            </select>
+          </div>
+
+          <div id="seriesHistoricalFull_${s.id}" style="margin-top:12px">
+            <div style="display:flex;justify-content:space-between;gap:10px;align-items:center;flex-wrap:wrap">
+              <div>
+                <label style="margin-bottom:3px">Odehrané zápasy</label>
+                <div class="muted">Každý zápas zadej do samostatného řádku.</div>
+              </div>
+              <button class="btn" type="button" onclick="addHistoricalMatchRow('${s.id}')">+ PŘIDAT ZÁPAS</button>
+            </div>
+            <div id="seriesHistoricalMatchRows_${s.id}" class="historical-entry-list" style="margin-top:10px"></div>
+
+            <label style="display:flex;align-items:center;gap:8px;margin-top:14px">
+              <input id="seriesHistoricalManualPlacement_${s.id}" type="checkbox" style="width:auto" onchange="toggleHistoricalManualPlacement('${s.id}')">
+              Chci konečné pořadí zadat ručně
+            </label>
+            <div id="seriesHistoricalManualPlacementBox_${s.id}" class="hidden" style="margin-top:10px">
+              <div style="display:flex;justify-content:space-between;gap:10px;align-items:center;flex-wrap:wrap">
+                <div class="muted">Použij, pokud nemáš kompletní pavouk nebo chceš pořadí ručně opravit.</div>
+                <button class="btn" type="button" onclick="addHistoricalPlacementRow('${s.id}','manual')">+ PŘIDAT HRÁČE</button>
+              </div>
+              <div id="seriesHistoricalManualPlacementRows_${s.id}" class="historical-entry-list" style="margin-top:10px"></div>
+            </div>
+
+            <details style="margin-top:14px">
+              <summary style="cursor:pointer;font-weight:900">Pokročilé: vložit zápasy z textu</summary>
+              <div style="margin-top:10px">
+                <textarea id="seriesHistoricalMatches_${s.id}" rows="7" placeholder="skupina A; Jan Novák; Petr Svoboda; 2:1"></textarea>
+                <div class="muted" style="margin-top:5px">Původní import zůstává jako záložní možnost. Pokud vyplníš řádky výše, mají přednost.</div>
+                <textarea id="seriesHistoricalResults_${s.id}" rows="5" style="margin-top:8px" placeholder="Volitelné pořadí: 1; Jan Novák"></textarea>
+              </div>
+            </details>
+          </div>
+
+          <div id="seriesHistoricalPlacements_${s.id}" class="hidden" style="margin-top:12px">
+            <div style="display:flex;justify-content:space-between;gap:10px;align-items:center;flex-wrap:wrap">
+              <div>
+                <label style="margin-bottom:3px">Konečné pořadí</label>
+                <div class="muted">Stejné číslo místa znamená dělené pořadí.</div>
+              </div>
+              <button class="btn" type="button" onclick="addHistoricalPlacementRow('${s.id}','placements')">+ PŘIDAT HRÁČE</button>
+            </div>
+            <div id="seriesHistoricalPlacementRows_${s.id}" class="historical-entry-list" style="margin-top:10px"></div>
+            <details style="margin-top:14px">
+              <summary style="cursor:pointer;font-weight:900">Pokročilé: vložit pořadí z textu</summary>
+              <textarea id="seriesHistoricalPlacementsOnly_${s.id}" rows="6" style="margin-top:10px" placeholder="1; Jan Novák&#10;2; Petr Svoboda"></textarea>
+            </details>
+            <div class="muted" style="margin-top:8px">Tato varianta uloží body za umístění, ale nebude doplňovat výhry/prohry ze zápasů.</div>
+          </div>
+
+          <div style="display:flex;justify-content:flex-end;margin-top:12px"><button class="btn primary" onclick="addHistoricalTournamentToSeries('${s.id}')">ULOŽIT HISTORICKÝ TURNAJ</button></div>
+        </div>
+
+        <h3 style="margin-top:18px">PŘIDAT JIŽ ODEHRANÝ TURNAJ Z POČÍTADLA</h3>
+        ${available.length?`<div class="grid two">${available.map(t=>`<button class="btn" onclick="addTournamentToSeries('${s.id}','${t.id}')">${esc(t.name)} • ${esc(tournamentFormatLabel(t))}</button>`).join('')}</div>`:'<div class="muted">Žádný další dokončený turnaj není k dispozici.</div>'}
+        ${canManageSeriesOrganizers(s)?`<div style="margin-top:18px"><button class="btn danger" onclick="deleteTournamentSeries('${s.id}')">SMAZAT SÉRII</button></div>`:''}`:''}
+    `;
+  }
+
+
+  document.addEventListener('click',function(e){
+    if(e.target?.closest?.('[onclick*="openSeries"]')||e.target?.closest?.('[onclick*="renderSeriesModal"]')){
+      setTimeout(()=>{
+        const s=(data.tournamentSeries||[]).find(x=>x.id===selectedSeriesId);
+        if(s)ensureHistoricalInitialRows(s.id);
+      },0);
+    }
+  },true);
+
+  window.toggleSeriesEditScoring=function(seriesId){
+    const custom=$('seriesEditScoringMode_'+seriesId)?.value==='custom';
+    $('seriesEditBands_'+seriesId)?.classList.toggle('hidden',custom);
+    $('seriesEditCustom_'+seriesId)?.classList.toggle('hidden',!custom);
+  };
+
+  window.saveSeriesScoring=function(seriesId){
+    const s=(data.tournamentSeries||[]).find(x=>x.id===seriesId);
+    if(!s||!canManageSeries(s))return;
+
+    const mode=$('seriesEditScoringMode_'+seriesId)?.value||'bands';
+    const customText=($('seriesEditCustomPts_'+seriesId)?.value||'').trim();
+    const custom=parseCustomSeriesPoints(customText);
+
+    if(mode==='custom' && !Object.keys(custom.exact).length && !custom.ranges.length){
+      toast('Zadej alespoň jedno vlastní bodové pravidlo.');
+      return;
+    }
+
+    s.scoringMode=mode;
+    s.placementTieBreak=$('seriesEditPlacementTieBreak_'+seriesId)?.value||'legacy';
+    s.bestCount=Math.max(0,Number($('seriesEditBestCount_'+seriesId)?.value||0));
+    s.pointsTop=parsePointList($('seriesEditTop_'+seriesId)?.value,[100,80,65,55]);
+    s.pointsBands=parsePointList($('seriesEditBandsPts_'+seriesId)?.value,[45,25,10,5]);
+    s.customPointsText=customText;
+    s.customPoints=custom;
+    s.updatedAt=new Date().toISOString();
+
+    (s.tournamentIds||[]).forEach(tid=>{
+      const t=(data.tournaments||[]).find(x=>x.id===tid);
+      if(t)t.seriesPlacementTieBreak=s.placementTieBreak;
+    });
+
+    saveData();
+    renderSeriesList();
+    renderSeriesModal();
+    renderResultsSeries();
+    toast('Nastavení série bylo uloženo.');
+  };
+
+
+  function historicalPlayerOptionsHtml(selected=''){
+    const players=Object.values(data.players||{})
+      .filter(p=>p && p.active!==false && p.hiddenFromPlayers!==true)
+      .sort((a,b)=>playerSelectionLabel(a).localeCompare(playerSelectionLabel(b),'cs'));
+    return '<option value="">— vyber hráče —</option>'+
+      players.map(p=>'<option value="'+esc(p.id)+'" '+(selected===p.id?'selected':'')+'>'+esc(playerSelectionLabel(p))+'</option>').join('')+
+      '<option value="__guest__">Jiný hráč / host…</option>';
+  }
+
+  function historicalPlayerControlHtml(seriesId,rowId,side){
+    return '<div class="historical-player-control" style="min-width:0">'+
+      '<select class="historical-player-select" data-series="'+esc(seriesId)+'" data-row="'+esc(rowId)+'" data-side="'+esc(side)+'" onchange="historicalPlayerChoiceChanged(this)">'+historicalPlayerOptionsHtml()+'</select>'+
+      '<input class="historical-guest-name hidden" data-side="'+esc(side)+'" placeholder="Jméno hosta" style="margin-top:6px">'+
+    '</div>';
+  }
+
+  window.historicalPlayerChoiceChanged=function(sel){
+    const wrap=sel?.closest('.historical-player-control');
+    const input=wrap?.querySelector('.historical-guest-name');
+    if(input)input.classList.toggle('hidden',sel.value!=='__guest__');
+    if(input && sel.value==='__guest__')input.focus();
+  };
+
+  window.addHistoricalPlacementRow=function(seriesId,target='placements',place=''){
+    const wrap=$(target==='manual'?'seriesHistoricalManualPlacementRows_'+seriesId:'seriesHistoricalPlacementRows_'+seriesId);
+    if(!wrap)return;
+    const rowId='hpr_'+uid();
+    const row=document.createElement('div');
+    row.className='historical-placement-row subpanel';
+    row.dataset.rowId=rowId;
+    row.style.margin='8px 0 0';
+    row.innerHTML='<div class="historical-placement-grid">'+
+      '<div><label>Místo</label><input class="historical-place" type="number" min="1" value="'+esc(String(place||''))+'" placeholder="1"></div>'+
+      '<div><label>Hráč</label>'+historicalPlayerControlHtml(seriesId,rowId,'player')+'</div>'+
+      '<div class="historical-row-remove"><button class="btn danger" type="button" onclick="this.closest(\'.historical-placement-row\').remove()">ODEBRAT</button></div>'+
+    '</div>';
+    wrap.appendChild(row);
+  };
+
+  window.addHistoricalMatchRow=function(seriesId){
+    const wrap=$('seriesHistoricalMatchRows_'+seriesId);if(!wrap)return;
+    const rowId='hmr_'+uid(),row=document.createElement('div');
+    row.className='historical-match-row subpanel';
+    row.dataset.rowId=rowId;
+    row.style.margin='8px 0 0';
+    row.innerHTML='<div class="historical-match-grid">'+
+      '<div><label>Fáze</label><select class="historical-stage" onchange="historicalStageChanged(this)">'+
+        '<option value="group">Skupina</option><option value="r32">Last 32</option><option value="r16">Osmifinále</option>'+
+        '<option value="quarter">Čtvrtfinále</option><option value="semi">Semifinále</option><option value="third">O 3. místo</option><option value="final">Finále</option>'+
+      '</select><input class="historical-group" value="A" placeholder="Skupina A" style="margin-top:6px"></div>'+
+      '<div><label>Hráč 1</label>'+historicalPlayerControlHtml(seriesId,rowId,'p1')+'</div>'+
+      '<div><label>Skóre</label><div style="display:grid;grid-template-columns:1fr auto 1fr;gap:6px;align-items:center"><input class="historical-score1" type="number" min="0" value="0"><strong>:</strong><input class="historical-score2" type="number" min="0" value="0"></div></div>'+
+      '<div><label>Hráč 2</label>'+historicalPlayerControlHtml(seriesId,rowId,'p2')+'</div>'+
+      '<div class="historical-row-remove"><button class="btn danger" type="button" onclick="this.closest(\'.historical-match-row\').remove()">ODEBRAT</button></div>'+
+    '</div>';
+    wrap.appendChild(row);
+  };
+
+  window.historicalStageChanged=function(sel){
+    const row=sel?.closest('.historical-match-row'),group=row?.querySelector('.historical-group');
+    if(group)group.classList.toggle('hidden',sel.value!=='group');
+  };
+
+  window.toggleHistoricalManualPlacement=function(seriesId){
+    const on=$('seriesHistoricalManualPlacement_'+seriesId)?.checked===true;
+    const box=$('seriesHistoricalManualPlacementBox_'+seriesId);
+    box?.classList.toggle('hidden',!on);
+    const rows=$('seriesHistoricalManualPlacementRows_'+seriesId);
+    if(on && rows && !rows.children.length){
+      addHistoricalPlacementRow(seriesId,'manual',1);
+      addHistoricalPlacementRow(seriesId,'manual',2);
+    }
+  };
+
+  function historicalStructuredPlayer(control){
+    const sel=control?.querySelector('.historical-player-select');
+    if(!sel||!sel.value)return null;
+    if(sel.value==='__guest__'){
+      const name=String(control.querySelector('.historical-guest-name')?.value||'').trim();
+      if(!name)return null;
+      return {id:'histguest_'+uid(),displayName:name,guest:true};
+    }
+    const p=data.players?.[sel.value];
+    return p?{id:p.id,displayName:playerSelectionLabel(p),guest:false}:null;
+  }
+
+  function collectHistoricalPlacementRows(seriesId,target){
+    const wrap=$(target==='manual'?'seriesHistoricalManualPlacementRows_'+seriesId:'seriesHistoricalPlacementRows_'+seriesId);
+    const rows=[...(wrap?.querySelectorAll('.historical-placement-row')||[])];
+    return rows.map((row,i)=>{
+      const place=Math.floor(Number(row.querySelector('.historical-place')?.value||0));
+      const player=historicalStructuredPlayer(row.querySelector('.historical-player-control'));
+      if(place<1)throw new Error('Zkontroluj místo na řádku '+(i+1)+'.');
+      if(!player)throw new Error('Vyber hráče na řádku '+(i+1)+'.');
+      return {place,player};
+    });
+  }
+
+  function collectHistoricalMatchRows(seriesId){
+    const wrap=$('seriesHistoricalMatchRows_'+seriesId);
+    const rows=[...(wrap?.querySelectorAll('.historical-match-row')||[])];
+    return rows.map((row,i)=>{
+      const stage=row.querySelector('.historical-stage')?.value||'';
+      const group=stage==='group'?String(row.querySelector('.historical-group')?.value||'A').trim():'';
+      const controls=row.querySelectorAll('.historical-player-control');
+      const p1=historicalStructuredPlayer(controls[0]),p2=historicalStructuredPlayer(controls[1]);
+      const score1=Math.max(0,Math.floor(Number(row.querySelector('.historical-score1')?.value||0)));
+      const score2=Math.max(0,Math.floor(Number(row.querySelector('.historical-score2')?.value||0)));
+      if(!p1||!p2)throw new Error('Vyber oba hráče u zápasu '+(i+1)+'.');
+      if(normalizeSeriesHistoricalName(p1.displayName)===normalizeSeriesHistoricalName(p2.displayName))throw new Error('V zápasu '+(i+1)+' je stejný hráč na obou stranách.');
+      if(score1===score2)throw new Error('Zápas '+(i+1)+' nemůže skončit remízou.');
+      return {stage,group,p1,p2,score1,score2};
+    });
+  }
+
+  function ensureHistoricalInitialRows(seriesId){
+    const matchWrap=$('seriesHistoricalMatchRows_'+seriesId);
+    if(matchWrap && !matchWrap.children.length)addHistoricalMatchRow(seriesId);
+    const placementWrap=$('seriesHistoricalPlacementRows_'+seriesId);
+    if(placementWrap && !placementWrap.children.length){
+      addHistoricalPlacementRow(seriesId,'placements',1);
+      addHistoricalPlacementRow(seriesId,'placements',2);
+      addHistoricalPlacementRow(seriesId,'placements',3);
+    }
+  }
+
+  window.toggleSeriesHistoricalMode=function(seriesId){
+    const mode=$('seriesHistoricalMode_'+seriesId)?.value||'full';
+    $('seriesHistoricalFull_'+seriesId)?.classList.toggle('hidden',mode!=='full');
+    $('seriesHistoricalPlacements_'+seriesId)?.classList.toggle('hidden',mode==='full');
+    ensureHistoricalInitialRows(seriesId);
+  };
+
+  function parseHistoricalPlacementRows(raw,resolver){
+    const parsed=[],errors=[];
+    String(raw||'').split(/\r?\n/).map(x=>x.trim()).filter(Boolean).forEach((line,i)=>{
+      const m=line.match(/^(\d+)\s*(?:;|\||\t|\.\s+|:\s+)\s*(.+)$/);
+      if(!m){errors.push(i+1);return;}
+      const place=Math.max(1,Math.floor(Number(m[1])));
+      const name=String(m[2]||'').trim();
+      if(!name){errors.push(i+1);return;}
+      const p=resolver(name);
+      parsed.push({place,playerId:p.id,displayName:p.displayName});
+    });
+    if(errors.length)throw new Error('Zkontroluj řádky '+errors.join(', ')+' – použij formát místo; jméno.');
+    const counts={};
+    parsed.forEach(x=>counts[x.place]=(counts[x.place]||0)+1);
+    parsed.forEach(x=>x.sharedPlace=counts[x.place]>1);
+    return parsed;
+  }
+
+  function historicalStageInfo(raw){
+    const original=String(raw||'').trim();
+    const n=normalizeSeriesHistoricalName(original);
+    if(n.startsWith('skupina')||n==='group'||n.startsWith('group ')){
+      const g=original.replace(/^\s*(skupina|group)\s*/i,'').trim()||'A';
+      return {stage:'group',group:g,label:original};
+    }
+    if(n.includes('o 3')||n.includes('3. mist')||n.includes('third'))return {stage:'third',group:'',label:original};
+    if(n.includes('semifinal')||n==='sf')return {stage:'semi',group:'',label:original};
+    if(n.includes('ctvrtfinal')||n==='qf'||n.includes('quarter'))return {stage:'quarter',group:'',label:original};
+    if(n.includes('osmifinal')||n.includes('last 16')||n==='r16')return {stage:'r16',group:'',label:original};
+    if(n.includes('sestnactifinal')||n.includes('last 32')||n==='r32')return {stage:'r32',group:'',label:original};
+    if((n.includes('final')||n==='f')&&!n.includes('semi')&&!n.includes('ctvrt')&&!n.includes('osmi'))return {stage:'final',group:'',label:original};
+    return null;
+  }
+
+  function historicalAutoPlacements(matches,participants){
+    const ids=[...participants.keys()];
+    const groupMatches=matches.filter(m=>m.stage==='group');
+    const playoffMatches=matches.filter(m=>m.stage!=='group');
+    const playoffPlayers=new Set(playoffMatches.flatMap(m=>[m.player1Id,m.player2Id]));
+    const groupStats={},groups=new Map();
+
+    const ensureGroup=(pid,group)=>{
+      if(!groupStats[pid])groupStats[pid]={playerId:pid,group:String(group||''),wins:0,losses:0,for:0,against:0,diff:0,place:999};
+      if(group&&!groupStats[pid].group)groupStats[pid].group=String(group);
+      return groupStats[pid];
+    };
+
+    groupMatches.forEach(m=>{
+      const a=ensureGroup(m.player1Id,m.group),b=ensureGroup(m.player2Id,m.group);
+      a.for+=m.score1;a.against+=m.score2;a.diff=a.for-a.against;
+      b.for+=m.score2;b.against+=m.score1;b.diff=b.for-b.against;
+      if(m.winnerId===m.player1Id){a.wins++;b.losses++;}else{b.wins++;a.losses++;}
+      const key=String(m.group||'A');
+      if(!groups.has(key))groups.set(key,new Set());
+      groups.get(key).add(m.player1Id);groups.get(key).add(m.player2Id);
+    });
+
+    const h2hWinner=(a,b)=>{
+      const sameGroup=String(groupStats[a]?.group||'')===String(groupStats[b]?.group||'');
+      if(!sameGroup)return null;
+      const mm=groupMatches.find(m=>(m.player1Id===a&&m.player2Id===b)||(m.player1Id===b&&m.player2Id===a));
+      return mm?.winnerId||null;
+    };
+
+    groups.forEach(set=>{
+      const arr=[...set].map(id=>groupStats[id]);
+      arr.sort((a,b)=>{
+        if(b.wins!==a.wins)return b.wins-a.wins;
+        if(b.diff!==a.diff)return b.diff-a.diff;
+        if(b.for!==a.for)return b.for-a.for;
+        const h=h2hWinner(a.playerId,b.playerId);
+        if(h===a.playerId)return -1;if(h===b.playerId)return 1;
+        return 0;
+      });
+      let prev=null,rank=1;
+      arr.forEach((r,i)=>{
+        let same=false;
+        if(prev){
+          const h=h2hWinner(prev.playerId,r.playerId);
+          same=prev.wins===r.wins&&prev.diff===r.diff&&prev.for===r.for&&!h;
+        }
+        if(!same)rank=i+1;
+        r.place=rank;prev=r;
+      });
+    });
+
+    const playoffScores={};
+    const po=pid=>playoffScores[pid]||(playoffScores[pid]={for:0,against:0,diff:0});
+    playoffMatches.forEach(m=>{
+      const a=po(m.player1Id),b=po(m.player2Id);
+      a.for+=m.score1;a.against+=m.score2;a.diff=a.for-a.against;
+      b.for+=m.score2;b.against+=m.score1;b.diff=b.for-b.against;
+    });
+
+    const results=[],placed=new Set();
+    const add=(pid,place)=>{
+      if(!pid||placed.has(pid))return;
+      const p=participants.get(pid);
+      results.push({place,playerId:pid,displayName:p?.displayName||pid,sharedPlace:false});
+      placed.add(pid);
+    };
+
+    const final=playoffMatches.find(m=>m.stage==='final');
+    if(!final)throw new Error('Pro automatický výpočet chybí finále. Doplň finále nebo vyplň ruční konečné pořadí.');
+    add(final.winnerId,1);add(final.loserId,2);
+
+    const third=playoffMatches.find(m=>m.stage==='third');
+    if(third){add(third.winnerId,3);add(third.loserId,4);}
+
+    const cmp=(a,b)=>{
+      const pa=playoffScores[a]||{},pb=playoffScores[b]||{},ga=groupStats[a]||{},gb=groupStats[b]||{};
+      if(Number(pb.diff||0)!==Number(pa.diff||0))return Number(pb.diff||0)-Number(pa.diff||0);
+      if(Number(pb.for||0)!==Number(pa.for||0))return Number(pb.for||0)-Number(pa.for||0);
+      if(Number(gb.wins||0)!==Number(ga.wins||0))return Number(gb.wins||0)-Number(ga.wins||0);
+      if(Number(gb.diff||0)!==Number(ga.diff||0))return Number(gb.diff||0)-Number(ga.diff||0);
+      const h=h2hWinner(a,b);if(h===a)return -1;if(h===b)return 1;
+      return 0;
+    };
+    const same=(a,b)=>{
+      const pa=playoffScores[a]||{},pb=playoffScores[b]||{},ga=groupStats[a]||{},gb=groupStats[b]||{};
+      if(Number(pa.diff||0)!==Number(pb.diff||0)||Number(pa.for||0)!==Number(pb.for||0)||Number(ga.wins||0)!==Number(gb.wins||0)||Number(ga.diff||0)!==Number(gb.diff||0))return false;
+      return !h2hWinner(a,b);
+    };
+    const stage=(name,startPlace)=>{
+      let losers=[...new Set(playoffMatches.filter(m=>m.stage===name).map(m=>m.loserId).filter(id=>id&&!placed.has(id)))];
+      losers.sort(cmp);
+      let prev=null,rank=startPlace;
+      losers.forEach((pid,i)=>{
+        if(i===0)rank=startPlace;
+        else if(!same(prev,pid))rank=startPlace+i;
+        add(pid,rank);prev=pid;
+      });
+    };
+
+    if(!third)stage('semi',3);
+    stage('quarter',5);
+    stage('r16',9);
+    stage('r32',17);
+
+    const groupOnly=ids.filter(id=>!playoffPlayers.has(id)&&!placed.has(id));
+    groupOnly.sort((a,b)=>{
+      const ga=groupStats[a]||{},gb=groupStats[b]||{};
+      if(Number(ga.place||999)!==Number(gb.place||999))return Number(ga.place||999)-Number(gb.place||999);
+      if(Number(gb.wins||0)!==Number(ga.wins||0))return Number(gb.wins||0)-Number(ga.wins||0);
+      if(Number(gb.diff||0)!==Number(ga.diff||0))return Number(gb.diff||0)-Number(ga.diff||0);
+      if(Number(gb.for||0)!==Number(ga.for||0))return Number(gb.for||0)-Number(ga.for||0);
+      const h=h2hWinner(a,b);if(h===a)return -1;if(h===b)return 1;
+      return 0;
+    });
+    const sameGroup=(a,b)=>{
+      const ga=groupStats[a]||{},gb=groupStats[b]||{};
+      if(Number(ga.place||999)!==Number(gb.place||999)||Number(ga.wins||0)!==Number(gb.wins||0)||Number(ga.diff||0)!==Number(gb.diff||0)||Number(ga.for||0)!==Number(gb.for||0))return false;
+      return !h2hWinner(a,b);
+    };
+    const groupStart=Math.max(1,playoffPlayers.size+1);
+    let prev=null,rank=groupStart;
+    groupOnly.forEach((pid,i)=>{
+      if(i===0)rank=groupStart;
+      else if(!sameGroup(prev,pid))rank=groupStart+i;
+      add(pid,rank);prev=pid;
+    });
+
+    results.sort((a,b)=>a.place-b.place||String(a.displayName).localeCompare(String(b.displayName),'cs'));
+    const counts={};results.forEach(r=>counts[r.place]=(counts[r.place]||0)+1);
+    results.forEach(r=>r.sharedPlace=counts[r.place]>1);
+    return results;
+  }
+
+  window.addHistoricalTournamentToSeries=function(seriesId){
+    const s=(data.tournamentSeries||[]).find(x=>x.id===seriesId);
+    if(!s||!canManageSeries(s))return;
+
+    const name=String($('seriesHistoricalName_'+seriesId)?.value||'').trim();
+    const date=String($('seriesHistoricalDate_'+seriesId)?.value||'').trim();
+    const mode=String($('seriesHistoricalMode_'+seriesId)?.value||'full');
+    if(!name){toast('Zadej název historického turnaje.');return;}
+    if(!date){toast('Zadej datum historického turnaje.');return;}
+
+    const byName=new Map(),byId=new Map();
+    const resolve=(displayName)=>{
+      const clean=String(displayName||'').trim(),key=normalizeSeriesHistoricalName(clean);
+      if(byName.has(key))return byName.get(key);
+      const player=seriesHistoricalPlayerMatch(clean);
+      const item=player?{id:player.id,displayName:playerSelectionLabel(player)}:{id:'histguest_'+uid(),displayName:clean};
+      byName.set(key,item);byId.set(item.id,item);
+      return item;
+    };
+
+    try{
+      let results=[],matches=[],statsComplete=false,manualPlacement=false;
+      if(mode==='placements'){
+        const structured=collectHistoricalPlacementRows(seriesId,'placements');
+        const raw=String($('seriesHistoricalPlacementsOnly_'+seriesId)?.value||'').trim();
+        if(structured.length){
+          const seen=new Set();
+          results=structured.map(({place,player})=>{
+            const key=normalizeSeriesHistoricalName(player.displayName);
+            if(seen.has(key))throw new Error('Hráč „'+player.displayName+'“ je v pořadí zadaný vícekrát.');
+            seen.add(key);
+            byId.set(player.id,player);
+            return {place,playerId:player.id,displayName:player.displayName};
+          });
+          const counts={};results.forEach(x=>counts[x.place]=(counts[x.place]||0)+1);
+          results.forEach(x=>x.sharedPlace=counts[x.place]>1);
+        }else if(raw){
+          results=parseHistoricalPlacementRows(raw,resolve);
+        }else throw new Error('Přidej alespoň dva hráče do konečného pořadí.');
+      }else{
+        const structured=collectHistoricalMatchRows(seriesId);
+        const raw=String($('seriesHistoricalMatches_'+seriesId)?.value||'').trim();
+
+        if(structured.length){
+          structured.forEach((m,i)=>{
+            const p1=m.p1,p2=m.p2;
+            byId.set(p1.id,p1);byId.set(p2.id,p2);
+            const stageLabel=m.stage==='group'?'skupina '+(m.group||'A'):
+              ({r32:'Last 32',r16:'osmifinále',quarter:'čtvrtfinále',semi:'semifinále',third:'o 3. místo',final:'finále'}[m.stage]||m.stage);
+            matches.push({
+              id:'histmatch_'+uid(),stage:m.stage,stageLabel,group:m.group||'',
+              player1Id:p1.id,player2Id:p2.id,player1Name:p1.displayName,player2Name:p2.displayName,
+              score1:m.score1,score2:m.score2,winnerId:m.score1>m.score2?p1.id:p2.id,loserId:m.score1>m.score2?p2.id:p1.id
+            });
+          });
+        }else if(raw){
+          const errors=[];
+          raw.split(/\r?\n/).map(x=>x.trim()).filter(Boolean).forEach((line,i)=>{
+            const parts=line.split(';').map(x=>x.trim());
+            if(parts.length<4){errors.push(i+1);return;}
+            const st=historicalStageInfo(parts[0]),p1=resolve(parts[1]),p2=resolve(parts[2]);
+            const sm=parts.slice(3).join(';').trim().match(/^(\d+)\s*[:\-]\s*(\d+)$/);
+            if(!st||!p1.displayName||!p2.displayName||!sm){errors.push(i+1);return;}
+            const score1=Number(sm[1]),score2=Number(sm[2]);
+            if(score1===score2){errors.push(i+1);return;}
+            matches.push({
+              id:'histmatch_'+uid(),stage:st.stage,stageLabel:st.label,group:st.group||'',
+              player1Id:p1.id,player2Id:p2.id,player1Name:p1.displayName,player2Name:p2.displayName,
+              score1,score2,winnerId:score1>score2?p1.id:p2.id,loserId:score1>score2?p2.id:p1.id
+            });
+          });
+          if(errors.length)throw new Error('Zkontroluj zápasy na řádcích '+errors.join(', ')+'.');
+        }else throw new Error('Přidej alespoň jeden odehraný zápas.');
+
+        const manualOn=$('seriesHistoricalManualPlacement_'+seriesId)?.checked===true;
+        const manualRows=manualOn?collectHistoricalPlacementRows(seriesId,'manual'):[];
+        const override=String($('seriesHistoricalResults_'+seriesId)?.value||'').trim();
+        if(manualRows.length){
+          const seen=new Set();
+          results=manualRows.map(({place,player})=>{
+            const key=normalizeSeriesHistoricalName(player.displayName);
+            if(seen.has(key))throw new Error('Hráč „'+player.displayName+'“ je v pořadí zadaný vícekrát.');
+            seen.add(key);byId.set(player.id,player);
+            return {place,playerId:player.id,displayName:player.displayName};
+          });
+          const counts={};results.forEach(x=>counts[x.place]=(counts[x.place]||0)+1);
+          results.forEach(x=>x.sharedPlace=counts[x.place]>1);
+          manualPlacement=true;
+        }else if(override){
+          results=parseHistoricalPlacementRows(override,resolve);manualPlacement=true;
+        }else results=historicalAutoPlacements(matches,byId);
+        statsComplete=true;
+      }
+
+      if(results.length<2)throw new Error('Historický turnaj musí mít alespoň 2 hráče.');
+      if(!results.some(x=>x.place===1))throw new Error('V pořadí chybí 1. místo.');
+
+      s.historicalTournaments=Array.isArray(s.historicalTournaments)?s.historicalTournaments:[];
+      s.historicalTournaments.push({
+        id:'hist_'+uid(),name,date,mode:mode==='full'?'full':'placements',
+        statsComplete,manualPlacement,results,matches,
+        createdAt:new Date().toISOString(),createdByUid:cloudUid||''
+      });
+      s.updatedAt=new Date().toISOString();
+      saveData();renderSeriesList();renderSeriesModal();renderResultsSeries();
+      try{renderTournamentStats();}catch(e){}
+      toast(statsComplete?'Historický turnaj včetně zápasů byl přidán do série.':'Historický turnaj byl uložen pouze s konečným pořadím.');
+    }catch(e){toast(e?.message||String(e));}
+  };
+
+  window.deleteHistoricalSeriesTournament=function(seriesId,historicalId){
+    const s=(data.tournamentSeries||[]).find(x=>x.id===seriesId);
+    if(!s||!canManageSeries(s))return;
+    const ht=(s.historicalTournaments||[]).find(x=>x.id===historicalId);
+    if(!ht)return;
+    if(!confirm('Opravdu smazat historický turnaj „'+(ht.name||'')+'“ ze série?'))return;
+    s.historicalTournaments=(s.historicalTournaments||[]).filter(x=>x.id!==historicalId);
+    s.updatedAt=new Date().toISOString();
+    saveData();
+    renderSeriesList();
+    renderSeriesModal();
+    renderResultsSeries();
+    toast('Historický turnaj byl ze série odebrán.');
+  };
+
+  window.addTournamentToSeries=function(seriesId,tournamentId){
+    const s=(data.tournamentSeries||[]).find(x=>x.id===seriesId);
+    if(!s||!canManageSeries(s))return;
+    if(!(s.tournamentIds||[]).includes(tournamentId))s.tournamentIds.push(tournamentId);
+    const t=(data.tournaments||[]).find(x=>x.id===tournamentId);
+    if(t)t.seriesPlacementTieBreak=seriesPlacementTieBreakMode(s);
+    s.updatedAt=new Date().toISOString();
+    saveData();renderSeriesList();renderSeriesModal();renderTournamentSeriesSelect();
+  };
+
+  window.removeTournamentFromSeries=function(seriesId,tournamentId){
+    const s=(data.tournamentSeries||[]).find(x=>x.id===seriesId);
+    if(!s||!canManageSeries(s))return;
+    s.tournamentIds=(s.tournamentIds||[]).filter(id=>id!==tournamentId);
+    s.updatedAt=new Date().toISOString();
+    saveData();renderSeriesList();renderSeriesModal();renderTournamentSeriesSelect();
+  };
+
+  window.deleteTournamentSeries=function(seriesId){
+    const s=(data.tournamentSeries||[]).find(x=>x.id===seriesId);
+    if(!s||!canManageSeriesOrganizers(s))return;
+    if(!confirm('Opravdu smazat sérii „'+s.name+'“? Samotné turnaje zůstanou zachované.'))return;
+    data.tournamentSeries=(data.tournamentSeries||[]).filter(x=>x.id!==seriesId);
+    saveData();$('seriesModal').classList.remove('show');renderSeriesList();renderTournamentSeriesSelect();
+  };
+
+
+  function renderResultsTournaments(){
+    const wrap=$('resultsTournamentList');
+    if(!wrap)return;
+
+    const completed=(data.tournaments||[])
+      .filter(t=>t && t.status==='complete')
+      .slice()
+      .sort((a,b)=>new Date(b.updatedAt||b.createdAt||0)-new Date(a.updatedAt||a.createdAt||0));
+
+    if(!completed.length){
+      wrap.innerHTML='<div class="empty">Zatím není dokončený žádný turnaj.</div>';
+      return;
+    }
+
+    wrap.innerHTML=completed.map(t=>{
+      const all=allTournamentMatches(t);
+      const date=t.createdAt?new Date(t.createdAt).toLocaleDateString('cs-CZ'):'';
+      const placements=tournamentPlacementRecords(t);
+      const winner=placements.find(r=>Number(r.value)===1);
+      const winnerName=winner?tournamentPlayerName(winner.playerId,t):'—';
+
+      return `<div class="subpanel" style="margin-bottom:12px">
+        <div style="display:flex;justify-content:space-between;gap:12px;align-items:center;flex-wrap:wrap">
+          <div style="flex:1;min-width:230px">
+            <div style="font-size:22px;font-weight:950">${esc(t.name||'Turnaj')}</div>
+            <div class="muted" style="margin-top:5px">
+              ${esc(tournamentFormatLabel(t))} • ${esc(tournamentDisciplineSummary(t))} • Race to ${t.raceTo}${t.variableRaceEnabled?' • proměnlivé Race to':''}${t.groupAdvanceTieRule==='head_to_head'?' • shoda bodů: vzájemný zápas':' • shoda bodů: skóre'}${t.groupPenaltyTieBreak?' • nerozhodnuto: penalty':''}
+              ${date?' • '+esc(date):''} • ${all.length} zápasů
+            </div>
+            <div style="margin-top:7px"><strong>Vítěz:</strong> ${esc(winnerName)}</div>
+          </div>
+          <button class="btn primary" onclick="openTournamentResultDetail('${t.id}')">VÝSLEDKY</button>
+        </div>
+      </div>`;
+    }).join('');
+  }
+
+  window.openTournamentResultDetail=async function(tid){
+    tournamentDetailReturnScreen='results-tournaments';
+    preserveTournamentDetailReturn=true;
+    await openTournamentDetail(tid);
+  };
+
+  function renderResultsSeries(){
+    const wrap=$('resultsSeriesList');
+    if(!wrap)return;
+
+    const list=(data.tournamentSeries||[])
+      .slice()
+      .sort((a,b)=>String(b.season||'').localeCompare(String(a.season||''))||String(a.name||'').localeCompare(String(b.name||''),'cs'));
+
+    if(!list.length){
+      wrap.innerHTML='<div class="empty">Zatím není vytvořená žádná série.</div>';
+      return;
+    }
+
+    wrap.innerHTML=list.map(s=>{
+      const tournaments=(s.tournamentIds||[])
+        .map(id=>(data.tournaments||[]).find(t=>t.id===id))
+        .filter(Boolean);
+      const historical=Array.isArray(s.historicalTournaments)?s.historicalTournaments:[];
+      const completed=tournaments.filter(t=>t.status==='complete').length+historical.length;
+      const total=tournaments.length+historical.length;
+      const standings=seriesStandings(s);
+      const leader=standings[0];
+      const leaderName=leader?(leader.displayName||leader.playerId):'—';
+      const leaderPts=leader?leader.points:0;
+
+      return `<div class="subpanel" style="margin-bottom:12px">
+        <div style="display:flex;justify-content:space-between;gap:12px;align-items:center;flex-wrap:wrap">
+          <div style="flex:1;min-width:230px">
+            <div style="font-size:22px;font-weight:950">${esc(s.name||'Série')}</div>
+            <div class="muted" style="margin-top:5px">
+              ${esc(s.club||'')}${s.season?' • '+esc(s.season):''} • ${completed}/${total} odehraných turnajů • ${standings.length} hráčů
+            </div>
+            <div style="margin-top:7px"><strong>Průběžně vede:</strong> ${esc(leaderName)}${leader?' • '+leaderPts+' bodů':''}</div>
+          </div>
+          <button class="btn primary" onclick="openTournamentSeries('${s.id}')">POŘADÍ SÉRIE</button>
+        </div>
+      </div>`;
+    }).join('');
+  }
+
+  function updateTournamentNineBallBreakRuleVisibility(){
+    const field=$('tournamentNineBallBreakRuleField');
+    if(!field)return;
+    const groupDisc=$('tournamentDiscipline')?.value||'';
+    const playoffDisc=$('tournamentPlayoffDiscipline')?.value||'';
+    const format=$('tournamentFormat')?.value||'';
+    const hybrid=['groups_sko','groups_dko'].includes(format);
+    const usesNineBall=groupDisc==='9-ball' || (hybrid && playoffDisc==='9-ball');
+    field.classList.toggle('hidden',!usesNineBall);
+  }
+
+
+  // =========================
+  // POOL LIGA SEVER 2026 • ONLINE
+  // =========================
+  const LEAGUE_SEVER_ID='liga_sever_2026';
+  const LEAGUE_CLOUD_ROOT='leagueSever2026';
+  const LEAGUE_SEVER_TEAMS=[
+    {id:'lovo',name:'1. BC LOVO'},
+    {id:'rybarna',name:'BC Rybárna'},
+    {id:'kadan',name:'Kadaňský Break'},
+    {id:'louny',name:'Billiard Club Louny'}
+  ];
+  const LEAGUE_SEVER_DRAW=[
+    [1,'lovo','kadan'],[1,'rybarna','louny'],
+    [2,'rybarna','lovo'],[2,'kadan','louny'],
+    [3,'louny','lovo'],[3,'kadan','rybarna'],
+    [4,'kadan','lovo'],[4,'louny','rybarna'],
+    [5,'lovo','louny'],[5,'rybarna','kadan'],
+    [6,'lovo','rybarna'],[6,'louny','kadan'],
+    [7,'lovo','kadan'],[7,'rybarna','louny'],
+    [8,'louny','lovo'],[8,'kadan','rybarna'],
+    [9,'rybarna','lovo'],[9,'kadan','louny']
+  ];
+  const LEAGUE_LEG_MAP=[[0,0],[1,1],[2,2],[0,1],[1,2],[2,0]];
+  let leagueCloudLoaded=false;
+  let leagueCloudLoading=false;
+  let leagueConfirmations={};
+  let leagueConfigTeams={};
+  let leaguePlayerAliases={};
+
+  function defaultLeagueFixtures(){
+    return LEAGUE_SEVER_DRAW.map((x,i)=>({
+      id:'LS26_'+String(i+1).padStart(2,'0'),round:x[0],homeId:x[1],awayId:x[2],status:'pending',
+      lineup:null,legs:[],decider:null,homeScore:0,awayScore:0,resultRevision:0,adminOverride:false,
+      createdAt:new Date().toISOString(),updatedAt:new Date().toISOString()
+    }));
+  }
+  function defaultLeagueConfigTeams(){
+    const out={};
+    LEAGUE_SEVER_TEAMS.forEach(t=>out[t.id]={id:t.id,name:t.name,captainUid:'',captainPlayerId:'',captainName:''});
+    return out;
+  }
+  function ensureLeagueSever(){
+    if(!Array.isArray(data.leagues))data.leagues=[];
+    let l=data.leagues.find(x=>x?.id===LEAGUE_SEVER_ID);
+    if(!l){
+      l={id:LEAGUE_SEVER_ID,name:'POOL LIGA SEVER 2026',season:2026,teams:JSON.parse(JSON.stringify(LEAGUE_SEVER_TEAMS)),fixtures:defaultLeagueFixtures()};
+      data.leagues.push(l);
+      try{localStorage.setItem(DB_KEY,JSON.stringify(data));}catch(e){}
+    }
+    if(!Array.isArray(l.fixtures))l.fixtures=[];
+    if(!l.fixtures.length)l.fixtures=defaultLeagueFixtures();
+    return l;
+  }
+  function leagueTeamName(id){return LEAGUE_SEVER_TEAMS.find(t=>t.id===id)?.name||id||'—';}
+  function leagueFixtureScore(f){
+    let h=0,a=0;
+    (f.legs||[]).forEach(x=>{if(x?.winner===0)h++;if(x?.winner===1)a++;});
+    if(f.decider?.winner===0)h++;if(f.decider?.winner===1)a++;
+    f.homeScore=h;f.awayScore=a;
+    return [h,a];
+  }
+  function leagueConfirmationFor(f,teamId){
+    const c=leagueConfirmations?.[f.id]?.[teamId];
+    return c&&Number(c.revision||0)===Number(f.resultRevision||0)?c:null;
+  }
+  function leagueFixtureConfirmed(f){
+    if(!f||f.status!=='done')return false;
+    if(f.adminOverride===true)return true;
+    const hc=leagueConfirmationFor(f,f.homeId),ac=leagueConfirmationFor(f,f.awayId);
+    return hc?.status==='confirmed'&&ac?.status==='confirmed';
+  }
+  function leagueFixtureComplete(f){return leagueFixtureConfirmed(f);}
+  function leagueCurrentCaptainTeamIds(){
+    if(!cloudUid)return [];
+    return Object.values(leagueConfigTeams||{}).filter(t=>t?.captainUid===cloudUid).map(t=>t.id);
+  }
+  function canEditLeagueFixture(f){
+    if(currentUserIsSystemAdmin())return true;
+    const ids=new Set(leagueCurrentCaptainTeamIds());
+    return !!(f&&ids.size&&(ids.has(f.homeId)||ids.has(f.awayId)));
+  }
+  function canPrepareLeagueFixture(f){return canEditLeagueFixture(f);}
+  function canConfirmLeagueSide(f,teamId){
+    if(currentUserIsSystemAdmin())return true;
+    return !!(cloudUid&&leagueConfigTeams?.[teamId]?.captainUid===cloudUid&&(teamId===f.homeId||teamId===f.awayId));
+  }
+  function leagueEditablePendingFixtures(){
+    const l=ensureLeagueSever();
+    return (l.fixtures||[]).filter(f=>f.status==='pending'&&canPrepareLeagueFixture(f));
+  }
+  function remainingLeagueFixture(homeId,awayId){
+    const l=ensureLeagueSever();
+    return (l.fixtures||[]).find(f=>f.homeId===homeId&&f.awayId===awayId&&f.status==='pending')||null;
+  }
+  function activeLeagueFixtures(){
+    const l=ensureLeagueSever();
+    return (l.fixtures||[]).filter(f=>['playing','needs_decider','done'].includes(f.status)&&(!leagueFixtureConfirmed(f)||f.status!=='done'));
+  }
+  async function leagueCloudRequest(path,method='GET',body=null){
+    if(!await ensureCloudToken())throw new Error('NO_AUTH');
+    const opts={method,headers:{'Content-Type':'application/json'},cache:'no-store'};
+    if(body!==null)opts.body=JSON.stringify(body);
+    const suffix=path?'/'+path:'';
+    const r=await fetch(cloudUrl(LEAGUE_CLOUD_ROOT+suffix)+(method==='GET'?'&t='+Date.now():''),opts);
+    if(!r.ok)throw new Error('LEAGUE_CLOUD_'+r.status);
+    return await r.json();
+  }
+  function leagueCloudPayload(){
+    const l=ensureLeagueSever();
+    const fixtures={};(l.fixtures||[]).forEach(f=>fixtures[f.id]=JSON.parse(JSON.stringify(f)));
+    return {config:{id:LEAGUE_SEVER_ID,name:l.name,season:l.season,teams:leagueConfigTeams&&Object.keys(leagueConfigTeams).length?leagueConfigTeams:defaultLeagueConfigTeams(),playerAliases:leaguePlayerAliases||{}},fixtures,confirmations:leagueConfirmations||{}};
+  }
+  async function bootstrapLeagueCloudIfNeeded(){
+    if(!currentUserIsSystemAdmin())return false;
+    const existing=await leagueCloudRequest('','GET');
+    if(existing)return true;
+    leagueConfigTeams=defaultLeagueConfigTeams();leagueConfirmations={};leaguePlayerAliases={};
+    await leagueCloudRequest('','PUT',leagueCloudPayload());
+    return true;
+  }
+  async function loadLeagueCloud(force=false){
+    if(leagueCloudLoading)return;
+    if(!cloudAuthenticated||!cloudUid){
+      leagueCloudLoaded=false;
+      if($('leagueCloudStatusText'))$('leagueCloudStatusText').textContent='Pro společná online data se přihlas do aplikace.';
+      renderLeague();return;
+    }
+    leagueCloudLoading=true;
+    try{
+      let raw=await leagueCloudRequest('','GET');
+      if(!raw&&currentUserIsSystemAdmin()){
+        await bootstrapLeagueCloudIfNeeded();
+        raw=await leagueCloudRequest('','GET');
+      }
+      if(raw){
+        leagueConfigTeams=raw.config?.teams||defaultLeagueConfigTeams();
+        leaguePlayerAliases=(raw.config?.playerAliases&&typeof raw.config.playerAliases==='object')?raw.config.playerAliases:{};
+        leagueConfirmations=raw.confirmations||{};
+        const fixtures=Object.values(raw.fixtures||{}).filter(Boolean);
+        const l=ensureLeagueSever();
+        if(fixtures.length)l.fixtures=fixtures;
+        leagueCloudLoaded=true;
+        try{localStorage.setItem(DB_KEY,JSON.stringify(data));}catch(e){}
+        if($('leagueCloudStatusText'))$('leagueCloudStatusText').textContent='ONLINE • výsledky, tabulka a rozpis jsou společné pro všechny přihlášené uživatele.';
+      }else{
+        leagueCloudLoaded=false;
+        if($('leagueCloudStatusText'))$('leagueCloudStatusText').textContent='Online liga ještě není založená. Musí ji jednou otevřít systémový administrátor.';
+      }
+    }catch(e){
+      console.error('League cloud load:',e);
+      leagueCloudLoaded=false;
+      if($('leagueCloudStatusText'))$('leagueCloudStatusText').textContent='Online data se nepodařilo načíst. Zobrazuji poslední lokální stav.';
+    }finally{
+      leagueCloudLoading=false;renderLeague();
+    }
+  }
+  async function saveLeagueFixtureCloud(f){
+    if(!leagueCloudLoaded)throw new Error('LEAGUE_NOT_ONLINE');
+    f.updatedAt=new Date().toISOString();
+    await leagueCloudRequest('fixtures/'+f.id,'PUT',f);
+  }
+  async function saveLeagueConfirmationCloud(f,teamId,status){
+    const rev=Number(f.resultRevision||0);
+    const payload={status,revision:rev,uid:cloudUid,at:new Date().toISOString()};
+    await leagueCloudRequest('confirmations/'+f.id+'/'+teamId,'PUT',payload);
+    if(!leagueConfirmations[f.id])leagueConfirmations[f.id]={};
+    leagueConfirmations[f.id][teamId]=payload;
+  }
+  async function saveLeagueConfigTeamsCloud(){
+    await leagueCloudRequest('config/teams','PUT',leagueConfigTeams);
+  }
+  function updateLeagueSelectors(){
+    const home=$('leagueHomeTeam'),away=$('leagueAwayTeam');if(!home||!away)return;
+    const oldH=home.value,oldA=away.value;
+    const fixtures=leagueEditablePendingFixtures();
+    const homes=[...new Set(fixtures.map(f=>f.homeId))];
+    home.innerHTML='<option value="">— domácí —</option>'+homes.map(id=>`<option value="${esc(id)}">${esc(leagueTeamName(id))}</option>`).join('');
+    if(homes.includes(oldH))home.value=oldH;
+    const awayIds=[...new Set(fixtures.filter(f=>!home.value||f.homeId===home.value).map(f=>f.awayId))];
+    away.innerHTML='<option value="">— hosté —</option>'+awayIds.map(id=>`<option value="${esc(id)}">${esc(leagueTeamName(id))}</option>`).join('');
+    if(awayIds.includes(oldA))away.value=oldA;
+    const f=remainingLeagueFixture(home.value,away.value);
+    if($('leagueFixtureHint'))$('leagueFixtureHint').textContent=f?`Neodehrané utkání z losu: kolo ${f.round}. Po dokončení se tato konkrétní položka uzamkne.`:(fixtures.length?'Vyber dvojici svého týmu, která má ještě neodehrané utkání.':'Nemáš žádné neodehrané utkání, které smíš připravit.');
+    const can=!!f&&canPrepareLeagueFixture(f);
+    ['leagueDate','leaguePlace','leagueH1','leagueH2','leagueH3','leagueA1','leagueA2','leagueA3','leaguePrepareBtn'].forEach(id=>{if($(id))$(id).disabled=!can;});
+  }
+  function leagueAliasKey(name){
+    return String(name||'').trim().toLowerCase().replace(/\s+/g,' ');
+  }
+  function leagueCanonicalAliasName(name){
+    let current=String(name||'').trim();
+    const seen=new Set();
+    for(let i=0;i<8;i++){
+      const key=leagueAliasKey(current);
+      if(!key||seen.has(key))break;
+      seen.add(key);
+      const next=String(leaguePlayerAliases?.[key]||'').trim();
+      if(!next)break;
+      current=next;
+    }
+    return current;
+  }
+  function leagueRawPlayerNames(){
+    const out=new Set();
+    const l=ensureLeagueSever();
+    (l.fixtures||[]).forEach(f=>{
+      ['home','away'].forEach(side=>{
+        (f.lineup?.[side]||[]).forEach(p=>{
+          const n=String(p?.displayName||p?.name||'').trim();
+          if(n)out.add(n);
+        });
+      });
+      ['homePlayers','awayPlayers'].forEach(k=>{
+        (f.decider?.[k]||[]).forEach(p=>{
+          const n=String(p?.displayName||p?.name||'').trim();
+          if(n)out.add(n);
+        });
+      });
+    });
+    return [...out].sort((a,b)=>a.localeCompare(b,'cs'));
+  }
+  async function saveLeaguePlayerAliasesCloud(){
+    await leagueCloudRequest('config/playerAliases','PUT',leaguePlayerAliases||{});
+  }
+  function renderLeaguePlayerAliasesAdmin(){
+    const panel=$('leaguePlayerAliasesAdmin'),sel=$('leagueAliasSource'),list=$('leagueAliasList');
+    if(!panel||!sel||!list)return;
+    panel.classList.toggle('hidden',!currentUserIsSystemAdmin());
+    if(!currentUserIsSystemAdmin())return;
+
+    const raw=leagueRawPlayerNames();
+    const old=sel.value;
+    sel.innerHTML='<option value="">— vyber zadané jméno —</option>'+raw.map(n=>`<option value="${esc(n)}">${esc(n)}</option>`).join('');
+    if(raw.includes(old))sel.value=old;
+
+    const entries=Object.entries(leaguePlayerAliases||{});
+    list.innerHTML=entries.length?entries.map(([key,target])=>`<div class="history-item" style="margin-bottom:6px">
+      <div class="history-line"><div><strong>${esc(key)}</strong> → <strong>${esc(target)}</strong></div>
+      <button class="btn danger" onclick="deleteLeagueAlias('${esc(key)}')">SMAZAT</button></div>
+    </div>`).join(''):'<div class="muted">Žádné ruční aliasy nejsou nastavené.</div>';
+  }
+  window.deleteLeagueAlias=async function(key){
+    if(!currentUserIsSystemAdmin())return;
+    delete leaguePlayerAliases[key];
+    try{await saveLeaguePlayerAliasesCloud();renderLeague();toast('Alias byl smazán.');}
+    catch(e){console.error(e);toast('Alias se nepodařilo smazat.');}
+  };
+
+  function leaguePlayerFromName(name){
+    const n=String(name||'').trim();if(!n)return null;
+    const p=getOrCreatePlayer(n);return {id:p.id,name:p.name,displayName:playerDisplayName(p)};
+  }
+  async function prepareLeagueFixture(){
+    const homeId=$('leagueHomeTeam')?.value||'',awayId=$('leagueAwayTeam')?.value||'';
+    const f=remainingLeagueFixture(homeId,awayId);
+    if(!f||!canPrepareLeagueFixture(f)){toast('Na toto utkání nemáš oprávnění.');return;}
+    const hn=[$('leagueH1').value,$('leagueH2').value,$('leagueH3').value].map(x=>x.trim());
+    const an=[$('leagueA1').value,$('leagueA2').value,$('leagueA3').value].map(x=>x.trim());
+    if(hn.some(x=>!x)||an.some(x=>!x)){toast('Vyplň všechny tři hráče obou týmů.');return;}
+    const all=[...hn,...an].map(x=>x.toLowerCase());if(new Set(all).size!==all.length){toast('V sestavách nesmí být stejný hráč dvakrát.');return;}
+    try{f.lineup={home:hn.map(leaguePlayerFromName),away:an.map(leaguePlayerFromName)};}catch(e){toast('Některého hráče nelze použít.');return;}
+    f.date=$('leagueDate').value||'';f.place=$('leaguePlace').value.trim();f.status='playing';f.startedAt=new Date().toISOString();f.updatedAt=f.startedAt;
+    f.legs=LEAGUE_LEG_MAP.map((pair,i)=>({index:i+1,homeSlot:pair[0],awaySlot:pair[1],status:'pending',matchId:null,winner:null,score:null}));
+    f.decider=null;f.resultRevision=Number(f.resultRevision||0)+1;f.adminOverride=false;selectedLeagueFixtureId=f.id;
+    try{await saveLeagueFixtureCloud(f);}catch(e){console.error(e);toast('Utkání se nepodařilo uložit online.');return;}
+    try{localStorage.setItem(DB_KEY,JSON.stringify(data));}catch(e){}renderLeague();toast('Ligové utkání připraveno.');
+  }
+  function startLeagueLeg(fixtureId,legIndex){
+    const l=ensureLeagueSever(),f=l.fixtures.find(x=>x.id===fixtureId);if(!f||!f.lineup)return;
+    if(!canEditLeagueFixture(f)){toast('Na toto utkání nemáš oprávnění.');return;}
+    const leg=(f.legs||[]).find(x=>x.index===legIndex);if(!leg||leg.status==='done'){toast('Tento zápas už je odehraný.');return;}
+    const hp=f.lineup.home[leg.homeSlot],ap=f.lineup.away[leg.awaySlot];
+    pendingLeagueLink={leagueId:l.id,fixtureId:f.id,legIndex:leg.index,type:'singles',raceTo:3,doubles:false};
+    $('p1Name').value=hp.name;$('p2Name').value=ap.name;$('discipline').value='8-ball';$('raceTo').value='3';$('breakMode').value='alternate';
+    if($('doublesMode'))$('doublesMode').checked=false;if($('ghostMode'))$('ghostMode').checked=false;if($('winnerTableMode'))$('winnerTableMode').checked=false;
+    if($('useLag'))$('useLag').checked=true;if($('streamMatchTitle'))$('streamMatchTitle').value=`Liga Sever • ${leagueTeamName(f.homeId)} – ${leagueTeamName(f.awayId)} • zápas ${leg.index}`;
+    leg.status='playing';f.updatedAt=new Date().toISOString();saveLeagueFixtureCloud(f).catch(e=>console.warn('League leg cloud:',e));startMatch();
+  }
+  function leagueValidateScore(a,b,race){
+    a=Number(a);b=Number(b);race=Number(race);return Number.isInteger(a)&&Number.isInteger(b)&&a>=0&&b>=0&&a!==b&&Math.max(a,b)===race&&Math.min(a,b)<race;
+  }
+  async function manualLeagueLegResult(fixtureId,legIndex){
+    const l=ensureLeagueSever(),f=l.fixtures.find(x=>x.id===fixtureId);if(!f||!canEditLeagueFixture(f))return toast('Nemáš oprávnění.');
+    const leg=(f.legs||[]).find(x=>x.index===legIndex);if(!leg)return;
+    const hp=f.lineup.home[leg.homeSlot],ap=f.lineup.away[leg.awaySlot];
+    const old=leg.score||[3,0];
+    const hs=prompt(`Výsledek • ${hp.displayName||hp.name}\nPočet racků domácího:`,String(old[0]??3));if(hs===null)return;
+    const as=prompt(`Výsledek • ${ap.displayName||ap.name}\nPočet racků hosta:`,String(old[1]??0));if(as===null)return;
+    if(!leagueValidateScore(Number(hs),Number(as),3)){toast('8-ball je Race to 3. Jeden hráč musí mít 3 a skóre nesmí být shodné.');return;}
+    leg.status='done';leg.matchId=leg.matchId||null;leg.score=[Number(hs),Number(as)];leg.winner=Number(hs)>Number(as)?0:1;leg.completedAt=new Date().toISOString();
+    f.resultRevision=Number(f.resultRevision||0)+1;f.adminOverride=currentUserIsSystemAdmin();
+    const completed=(f.legs||[]).filter(x=>x.status==='done').length;const [h,a]=leagueFixtureScore(f);
+    if(completed===6){if(h===3&&a===3)f.status='needs_decider';else{f.status='done';f.completedAt=new Date().toISOString();}}else f.status='playing';
+    try{await saveLeagueFixtureCloud(f);}catch(e){console.error(e);toast('Výsledek se nepodařilo uložit online.');return;}
+    renderLeague();toast('Výsledek zapsán.');
+  }
+  function leagueSelectedDeciderPlayers(fixtureId){
+    const l=ensureLeagueSever(),f=l.fixtures.find(x=>x.id===fixtureId);if(!f)return null;
+    const picks=[0,1].map(side=>[0,1,2].filter(i=>$(`leagueDec_${fixtureId}_${side}_${i}`)?.checked));
+    if(picks[0].length!==2||picks[1].length!==2)return null;
+    return {f,h:picks[0].map(i=>f.lineup.home[i]),a:picks[1].map(i=>f.lineup.away[i])};
+  }
+  function startLeagueDecider(fixtureId){
+    const sel=leagueSelectedDeciderPlayers(fixtureId);if(!sel)return toast('Do dvojiceu vyber přesně dva hráče z každého týmu.');
+    const {f,h,a}=sel;if(!canEditLeagueFixture(f))return toast('Nemáš oprávnění.');
+    const race=Math.max(1,parseInt($(`leagueDecRace_${fixtureId}`)?.value||'3',10));
+    pendingLeagueLink={leagueId:LEAGUE_SEVER_ID,fixtureId:f.id,type:'decider',raceTo:race,doubles:true,nineBallBreakRule:'kitchen'};
+    $('p1Name').value=h[0].name;$('p1PartnerName').value=h[1].name;$('p2Name').value=a[0].name;$('p2PartnerName').value=a[1].name;
+    $('discipline').value='9-ball';$('raceTo').value=String(race);$('breakMode').value='alternate';
+    if($('doublesMode'))$('doublesMode').checked=true;if($('ghostMode'))$('ghostMode').checked=false;if($('winnerTableMode'))$('winnerTableMode').checked=false;
+    if($('nineBallBreakRule'))$('nineBallBreakRule').value='kitchen';if($('useLag'))$('useLag').checked=true;
+    if($('streamMatchTitle'))$('streamMatchTitle').value=`Liga Sever • DVOJICE • ${leagueTeamName(f.homeId)} – ${leagueTeamName(f.awayId)}`;
+    f.decider={status:'playing',homePlayers:h,awayPlayers:a,raceTo:race,winner:null,matchId:null};f.updatedAt=new Date().toISOString();saveLeagueFixtureCloud(f).catch(e=>console.warn(e));startMatch();
+  }
+  async function manualLeagueDeciderResult(fixtureId){
+    const sel=leagueSelectedDeciderPlayers(fixtureId);if(!sel)return toast('Do dvojiceu vyber přesně dva hráče z každého týmu.');
+    const {f,h,a}=sel;if(!canEditLeagueFixture(f))return toast('Nemáš oprávnění.');
+    const race=Math.max(1,parseInt($(`leagueDecRace_${fixtureId}`)?.value||'3',10));
+    const hs=prompt('Dvojice 9-ball • počet racků domácích:',String(race));if(hs===null)return;
+    const as=prompt('Dvojice 9-ball • počet racků hostů:','0');if(as===null)return;
+    if(!leagueValidateScore(Number(hs),Number(as),race)){toast(`Dvojice je Race to ${race}. Jeden tým musí mít ${race}.`);return;}
+    f.decider={status:'done',homePlayers:h,awayPlayers:a,raceTo:race,winner:Number(hs)>Number(as)?0:1,score:[Number(hs),Number(as)],matchId:null,completedAt:new Date().toISOString()};
+    leagueFixtureScore(f);f.status='done';f.completedAt=new Date().toISOString();f.resultRevision=Number(f.resultRevision||0)+1;f.adminOverride=currentUserIsSystemAdmin();
+    try{await saveLeagueFixtureCloud(f);}catch(e){console.error(e);toast('Dvojice se nepodařilo uložit online.');return;}
+    renderLeague();toast('Rozhodující dvojice zapsán.');
+  }
+  async function processLeagueResult(finished){
+    const link=finished?.leagueLink;if(!link)return null;
+    const l=ensureLeagueSever();if(link.leagueId!==l.id)throw new Error('LEAGUE_NOT_FOUND');
+    const f=l.fixtures.find(x=>x.id===link.fixtureId);if(!f)throw new Error('FIXTURE_NOT_FOUND');
+    if(link.type==='decider'){
+      if(f.decider?.status==='done'&&f.decider.matchId===finished.id)return f;
+      f.decider={...(f.decider||{}),status:'done',matchId:finished.id,winner:finished.winner,score:[...finished.scores],completedAt:finished.endedAt||new Date().toISOString()};
+      leagueFixtureScore(f);f.status='done';f.completedAt=finished.endedAt||new Date().toISOString();
+    }else{
+      const leg=(f.legs||[]).find(x=>x.index===link.legIndex);if(!leg)throw new Error('LEG_NOT_FOUND');
+      if(leg.status==='done'&&leg.matchId===finished.id)return f;
+      leg.status='done';leg.matchId=finished.id;leg.winner=finished.winner;leg.score=[...finished.scores];leg.completedAt=finished.endedAt||new Date().toISOString();
+      const completed=(f.legs||[]).filter(x=>x.status==='done').length;const [h,a]=leagueFixtureScore(f);
+      if(completed===6){if(h===3&&a===3)f.status='needs_decider';else{f.status='done';f.completedAt=finished.endedAt||new Date().toISOString();}}else f.status='playing';
+    }
+    f.resultRevision=Number(f.resultRevision||0)+1;f.adminOverride=currentUserIsSystemAdmin();f.updatedAt=new Date().toISOString();
+    try{await saveLeagueFixtureCloud(f);}catch(e){console.error('League fixture save:',e);throw e;}
+    try{localStorage.setItem(DB_KEY,JSON.stringify(data));}catch(e){}return f;
+  }
+  async function confirmLeagueFixture(fixtureId,teamId,status='confirmed'){
+    const l=ensureLeagueSever(),f=l.fixtures.find(x=>x.id===fixtureId);if(!f||f.status!=='done')return;
+    if(!canConfirmLeagueSide(f,teamId))return toast('Tuto stranu utkání nemůžeš potvrdit.');
+    if(currentUserIsSystemAdmin()){
+      f.adminOverride=true;f.updatedAt=new Date().toISOString();
+      try{await saveLeagueFixtureCloud(f);}catch(e){return toast('Admin potvrzení se nepodařilo uložit.');}
+      renderLeague();toast('Výsledek potvrzen administrátorem.');return;
+    }
+    try{await saveLeagueConfirmationCloud(f,teamId,status);}catch(e){console.error(e);toast('Potvrzení se nepodařilo uložit.');return;}
+    renderLeague();toast(status==='confirmed'?'Výsledek potvrzen.':'Nesouhlas byl uložen. Výsledek je potřeba opravit.');
+  }
+
+  function leaguePlayerNameFromRef(ref){
+    if(!ref)return 'Neznámý hráč';
+    const id=ref.id||ref.playerId||'';
+    const p=id?data.players?.[id]:null;
+    const raw=p?playerDisplayName(p):(ref.displayName||ref.name||'Neznámý hráč');
+    return leagueCanonicalAliasName(raw)||raw;
+  }
+
+  function leaguePlayerIdFromRef(ref){
+    if(!ref)return '';
+    if(ref.id&&data.players?.[ref.id])return ref.id;
+    if(ref.playerId&&data.players?.[ref.playerId])return ref.playerId;
+    const name=String(ref.displayName||ref.name||'').trim();
+    if(!name)return '';
+    return findPlayerByLooseName(name)?.id||'';
+  }
+
+  function leagueSavedMatches(){
+    return (data.matches||[])
+      .filter(m=>
+        m &&
+        (m.status||'complete')==='complete' &&
+        m.leagueLink?.leagueId===LEAGUE_SEVER_ID
+      )
+      .sort((a,b)=>new Date(a.endedAt||a.startedAt||0)-new Date(b.endedAt||b.startedAt||0));
+  }
+
+  function leagueFixtureMatchFacts(){
+    const l=ensureLeagueSever();
+    const savedById=new Map(leagueSavedMatches().map(m=>[m.id,m]));
+    const facts=[];
+
+    (l.fixtures||[]).forEach(f=>{
+      // Singles legs
+      (f.legs||[]).forEach(leg=>{
+        if(leg?.status!=='done' || !Array.isArray(leg.score))return;
+
+        const saved=leg.matchId?savedById.get(leg.matchId):null;
+        if(saved){
+          facts.push({
+            key:'M:'+saved.id,
+            source:'saved',
+            doubles:false,
+            match:saved,
+            playerIds:[saved.playerIds?.[0]||'',saved.playerIds?.[1]||''],
+            playerNames:[savedMatchSideDisplayName(saved,0),savedMatchSideDisplayName(saved,1)],
+            scores:[Number(saved.scores?.[0]||0),Number(saved.scores?.[1]||0)],
+            winner:Number(saved.winner),
+            endedAt:saved.endedAt||saved.startedAt||'',
+            stats:saved.stats||[]
+          });
+          return;
+        }
+
+        const hp=f.lineup?.home?.[leg.homeSlot];
+        const ap=f.lineup?.away?.[leg.awaySlot];
+        if(!hp||!ap)return;
+        facts.push({
+          key:'F:'+f.id+':L:'+leg.index,
+          source:'fixture',
+          doubles:false,
+          match:null,
+          playerIds:[leaguePlayerIdFromRef(hp),leaguePlayerIdFromRef(ap)],
+          playerNames:[leaguePlayerNameFromRef(hp),leaguePlayerNameFromRef(ap)],
+          scores:[Number(leg.score[0]||0),Number(leg.score[1]||0)],
+          winner:Number(leg.winner),
+          endedAt:leg.completedAt||f.completedAt||f.updatedAt||'',
+          stats:[null,null]
+        });
+      });
+
+      // Deciding doubles
+      const d=f.decider;
+      if(d?.status==='done' && Array.isArray(d.score)){
+        const saved=d.matchId?savedById.get(d.matchId):null;
+        if(saved){
+          const side0Ids=Array.isArray(saved.teamPlayerIds?.[0])?saved.teamPlayerIds[0].filter(Boolean):[];
+          const side1Ids=Array.isArray(saved.teamPlayerIds?.[1])?saved.teamPlayerIds[1].filter(Boolean):[];
+          const side0Names=savedDoublesSideNames(saved,0);
+          const side1Names=savedDoublesSideNames(saved,1);
+          facts.push({
+            key:'M:'+saved.id,
+            source:'saved',
+            doubles:true,
+            match:saved,
+            teamPlayerIds:[side0Ids,side1Ids],
+            teamPlayerNames:[side0Names,side1Names],
+            scores:[Number(saved.scores?.[0]||0),Number(saved.scores?.[1]||0)],
+            winner:Number(saved.winner),
+            endedAt:saved.endedAt||saved.startedAt||'',
+            stats:saved.stats||[]
+          });
+          return;
+        }
+
+        const home=(d.homePlayers||[]).filter(Boolean);
+        const away=(d.awayPlayers||[]).filter(Boolean);
+        if(home.length&&away.length){
+          facts.push({
+            key:'F:'+f.id+':D',
+            source:'fixture',
+            doubles:true,
+            match:null,
+            teamPlayerIds:[home.map(leaguePlayerIdFromRef),away.map(leaguePlayerIdFromRef)],
+            teamPlayerNames:[home.map(leaguePlayerNameFromRef),away.map(leaguePlayerNameFromRef)],
+            scores:[Number(d.score[0]||0),Number(d.score[1]||0)],
+            winner:Number(d.winner),
+            endedAt:d.completedAt||f.completedAt||f.updatedAt||'',
+            stats:[null,null]
+          });
+        }
+      }
+    });
+
+    // Add league-linked saved matches that the fixture structure does not reference.
+    const known=new Set(facts.map(x=>x.key));
+    leagueSavedMatches().forEach(saved=>{
+      const key='M:'+saved.id;
+      if(known.has(key))return;
+      if(matchIsDoubles(saved)){
+        facts.push({
+          key,
+          source:'saved',
+          doubles:true,
+          match:saved,
+          teamPlayerIds:[
+            Array.isArray(saved.teamPlayerIds?.[0])?saved.teamPlayerIds[0].filter(Boolean):[],
+            Array.isArray(saved.teamPlayerIds?.[1])?saved.teamPlayerIds[1].filter(Boolean):[]
+          ],
+          teamPlayerNames:[savedDoublesSideNames(saved,0),savedDoublesSideNames(saved,1)],
+          scores:[Number(saved.scores?.[0]||0),Number(saved.scores?.[1]||0)],
+          winner:Number(saved.winner),
+          endedAt:saved.endedAt||saved.startedAt||'',
+          stats:saved.stats||[]
+        });
+      }else{
+        facts.push({
+          key,
+          source:'saved',
+          doubles:false,
+          match:saved,
+          playerIds:[saved.playerIds?.[0]||'',saved.playerIds?.[1]||''],
+          playerNames:[savedMatchSideDisplayName(saved,0),savedMatchSideDisplayName(saved,1)],
+          scores:[Number(saved.scores?.[0]||0),Number(saved.scores?.[1]||0)],
+          winner:Number(saved.winner),
+          endedAt:saved.endedAt||saved.startedAt||'',
+          stats:saved.stats||[]
+        });
+      }
+    });
+
+    // Deduplicate and preserve chronological order.
+    const uniq=new Map();
+    facts.forEach(f=>{if(f?.key&&!uniq.has(f.key))uniq.set(f.key,f);});
+    return [...uniq.values()].sort((a,b)=>new Date(a.endedAt||0)-new Date(b.endedAt||0));
+  }
+
+  function normalizedPersonNameParts(name){
+    return String(name||'')
+      .trim()
+      .toLowerCase()
+      .replace(/\s+/g,' ')
+      .split(' ')
+      .filter(Boolean);
+  }
+
+  function samePersonNameLoose(a,b){
+    const pa=normalizedPersonNameParts(a);
+    const pb=normalizedPersonNameParts(b);
+    if(!pa.length || !pb.length)return false;
+    if(pa.join(' ')===pb.join(' '))return true;
+    return pa.length===2 && pb.length===2 && pa[0]===pb[1] && pa[1]===pb[0];
+  }
+
+  function findPlayerByLooseName(name){
+    return Object.values(data.players||{}).find(p=>
+      p && (
+        samePersonNameLoose(p.name,name) ||
+        samePersonNameLoose(playerDisplayName(p),name)
+      )
+    )||null;
+  }
+
+  function leagueCanonicalPlayerKey(id,name){
+    const cleanId=String(id||'').trim();
+    if(cleanId && data.players?.[cleanId])return 'id:'+cleanId;
+
+    const canonicalName=leagueCanonicalAliasName(name);
+    const normalized=leagueAliasKey(canonicalName);
+    if(normalized){
+      const p=findPlayerByLooseName(canonicalName);
+      if(p?.id)return 'id:'+p.id;
+
+      // Pokud nejde o profil, prosté prohození jména/příjmení je stále jedna osoba.
+      // "Robert Paťcha" a "Paťcha Robert" proto dostanou stejný klíč.
+      const parts=normalized.split(' ').filter(Boolean);
+      if(parts.length===2)return 'name2:'+parts.slice().sort((a,b)=>a.localeCompare(b,'cs')).join('|');
+    }
+    return 'name:'+normalized;
+  }
+
+  function leaguePlayerStatsRows(){
+    const facts=leagueFixtureMatchFacts();
+    const rows=new Map();
+    const elo=new Map();
+
+    function ensureRow(id,name){
+      const key=leagueCanonicalPlayerKey(id,name);
+      const profileId=key.startsWith('id:')?key.slice(3):'';
+      const p=profileId?data.players?.[profileId]:null;
+      const canonicalName=leagueCanonicalAliasName(name)||name;
+      const display=p?playerDisplayName(p):(canonicalName||'Neznámý hráč');
+
+      if(!rows.has(key)){
+        rows.set(key,{
+          key,id:profileId||id||'',name:display,
+          played:0,wins:0,losses:0,racksFor:0,racksAgainst:0,
+          breakAndRun:0,runouts:0,elo:1500,singlesForElo:0
+        });
+      }else if(p){
+        rows.get(key).id=p.id;
+        rows.get(key).name=playerDisplayName(p);
+      }
+
+      if(!elo.has(key))elo.set(key,1500);
+      return rows.get(key);
+    }
+
+    facts.forEach(f=>{
+      const s0=Number(f.scores?.[0]||0),s1=Number(f.scores?.[1]||0);
+
+      if(f.doubles){
+        [0,1].forEach(side=>{
+          const ids=f.teamPlayerIds?.[side]||[];
+          const names=f.teamPlayerNames?.[side]||[];
+          const n=Math.max(ids.length,names.length);
+          for(let pos=0;pos<n;pos++){
+            const id=ids[pos]||'';
+            const name=(id&&data.players?.[id])?playerDisplayName(data.players[id]):(names[pos]||'Neznámý hráč');
+            const r=ensureRow(id,name);
+            r.played++;
+            if(Number(f.winner)===side)r.wins++;else r.losses++;
+            r.racksFor+=side===0?s0:s1;
+            r.racksAgainst+=side===0?s1:s0;
+          }
+        });
+        return;
+      }
+
+      const id0=f.playerIds?.[0]||'', id1=f.playerIds?.[1]||'';
+      const n0=(id0&&data.players?.[id0])?playerDisplayName(data.players[id0]):(f.playerNames?.[0]||'Neznámý hráč');
+      const n1=(id1&&data.players?.[id1])?playerDisplayName(data.players[id1]):(f.playerNames?.[1]||'Neznámý hráč');
+
+      const r0=ensureRow(id0,n0), r1=ensureRow(id1,n1);
+
+      r0.played++;r1.played++;
+      if(Number(f.winner)===0){r0.wins++;r1.losses++;}else{r1.wins++;r0.losses++;}
+      r0.racksFor+=s0;r0.racksAgainst+=s1;
+      r1.racksFor+=s1;r1.racksAgainst+=s0;
+
+      if(f.match && Array.isArray(f.stats)){
+        r0.breakAndRun+=Number(f.stats?.[0]?.breakAndRun||0);
+        r1.breakAndRun+=Number(f.stats?.[1]?.breakAndRun||0);
+        r0.runouts+=Number(f.stats?.[0]?.runouts||0);
+        r1.runouts+=Number(f.stats?.[1]?.runouts||0);
+      }
+
+      const k0=r0.key,k1=r1.key;
+      const e0=elo.get(k0)??1500,e1=elo.get(k1)??1500;
+      const exp0=1/(1+Math.pow(10,(e1-e0)/400));
+      const score0=Number(f.winner)===0?1:0;
+      elo.set(k0,e0+32*(score0-exp0));
+      elo.set(k1,e1+32*((1-score0)-(1-exp0)));
+      r0.singlesForElo++;r1.singlesForElo++;
+    });
+
+    rows.forEach(r=>{
+      r.elo=Math.round(elo.get(r.key)??1500);
+      r.winPct=r.played?Math.round(r.wins/r.played*100):0;
+      r.rackDiff=r.racksFor-r.racksAgainst;
+    });
+
+    return {
+      facts,
+      rows:[...rows.values()].sort((a,b)=>
+        b.wins-a.wins ||
+        b.winPct-a.winPct ||
+        b.rackDiff-a.rackDiff ||
+        b.racksFor-a.racksFor ||
+        a.name.localeCompare(b.name,'cs')
+      )
+    };
+  }
+
+  function renderLeaguePlayerStats(){
+    const host=$('leaguePlayerStats');
+    const count=$('leaguePlayerStatsCount');
+    if(!host)return;
+    const {facts,rows}=leaguePlayerStatsRows();
+    if(count)count.textContent=facts.length+' '+(facts.length===1?'zápas':'zápasů');
+
+    if(!rows.length){
+      host.innerHTML='<div class="empty">Zatím není dohledatelný žádný odehraný zápas Ligy Sever.</div>';
+      return;
+    }
+
+    const l=ensureLeagueSever();
+    const completeFixtures=(l.fixtures||[]).filter(f=>
+      (f.legs||[]).filter(x=>x?.status==='done'&&Array.isArray(x.score)).length===6
+    ).length;
+    const singlesCount=facts.filter(f=>!f.doubles).length;
+
+    host.innerHTML=`<div class="subpanel" style="margin:0 0 10px;padding:8px 10px">
+      <div class="muted" style="font-size:11px">
+        Započítáno <strong>${singlesCount}</strong> dvouher z <strong>${completeFixtures}</strong> kompletních týmových utkání.
+        Každé kompletní utkání obsahuje 6 dvouher, tedy 2 dvouhry na každého hráče v tříčlenné sestavě.
+      </div>
+    </div>
+    <div style="overflow:auto">
+      <table class="stats-table">
+        <thead>
+          <tr>
+            <th>#</th><th>Hráč</th><th>O</th><th>V</th><th>P</th><th>Úsp.</th>
+            <th>Racky</th><th>+/-</th><th>Čisté</th><th>Dohrávky</th><th>Ligové ELO</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${rows.map((r,i)=>`<tr>
+            <td>${i+1}</td>
+            <td class="${i===0?'league-standing-lead':''}"><strong>${esc(r.name)}</strong></td>
+            <td>${r.played}</td>
+            <td>${r.wins}</td>
+            <td>${r.losses}</td>
+            <td>${r.winPct} %</td>
+            <td>${r.racksFor}:${r.racksAgainst}</td>
+            <td>${r.rackDiff>0?'+':''}${r.rackDiff}</td>
+            <td>${r.breakAndRun}</td>
+            <td>${r.runouts}</td>
+            <td>${r.elo}${r.singlesForElo?'':'*'}</td>
+          </tr>`).join('')}
+        </tbody>
+      </table>
+    </div>
+    <div class="muted" style="font-size:11px;margin-top:7px">
+      * Bez odehrané dvouhry zůstává ligové ELO na výchozí hodnotě 1500.
+      Čisté hry a dohrávky se zobrazí jen u zápasů, kde byly skutečně evidované počítadlem.
+    </div>`;
+  }
+
+  function leagueStandingsRows(){
+    const l=ensureLeagueSever();const rows=LEAGUE_SEVER_TEAMS.map(t=>({id:t.id,name:t.name,p:0,w:0,l:0,for:0,against:0}));const by=new Map(rows.map(r=>[r.id,r]));
+    (l.fixtures||[]).filter(leagueFixtureComplete).forEach(f=>{const [h,a]=leagueFixtureScore(f),rh=by.get(f.homeId),ra=by.get(f.awayId);if(!rh||!ra)return;rh.p++;ra.p++;rh.for+=h;rh.against+=a;ra.for+=a;ra.against+=h;if(h>a){rh.w++;ra.l++;}else if(a>h){ra.w++;rh.l++;}});
+    rows.sort((a,b)=>b.w-a.w||((b.for-b.against)-(a.for-a.against))||b.for-a.for||a.name.localeCompare(b.name,'cs'));return rows;
+  }
+  function renderLeagueStandings(){
+    const el=$('leagueStandings');if(!el)return;const rows=leagueStandingsRows();
+    el.innerHTML=`<div style="overflow:auto"><table class="stats-table"><thead><tr><th>#</th><th>Tým</th><th>O</th><th>V</th><th>P</th><th>Skóre</th></tr></thead><tbody>${rows.map((r,i)=>`<tr><td>${i+1}</td><td class="${i===0?'league-standing-lead':''}">${esc(r.name)}</td><td>${r.p}</td><td>${r.w}</td><td>${r.l}</td><td>${r.for}:${r.against}</td></tr>`).join('')}</tbody></table></div>`;
+  }
+  function leagueLegDisplayName(f,leg,side){
+    const ref=side===0?f.lineup?.home?.[leg.homeSlot]:f.lineup?.away?.[leg.awaySlot];
+    return leaguePlayerNameFromRef(ref);
+  }
+
+  function leagueFixtureDetailRow(f,leg){
+    const hn=leagueLegDisplayName(f,leg,0);
+    const an=leagueLegDisplayName(f,leg,1);
+    const done=leg.status==='done'&&Array.isArray(leg.score);
+    const score=done?`${leg.score[0]} : ${leg.score[1]}`:'—';
+    const saved=leg.matchId?(data.matches||[]).find(m=>m.id===leg.matchId):null;
+    return `<div class="history-item" style="margin-bottom:8px">
+      <div class="history-line">
+        <div style="min-width:0">
+          <div class="muted" style="font-size:10px">ZÁPAS ${esc(String(leg.index||''))} • 8-BALL</div>
+          <div style="font-weight:900;margin-top:3px">${esc(hn)} vs ${esc(an)}</div>
+        </div>
+        <div class="history-score">${esc(score)}</div>
+      </div>
+      <div class="muted" style="margin-top:5px">${done?'DOKONČENO':(leg.status==='playing'?'ROZEHRÁNO':'ČEKÁ')}</div>
+      ${saved?`<div class="item-actions" style="margin-top:8px"><button class="btn" onclick="showSavedMatchStats('${esc(saved.id)}')">STATISTIKY ZÁPASU</button></div>`:''}
+    </div>`;
+  }
+
+  function leagueDeciderDetailRow(f){
+    const d=f.decider;if(!d)return '';
+    const home=(d.homePlayers||[]).map(leaguePlayerNameFromRef).join(' + ')||'Domácí dvojice';
+    const away=(d.awayPlayers||[]).map(leaguePlayerNameFromRef).join(' + ')||'Hostující dvojice';
+    const done=d.status==='done'&&Array.isArray(d.score);
+    const score=done?`${d.score[0]} : ${d.score[1]}`:'—';
+    const saved=d.matchId?(data.matches||[]).find(m=>m.id===d.matchId):null;
+    return `<div class="history-item" style="margin-top:10px;border-color:rgba(212,175,55,.5)">
+      <div class="history-line">
+        <div style="min-width:0">
+          <div class="muted" style="font-size:10px">ROZHODUJÍCÍ DVOJICE • 9-BALL</div>
+          <div style="font-weight:900;margin-top:3px">${esc(home)} vs ${esc(away)}</div>
+        </div>
+        <div class="history-score">${esc(score)}</div>
+      </div>
+      <div class="muted" style="margin-top:5px">${done?'DOKONČENO':(d.status==='playing'?'ROZEHRÁNO':'ČEKÁ')}</div>
+      ${saved?`<div class="item-actions" style="margin-top:8px"><button class="btn" onclick="showSavedMatchStats('${esc(saved.id)}')">STATISTIKY ZÁPASU</button></div>`:''}
+    </div>`;
+  }
+
+  window.openLeagueFixtureDetail=function(fixtureId){
+    const l=ensureLeagueSever();
+    const f=(l.fixtures||[]).find(x=>x.id===fixtureId);
+    if(!f)return toast('Ligové utkání nebylo nalezeno.');
+    const [h,a]=leagueFixtureScore(f);
+    $('leagueFixtureDetailTitle').textContent=leagueTeamName(f.homeId)+' '+h+' : '+a+' '+leagueTeamName(f.awayId);
+    const legs=(f.legs||[]).slice().sort((x,y)=>Number(x.index||0)-Number(y.index||0));
+    $('leagueFixtureDetailBody').innerHTML=`
+      <div class="subpanel"><div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px">
+        ${statBox('KOLO',f.round||'—')}${statBox('DATUM',f.date||'—')}${statBox('MÍSTO',f.place||'—')}${statBox('STAV',leagueResultStatusLabel(f))}
+      </div></div>
+      <div style="margin-top:12px"><div style="font-weight:950;font-size:17px;margin-bottom:8px">JEDNOTLIVÉ ZÁPASY</div>
+        ${legs.length?legs.map(leg=>leagueFixtureDetailRow(f,leg)).join(''):'<div class="empty">Sestava ještě nebyla připravena.</div>'}
+        ${f.decider?leagueDeciderDetailRow(f):''}
+      </div>`;
+    $('leagueFixtureDetailModal').classList.add('show');
+  };
+
+  if($('leagueFixtureDetailClose'))$('leagueFixtureDetailClose').onclick=()=>$('leagueFixtureDetailModal').classList.remove('show');
+
+  function leagueResultStatusLabel(f){
+    if(f.status==='pending')return 'ČEKÁ NA TERMÍN';if(f.status==='playing')return 'ROZEHRÁNO';if(f.status==='needs_decider')return '3:3 • ČEKÁ DVOJICE';
+    if(f.status==='done'&&leagueFixtureConfirmed(f))return f.adminOverride?'POTVRZENO ADMINEM':'POTVRZENO OBĚMA KAPITÁNY';
+    if(f.status==='done')return 'ČEKÁ NA POTVRZENÍ';return String(f.status||'');
+  }
+  function renderLeagueConfirmationActions(f){
+    if(f.status!=='done'||leagueFixtureConfirmed(f))return '';
+    if(currentUserIsSystemAdmin())return `<button class="btn primary" onclick="confirmLeagueFixture('${f.id}','${f.homeId}','confirmed')">POTVRDIT ADMINEM</button>`;
+    const buttons=[];
+    [f.homeId,f.awayId].forEach(teamId=>{
+      if(!canConfirmLeagueSide(f,teamId))return;
+      const c=leagueConfirmationFor(f,teamId);
+      if(c?.status==='confirmed')buttons.push(`<span class="status-badge complete">${esc(leagueTeamName(teamId))}: potvrzeno</span>`);
+      else buttons.push(`<button class="btn primary" onclick="confirmLeagueFixture('${f.id}','${teamId}','confirmed')">POTVRDIT ZA ${esc(leagueTeamName(teamId))}</button><button class="btn danger" onclick="confirmLeagueFixture('${f.id}','${teamId}','rejected')">NESOUHLASÍM</button>`);
+    });
+    return buttons.join(' ');
+  }
+  function renderLeagueFixture(f){
+    const [hs,as]=leagueFixtureScore(f),canEdit=canEditLeagueFixture(f),confirmed=leagueFixtureConfirmed(f),locked=confirmed&&!currentUserIsSystemAdmin();
+    const legs=(f.legs||[]).map(leg=>{const hp=f.lineup?.home?.[leg.homeSlot],ap=f.lineup?.away?.[leg.awaySlot];const done=leg.status==='done';let action='';
+      if(done)action=`<strong>${leg.score?.[0]??0}:${leg.score?.[1]??0}</strong>${canEdit&&!locked?` <button class="btn ghost" style="padding:5px 8px" onclick="manualLeagueLegResult('${f.id}',${leg.index})">UPRAVIT</button>`:''}`;
+      else if(canEdit)action=`<div style="display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end"><button class="btn primary" onclick="startLeagueLeg('${f.id}',${leg.index})">HRÁT</button><button class="btn" onclick="manualLeagueLegResult('${f.id}',${leg.index})">ZAPSAT</button></div>`;
+      else action='<span class="muted">čeká</span>';
+      return `<div class="league-leg"><div class="league-num"><strong>${leg.index}.</strong></div><div class="league-p1">${esc(hp?.displayName||hp?.name||'—')}</div><div class="league-vs muted">vs</div><div class="league-p2">${esc(ap?.displayName||ap?.name||'—')}</div><div class="league-start">${action}</div></div>`;}).join('');
+    let dec='';
+    if(f.status==='needs_decider'){
+      const side=(arr,side)=>arr.map((p,i)=>`<label style="display:flex;align-items:center;gap:7px;margin:6px 0"><input style="width:auto" type="checkbox" id="leagueDec_${f.id}_${side}_${i}" ${canEdit?'':'disabled'}>${esc(p.displayName||p.name)}</label>`).join('');
+      dec=`<div class="subpanel" style="margin-top:12px;border-color:#705820"><strong>Rozhodující dvojice • 9-ball • Kitchen rule</strong><div class="grid two" style="margin-top:10px"><div><div class="muted">${esc(leagueTeamName(f.homeId))} – vyber 2</div>${side(f.lineup.home,0)}</div><div><div class="muted">${esc(leagueTeamName(f.awayId))} – vyber 2</div>${side(f.lineup.away,1)}</div></div><div style="max-width:180px;margin-top:8px"><label>Race to</label><input id="leagueDecRace_${f.id}" type="number" min="1" value="3" ${canEdit?'':'disabled'}></div>${canEdit?`<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px"><button class="btn primary big" onclick="startLeagueDecider('${f.id}')">HRÁT DVOJICE</button><button class="btn big" onclick="manualLeagueDeciderResult('${f.id}')">ZAPSAT RUČNĚ</button></div>`:''}</div>`;
+    }else if(f.decider?.status==='done')dec=`<div class="subpanel" style="margin-top:10px"><strong>Dvojice:</strong> ${esc((f.decider.homePlayers||[]).map(x=>x.displayName||x.name).join(' + '))} <strong>${f.decider.score?.[0]??0}:${f.decider.score?.[1]??0}</strong> ${esc((f.decider.awayPlayers||[]).map(x=>x.displayName||x.name).join(' + '))}</div>`;
+    const hc=leagueConfirmationFor(f,f.homeId),ac=leagueConfirmationFor(f,f.awayId);
+    const conf=f.status==='done'?`<div class="muted" style="margin-top:8px">Potvrzení: ${esc(leagueTeamName(f.homeId))} ${hc?.status==='confirmed'?'✓':(hc?.status==='rejected'?'✕':'…')} • ${esc(leagueTeamName(f.awayId))} ${ac?.status==='confirmed'?'✓':(ac?.status==='rejected'?'✕':'…')}</div>`:'';
+    const actions=renderLeagueConfirmationActions(f);
+    return `<div class="league-fixture ${esc(f.status||'')}"><div style="display:flex;justify-content:space-between;gap:10px;align-items:center;flex-wrap:wrap"><div><span class="tournament-badge">kolo ${f.round}</span> <span class="tournament-badge ${confirmed?'gold':''}">${esc(leagueResultStatusLabel(f))}</span><div style="font-size:19px;font-weight:950;margin-top:7px">${esc(leagueTeamName(f.homeId))} <span class="league-team-score">${hs}:${as}</span> ${esc(leagueTeamName(f.awayId))}</div><div class="muted" style="margin-top:3px">${esc(f.date||'termín dle dohody')}${f.place?' • '+esc(f.place):''}</div>${conf}</div><div>${actions}</div></div>${legs?`<div style="margin-top:10px">${legs}</div>`:''}${dec}</div>`;
+  }
+  function renderLeagueCaptainAdmin(){
+    const panel=$('leagueAdminCaptains'),wrap=$('leagueCaptainSelectors'); if(!panel||!wrap)return;
+    panel.classList.toggle('hidden',!currentUserIsSystemAdmin()); if(!currentUserIsSystemAdmin())return;
+    const accountMap=new Map();
+    Object.entries(adminRegisteredUsersCache||{}).forEach(([uid,u])=>{
+      if(!uid||!u||typeof u!=='object')return; const p=registeredUserLinkedPlayer(uid,u);
+      accountMap.set(uid,{uid,playerId:p?.id||u.playerId||'',label:p?playerSelectionLabel(p):(u.email||uid),hasProfile:!!p});
+    });
+    Object.values(data.players||{}).filter(p=>p&&p.ownerUid&&p.active!==false&&p.hiddenFromPlayers!==true).forEach(p=>{
+      if(!accountMap.has(p.ownerUid))accountMap.set(p.ownerUid,{uid:p.ownerUid,playerId:p.id,label:playerSelectionLabel(p),hasProfile:true});
+    });
+    const candidates=[...accountMap.values()].sort((a,b)=>a.label.localeCompare(b.label,'cs'));
+    wrap.innerHTML=LEAGUE_SEVER_TEAMS.map(t=>{const cfg=leagueConfigTeams?.[t.id]||{};return `<div><label>${esc(t.name)}</label><select id="leagueCaptain_${t.id}"><option value="">— bez kapitána —</option>${candidates.map(c=>`<option value="${esc(c.uid)}" data-player-id="${esc(c.playerId||'')}" data-user-label="${esc(c.label)}" ${cfg.captainUid===c.uid?'selected':''}>${esc(c.label)}${c.hasProfile?'':' • ÚČET BEZ PROFILU'}</option>`).join('')}</select></div>`;}).join('');
+    if(!Object.keys(adminRegisteredUsersCache||{}).length&&!adminRegisteredUsersLoading){loadAllRegisteredUsers(false).then(()=>renderLeagueCaptainAdmin()).catch(e=>console.warn('League users:',e));}
+  }
+  async function saveLeagueCaptains(){
+    if(!currentUserIsSystemAdmin())return;
+    LEAGUE_SEVER_TEAMS.forEach(t=>{const sel=$(`leagueCaptain_${t.id}`),opt=sel?.selectedOptions?.[0];const uidv=sel?.value||'';const pid=opt?.dataset?.playerId||'';const p=pid?data.players?.[pid]:null;const lbl=opt?.dataset?.userLabel||'';leagueConfigTeams[t.id]={id:t.id,name:t.name,captainUid:uidv,captainPlayerId:pid,captainName:p?playerSelectionLabel(p):lbl};});
+    try{await saveLeagueConfigTeamsCloud();toast('Kapitáni byli uloženi.');renderLeague();try{renderRegisteredUsersAdmin(false);}catch(e){}}catch(e){console.error(e);toast('Kapitány se nepodařilo uložit. Zkontroluj Firebase Rules.');}
+  }
+  function renderLeague(){
+    const l=ensureLeagueSever();
+    if(currentUserIsSystemAdmin()&&!Object.keys(adminRegisteredUsersCache||{}).length&&!adminRegisteredUsersLoading){loadAllRegisteredUsers(false).then(()=>renderLeagueCaptainAdmin()).catch(e=>console.warn('League users:',e));}
+    renderLeagueCaptainAdmin();renderLeaguePlayerAliasesAdmin();updateLeagueSelectors();renderLeagueStandings();renderLeaguePlayerStats();
+    const myTeams=leagueCurrentCaptainTeamIds().map(leagueTeamName);
+    if($('leagueEditPermissionInfo'))$('leagueEditPermissionInfo').textContent=currentUserIsSystemAdmin()?'Jsi systémový administrátor • můžeš zapisovat všechna utkání.':(myTeams.length?'Jsi kapitán: '+myTeams.join(', ')+' • můžeš zapisovat pouze utkání svého týmu.':'Výsledky může zapisovat pouze kapitán některého z týmů nebo administrátor.');
+    const confirmed=(l.fixtures||[]).filter(leagueFixtureConfirmed).length, waiting=(l.fixtures||[]).filter(f=>f.status==='done'&&!leagueFixtureConfirmed(f)).length,active=(l.fixtures||[]).filter(f=>f.status==='playing'||f.status==='needs_decider').length,remaining=(l.fixtures||[]).filter(f=>f.status==='pending').length;
+    if($('leagueSummary'))$('leagueSummary').innerHTML=`<div class="league-kpi"><strong>${confirmed}</strong><span class="muted">potvrzeno</span></div><div class="league-kpi"><strong>${waiting}</strong><span class="muted">čeká potvrzení</span></div><div class="league-kpi"><strong>${active}</strong><span class="muted">rozehráno</span></div><div class="league-kpi"><strong>${remaining}</strong><span class="muted">zbývá</span></div>`;
+    const act=(l.fixtures||[]).filter(f=>f.status!=='pending'&&!leagueFixtureConfirmed(f));if($('leagueActiveFixtures'))$('leagueActiveFixtures').innerHTML=act.length?act.map(renderLeagueFixture).join(''):'<div class="empty">Žádné rozehrané ani nepotvrzené ligové utkání.</div>';
+    if($('leagueSchedule'))$('leagueSchedule').innerHTML=(l.fixtures||[]).slice().sort((a,b)=>a.round-b.round||a.id.localeCompare(b.id)).map(f=>{const [h,a]=leagueFixtureScore(f);return `<div class="history-item"><div class="history-line"><div><span class="tournament-badge">kolo ${f.round}</span><div style="font-weight:900;margin-top:5px">${esc(leagueTeamName(f.homeId))} – ${esc(leagueTeamName(f.awayId))}</div></div><div class="history-score">${f.status==='pending'?'—':h+':'+a}</div></div><div class="muted" style="margin-top:5px">${esc(leagueResultStatusLabel(f))}</div><div class="item-actions" style="margin-top:8px"><button class="btn" onclick="openLeagueFixtureDetail('${f.id}')">DETAIL UTKÁNÍ</button></div></div>`;}).join('');
+  }
+  window.startLeagueLeg=startLeagueLeg;window.startLeagueDecider=startLeagueDecider;window.manualLeagueLegResult=manualLeagueLegResult;window.manualLeagueDeciderResult=manualLeagueDeciderResult;window.confirmLeagueFixture=confirmLeagueFixture;
+  if($('leagueHomeTeam'))$('leagueHomeTeam').onchange=updateLeagueSelectors;
+  if($('leagueAwayTeam'))$('leagueAwayTeam').onchange=updateLeagueSelectors;
+  if($('leaguePrepareBtn'))$('leaguePrepareBtn').onclick=prepareLeagueFixture;
+  if($('leagueSaveCaptainsBtn'))$('leagueSaveCaptainsBtn').onclick=saveLeagueCaptains;
+  if($('leagueAliasSource'))$('leagueAliasSource').onchange=()=>{
+    const src=$('leagueAliasSource').value||'';
+    if(src && $('leagueAliasTarget') && !$('leagueAliasTarget').value)$('leagueAliasTarget').value=leagueCanonicalAliasName(src)||src;
+  };
+  if($('leagueAliasSaveBtn'))$('leagueAliasSaveBtn').onclick=async()=>{
+    if(!currentUserIsSystemAdmin())return;
+    const source=String($('leagueAliasSource')?.value||'').trim();
+    const target=String($('leagueAliasTarget')?.value||'').trim();
+    if(!source||!target)return toast('Vyber chybné jméno a zadej správné jméno.');
+    if(leagueAliasKey(source)===leagueAliasKey(target))return toast('Zdroj a cílové jméno jsou stejné.');
+    leaguePlayerAliases[leagueAliasKey(source)]=target;
+    try{
+      await saveLeaguePlayerAliasesCloud();
+      $('leagueAliasTarget').value='';
+      renderLeague();
+      toast('Ligový alias byl uložen a statistiky přepočítány.');
+    }catch(e){console.error(e);toast('Alias se nepodařilo uložit.');}
+  };
+
+  if($('leagueRefreshBtn'))$('leagueRefreshBtn').onclick=async()=>{
+    await Promise.allSettled([loadSecureMatches(),loadLeagueCloud(true)]);
+    renderLeague();
+    toast('Liga a statistiky hráčů byly obnoveny z cloudu.');
+  };
+
+
+  if($('activeTournamentSaveRulesBtn'))$('activeTournamentSaveRulesBtn').onclick=saveActiveTournamentRules;
+  if($('activeTournamentEditCancelBtn'))$('activeTournamentEditCancelBtn').onclick=closeActiveTournamentEdit;
+
+  if($('groupPlayoffSeedMode'))$('groupPlayoffSeedMode').onchange=()=>{
+    const manual=$('groupPlayoffSeedMode').value==='manual';
+    $('groupPlayoffSeedRulesBox').classList.toggle('hidden',manual);
+    $('groupPlayoffManualBox').classList.toggle('hidden',!manual);
+
+    if(manual){
+      const t=(data.tournaments||[]).find(x=>x.id===groupPlayoffSeedTournamentId);
+      if(t)buildManualGroupSeedEditor(t);
+    }
+  };
+  // Handler tlačítka NASADIT DO PLAY-OFF se váže přímo při otevření modalu.
+  // Tím se eliminuje problém se ztraceným/pozdně vytvořeným globálním handlerem.
+  if($('groupPlayoffSeedCancelBtn'))$('groupPlayoffSeedCancelBtn').onclick=()=>{
+    $('groupPlayoffSeedModal').classList.remove('show');
+    groupPlayoffSeedTournamentId=null;
+  };
+
+  if($('swissScoreSaveBtn'))$('swissScoreSaveBtn').onclick=saveSwissScore;
+  if($('swissScoreCancelBtn'))$('swissScoreCancelBtn').onclick=()=>{
+    $('swissScoreModal').classList.remove('show');
+    swissScoreContext=null;
+  };
+
+  if($('historicalEditApplyBtn'))$('historicalEditApplyBtn').onclick=applyHistoricalTournamentReseed;
+  if($('historicalEditCancelBtn'))$('historicalEditCancelBtn').onclick=()=>{
+    $('tournamentHistoricalEditModal').classList.remove('show');
+    historicalEditTournamentId=null;
+  };
+  if($('historicalTournamentScoreSaveBtn'))$('historicalTournamentScoreSaveBtn').onclick=saveHistoricalTournamentScore;
+  if($('historicalTournamentScoreCancelBtn'))$('historicalTournamentScoreCancelBtn').onclick=()=>{
+    $('historicalTournamentScoreModal').classList.remove('show');
+    historicalScoreContext=null;
+  };
+
+  async function refreshTournamentById(tournamentId,buttonEl=null){
+    if(!tournamentId)return;
+    const btn=buttonEl||null;
+    if(btn)btn.disabled=true;
+
+    try{
+      await loadSecureMatches();
+      await loadSecureTournaments();
+
+      let repaired=reconcileTournamentResultsFromMatches(tournamentId);
+      const syncedTournament=(data.tournaments||[]).find(x=>x.id===tournamentId);
+
+      if(syncedTournament && rebuildSKOStateFromFinishedMatches(syncedTournament)){
+        repaired=true;
+      }
+
+      if(repaired && syncedTournament){
+        try{
+          await saveSecureTournament(syncedTournament);
+        }catch(e){
+          console.error('Tournament repair save:',e);
+        }
+      }
+
+      renderTournament();
+      renderResultsTournaments();
+      if(selectedTournamentId===tournamentId){
+        renderTournamentDetail();
+      }
+
+      toast(syncedTournament?.status==='complete'
+        ? 'Turnaj dokončen • konečné výsledky byly obnoveny.'
+        : 'Aktuální výsledky turnaje byly načteny.');
+    }catch(e){
+      console.error('Tournament refresh:',e);
+      toast('Turnaj se nepodařilo aktualizovat.');
+    }finally{
+      if(btn)btn.disabled=false;
+    }
+  }
+
+  window.refreshTournamentById=refreshTournamentById;
+
+  function renderTournament(){
+    if(!$('tournamentPlayerDropdown')) return;
+    if(!tournamentCheckinDraftRestored){
+      restoreTournamentCheckinDraft();
+      tournamentCheckinDraftRestored=true;
+    }
+    reconcileTournamentResultsFromMatches();
+    renderTournamentPlayerPicker();
+    renderSeriesList();
+    renderTournamentSeriesSelect();
+    updateTournamentCreateButtonLabel();
+    updateTournamentNineBallBreakRuleVisibility();
+
+    const tournamentFormatValue=$('tournamentFormat').value;
+    const groupMode=['groups','groups_sko','groups_dko'].includes(tournamentFormatValue);
+    $('tournamentGroupCountField').classList.toggle('hidden',!groupMode || tournamentFormatValue==='groups');
+    const hybridGroupMode=['groups_sko','groups_dko'].includes(tournamentFormatValue);
+    if($('tournamentPlayoffDisciplineField'))$('tournamentPlayoffDisciplineField').classList.toggle('hidden',!hybridGroupMode);
+    if($('tournamentDisciplineLabel'))$('tournamentDisciplineLabel').textContent=groupMode?'Disciplína skupin':'Disciplína';
+    if($('tournamentAdvanceField'))$('tournamentAdvanceField').classList.toggle('hidden',!hybridGroupMode);
+    if($('tournamentThirdPlaceField'))$('tournamentThirdPlaceField').classList.toggle('hidden',tournamentFormatValue==='groups');
+    renderTournamentSeriesSelect();
+
+    const tournaments=(data.tournaments||[]).slice().sort((a,b)=>
+      new Date(b.createdAt||0)-new Date(a.createdAt||0)
+    );
+    const active=tournaments.filter(t=>t.status!=='complete');
+
+    const activeWrap=$('tournamentActiveList');
+
+    const cardHtml=(t,archived=false)=>{
+      const all=allTournamentMatches(t);
+      const done=all.filter(m=>m.status==='done'||m.winnerId||m.loserId).length;
+      const playing=all.filter(m=>m.status==='playing').length;
+      const status=archived?'DOKONČENO':(playing?'PROBÍHÁ':'PŘIPRAVENO');
+      const created=t.createdAt
+        ? new Date(t.createdAt).toLocaleDateString('cs-CZ')
+        : '';
+
+      return `<div class="subpanel" style="margin-bottom:12px">
+        <div style="display:flex;justify-content:space-between;gap:14px;align-items:center;flex-wrap:wrap">
+          <div style="flex:1;min-width:220px">
+            <div style="font-size:23px;font-weight:950">${esc(t.name||'Turnaj')}</div>
+            <div class="muted" style="margin-top:5px">
+              ${esc(tournamentFormatLabel(t))} • ${esc(tournamentDisciplineSummary(t))} • Race to ${t.raceTo}${t.nineBallBreakRule&&t.nineBallBreakRule!=='none'?' • '+esc(nineBallBreakRuleLabel(t.nineBallBreakRule)):''}
+              • odehráno ${done}/${all.length}${playing?` • právě hraje ${playing}`:''}${created?` • ${created}`:''}
+            </div>
+          </div>
+          <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+            <span class="tournament-badge ${archived?'gold':''}">${status}</span>
+            ${archived?'':`<button class="btn" onclick="refreshTournamentById('${t.id}',this)">↻ AKTUALIZOVAT</button>`}
+            <button class="btn primary" onclick="openTournamentDetail('${t.id}')">${archived?'VÝSLEDKY':'OTEVŘÍT TURNAJ'}</button>
+          </div>
+        </div>
+      </div>`;
+    };
+
+    if(activeWrap){
+      activeWrap.innerHTML=active.length
+        ? active.map(t=>cardHtml(t,false)).join('')
+        : '<div class="muted">Momentálně není rozehraný žádný turnaj.</div>';
+    }
+
+
+  }
+
+  $('tournamentFormat').addEventListener('change',()=>{
+    const f=$('tournamentFormat').value;
+    const groupMode=['groups_sko','groups_dko'].includes(f);
+    const swissMode=f==='swiss';
+    $('tournamentGroupCountField').classList.toggle('hidden',!groupMode);
+    $('tournamentSwissRoundsField')?.classList.toggle('hidden',!swissMode);
+    $('tournamentThirdPlaceField')?.classList.toggle('hidden',swissMode);
+    $('tournamentDkoSkoCutField')?.classList.toggle('hidden',f!=='dko');
+    if($('tournamentAdvanceField'))$('tournamentAdvanceField').classList.toggle('hidden',!groupMode);
+    if($('tournamentPlayoffDisciplineField'))$('tournamentPlayoffDisciplineField').classList.toggle('hidden',!groupMode);
+    if($('tournamentDisciplineLabel'))$('tournamentDisciplineLabel').textContent=groupMode?'Disciplína skupin':'Disciplína';
+    if(groupMode && $('tournamentPlayoffDiscipline') && !$('tournamentPlayoffDiscipline').dataset.touched){
+      $('tournamentPlayoffDiscipline').value=$('tournamentDiscipline').value;
+    }
+    renderTournamentSeedOrder();
+  });
+
+  if($('tournamentPlayoffDiscipline')){
+    $('tournamentPlayoffDiscipline').addEventListener('change',()=>{
+      $('tournamentPlayoffDiscipline').dataset.touched='1';
+      updateTournamentNineBallBreakRuleVisibility();
+    });
+  }
+  if($('tournamentDiscipline')){
+    $('tournamentDiscipline').addEventListener('change',()=>{
+      updateTournamentNineBallBreakRuleVisibility();
+      if($('tournamentPlayoffDiscipline') && !$('tournamentPlayoffDiscipline').dataset.touched){
+        $('tournamentPlayoffDiscipline').value=$('tournamentDiscipline').value;
+      }
+    });
+  }
+
+  
+
+  function currentUserIsSystemAdmin(){
+    // Administrátorská práva platí jen pro aktivně přihlášený a ověřený účet.
+    // Nestačí zbytková role nebo e-mail uložený v runtime/localStorage.
+    if(!cloudAuthenticated || !cloudUid || !cloudEmailVerified) return false;
+    if(currentUserRole==='system_admin') return true;
+    const email=typeof cloudUserEmail==='string' ? cloudUserEmail.trim().toLowerCase() : '';
+    return email===MAIN_ADMIN_EMAIL;
+  }
+
+  function populateMergePlayerSelectors(){
+    const src=$('mergePlayerSource'),dst=$('mergePlayerTarget');
+    if(!src||!dst)return;
+    const players=Object.values(data.players||{}).filter(Boolean).sort((a,b)=>playerSelectionLabel(a).localeCompare(playerSelectionLabel(b),'cs'));
+    const html='<option value="">— vyber profil —</option>'+players.map(p=>`<option value="${esc(p.id)}">${esc(playerSelectionLabel(p))}${p.active===false?' • NEAKTIVNÍ':''}</option>`).join('');
+    src.innerHTML=html; dst.innerHTML=html;
+  }
+
+  function replacePlayerIdDeep(obj,sourceId,targetId,targetName){
+    if(!obj || typeof obj!=='object')return false;
+    let changed=false;
+    const walk=(x,key,parent)=>{
+      if(Array.isArray(x)){
+        for(let i=0;i<x.length;i++){
+          if(x[i]===sourceId){x[i]=targetId;changed=true;}
+          else if(x[i]&&typeof x[i]==='object')walk(x[i],i,x);
+        }
+      }else if(x&&typeof x==='object'){
+        Object.keys(x).forEach(k=>{
+          if((k==='playerId'||k==='id'||k==='winnerId'||k==='loserId') && x[k]===sourceId){x[k]=targetId;changed=true;}
+          else if(x[k]&&typeof x[k]==='object')walk(x[k],k,x);
+        });
+      }
+    };
+    walk(obj,null,null);
+    return changed;
+  }
+
+  async function mergePlayerProfiles(sourceId,targetId){
+    if(!currentUserIsSystemAdmin())throw new Error('NO_ADMIN');
+    if(!sourceId||!targetId||sourceId===targetId)throw new Error('INVALID_PLAYER_MERGE');
+    const source=data.players?.[sourceId],target=data.players?.[targetId];
+    if(!source||!target)throw new Error('PLAYER_NOT_FOUND');
+    const targetName=playerDisplayName(target);
+
+    for(const m of (data.matches||[])){
+      let changed=false;
+      if(Array.isArray(m.playerIds)){
+        m.playerIds=m.playerIds.map(id=>{if(id===sourceId){changed=true;return targetId;}return id;});
+      }
+      if(Array.isArray(m.teamPlayerIds)){
+        m.teamPlayerIds=m.teamPlayerIds.map(side=>Array.isArray(side)?side.map(id=>{if(id===sourceId){changed=true;return targetId;}return id;}):side);
+      }
+      if(changed){
+        if(Array.isArray(m.playerNames)&&Array.isArray(m.playerIds))m.playerNames=m.playerNames.map((n,i)=>m.playerIds[i]===targetId?targetName:n);
+        if(Array.isArray(m.teamPlayerNames)&&Array.isArray(m.teamPlayerIds))m.teamPlayerNames=m.teamPlayerNames.map((side,si)=>Array.isArray(side)?side.map((n,pi)=>m.teamPlayerIds?.[si]?.[pi]===targetId?targetName:n):side);
+        try{await saveSecureMatch(m);}catch(e){console.warn('merge match',m.id,e);}
+      }
+    }
+
+    for(const t of (data.tournaments||[])){
+      const copy=JSON.parse(JSON.stringify(t));
+      if(replacePlayerIdDeep(copy,sourceId,targetId,targetName)){
+        try{await saveSecureTournament(copy);}catch(e){console.warn('merge tournament',t.id,e);}
+      }
+    }
+
+    const league=ensureLeagueSever();
+    for(const f of (league.fixtures||[])){
+      const copy=JSON.parse(JSON.stringify(f));
+      let changed=replacePlayerIdDeep(copy,sourceId,targetId,targetName);
+      ['home','away'].forEach(side=>{
+        (copy.lineup?.[side]||[]).forEach(p=>{
+          if(p && (p.id===targetId||p.playerId===targetId)){
+            p.name=targetName;p.displayName=targetName;changed=true;
+          }
+        });
+      });
+      if(changed){Object.assign(f,copy);try{await saveLeagueFixtureCloud(f);}catch(e){console.warn('merge league',f.id,e);}}
+    }
+
+    if(source.ownerUid){
+      try{const rec=await adminUserRecordRequest(source.ownerUid,'GET')||{};rec.playerId=targetId;await adminUserRecordRequest(source.ownerUid,'PUT',rec);}catch(e){console.warn('merge user',e);}
+    }
+    if(!target.ownerUid&&source.ownerUid)target.ownerUid=source.ownerUid;
+    target.active=true;
+    await saveSecurePlayer(target);
+
+    source.active=false;
+    source.hiddenFromPlayers=true;
+    source.mergedIntoPlayerId=targetId;
+    source.mergedAt=new Date().toISOString();
+    source.mergedByUid=cloudUid||'';
+    await saveSecurePlayer(source);
+    data.players[targetId]=target;data.players[sourceId]=source;
+    try{localStorage.setItem(DB_KEY,JSON.stringify(data));}catch(e){}
+  }
+
+  if($('mergePlayersBtn'))$('mergePlayersBtn').onclick=async()=>{
+    const sourceId=$('mergePlayerSource')?.value||'';
+    const targetId=$('mergePlayerTarget')?.value||'';
+    const info=$('mergePlayersInfo');
+    if(!sourceId||!targetId){if(info)info.textContent='Vyber oba profily.';return;}
+    if(sourceId===targetId){if(info)info.textContent='Musí jít o dva různé profily.';return;}
+    const s=data.players?.[sourceId],t=data.players?.[targetId];
+    if(!s||!t)return;
+    if(!confirm('Sloučit „'+playerSelectionLabel(s)+'“ do „'+playerSelectionLabel(t)+'“?'))return;
+    $('mergePlayersBtn').disabled=true;if(info)info.textContent='Slučuji…';
+    try{
+      await mergePlayerProfiles(sourceId,targetId);
+      await Promise.allSettled([loadSecurePlayers(),loadSecureMatches(),loadSecureTournaments(),loadLeagueCloud(true)]);
+      renderPlayers();renderStats();renderLeague();populateMergePlayerSelectors();
+      if(info)info.textContent='Profily byly sloučeny.';
+      toast('Duplicitní hráč byl sloučen.');
+    }catch(e){console.error(e);if(info)info.textContent='Sloučení selhalo: '+String(e.message||e);}
+    finally{$('mergePlayersBtn').disabled=false;}
+  };
+
+  function populateAdminProfileOwnerSelect(){
+    const sel=$('adminProfileOwnerSelect');
+    const info=$('adminProfileOwnerInfo');
+    if(!sel || !info)return;
+
+    const entries=Object.values(data.players||{})
+      .filter(Boolean)
+      .sort((a,b)=>playerDisplayName(a).localeCompare(playerDisplayName(b),'cs'));
+
+    const previous=sel.value;
+    sel.innerHTML=entries.map(p=>{
+      const inactive=p.active===false?' • NEAKTIVNÍ':'';
+      const hidden=p.hiddenFromPlayers===true?' • SKRYTÝ':'';
+      return `<option value="${esc(p.id)}">${esc(playerDisplayName(p))}${inactive}${hidden} • ${esc(p.id)}</option>`;
+    }).join('');
+
+    if(previous && entries.some(p=>p.id===previous)) sel.value=previous;
+
+    const update=()=>{
+      const p=data.players?.[sel.value];
+      if(!p){
+        info.value='—';
+        if($('adminRepairFirstName')) $('adminRepairFirstName').value='';
+        if($('adminRepairLastName')) $('adminRepairLastName').value='';
+        if($('adminRepairClub')) $('adminRepairClub').value='';
+        return;
+      }
+
+      info.value=p.ownerUid ? 'Přiřazen k účtu • UID '+p.ownerUid : 'Profil je volný';
+      $('adminRepairFirstName').value=p.firstName||p.name?.split(' ')?.[0]||'';
+      $('adminRepairLastName').value=p.lastName||((p.name||'').split(' ').slice(1).join(' '))||'';
+      $('adminRepairClub').value=p.club||'';
+      const hideBtn=$('adminToggleHiddenProfileBtn');
+      if(hideBtn){
+        hideBtn.textContent=p.hiddenFromPlayers===true ? 'ZOBRAZIT PROFIL MEZI HRÁČI' : 'SKRÝT PROFIL Z HRÁČŮ';
+      }
+    };
+
+    sel.onchange=update;
+    update();
+  }
+
+  async function saveAdminProfileRepair(){
+    if(!currentUserIsSystemAdmin()){
+      toast('Tuto akci může provést pouze systémový administrátor.');
+      return;
+    }
+
+    const sel=$('adminProfileOwnerSelect');
+    const playerId=sel?.value;
+    const p=data.players?.[playerId];
+    if(!p){
+      toast('Vyber profil.');
+      return;
+    }
+
+    const firstName=($('adminRepairFirstName').value||'').trim();
+    const lastName=($('adminRepairLastName').value||'').trim();
+    const club=($('adminRepairClub').value||'').trim();
+
+    if(!firstName || !lastName){
+      toast('Vyplň jméno a příjmení.');
+      return;
+    }
+
+    const updated={
+      ...p,
+      firstName,
+      lastName,
+      name:(firstName+' '+lastName).trim(),
+      club,
+      active:p.active!==false,
+      updatedAt:new Date().toISOString()
+    };
+
+    try{
+      await saveSecurePlayer(updated);
+      data.players[playerId]=updated;
+      try{localStorage.setItem(DB_KEY,JSON.stringify(data));}catch(e){}
+
+      populateAdminProfileOwnerSelect();
+      renderPlayers();
+      refreshPlayerList();
+      updateLoggedInUserBadge();
+
+      toast('Profil byl opraven.');
+    }catch(e){
+      console.error('Admin profile repair:',e);
+      toast('Profil se nepodařilo uložit: '+String(e.message||e));
+    }
+  }
+
+
+
+  async function toggleSelectedProfileHidden(){
+    if(!currentUserIsSystemAdmin()){
+      toast('Tuto akci může provést pouze systémový administrátor.');
+      return;
+    }
+
+    const sel=$('adminProfileOwnerSelect');
+    const playerId=sel?.value;
+    const p=data.players?.[playerId];
+    if(!p){
+      toast('Vyber profil.');
+      return;
+    }
+
+    const hide=p.hiddenFromPlayers!==true;
+    const updated={
+      ...p,
+      hiddenFromPlayers:hide,
+      updatedAt:new Date().toISOString()
+    };
+
+    try{
+      await saveSecurePlayer(updated);
+      data.players[playerId]=updated;
+      try{localStorage.setItem(DB_KEY,JSON.stringify(data));}catch(e){}
+
+      populateAdminProfileOwnerSelect();
+      refreshPlayerList();
+      renderPlayers();
+      renderStats();
+      renderTournament();
+      renderLive();
+
+      toast(hide ? 'Profil je skrytý z běžných seznamů hráčů.' : 'Profil je znovu viditelný mezi hráči.');
+    }catch(e){
+      console.error('Toggle hidden profile:',e);
+      toast('Změnu se nepodařilo uložit: '+String(e.message||e));
+    }
+  }
+
+  async function releaseSelectedProfileOwner(){
+    if(!currentUserIsSystemAdmin()){
+      toast('Tuto akci může provést pouze systémový administrátor.');
+      return;
+    }
+
+    const sel=$('adminProfileOwnerSelect');
+    const playerId=sel?.value;
+    const p=data.players?.[playerId];
+
+    if(!p){
+      toast('Vyber profil.');
+      return;
+    }
+
+    if(!p.ownerUid){
+      toast('Tento profil už je volný.');
+      return;
+    }
+
+    if(!confirm('Opravdu uvolnit vlastníka profilu „'+playerDisplayName(p)+'“? Profil pak nebude patřit žádnému účtu, dokud si ho správný uživatel znovu nenárokuje.'))return;
+
+    const oldOwnerUid=p.ownerUid;
+
+    try{
+      const updated={...p};
+      delete updated.ownerUid;
+      updated.updatedAt=new Date().toISOString();
+
+      await saveSecurePlayer(updated);
+
+      data.players[playerId]=updated;
+
+      // Pokud je v uživatelském mapování nějaký účet navázaný na tento profil,
+      // zkusíme vazbu odstranit pouze pokud to dovolí stávající backend.
+      try{
+        await clearUserPlayerLink(oldOwnerUid, playerId);
+      }catch(e){
+        console.warn('User/player link cleanup skipped:',e);
+      }
+
+      try{localStorage.setItem(DB_KEY,JSON.stringify(data));}catch(e){}
+
+      populateAdminProfileOwnerSelect();
+      renderPlayers();
+      toast('Profil byl uvolněn. Správný uživatel si ho nyní může nárokovat svým účtem.');
+    }catch(e){
+      console.error('Release profile owner:',e);
+      toast('Profil se nepodařilo uvolnit: '+String(e.message||e));
+    }
+  }
+
+
+  if($('adminSaveProfileRepairBtn')){
+    $('adminSaveProfileRepairBtn').onclick=saveAdminProfileRepair;
+  }
+
+  if($('adminToggleHiddenProfileBtn')){
+    $('adminToggleHiddenProfileBtn').onclick=toggleSelectedProfileHidden;
+  }
+
+  if($('adminReleaseProfileBtn')){
+    $('adminReleaseProfileBtn').onclick=releaseSelectedProfileOwner;
+  }
+
+  if($('cleanupEmptyTournamentsBtn')){
+    $('cleanupEmptyTournamentsBtn').onclick=cleanupEmptyTournaments;
+  }
+
+  if($('submitReportBtn'))$('submitReportBtn').onclick=submitProblemReport;
+  if($('refreshMyReportsBtn'))$('refreshMyReportsBtn').onclick=()=>loadOwnReports();
+  if($('refreshReportsAdminBtn'))$('refreshReportsAdminBtn').onclick=loadReportsAdmin;
+
+  if($('toggleSeriesCreateBtn'))$('toggleSeriesCreateBtn').onclick=()=> $('seriesCreatePanel').classList.toggle('hidden');
+  if($('seriesModalClose'))$('seriesModalClose').onclick=()=> $('seriesModal').classList.remove('show');
+  if($('seriesModal'))$('seriesModal').addEventListener('click',e=>{if(e.target===$('seriesModal'))$('seriesModal').classList.remove('show');});
+  function updateSeriesScoringCreateUI(){
+    const custom=$('seriesScoringMode')?.value==='custom';
+    $('seriesBandsScoringFields')?.classList.toggle('hidden',custom);
+    $('seriesCustomScoringFields')?.classList.toggle('hidden',!custom);
+  }
+  if($('seriesScoringMode')){
+    $('seriesScoringMode').addEventListener('change',updateSeriesScoringCreateUI);
+    updateSeriesScoringCreateUI();
+  }
+
+  if($('createSeriesBtn'))$('createSeriesBtn').onclick=()=>{
+    const name=$('seriesName').value.trim();
+    const club=$('seriesClub').value.trim();
+    const season=$('seriesSeason').value.trim();
+    if(!name||!club){toast('Vyplň název série a klub.');return;}
+    const scoringMode=$('seriesScoringMode')?.value||'bands';
+    const customPointsText=($('seriesCustomPoints')?.value||'').trim();
+    if(scoringMode==='custom' && !Object.keys(parseCustomSeriesPoints(customPointsText).exact).length && !parseCustomSeriesPoints(customPointsText).ranges.length){
+      toast('Zadej alespoň jedno vlastní bodové pravidlo, např. 1=100.');
+      return;
+    }
+    const s={
+      id:uid(),createdByUid:cloudUid||'',managerUids:{},name,club,season,
+      bestCount:Math.max(0,Number($('seriesBestCount').value||0)),
+      placementTieBreak:$('seriesPlacementTieBreak')?.value||'legacy',
+      scoringMode,
+      pointsTop:parsePointList($('seriesPointsTop').value,[100,80,65,55]),
+      pointsBands:parsePointList($('seriesPointsBands').value,[45,25,10,5]),
+      customPointsText,
+      customPoints:parseCustomSeriesPoints(customPointsText),
+      tournamentIds:[],createdAt:new Date().toISOString(),updatedAt:new Date().toISOString()
+    };
+    data.tournamentSeries.push(s);
+    saveData();
+    $('seriesCreatePanel').classList.add('hidden');
+    renderSeriesList();renderTournamentSeriesSelect();
+    toast('Série byla vytvořena.');
+  };
+
+  function ensureTournamentParticipants(t,selectedIds){
+    if(!t || !Array.isArray(selectedIds))return false;
+    const expected=[...new Set(selectedIds.filter(Boolean))];
+    let changed=false;
+
+    if(!Array.isArray(t.playerIds))t.playerIds=[];
+    expected.forEach(id=>{
+      if(!t.playerIds.includes(id)){
+        t.playerIds.push(id);
+        changed=true;
+      }
+    });
+
+    // U již vytvořených počátečních stavů opravíme seznam účastníků.
+    if(t.ko){
+      t.ko.participantIds=Array.isArray(t.ko.participantIds)?t.ko.participantIds:[];
+      expected.forEach(id=>{
+        if(!t.ko.participantIds.includes(id)){
+          t.ko.participantIds.push(id);
+          changed=true;
+        }
+      });
+    }
+
+    if(t.dko){
+      t.dko.participantIds=Array.isArray(t.dko.participantIds)?t.dko.participantIds:[];
+      t.dko.losses=t.dko.losses||{};
+      expected.forEach(id=>{
+        if(!t.dko.participantIds.includes(id)){
+          t.dko.participantIds.push(id);
+          changed=true;
+        }
+        if(t.dko.losses[id]==null)t.dko.losses[id]=0;
+      });
+    }
+
+    return changed;
+  }
+
+  if($('tournamentEntryFee'))$('tournamentEntryFee').addEventListener('input',()=>{renderTournamentCheckinSummary();});
+  if($('tournamentPrizeMode'))$('tournamentPrizeMode').addEventListener('change',()=>{tournamentPrizeMoney.mode=$('tournamentPrizeMode').value==='fixed'?'fixed':'percent';syncTournamentPrizeMoneyForm();});
+  if($('tournamentPrizeReturnPercent'))$('tournamentPrizeReturnPercent').addEventListener('input',()=>{tournamentPrizeMoney.returnPercent=Math.max(0,Math.min(100,Number($('tournamentPrizeReturnPercent').value||0)));renderTournamentPrizeMoney();});
+  if($('tournamentPrizeFixedAmount'))$('tournamentPrizeFixedAmount').addEventListener('input',()=>{tournamentPrizeMoney.fixedAmount=Math.max(0,Number($('tournamentPrizeFixedAmount').value||0));renderTournamentPrizeMoney();});
+  if($('tournamentPrizeBonus'))$('tournamentPrizeBonus').addEventListener('input',()=>{tournamentPrizeMoney.bonus=Math.max(0,Number($('tournamentPrizeBonus').value||0));renderTournamentPrizeMoney();});
+  if($('tournamentAddPrizePlaceBtn'))$('tournamentAddPrizePlaceBtn').onclick=()=>{normalizeTournamentPrizeMoney();tournamentPrizeMoney.payouts.push({label:(tournamentPrizeMoney.payouts.length+1)+'. místo',count:1,percent:0});renderTournamentPrizeMoney();};
+  if($('tournamentCloseCheckinBtn'))$('tournamentCloseCheckinBtn').onclick=()=>{
+    const ids=tournamentAllCheckinIds();
+    if(!ids.length){toast('Nejdřív zapiš příchozí hráče.');return;}
+    const paid=tournamentPaidPlayerIds();
+    const unpaid=ids.filter(id=>!paid.includes(id));
+    if(unpaid.length && !confirm('Nezaplaceno má '+unpaid.length+' hráčů. Po uzavření prezence nebudou zařazeni do turnaje. Pokračovat?'))return;
+    if(paid.length<2){toast('Zaplaceno musí mít alespoň 2 hráči.');return;}
+    tournamentCheckinClosed=true;
+    manualTournamentSeedOrder=[...paid];
+    tournamentDrawNumbers={};
+    renderTournamentPlayerPicker();
+    updateTournamentCreateButtonLabel();
+    toast('Prezence uzavřena • účastníků: '+paid.length);
+  };
+  if($('tournamentReopenCheckinBtn'))$('tournamentReopenCheckinBtn').onclick=()=>{
+    if(Object.keys(tournamentDrawNumbers).length && !confirm('Znovu otevřít prezenci? Dosavadní elektronický los bude zrušen.'))return;
+    tournamentCheckinClosed=false;
+    tournamentDrawNumbers={};
+    manualTournamentSeedOrder=[];
+    renderTournamentPlayerPicker();
+    updateTournamentCreateButtonLabel();
+    toast('Prezence znovu otevřena.');
+  };
+  if($('tournamentMarkAllPaidBtn'))$('tournamentMarkAllPaidBtn').onclick=()=>{
+    if(tournamentCheckinClosed)return;
+    tournamentAllCheckinIds().forEach(id=>{ensureTournamentCheckinEntry(id);tournamentCheckin[id].paid=true;});
+    invalidateTournamentDraw();
+    renderTournamentPlayerPicker();
+  };
+
+$('createTournamentBtn').onclick=async()=>{
+    if(!tournamentCheckinClosed){toast('Nejdřív uzavři prezenci.');return;}
+    normalizeTournamentPrizeMoney();
+    const prizePct=tournamentPrizeTotalPercent();
+    if(tournamentPrizePool()>0 && Math.abs(prizePct-100)>0.001){toast('Rozdělení prize money musí být přesně 100 %. Aktuálně: '+prizePct.toLocaleString('cs-CZ',{maximumFractionDigits:2})+' %.');return;}
+    if(tournamentPrizeMoney.mode==='fixed' && tournamentPrizeMoney.fixedAmount>tournamentPrizeCollected()){
+      toast('Pevná částka ze startovného je vyšší než aktuálně vybrané startovné. Rozdíl zadej jako bonus klubu / sponzora.');return;
+    }
+    let ids=tournamentPaidPlayerIds(),format=$('tournamentFormat').value;
+    const seedingMode=$('tournamentSeedingMode')?.value||'random';
+    const thirdPlacePlayoff=['sko','dko','groups_sko','groups_dko'].includes(format) && $('tournamentThirdPlacePlayoff')?.value==='yes';
+
+    if(seedingMode==='manual'){
+      const selectedSet=new Set(ids);
+      const ordered=manualTournamentSeedOrder.filter(id=>selectedSet.has(id));
+      ids.forEach(id=>{if(!ordered.includes(id))ordered.push(id);});
+      // Ruční nasazení se použije přesně v pořadí zobrazeném v seznamu.
+      // V této větvi se hráči už nikde náhodně nemíchají.
+      ids=ordered;
+    }
+
+    if(seedingMode==='draw' || seedingMode==='draw_individual'){
+      if(!tournamentDrawIsComplete(ids)){
+        toast('Nejdřív vylosuj čísla pro všechny vybrané hráče.');
+        renderTournamentSeedOrder();
+        return;
+      }
+      ids=tournamentIdsSortedByDraw(ids);
+    }
+
+    if(['dko','sko'].includes(format)&&ids.length<4){toast('Pro vyřazovací turnaj vyber alespoň 4 hráče.');return;}
+    if(format==='groups'&&ids.length<2){toast('Pro formát každý s každým vyber alespoň 2 hráče.');return;}
+    if(['groups_sko','groups_dko'].includes(format)&&ids.length<4){toast('Pro skupinový turnaj vyber alespoň 4 hráče.');return;}
+    if(format==='swiss'&&ids.length<4){toast('Pro švýcarský systém vyber alespoň 4 hráče.');return;}
+    if(format==='swiss'){
+      const swissAdvance=Math.max(0,parseInt($('tournamentSwissAdvanceCount')?.value||'0',10));
+      if(swissAdvance>ids.length){
+        toast('Do SKO nemůže postupovat více hráčů, než je účastníků turnaje.');
+        return;
+      }
+    }
+    const name=$('tournamentName').value.trim()||('Turnaj '+new Date().toLocaleDateString('cs-CZ'));
+    const discipline=$('tournamentDiscipline').value;
+    const playoffDiscipline=['groups_sko','groups_dko'].includes(format)
+      ? ($('tournamentPlayoffDiscipline')?.value||discipline)
+      : discipline;
+    const raceTo=Math.max(1,parseInt($('tournamentRace').value||'5',10)),breakMode=$('tournamentBreakMode').value;
+    const handicapTournament=!!$('tournamentHandicapEnabled')?.checked;
+    if(handicapTournament){
+      const stageVals=[$('tournamentRace')?.value,$('raceGroup')?.value,$('raceLast32')?.value,$('raceLast16')?.value,$('raceLast8')?.value,$('raceSemifinal')?.value,$('raceFinal')?.value]
+        .map(v=>Number(v||0)).filter(v=>Number.isFinite(v)&&v>0);
+      const minRace=stageVals.length?Math.min(...stageVals):raceTo;
+      const invalid=ids.find(id=>tournamentPlayerHandicap(id)>=minRace);
+      if(invalid){toast('Handicap hráče '+tournamentPlayerName(invalid)+' musí být nižší než nejnižší Race to ('+minRace+').');return;}
+    }
+    const tableCount=Math.max(1,Math.min(32,parseInt($('tournamentTableCount').value||'1',10)));
+    const selectedGuestIds=new Set(ids.filter(id=>id.startsWith('guest_')));
+    const guests={};
+    tournamentGuestDrafts.forEach(g=>{
+      if(selectedGuestIds.has(g.id)) guests[g.id]={name:g.name,preserveGuest:true};
+    });
+    let groupCount=Math.max(1,parseInt($('tournamentGroupCount').value||'2',10));
+    if(format==='groups')groupCount=1;
+    let advancePerGroup=Math.max(1,parseInt($('tournamentAdvanceCount').value||'2',10));
+    if(['groups_sko','groups_dko'].includes(format)){
+      const smallestGroup=Math.floor(ids.length/groupCount);
+      if(smallestGroup<1){toast('Počet skupin je příliš vysoký.');return;}
+      advancePerGroup=Math.min(advancePerGroup,smallestGroup);
+    }
+    const dkoSkoCut=format==='dko' ? Math.max(0,Number($('tournamentDkoSkoCut')?.value||0)) : 0;
+    if(format==='dko' && dkoSkoCut>0 && dkoSkoCut>=ids.length){
+      toast('Přechod na SKO musí být nižší než počet účastníků. Pro '+ids.length+' hráčů zvol menší Last X nebo celý turnaj DKO.');
+      return;
+    }
+    let t;
+    const manualBracketOrder=seedingMode==='manual' ? [...ids] : [];
+    if(format==='dko') t=generateDKOTournament(name,ids,discipline,raceTo,breakMode,guests,tableCount,seedingMode,thirdPlacePlayoff,dkoSkoCut);
+    else if(format==='sko') t=generateSKOTournament(name,ids,discipline,raceTo,breakMode,guests,tableCount,seedingMode,thirdPlacePlayoff);
+    else if(format==='swiss') t=generateSwissTournament(
+      name,ids,discipline,raceTo,breakMode,guests,tableCount,seedingMode,
+      Math.max(0,parseInt($('tournamentSwissRounds')?.value||'0',10)),
+      Math.max(0,parseInt($('tournamentSwissAdvanceCount')?.value||'0',10))
+    );
+    else if(format==='groups') t=generateGroupTournament(name,ids,discipline,raceTo,breakMode,groupCount,guests,tableCount,seedingMode);
+    else if(format==='groups_dko') t=generateHybridTournament(name,ids,discipline,raceTo,breakMode,groupCount,advancePerGroup,'dko',guests,tableCount,seedingMode,thirdPlacePlayoff);
+    else t=generateHybridTournament(name,ids,discipline,raceTo,breakMode,groupCount,advancePerGroup,'sko',guests,tableCount,seedingMode,thirdPlacePlayoff);
+
+    ensureTournamentParticipants(t,ids);
+    t.handicapEnabled=handicapTournament;
+    t.playerHandicaps={};
+    if(handicapTournament) ids.forEach(id=>{t.playerHandicaps[id]=tournamentPlayerHandicap(id);});
+
+    if(seedingMode==='draw' || seedingMode==='draw_individual'){
+      t.drawNumbers={};
+      ids.forEach(id=>t.drawNumbers[id]=Number(tournamentDrawNumbers[id]));
+      t.drawOrder=[...ids];
+    }
+
+    // Bezpečnostní kontrola: každý vybraný účastník musí být uložen v turnaji.
+    const missingParticipants=ids.filter(id=>!t.playerIds.includes(id));
+    if(missingParticipants.length){
+      toast('Chyba při rozlosování: některý hráč se nepodařil zařadit.');
+      console.error('Missing tournament participants:',missingParticipants);
+      return;
+    }
+
+    if(manualBracketOrder.length)t.manualSeedOrder=[...manualBracketOrder];
+    if(seedingMode==='manual' && ['groups','groups_sko','groups_dko'].includes(format)){
+      t.manualGroupSeedOrder=[...ids];
+    }
+
+    if(['groups_sko','groups_dko'].includes(format)){
+      t.groupDiscipline=discipline;
+      t.playoffDiscipline=playoffDiscipline;
+      // t.discipline zůstává kvůli zpětné kompatibilitě disciplínou skupin.
+      t.discipline=discipline;
+    }
+
+    t.nineBallBreakRule=$('tournamentNineBallBreakRule')?.value||'none';
+    t.variableRaceEnabled=!!$('tournamentVariableRace')?.checked;
+    t.raceByStage=tournamentRaceStageSettingsFromForm()||{};
+    t.groupAdvanceTieRule=$('tournamentGroupAdvanceTieRule')?.value||'points';
+    t.groupPenaltyTieBreak=!!$('tournamentPenaltyTieBreak')?.checked && ['groups_sko','groups_dko'].includes(format);
+    t.groupPenaltyWinners={};
+    t.checkin={
+      closed:true,
+      entryFee:Math.max(0,Number($('tournamentEntryFee')?.value||0)),
+      totalArrived:tournamentAllCheckinIds().length,
+      paidPlayerIds:[...ids],
+      unpaidPlayerIds:tournamentAllCheckinIds().filter(id=>!ids.includes(id)),
+      paidCount:ids.length,
+      closedAt:new Date().toISOString()
+    };
+    const prizeCollected=tournamentPrizeCollected();
+    const prizeFromEntries=tournamentPrizeBaseFromEntries(prizeCollected);
+    const prizeBonus=Math.max(0,Number(tournamentPrizeMoney.bonus||0));
+    const prizePool=prizeFromEntries+prizeBonus;
+    t.prizeMoney={
+      mode:tournamentPrizeMoney.mode,
+      entryFee:t.checkin.entryFee,
+      collected:prizeCollected,
+      returnPercent:tournamentPrizeMoney.returnPercent,
+      fixedAmount:tournamentPrizeMoney.fixedAmount,
+      fromEntries:prizeFromEntries,
+      organizerAmount:Math.max(0,prizeCollected-prizeFromEntries),
+      bonus:prizeBonus,
+      total:prizePool,
+      payouts:tournamentPrizeMoney.payouts.map(row=>({label:String(row.label||''),count:Math.max(1,Number(row.count||1)),percent:Math.max(0,Number(row.percent||0)),amountPerPlayer:prizePool*Math.max(0,Number(row.percent||0))/100})),
+      configuredAt:new Date().toISOString()
+    };
+
+
+    t.publicInfo={
+      date:String($('tournamentPublicDate')?.value||''),
+      time:String($('tournamentPublicTime')?.value||''),
+      venue:String($('tournamentPublicVenue')?.value||'').trim(),
+      address:String($('tournamentPublicAddress')?.value||'').trim(),
+      capacity:Math.max(0,Number($('tournamentPublicCapacity')?.value||0)),
+      registrationUrl:String($('tournamentPublicRegistrationUrl')?.value||'').trim(),
+      contact:String($('tournamentPublicContact')?.value||'').trim(),
+      prizes:String($('tournamentPublicPrizes')?.value||'').trim(),
+      description:String($('tournamentPublicDescription')?.value||'').trim()
+    };
+    if(!Array.isArray(t.registrations))t.registrations=[];
+
+    const selectedSeriesId=$('tournamentSeriesSelect')?.value||'';
+    // Nejprve vytvořený turnaj držíme lokálně, aby nezmizel z UI.
+    const existingIndex=(data.tournaments||[]).findIndex(x=>x.id===t.id);
+    if(existingIndex>=0) data.tournaments[existingIndex]=t;
+    else data.tournaments.push(t);
+
+    tournamentGuestDrafts=[];
+    tournamentSelectedPlayerIds=[];
+    manualTournamentSeedOrder=[];
+    tournamentDrawNumbers={};
+    tournamentCheckin={};
+    tournamentCheckinClosed=false;
+    if($('tournamentHandicapEnabled'))$('tournamentHandicapEnabled').checked=false;
+    tournamentPrizeMoney={mode:'percent',returnPercent:100,fixedAmount:0,bonus:0,payouts:[{label:'1. místo',count:1,percent:50},{label:'2. místo',count:1,percent:30},{label:'3. místo',count:1,percent:20}]};
+    clearTournamentCheckinDraft();
+    if($('tournamentEntryFee'))$('tournamentEntryFee').value='0';
+    syncTournamentPrizeMoneyForm();
+    try{localStorage.setItem(DB_KEY,JSON.stringify(data));}catch(e){}
+    renderTournament();
+
+    const btn=$('createTournamentBtn');
+    if(btn)btn.disabled=true;
+    toast(seedingMode==='manual'
+      ? 'Vytvářím turnaj dle ručního nasazení…'
+      : (seedingMode==='elo'
+          ? 'Vytvářím turnaj dle ELO…'
+          : ((seedingMode==='draw'||seedingMode==='draw_individual') ? 'Vytvářím turnaj dle vylosovaných čísel…' : 'Rozlosovávám turnaj…')));
+
+    try{
+      const saved=await saveSecureTournament(t);
+
+      if(selectedSeriesId){
+        const s=(data.tournamentSeries||[]).find(x=>x.id===selectedSeriesId);
+        if(s && !s.tournamentIds.includes(saved.id)){
+          s.tournamentIds.push(saved.id);
+          s.updatedAt=new Date().toISOString();
+          saveData();
+        }
+      }
+
+      selectedTournamentId=saved.id;
+      updateCurrentTournamentShortcut();
+
+      renderTournament();
+      await openTournamentDetail(saved.id);
+
+      toast(seedingMode==='manual'
+        ? 'Turnaj byl nasazen dle ručního pořadí a uložen.'
+        : (seedingMode==='elo'
+            ? 'Turnaj byl nasazen dle ELO a uložen.'
+            : ((seedingMode==='draw'||seedingMode==='draw_individual') ? 'Turnaj byl nasazen podle vylosovaných čísel a uložen.' : 'Turnaj byl rozlosován a uložen.')));
+    }catch(e){
+      console.error('Tournament save:',e);
+
+      // Lokální kopii ponecháme zobrazenou. Uživatel ji neztratí.
+      renderTournament();
+      toast('Turnaj se nepodařilo uložit do cloudu. Zůstává lokálně – zkontroluj připojení a zkus SYNCHRONIZOVAT.');
+    }finally{
+      updateTournamentCreateButtonLabel();
+    }
+
+    saveData();
+  };
+
+  window.deleteTournament=async function(tid){
+    const t=(data.tournaments||[]).find(x=>x.id===tid);
+    if(!t)return;
+
+    if(!canManageTournamentOrganizers(t)){
+      toast('Turnaj může smazat pouze jeho zakladatel nebo administrátor.');
+      return;
+    }
+
+    if(!confirm('Opravdu smazat turnaj „'+t.name+'“? Uložené jednotlivé zápasy v historii zůstanou zachované.'))return;
+
+    try{
+      await deleteSecureTournament(tid);
+      data.tournaments=(data.tournaments||[]).filter(x=>x.id!==tid);
+      try{localStorage.setItem(DB_KEY,JSON.stringify(data));}catch(e){}
+
+      await loadSecureTournaments();
+
+      if(selectedTournamentId===tid) selectedTournamentId=null;
+      renderTournament();
+      showScreen('tournament');
+      toast('Turnaj byl smazán.');
+    }catch(e){
+      console.error('Tournament delete:',e);
+      toast('Turnaj se nepodařilo smazat: '+String(e.message||e));
+    }
+  };
+
+  window.deleteTournamentWithMatches=async function(tid){
+    const t=(data.tournaments||[]).find(x=>x.id===tid);
+    if(!t)return;
+
+    if(!canManageTournamentOrganizers(t)){
+      toast('Turnaj může smazat pouze jeho zakladatel nebo administrátor.');
+      return;
+    }
+
+    const linked=(data.matches||[]).filter(m=>m.tournamentLink && m.tournamentLink.tournamentId===tid);
+    const count=linked.length;
+
+    if(!confirm(
+      'Opravdu smazat turnaj „'+t.name+'“ VČETNĚ '+count+' uložených zápasů?'+
+      (count ? '\n\nTím se odstraní i jejich statistiky a ELO.' : '')
+    ))return;
+
+    try{
+      // Nejprve smažeme případné samostatně uložené zápasy.
+      for(const m of linked){
+        await deleteSecureMatch(m.id);
+      }
+
+      // Potom smažeme samotný turnaj z /tournaments.
+      await deleteSecureTournament(tid);
+
+      data.matches=(data.matches||[]).filter(m=>!(m.tournamentLink && m.tournamentLink.tournamentId===tid));
+      data.tournaments=(data.tournaments||[]).filter(x=>x.id!==tid);
+
+      try{localStorage.setItem(DB_KEY,JSON.stringify(data));}catch(e){}
+
+      // Ověření skutečného stavu cloudu.
+      await Promise.all([
+        loadSecureMatches(),
+        loadSecureTournaments()
+      ]);
+
+      if(selectedTournamentId===tid) selectedTournamentId=null;
+      renderTournament();
+      showScreen('tournament');
+      renderHistory();
+      renderStats();
+      renderPlayers();
+
+      toast(count ? 'Turnaj i jeho zápasy byly smazány.' : 'Turnaj byl smazán.');
+    }catch(e){
+      console.error('Tournament delete with matches:',e);
+      toast('Mazání se nepodařilo dokončit: '+String(e.message||e));
+    }
+  };
+
+  window.startTournamentMatch=async function(tid,tmid){
+    // Pokud na telefonu zůstal ukončený zápas, bezpečně ho zahodíme.
+    if(match && match.endedAt){
+      removeDeviceActiveMatch(match.id);
+      match=null;
+      saveDeviceActiveMatch(null);
+    }
+
+    if(match){
+      toast('Na tomto telefonu už je rozehraný zápas. Pro další stůl použij jiný telefon.');
+      return;
+    }
+
+    let t=(data.tournaments||[]).find(x=>x.id===tid);
+    if(!t){
+      try{
+        await loadSecureTournaments();
+        t=(data.tournaments||[]).find(x=>x.id===tid);
+      }catch(e){}
+    }
+    if(!t){
+      toast('Turnaj nebyl nalezen.');
+      return;
+    }
+
+    if(!canManageTournament(t)){
+      toast('Tento turnaj může ovládat pouze jeho zakladatel nebo administrátor.');
+      return;
+    }
+
+    // Pevná návratová vazba pro celý sled turnajových zápasů.
+    forcedTournamentReturnId=t.id;
+    selectedTournamentId=t.id;
+
+    let tm=findTournamentMatch(t,tmid);
+    if(!tm){
+      // Jednorázově načteme čerstvou verzi turnaje a zkusíme stejný zápas znovu.
+      try{
+        await loadSecureTournaments();
+        t=(data.tournaments||[]).find(x=>x.id===tid);
+        tm=t ? findTournamentMatch(t,tmid) : null;
+      }catch(e){}
+    }
+    if(!tm){
+      toast('Turnajový zápas nebyl nalezen. Obnovuji turnaj.');
+      renderTournament();
+      return;
+    }
+
+    if(tm.status==='done' || tm.winnerId || tm.loserId){
+      toast('Tento turnajový zápas už je dohraný.');
+      return;
+    }
+
+    if(tournamentMatchHasBusyPlayer(t,tm)){
+      const busyNames=[];
+      if(tournamentPlayerBusy(t,tm.player1Id,tm.id)) busyNames.push(tournamentPlayerName(tm.player1Id,t));
+      if(tournamentPlayerBusy(t,tm.player2Id,tm.id)) busyNames.push(tournamentPlayerName(tm.player2Id,t));
+
+      toast('Zápas nelze zahájit. '+busyNames.join(' a ')+' už '+(busyNames.length>1?'hrají':'hraje')+' na jiném stole.');
+      assignTournamentTables(t);
+      renderTournament();
+      return;
+    }
+
+    // Znovu přepočítáme doporučené stoly.
+    assignTournamentTables(t);
+
+    // Stůl je skutečně obsazený pouze zápasem se stavem playing.
+    const busyTables=tournamentBusyTables(t);
+    if(tm.tableNumber && busyTables.has(Number(tm.tableNumber))){
+      tm.tableNumber=null;
+      tm.status='pending';
+    }
+
+    if(!tm.tableNumber){
+      const free=nextFreeTournamentTable(t);
+      if(free){
+        tm.tableNumber=free;
+        tm.status='assigned';
+      }
+    }
+
+    if(!tm.tableNumber){
+      toast('Všechny stoly jsou právě obsazené rozehranými zápasy.');
+      return;
+    }
+
+    if(t.dko){
+      repairDKOInvalidFutureMatches(t);
+      if(dkoPlayerIsOut(t,tm.player1Id)||dkoPlayerIsOut(t,tm.player2Id)){
+        toast('Tento zápas je neplatný – jeden z hráčů už je z DKO vyřazen.');
+        return;
+      }
+    }
+
+    const p1=tournamentParticipant(t,tm.player1Id);
+    const p2=tournamentParticipant(t,tm.player2Id);
+
+    pendingTournamentLink={
+      tournamentId:t.id,
+      tournamentMatchId:tm.id,
+      p1ParticipantId:tm.player1Id,
+      p2ParticipantId:tm.player2Id,
+      p1Guest:!!p1.guest,
+      p2Guest:!!p2.guest,
+      tableNumber:tm.tableNumber,
+      raceTo:tournamentRaceForMatch(t,tm),
+      discipline:tournamentDisciplineForMatch(t,tm),
+      nineBallBreakRule:t.nineBallBreakRule||'none',
+      handicapEnabled:!!t.handicapEnabled,
+      p1Handicap:Math.max(0,Number(t.playerHandicaps?.[tm.player1Id]||0)),
+      p2Handicap:Math.max(0,Number(t.playerHandicaps?.[tm.player2Id]||0))
+    };
+
+    $('p1Name').value=p1.name;
+    $('p2Name').value=p2.name;
+    $('p1PartnerName').value='';
+    $('p2PartnerName').value='';
+    $('doublesMode').checked=false;
+    $('p3Name').value='';
+    const matchDiscipline=tournamentDisciplineForMatch(t,tm);
+    $('discipline').value=matchDiscipline;
+    const matchRaceTo=tournamentRaceForMatch(t,tm);
+    $('raceTo').value=matchRaceTo;
+    $('breakMode').value=t.breakMode;
+    if($('nineBallBreakRule'))$('nineBallBreakRule').value=t.nineBallBreakRule||'none';
+    $('ghostMode').checked=false;
+    $('winnerTableMode').checked=false;
+    $('solo14').checked=false;
+    $('useLag').checked=true;
+    $('ghostRow').style.display='none';
+    $('winnerTableRow').classList.add('hidden');
+    $('streamMatchTitle').value=t.name+' • '+(tm.roundLabel||'turnaj')+' • Stůl '+tm.tableNumber;
+
+    updateDisciplineSetup();
+
+    tm.status='playing';
+
+    // Jakmile se tento zápas skutečně rozběhne, ostatním čekajícím zápasům
+    // odebereme případnou stejnou vizuální rezervaci stolu.
+    allTournamentMatches(t).forEach(other=>{
+      if(other.id!==tm.id && other.status!=='playing' && Number(other.tableNumber||0)===Number(tm.tableNumber||0)){
+        other.tableNumber=null;
+        if(other.status==='assigned')other.status='pending';
+      }
+    });
+
+    // Turnajový zápas používá pravidla turnaje automaticky.
+    // Není potřeba znovu potvrzovat disciplínu, Race to ani rozstřel v obecném setupu.
+    saveData();
+
+    // Cloud uložení nesmí blokovat samotné spuštění zápasu.
+    saveSecureTournament(t).catch(e=>{
+      console.error('Tournament playing save:',e);
+      toast('Zápas běží, ale stav turnaje se nepodařilo uložit do cloudu.');
+    });
+
+    ensureAudio();
+    startMatch();
+  };
+
+  function showTournamentResultMessage(title,html){
+    postMatchReturnScreen='tournament';
+    $('tournamentResultTitle').textContent=title||'';
+    $('tournamentResultBody').innerHTML=html||'';
+    $('tournamentResultModal').classList.add('show');
+  }
+
+  $('tournamentResultOk').onclick=()=>{
+    $('tournamentResultModal').classList.remove('show');
+
+    const targetTournamentId=postMatchTournamentId||selectedTournamentId||null;
+
+    renderTournament();
+
+    if(targetTournamentId){
+      selectedTournamentId=targetTournamentId;
+      forcedTournamentReturnId=targetTournamentId;
+      updateCurrentTournamentShortcut();
+
+      const t=(data.tournaments||[]).find(x=>x.id===targetTournamentId);
+      if(t){
+        renderTournamentDetail();
+        showScreen('tournament-detail');
+        if(t.groupPenaltyTieBreak && groupPhaseComplete(t) && !t.playoffStarted){
+          setTimeout(()=>openGroupPenaltyPrompt(t),80);
+        }
+      }else{
+        showScreen('tournament');
+        toast('Turnaj se nepodařilo znovu načíst.');
+      }
+
+      Promise.allSettled([loadSecureMatches(),loadSecureTournaments()])
+        .then(()=>{
+          try{
+            reconcileTournamentResultsFromMatches(targetTournamentId);
+            if(selectedTournamentId===targetTournamentId){
+              renderTournament();
+              renderTournamentDetail();
+            }
+          }catch(e){
+            console.error('Tournament result background refresh:',e);
+          }
+        });
+    }else{
+      showScreen('tournament');
+    }
+
+    postMatchReturnScreen=null;
+    postMatchTournamentId=null;
+    // forcedTournamentReturnId zůstává pro navazující zápasy stejného turnaje.
+  };
+
+  function dkoPlacementRange(place){
+    const p=Math.max(1,Number(place||0));
+    if(p<=2)return {from:p,to:p};
+
+    if(p<=4)return {from:3,to:4};
+
+    let upper=8;
+    while(p>upper)upper*=2;
+    return {from:(upper/2)+1,to:upper};
+  }
+
+  function dkoPlacementLabel(t,place,playerId=null){
+    const p=Math.max(1,Number(place||0));
+
+    if(p===1)return '1. místo';
+    if(p===2)return '2. místo';
+
+    // Pokud se nehraje bronze match, 3. a 4. pozice jsou dvě rovnocenná 3. místa.
+    if(p<=4 && !t?.dko?.thirdPlacePlayoff)return '3. místo';
+
+    // Při zápasu o 3. místo známe 3./4. přesně až po jeho dohrání.
+    if(p<=4 && t?.dko?.thirdPlacePlayoff){
+      if(playerId && t.dko.thirdPlaceWinnerId===playerId)return '3. místo';
+      if(playerId && t.dko.thirdPlaceLoserId===playerId)return '4. místo';
+      return 'čeká na zápas o 3. místo';
+    }
+
+    const r=dkoPlacementRange(p);
+    return r.from+'.–'+r.to+'. místo';
+  }
+
+  function dkoThirdPlaceCandidates(t){
+    if(!t?.dko?.eliminations)return [];
+
+    // Poslední dva hráči vyřazení před Grand Final tvoří dvojici pro bronze match.
+    return [...t.dko.eliminations]
+      .filter(e=>e && e.playerId)
+      .sort((a,b)=>Number(a.place||999)-Number(b.place||999))
+      .filter(e=>Number(e.place||999)<=4)
+      .slice(0,2)
+      .map(e=>e.playerId);
+  }
+
+  function dkoThirdPlaceMatch(t){
+    if(!t?.dko?.rounds)return null;
+    for(const r of t.dko.rounds){
+      const m=(r.matches||[]).find(x=>x.bracket==='3P');
+      if(m)return m;
+    }
+    return null;
+  }
+
+  function dkoFinalMatch(t){
+    if(!t?.dko?.rounds)return null;
+    for(const r of t.dko.rounds){
+      const m=(r.matches||[]).find(x=>x.bracket==='GF');
+      if(m)return m;
+    }
+    return null;
+  }
+
+  function dkoUpdateCompletion(t){
+    if(!t?.dko)return;
+    // Po přechodu DKO → SKO už turnaj dokončuje SKO větev, ne starý DKO Grand Final.
+    if(t.ko)return;
+    const gf=dkoFinalMatch(t);
+    const third=dkoThirdPlaceMatch(t);
+
+    const gfDone=!!(gf && (gf.status==='done'||gf.winnerId));
+    const thirdRequired=!!t.dko.thirdPlacePlayoff;
+    const thirdDone=!thirdRequired || !!(third && (third.status==='done'||third.winnerId));
+
+    if(gfDone && thirdDone && t.dko.championId){
+      t.status='complete';
+    }else{
+      t.status='active';
+    }
+  }
+
+  function dkoRegisterElimination(t,playerId,matchId){
+    if(!t.dko.eliminations) t.dko.eliminations=[];
+    const existing=t.dko.eliminations.find(x=>x.playerId===playerId);
+    if(existing) return existing.place;
+    const activeAfter=(t.dko.participantIds||t.playerIds||[]).filter(id=>(t.dko.losses[id]||0)<2).length;
+    const place=activeAfter+1;
+    t.dko.eliminations.push({playerId,place,matchId,at:new Date().toISOString()});
+    return place;
+  }
+
+  function dkoResultHtml(t,tm,winnerId,loserId,loserLossesBefore,eliminationPlace=null){
+    const winner=tournamentPlayerName(winnerId,t);
+    const loser=tournamentPlayerName(loserId,t);
+    const winnerLosses=t.dko.losses[winnerId]||0;
+    const loserLosses=t.dko.losses[loserId]||0;
+
+    if(tm.bracket==='GF'){
+      return `<div><strong>${esc(winner)}</strong> vítězí v Grand Final a stává se <strong>VÍTĚZEM TURNAJE</strong>.</div>
+              <div style="margin-top:10px"><strong>${esc(loser)}</strong> končí na <strong>2. místě</strong>.</div>`;
+    }
+
+    if(tm.bracket==='3P'){
+      return `<div><strong>${esc(winner)}</strong> vítězí v zápase o 3. místo a končí na <strong>3. místě</strong>.</div>
+              <div style="margin-top:10px"><strong>${esc(loser)}</strong> končí na <strong>4. místě</strong>.</div>`;
+    }
+
+    const winnerSide=winnerLosses===0?'A straně':'B straně';
+    let loserText='';
+    if(loserLosses>=2){
+      const placementText=dkoPlacementLabel(t,eliminationPlace,loserId);
+      loserText=`<strong>${esc(loser)}</strong> prohrává podruhé, <strong>vypadává z hlavního DKO pavouka</strong> a má pořadí <strong>${esc(placementText)}</strong>.`;
+    }else if(loserLossesBefore===0 && loserLosses===1){
+      loserText=`<strong>${esc(loser)}</strong> zaznamenává první prohru a přesouvá se do <strong>B strany pavouka</strong>.`;
+    }else{
+      loserText=`<strong>${esc(loser)}</strong> zůstává v <strong>B straně pavouka</strong>.`;
+    }
+
+    return `<div><strong>${esc(winner)}</strong> vítězí a postupuje dál v <strong>${winnerSide} pavouka</strong>.</div>
+            <div style="margin-top:10px">${loserText}</div>`;
+  }
+
+  function groupResultHtml(t,winnerId,loserId){
+    const winner=tournamentPlayerName(winnerId,t);
+    const loser=tournamentPlayerName(loserId,t);
+    return `<div><strong>${esc(winner)}</strong> vítězí a připisuje si výhru do tabulky skupiny.</div>
+            <div style="margin-top:10px"><strong>${esc(loser)}</strong> si připisuje porážku.</div>
+            <div class="muted" style="margin-top:10px">Pořadí skupiny bylo automaticky přepočítáno.</div>`;
+  }
+
+
+  function applyFinishedMatchToTournament(scoreMatch){
+    const link=scoreMatch?.tournamentLink;
+    if(!link)return null;
+
+    const t=(data.tournaments||[]).find(x=>x.id===link.tournamentId);
+    if(!t)return null;
+
+    const tm=findTournamentMatch(t,link.tournamentMatchId);
+    if(!tm)return null;
+
+    tm.status='done';
+    tm.tableNumber=null;
+    tm.resumable=false;
+    tm.finishedAt=scoreMatch.endedAt||new Date().toISOString();
+    tm.scoreboardMatchId=scoreMatch.id;
+    tm.score1=scoreMatch.scores?.[0]??tm.score1;
+    tm.score2=scoreMatch.scores?.[1]??tm.score2;
+
+    if(scoreMatch.winner===0||scoreMatch.winner===1){
+      tm.winnerId=scoreMatch.playerIds?.[scoreMatch.winner]||tm.winnerId;
+      tm.loserId=scoreMatch.playerIds?.[1-scoreMatch.winner]||tm.loserId;
+    }
+
+    return {t,tm};
+  }
+
+  function finalizeSKOIfResolved(t,tm){
+    if(!t?.ko || !tm)return false;
+
+    const k=ensureSKOState(t);
+    if(!k)return false;
+    const participants=k.participantIds||t.playerIds||[];
+    const active=participants.filter(id=>!(k.eliminatedIds||[]).includes(id));
+
+    // Pokud je po právě dohraném SKO zápase jediný aktivní hráč,
+    // je turnaj rozhodnutý bez ohledu na historické označení kola/bracketu.
+    if(active.length===1 && tm.winnerId===active[0]){
+      k.championId=tm.winnerId;
+      k.runnerUpId=tm.loserId||k.runnerUpId||null;
+
+      if(k.thirdPlacePlayoff){
+        const bronze=knockoutThirdMatch(t);
+        t.status=(bronze && (bronze.status==='done'||bronze.winnerId)) ? 'complete' : 'active';
+      }else{
+        t.status='complete';
+      }
+
+      assignTournamentTables(t);
+      return true;
+    }
+    return false;
+  }
+
+  function processTournamentResult(scoreMatch){
+    const applied=applyFinishedMatchToTournament(scoreMatch);
+    if(!applied)return null;
+    const {t,tm}=applied;
+
+    const isGroupMatch=tournamentHasGroups(t) && (t.groups||[]).some(g=>(g.matches||[]).some(m=>m.id===tm.id));
+
+    if(isGroupMatch){
+      let penaltyPending=false;
+      if(groupPhaseComplete(t)){
+        penaltyPending=!!unresolvedGroupPenaltyTie(t);
+
+        if(t.format==='groups'){
+          // Čisté "každý s každým" končí dohráním skupiny/skupin.
+          t.status='complete';
+        }else{
+          // Skupiny → SKO/DKO se už NIKDY nenasadí automaticky.
+          // Po posledním skupinovém zápasu zůstane turnaj aktivní a čeká na volbu pořadatele.
+          t.status='active';
+          t.awaitingPlayoffSeeding=true;
+          t.playoffStarted=false;
+          if(!t.ko && !t.dko){
+            t.groupEliminations=[];
+          }
+        }
+      }else{
+        t.status='active';
+        assignTournamentTables(t);
+      }
+
+      showTournamentResultMessage(
+        t.name+' • '+(tm.roundLabel||'Skupina'),
+        groupResultHtml(t,tm.winnerId,tm.loserId)+
+        (t.format!=='groups' && groupPhaseComplete(t)
+          ? '<div class="muted" style="margin-top:10px"><strong>Skupiny jsou dohrané.</strong> Turnaj čeká na nasazení postupujících do play-off.</div>'
+          : (penaltyPending
+              ? '<div class="muted" style="margin-top:10px">O pořadí musí ještě rozhodnout penalty.</div>'
+              : ''))
+      );
+      return t;
+    }
+
+    const isSwissRoundMatch=t.format==='swiss' && t.swiss &&
+      (t.swiss.rounds||[]).some(r=>(r.matches||[]).some(m=>m.id===tm.id));
+
+    if(isSwissRoundMatch){
+      const round=swissCurrentRound(t);
+      const finishedRound=!!(round && swissRoundComplete(round));
+
+      if(finishedRound){
+        swissAdvanceIfReady(t);
+      }else{
+        assignTournamentTables(t);
+      }
+
+      const st=swissStandings(t);
+      const winnerRow=st.find(r=>r.id===tm.winnerId);
+
+      showTournamentResultMessage(
+        t.name+' • '+(tm.roundLabel||'Švýcarský systém'),
+        `<div><strong>${esc(tournamentPlayerName(tm.winnerId,t))}</strong> získává bod.</div>
+         ${winnerRow?`<div class="muted" style="margin-top:8px">Průběžně: ${winnerRow.place}. místo • ${winnerRow.points} bodů.</div>`:''}
+         ${t.status==='complete'
+           ? `<div class="muted" style="margin-top:10px">Všechna kola jsou dohrána. Turnaj je dokončen.</div>
+              ${swissFinalRecapHtml(t)}`
+           : (t.swiss.playoffStarted && t.ko
+              ? `<div class="muted" style="margin-top:10px">Švýcarská část je dohrána. Do SKO postupuje ${t.swiss.qualifierCount||t.swiss.advanceToSko} hráčů.</div>`
+              : (finishedRound?`<div class="muted" style="margin-top:10px">Bylo vytvořeno ${t.swiss.currentRound}. kolo.</div>`:''))}`
+      );
+      return t;
+    }
+
+    if(t.ko){
+      const k=ensureSKOState(t);
+      if(!k)return t;
+
+      if(tm.bracket==='3P'){
+        k.thirdPlaceWinnerId=tm.winnerId;
+        k.thirdPlaceLoserId=tm.loserId;
+        if(k.championId)t.status='complete';
+        assignTournamentTables(t);
+        showTournamentResultMessage(
+          t.name+' • ZÁPAS O 3. MÍSTO',
+          `<div><strong>${esc(tournamentPlayerName(tm.winnerId,t))}</strong> končí na <strong>3. místě</strong>.</div>
+           <div style="margin-top:10px"><strong>${esc(tournamentPlayerName(tm.loserId,t))}</strong> končí na <strong>4. místě</strong>.</div>`
+        );
+        return t;
+      }
+
+      if(tm.bracket==='F'){
+        if(!k.eliminatedIds.includes(tm.loserId))k.eliminatedIds.push(tm.loserId);
+        knockoutRegisterElimination(t,tm.loserId,tm.id);
+        k.championId=tm.winnerId;
+        k.runnerUpId=tm.loserId;
+        if(!k.thirdPlacePlayoff || knockoutThirdMatch(t)?.status==='done')t.status='complete';
+        else t.status='active';
+        forceFinalizeTournamentIfResolved(t,tm);
+        assignTournamentTables(t);
+        showTournamentResultMessage(
+          t.name+' • FINÁLE',
+          `<div><strong>${esc(tournamentPlayerName(tm.winnerId,t))}</strong> je <strong>VÍTĚZEM TURNAJE</strong>.</div>
+           <div style="margin-top:10px"><strong>${esc(tournamentPlayerName(tm.loserId,t))}</strong> končí na <strong>2. místě</strong>.</div>`
+        );
+        return t;
+      }
+
+      if(!k.eliminatedIds.includes(tm.loserId))k.eliminatedIds.push(tm.loserId);
+      const place=knockoutRegisterElimination(t,tm.loserId,tm.id);
+
+      // Nejdřív ověříme skutečný stav pavouka. Tím opravíme i starší turnaje,
+      // kde poslední zápas mohl být uložen jako KO místo F.
+      const resolvedAsFinal=finalizeSKOIfResolved(t,tm);
+      if(resolvedAsFinal){
+        forceFinalizeTournamentIfResolved(t,tm);
+        showTournamentResultMessage(
+          t.name+' • FINÁLE',
+          `<div><strong>${esc(tournamentPlayerName(tm.winnerId,t))}</strong> je <strong>VÍTĚZEM TURNAJE</strong>.</div>
+           <div style="margin-top:10px"><strong>${esc(tournamentPlayerName(tm.loserId,t))}</strong> končí na <strong>2. místě</strong>.</div>`
+        );
+        return t;
+      }
+
+      const allFinished=(k.rounds||[]).flatMap(r=>r.matches||[]).every(m=>m.status==='done'||m.winnerId||m.loserId);
+      if(allFinished)knockoutCreateWave(t);
+
+      // Po vytvoření další vlny ještě jednou ověříme, zda se turnaj mezitím
+      // neuzavřel přes knockoutCreateWave.
+      if(t.status==='complete' && k.championId){
+        if(!k.runnerUpId)k.runnerUpId=tm.loserId||null;
+        showTournamentResultMessage(
+          t.name+' • FINÁLE',
+          `<div><strong>${esc(tournamentPlayerName(k.championId,t))}</strong> je <strong>VÍTĚZEM TURNAJE</strong>.</div>
+           ${k.runnerUpId?`<div style="margin-top:10px"><strong>${esc(tournamentPlayerName(k.runnerUpId,t))}</strong> končí na <strong>2. místě</strong>.</div>`:''}`
+        );
+        return t;
+      }
+
+      assignTournamentTables(t);
+
+      let label=genericPlacementLabel(place);
+      if(place<=4 && !k.thirdPlacePlayoff)label='3. místo';
+
+      showTournamentResultMessage(
+        t.name+' • '+(tm.roundLabel||'SKO'),
+        `<div><strong>${esc(tournamentPlayerName(tm.winnerId,t))}</strong> postupuje dál.</div>
+         <div style="margin-top:10px"><strong>${esc(tournamentPlayerName(tm.loserId,t))}</strong> vypadává a má pořadí <strong>${esc(label)}</strong>.</div>`
+      );
+      return t;
+    }
+
+    if(t.dko){
+      const d=t.dko;
+
+      if(tm.bracket==='3P'){
+        d.thirdPlaceWinnerId=tm.winnerId;
+        d.thirdPlaceLoserId=tm.loserId;
+        dkoUpdateCompletion(t);
+        assignTournamentTables(t);
+        showTournamentResultMessage(
+          t.name+' • ZÁPAS O 3. MÍSTO',
+          dkoResultHtml(t,tm,tm.winnerId,tm.loserId,0,null)
+        );
+        return t;
+      }
+
+      const loserLossesBefore=d.losses[tm.loserId]||0;
+      d.losses[tm.loserId]=loserLossesBefore+1;
+      let eliminationPlace=null;
+      if(d.losses[tm.loserId]>=2 && tm.bracket!=='GF'){
+        eliminationPlace=dkoRegisterElimination(t,tm.loserId,tm.id);
+      }
+
+      repairDKOInvalidFutureMatches(t);
+
+      if(tm.bracket==='GF'){
+        d.championId=tm.winnerId;
+        d.runnerUpId=tm.loserId;
+        d.finalResetNeeded=false;
+        dkoUpdateCompletion(t);
+        forceFinalizeTournamentIfResolved(t,tm);
+        showTournamentResultMessage(
+          t.name+' • GRAND FINAL',
+          dkoResultHtml(t,tm,tm.winnerId,tm.loserId,loserLossesBefore,2)
+        );
+        return t;
+      }
+
+      const allScheduledFinished=(d.rounds||[]).flatMap(r=>r.matches||[])
+        .every(m=>m.status==='done'||!!m.winnerId||!!m.loserId);
+      if(allScheduledFinished)dkoCreateWave(t);
+      assignTournamentTables(t);
+
+      showTournamentResultMessage(
+        t.name+' • '+(tm.roundLabel||'DKO'),
+        dkoResultHtml(t,tm,tm.winnerId,tm.loserId,loserLossesBefore,eliminationPlace)
+      );
+      return t;
+    }
+
+    return t;
+  }
+
+
+  
+  window.openGuestAssign=function(tid,gid){
+    const t=(data.tournaments||[]).find(x=>x.id===tid);
+    if(!t || !t.guests || !t.guests[gid]) return;
+    const players=Object.values(data.players||{}).sort((a,b)=>playerDisplayName(a).localeCompare(playerDisplayName(b),'cs'));
+    if(!players.length){toast('Nejdřív vytvoř profil hráče.');return;}
+    guestAssignContext={tournamentId:tid,guestId:gid};
+    $('guestAssignInfo').textContent='Host: '+t.guests[gid].name;
+    $('guestAssignProfile').innerHTML=players.map(p=>`<option value="${esc(p.id)}">${esc(playerDisplayName(p))}</option>`).join('');
+    $('guestAssignModal').classList.add('show');
+  };
+
+  $('guestAssignCancel').onclick=()=>{
+    guestAssignContext=null;
+    $('guestAssignModal').classList.remove('show');
+  };
+
+  function replaceTournamentParticipantId(t,oldId,newId){
+    t.playerIds=(t.playerIds||[]).map(id=>id===oldId?newId:id);
+
+    if(tournamentHasGroups(t)){
+      (t.groups||[]).forEach(g=>{
+        g.players=(g.players||[]).map(id=>id===oldId?newId:id);
+        (g.matches||[]).forEach(m=>{
+          if(m.player1Id===oldId)m.player1Id=newId;
+          if(m.player2Id===oldId)m.player2Id=newId;
+          if(m.winnerId===oldId)m.winnerId=newId;
+          if(m.loserId===oldId)m.loserId=newId;
+        });
+      });
+      (t.groupEliminations||[]).forEach(e=>{if(e.playerId===oldId)e.playerId=newId;});
+    }
+
+    if(t.ko){
+      t.ko.participantIds=(t.ko.participantIds||[]).map(id=>id===oldId?newId:id);
+      t.ko.eliminatedIds=(t.ko.eliminatedIds||[]).map(id=>id===oldId?newId:id);
+      if(t.ko.championId===oldId)t.ko.championId=newId;
+      if(t.ko.runnerUpId===oldId)t.ko.runnerUpId=newId;
+      if(t.ko.thirdPlaceWinnerId===oldId)t.ko.thirdPlaceWinnerId=newId;
+      if(t.ko.thirdPlaceLoserId===oldId)t.ko.thirdPlaceLoserId=newId;
+      (t.ko.eliminations||[]).forEach(e=>{if(e.playerId===oldId)e.playerId=newId;});
+      (t.ko.rounds||[]).forEach(r=>{
+        (r.byes||[]).forEach(b=>{if(b.playerId===oldId)b.playerId=newId;});
+        (r.matches||[]).forEach(m=>{
+          if(m.player1Id===oldId)m.player1Id=newId;
+          if(m.player2Id===oldId)m.player2Id=newId;
+          if(m.winnerId===oldId)m.winnerId=newId;
+          if(m.loserId===oldId)m.loserId=newId;
+        });
+      });
+    }
+
+    if(t.dko){
+      t.dko.participantIds=(t.dko.participantIds||[]).map(id=>id===oldId?newId:id);
+      if(Object.prototype.hasOwnProperty.call(t.dko.losses||{},oldId)){
+        t.dko.losses[newId]=(t.dko.losses[newId]||0)+(t.dko.losses[oldId]||0);
+        delete t.dko.losses[oldId];
+      }
+      if(t.dko.championId===oldId)t.dko.championId=newId;
+      if(t.dko.runnerUpId===oldId)t.dko.runnerUpId=newId;
+      if(t.dko.thirdPlaceWinnerId===oldId)t.dko.thirdPlaceWinnerId=newId;
+      if(t.dko.thirdPlaceLoserId===oldId)t.dko.thirdPlaceLoserId=newId;
+      (t.dko.eliminations||[]).forEach(e=>{if(e.playerId===oldId)e.playerId=newId;});
+      (t.dko.rounds||[]).forEach(r=>{
+        (r.byes||[]).forEach(b=>{if(b.playerId===oldId)b.playerId=newId;});
+        (r.matches||[]).forEach(m=>{
+          if(m.player1Id===oldId)m.player1Id=newId;
+          if(m.player2Id===oldId)m.player2Id=newId;
+          if(m.winnerId===oldId)m.winnerId=newId;
+          if(m.loserId===oldId)m.loserId=newId;
+        });
+      });
+    }
+  }
+
+  function relinkHistoricalGuestMatches(t,guestId,profileId){
+    const profile=data.players[profileId];
+    if(!profile) return;
+    (data.matches||[]).forEach(m=>{
+      if(!m.tournamentLink || m.tournamentLink.tournamentId!==t.id) return;
+      if(!Array.isArray(m.playerIds)) return;
+      m.playerIds=m.playerIds.map(id=>id===guestId?profileId:id);
+      if(Array.isArray(m.playerNames)){
+        m.playerNames=m.playerIds.map((id,i)=>id===profileId ? playerDisplayName(profile) : m.playerNames[i]);
+      }
+      if(Array.isArray(m.playerRealNames)){
+        m.playerRealNames=m.playerIds.map((id,i)=>id===profileId ? profile.name : m.playerRealNames[i]);
+      }
+      if(m.tournamentLink.p1ParticipantId===guestId){
+        m.tournamentLink.p1ParticipantId=profileId;
+        m.tournamentLink.p1Guest=false;
+      }
+      if(m.tournamentLink.p2ParticipantId===guestId){
+        m.tournamentLink.p2ParticipantId=profileId;
+        m.tournamentLink.p2Guest=false;
+      }
+    });
+
+    if(match && match.tournamentLink && match.tournamentLink.tournamentId===t.id){
+      if(Array.isArray(match.playerIds))match.playerIds=match.playerIds.map(id=>id===guestId?profileId:id);
+      saveDeviceActiveMatch(match);
+    }
+  }
+
+  $('guestAssignConfirm').onclick=()=>{
+    if(!guestAssignContext) return;
+    const t=(data.tournaments||[]).find(x=>x.id===guestAssignContext.tournamentId);
+    const gid=guestAssignContext.guestId;
+    const pid=$('guestAssignProfile').value;
+    if(!t || !t.guests || !t.guests[gid] || !data.players[pid]) return;
+
+    const guestName=t.guests[gid].name;
+    const profileName=playerDisplayName(data.players[pid]);
+
+    if(!confirm('Přiřadit výsledky hráče „'+guestName+'“ profilu „'+profileName+'“?')) return;
+
+    replaceTournamentParticipantId(t,gid,pid);
+    relinkHistoricalGuestMatches(t,gid,pid);
+    delete t.guests[gid];
+
+    guestAssignContext=null;
+    $('guestAssignModal').classList.remove('show');
+    saveData();
+    renderTournament();
+    renderHistory();
+    renderStats();
+    toast('Host byl přiřazen k profilu a výsledky propojeny.');
+  };
+
+
+    // Shot clock
+  $('clockStartStop').onclick=()=>{
+    if(!match || !match.useClock) return;
+    timerRunning ? stopTimer() : startTimer();
+    renderClock();
+  };
+  $('clockReset').onclick=()=> resetClock(false,false);
+  $('extensionBtn').onclick=useExtension;
+
+  function resetClock(firstShot=false,autoStart=true){
+    if(!match || !match.useClock) return;
+    stopTimer();
+    clockPhase = firstShot ? 'first' : 'normal';
+    timeLeft = firstShot ? match.clock.first : match.clock.normal;
+    renderClock();
+    if(autoStart) startTimer();
+  }
+  function startTimer(){
+    if(!match || !match.useClock || timerRunning) return;
+    timerRunning=true;
+    timer=setInterval(()=>{
+      timeLeft--;
+
+      // Výrazné dvojité varování přesně při 10 s.
+      if(timeLeft===match.clock.warn){
+        beep(1150,.20,.30,0);
+        beep(1150,.20,.30,.30);
+        toast('10 SEKUND');
+      }
+
+      // Posledních 5 sekund: pípnutí každou sekundu 5, 4, 3, 2, 1.
+      if(timeLeft<=match.clock.countdown && timeLeft>0){
+        beep(820,.10,.20);
+      }
+
+      // Nula = časový faul. Delší a hlubší tón.
+      if(timeLeft<=0){
+        timeLeft=0;
+        stopTimer();
+        beep(180,.80,.30);
+        toast('TIME – časový faul!');
+      }
+
+      renderClock();
+    },1000);
+  }
+  function stopTimer(){
+    timerRunning=false;
+    if(timer){ clearInterval(timer); timer=null; }
+  }
+  function renderClock(){
+    if(!match || !match.useClock) return;
+    $('clock').textContent=timeLeft;
+    $('clock').classList.toggle('warning',timeLeft<=match.clock.warn && timeLeft>match.clock.countdown);
+    $('clock').classList.toggle('danger',timeLeft<=match.clock.countdown);
+    $('clockStartStop').textContent=timerRunning?'⏸ PAUZA':'▶ START';
+    scheduleStreamState();
+  }
+  function useExtension(){
+    if(!match || !match.useClock) return;
+    const i=match.turn;
+    if(match.extensionsUsed[i]>=match.clock.extensionsPerRack){ toast('Extension už byla použita.'); return; }
+    addActionEvent('Extension • '+match.playerNames[i]);
+    match.extensionsUsed[i]++;
+    timeLeft += (clockPhase==='first' ? match.clock.first : match.clock.normal);
+    speak('Extension called');
+    renderMatch();
+    if(!timerRunning) startTimer();
+  }
+
+  function beep(freq=440,dur=.1,volume=.18,delay=0){
+    try{
+      ensureAudio();
+      if(!audioCtx) return;
+      const start = audioCtx.currentTime + delay;
+      const o = audioCtx.createOscillator();
+      const g = audioCtx.createGain();
+
+      o.type = 'sine';
+      o.frequency.setValueAtTime(freq, start);
+
+      g.gain.setValueAtTime(0.0001, start);
+      g.gain.exponentialRampToValueAtTime(Math.max(0.001,volume), start + 0.012);
+      g.gain.setValueAtTime(Math.max(0.001,volume), start + Math.max(0.02,dur-0.03));
+      g.gain.exponentialRampToValueAtTime(0.0001, start + dur);
+
+      o.connect(g);
+      g.connect(audioCtx.destination);
+      o.start(start);
+      o.stop(start + dur + 0.03);
+    }catch(e){}
+  }
+  function speak(text){
+    try{ const u=new SpeechSynthesisUtterance(text); u.lang='en-US'; speechSynthesis.speak(u); }catch(e){}
+  }
+
+  let statsCardMatch=null;
+  let statsCardIsCurrent=false;
+
+  function statBox(label,value){
+    return `<div class="subpanel" style="text-align:center;padding:12px">
+      <div class="muted" style="font-size:12px;font-weight:900">${esc(label)}</div>
+      <div style="font-size:25px;font-weight:950;margin-top:3px">${esc(String(value))}</div>
+    </div>`;
+  }
+
+  function averagePerInning14(m,i){
+    const innings=Math.max(0,Number(m?.stats?.[i]?.innings14||0));
+    if(!innings)return null;
+    const score=Number(m?.scores?.[i]||0);
+    return score/innings;
+  }
+
+  function averagePerInning14Text(m,i){
+    const avg=averagePerInning14(m,i);
+    return avg===null ? '—' : avg.toLocaleString('cs-CZ',{minimumFractionDigits:1,maximumFractionDigits:1});
+  }
+
+
+  function mostMissedBall(stats){
+    let bestBall=null,best=0;
+    for(let n=1;n<=10;n++){ const v=Number(stats?.['missBall'+n]||0); if(v>best){best=v;bestBall=n;} }
+    return bestBall==null?'—':bestBall+' ('+best+'×)';
+  }
+  function mostBreakBall(stats){
+    let bestBall=null,best=0;
+    for(let n=1;n<=10;n++){ const v=Number(stats?.['breakBall'+n]||0); if(v>best){best=v;bestBall=n;} }
+    return bestBall==null?'—':bestBall+' ('+best+'×)';
+  }
+
+  function safetyEscapePct(stats){
+    const attempts=Number(stats?.safetyEscapes||0);
+    const success=Number(stats?.successfulSafetyEscapes||0);
+    if(!attempts)return '—';
+    return Math.round(success/attempts*100)+' %';
+  }
+
+  function matchOnlyMissVal(m,i){
+    const row=m?.stats?.[i]||{};
+    // Nové zápasy používají matchOnlyMisses; starší záznamy zachováme přes fallback.
+    if(Object.prototype.hasOwnProperty.call(row,'matchOnlyMisses'))return Number(row.matchOnlyMisses||0);
+    return Number(row.misses||0);
+  }
+
+  function playerStatsCard14(m,i){
+    const name=m.playerNames[i];
+    const penalty=statVal(m,i,'foulPenaltyPoints14');
+    return `<div class="subpanel" style="margin-top:12px">
+      <div style="font-size:18px;font-weight:950;margin-bottom:10px">${esc(name)}</div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(100px,1fr));gap:8px">
+        ${statBox('SKÓRE',m.scores[i])}
+        ${statBox('HIGH RUN',statVal(m,i,'highRun14'))}
+        ${statBox('NÁBĚHY',statVal(m,i,'innings14'))}
+        ${statBox('PRŮMĚR / NÁBĚH',averagePerInning14Text(m,i))}
+        ${statBox('MISS',matchOnlyMissVal(m,i))}
+        ${statBox('SAFE',statVal(m,i,'safeties'))}
+        ${statBox('FAULY',statVal(m,i,'fouls'))}
+        ${statBox('TRESTNÉ BODY',penalty ? '−'+penalty : '0')}
+        ${statBox('3× FAUL',statVal(m,i,'threeFoulPenalties14'))}
+      </div>
+    </div>`;
+  }
+
+  function pctText(v){
+    return v===null || !Number.isFinite(Number(v)) ? '—' : Math.round(Number(v))+' %';
+  }
+
+  function avgText(v,digits=2){
+    if(v===null || !Number.isFinite(Number(v)))return '—';
+    return Number(v).toLocaleString('cs-CZ',{minimumFractionDigits:1,maximumFractionDigits:digits});
+  }
+
+  function metricDeltaText(current,baseline,suffix=' %'){
+    if(current===null || baseline===null || !Number.isFinite(Number(current)) || !Number.isFinite(Number(baseline)))return '';
+    const d=Number(current)-Number(baseline);
+    const rounded=Math.abs(d)>=10?Math.round(d):Math.round(d*10)/10;
+    if(Math.abs(rounded)<0.05)return '<span class="muted" style="font-size:11px">= dlouhodobý průměr</span>';
+    const arrow=rounded>0?'↑':'↓';
+    const sign=rounded>0?'+':'';
+    return `<span style="font-size:11px;font-weight:950">${arrow} ${sign}${esc(String(rounded).replace('.',','))}${esc(suffix)} vs průměr</span>`;
+  }
+
+  function historicalPlayerBaseline(m,i){
+    const pid=m?.playerIds?.[i];
+    if(!pid)return null;
+    const rows=(data.matches||[]).filter(x=>{
+      if(!x || x.id===m.id || (x.status||'complete')!=='complete')return false;
+      if(x.solo14 || x.ghostMode || x.winnerTableMode || x.discipline==='14.1')return false;
+      if(m.discipline && x.discipline!==m.discipline)return false;
+      return Array.isArray(x.playerIds) && x.playerIds.includes(pid);
+    });
+    let breaks=0,dry=0,soft=0,softDry=0,bf=0,potted=0,pottedTracked=0,bar=0;
+    let saf=0,safOk=0,safTracked=0,esc=0,escOk=0,resafes=0;
+    rows.forEach(x=>{
+      const j=x.playerIds.indexOf(pid), st=x.stats?.[j];
+      if(!st)return;
+      breaks+=Number(st.breaks||0); dry+=Number(st.dryBreaks||0); soft+=Number(st.softBreaks||0); softDry+=Number(st.softDryBreaks||0); bf+=Number(st.breakFouls||0);
+      potted+=Number(st.breakPottedBalls||0); pottedTracked+=Number(st.breakPottedTracked||0); bar+=Number(st.breakAndRun||0);
+      saf+=Number(st.safeties||0); safOk+=Number(st.successfulSafeties||0); safTracked+=Number(st.trackedSafeties||0);
+      esc+=Number(st.safetyEscapes||0); escOk+=Number(st.successfulSafetyEscapes||0); resafes+=Number(st.resafes||0);
+    });
+    const successful=Math.max(0,breaks-dry-soft+softDry-bf);
+    return {
+      matches:rows.length,
+      breakPct:breaks?successful/breaks*100:null,
+      pottedAvg:pottedTracked?potted/pottedTracked:null,
+      brConversion:successful?bar/successful*100:null,
+      safetyPct:safTracked?safOk/safTracked*100:null,
+      escapePct:esc?escOk/esc*100:null,
+      resafes
+    };
+  }
+
+  function comparisonMetricBox(label,current,currentText,baseline,baselineText,suffix=' %'){
+    const delta=metricDeltaText(current,baseline,suffix);
+    const base=baseline===null?'':`<div class="muted" style="font-size:11px;margin-top:3px">průměr ${esc(baselineText)}</div>`;
+    return `<div class="subpanel" style="text-align:center;padding:11px">
+      <div class="muted" style="font-size:11px;font-weight:900">${esc(label)}</div>
+      <div style="font-size:22px;font-weight:950;margin-top:3px">${esc(currentText)}</div>
+      ${base}<div style="margin-top:3px">${delta}</div>
+    </div>`;
+  }
+
+  function playerComparisonPanel(m,i){
+    const b=historicalPlayerBaseline(m,i);
+    if(!b || !b.matches)return '';
+    const br=breakStats(m,i), st=m.stats?.[i]||{};
+    const currentBrConv=br.successful?Number(st.breakAndRun||0)/br.successful*100:null;
+    const safTracked=Number(st.trackedSafeties||0), safPct=safTracked?Number(st.successfulSafeties||0)/safTracked*100:null;
+    const escapeAttempts=Number(st.safetyEscapes||0), escPct=escapeAttempts?Number(st.successfulSafetyEscapes||0)/escapeAttempts*100:null;
+    return `<div class="subpanel" style="margin-top:10px;border-color:rgba(212,175,55,.35)">
+      <div style="font-size:15px;font-weight:950;margin-bottom:8px">PROTI VLASTNÍMU PRŮMĚRU • ${esc(m.playerNames[i])}</div>
+      <div class="muted" style="font-size:11px;margin-bottom:8px">Srovnání s ${b.matches} dokončenými zápasy ve stejné disciplíně.</div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(125px,1fr));gap:7px">
+        ${comparisonMetricBox('BREAK',br.pct,br.pct===null?'—':br.pct+' %',b.breakPct,pctText(b.breakPct))}
+        ${comparisonMetricBox('Ø KOULÍ / BREAK',br.pottedAvg,avgText(br.pottedAvg),b.pottedAvg,avgText(b.pottedAvg),'')}
+        ${comparisonMetricBox('B&R CONVERSION',currentBrConv,pctText(currentBrConv),b.brConversion,pctText(b.brConversion))}
+        ${comparisonMetricBox('JISTOTY',safPct,pctText(safPct),b.safetyPct,pctText(b.safetyPct))}
+        ${comparisonMetricBox('ÚNIKY',escPct,pctText(escPct),b.escapePct,pctText(b.escapePct))}
+      </div>
+    </div>`;
+  }
+
+  function matchMomentumData(m){
+    const ev=Array.isArray(m?.events)?m.events:[];
+    const scores=[]; let prev=[0,0], streak=[0,0], best=[0,0], lastWinner=null;
+    ev.forEach(e=>{
+      const mt=String(e?.text||'').match(/^Skóre\s+(\d+)\s*:\s*(\d+)/i);
+      if(!mt)return;
+      const cur=[Number(mt[1]),Number(mt[2])];
+      let w=null;
+      if(cur[0]>prev[0] && cur[1]===prev[1])w=0;
+      else if(cur[1]>prev[1] && cur[0]===prev[0])w=1;
+      if(w!==null){
+        if(lastWinner===w)streak[w]++; else {streak[w]=1; streak[1-w]=0; lastWinner=w;}
+        best[w]=Math.max(best[w],streak[w]);
+        scores.push({score:cur[0]+':'+cur[1],winner:w});
+      }
+      prev=cur;
+    });
+    let chain=0,maxResafeChain=0,resafeChains=0,inChain=false;
+    ev.forEach(e=>{
+      const t=String(e?.text||'');
+      if(/^RESAFE\b/i.test(t)){
+        chain++; maxResafeChain=Math.max(maxResafeChain,chain);
+        if(!inChain){resafeChains++;inChain=true;}
+      }else if(/jistot|únik/i.test(t)){
+        if(!/RESAFE/i.test(t)){ chain=0; if(/potopen|bez potopen|Neúspěšný únik/i.test(t))inChain=false; }
+      }else if(/Skóre|Dry break|Čistá hra|Dohrávka|MISS|Faul/i.test(t)){
+        chain=0;inChain=false;
+      }
+    });
+    return {scores,best,maxResafeChain,resafeChains};
+  }
+
+  function matchAnalyticsPanel(m){
+    const md=matchMomentumData(m);
+    const chips=md.scores.length?md.scores.map(x=>`<span style="display:inline-block;padding:5px 8px;border:1px solid var(--line);border-radius:999px;margin:2px;font-weight:900">${esc(x.score)}</span>`).join(''):'<span class="muted">U tohoto zápasu není uložen průběh rack po racku.</span>';
+    return `<div class="subpanel" style="margin-top:12px;border-color:rgba(212,175,55,.45)">
+      <div style="font-size:18px;font-weight:950">MOMENTUM & SAFETY BATTLE</div>
+      <div style="margin-top:10px"><strong>Vývoj skóre:</strong><div style="margin-top:5px">${chips}</div></div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(135px,1fr));gap:8px;margin-top:10px">
+        ${statBox('NEJDELŠÍ SÉRIE • '+m.playerNames[0],md.best[0]||0)}
+        ${statBox('NEJDELŠÍ SÉRIE • '+m.playerNames[1],md.best[1]||0)}
+        ${statBox('RESAFE VÝMĚNY',md.resafeChains||0)}
+        ${statBox('NEJDELŠÍ RESAFE ŘETĚZEC',md.maxResafeChain||0)}
+      </div>
+    </div>`;
+  }
+
+  function winnerTableResultHtml(m){
+    const wt=m?.winnerTable;
+    if(!wt || !Array.isArray(wt.players))return '';
+    const rows=wt.players.map((p,i)=>({
+      name:p?.displayName||p?.realName||('Hráč '+(i+1)),
+      wins:Number(wt.wins?.[i]||0),
+      index:i
+    })).sort((a,b)=>b.wins-a.wins || a.index-b.index);
+
+    return `<div style="width:100%">
+      <div class="muted" style="font-size:11px;font-weight:950;letter-spacing:.8px;margin-bottom:8px">VÍTĚZ NA STOLE • KONEČNÉ POŘADÍ</div>
+      <div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px">
+        ${rows.map((r,pos)=>`<div class="subpanel" style="margin:0;padding:10px 7px;text-align:center;${pos===0?'border-color:var(--gold);':''}">
+          <div class="muted" style="font-size:10px;font-weight:900">${pos+1}. MÍSTO</div>
+          <div style="font-size:15px;font-weight:950;margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(r.name)}</div>
+          <div style="font-size:28px;font-weight:950;color:var(--gold2);margin-top:3px">${r.wins}</div>
+          <div class="muted" style="font-size:10px;font-weight:900">VYHRANÝCH RACKŮ</div>
+        </div>`).join('')}
+      </div>
+    </div>`;
+  }
+
+  function winnerTablePlayerStatsCard(m,i){
+    const wt=m?.winnerTable||{};
+    const p=wt.players?.[i]||{};
+    const st=wt.stats?.[i]||{};
+    const name=p.displayName||p.realName||('Hráč '+(i+1));
+    const wins=Number(wt.wins?.[i]||0);
+    const basic=matchEvidenceMode(m)==='basic';
+
+    if(basic){
+      return `<div class="subpanel" style="margin-top:12px">
+        <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap">
+          <div style="font-size:18px;font-weight:950">${esc(name)}</div>
+          <span class="badge gold">${wins} výher</span>
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-top:10px">
+          ${statBox('VÝHRY',wins)}
+          ${statBox('ČISTÉ HRY',Number(st.breakAndRun||0))}
+          ${statBox('DOHRÁVKY',Number(st.runouts||0))}
+        </div>
+      </div>`;
+    }
+
+    const total=Math.max(0,Number(st.breaks||0));
+    const dry=Math.max(0,Math.min(total,Number(st.dryBreaks||0)));
+    const soft=Math.max(0,Math.min(total,Number(st.softBreaks||0)));
+    const softDry=Math.max(0,Math.min(Math.min(dry,soft),Number(st.softDryBreaks||0)));
+    const breakFouls=Math.max(0,Math.min(total,Number(st.breakFouls||0)));
+    const successful=Math.max(0,total-dry-soft+softDry-breakFouls);
+    const breakPct=total?Math.round(successful/total*100):null;
+    const pottedTracked=Math.max(0,Number(st.breakPottedTracked||0));
+    const potted=Math.max(0,Number(st.breakPottedBalls||0));
+    const pottedAvg=pottedTracked?potted/pottedTracked:null;
+    const missMap=[];
+    for(let b=1;b<=10;b++){
+      const n=Number(st['missBall'+b]||0);
+      if(n>0)missMap.push({ball:b,count:n});
+    }
+    missMap.sort((a,b)=>b.count-a.count||a.ball-b.ball);
+    const mostMiss=missMap.length?'#'+missMap[0].ball+' ('+missMap[0].count+'×)':'—';
+
+    return `<div class="subpanel" style="margin-top:12px">
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap">
+        <div style="font-size:18px;font-weight:950">${esc(name)}</div>
+        <span class="badge gold">${wins} výher</span>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(100px,1fr));gap:8px;margin-top:10px">
+        ${statBox('VÝHRY',wins)}
+        ${statBox('BREAKY',total)}
+        ${statBox('DRY BREAK',dry)}
+        ${statBox('SOFT BREAK',soft)}
+        ${statBox('ÚSPĚŠNOST BREAKU',breakPct===null?'—':breakPct+' %')}
+        ${statBox('KOULÍ Z BREAKU',pottedTracked?potted:'—')}
+        ${statBox('Ø KOULÍ / BREAK',pottedAvg===null?'—':pottedAvg.toLocaleString('cs-CZ',{minimumFractionDigits:1,maximumFractionDigits:2}))}
+        ${statBox('ESO Z BREAKU',Number(st.aces||0))}
+        ${statBox('B&R',Number(st.breakAndRun||0))}
+        ${statBox('DOHRÁVKY',Number(st.runouts||0))}
+        ${statBox('SAFE',Number(st.safeties||0))}
+        ${statBox('MISS',Number(st.matchOnlyMisses||st.misses||0))}
+        ${statBox('FAULY',Number(st.fouls||0))}
+        ${statBox('PUSH OUT',Number(st.pushOuts||0))}
+        ${statBox('2-WAY SHOT',Number(st.twoWaySuccessful||0)+'/'+Number(st.twoWayAttempts||0))}
+        ${statBox('NEJČASTĚJŠÍ MISS KOULE',mostMiss)}
+      </div>
+    </div>`;
+  }
+
+  function winnerTableStatsCard(m){
+    const wt=m?.winnerTable;
+    if(!wt || !Array.isArray(wt.players))return '<div class="muted">Statistiky session nejsou k dispozici.</div>';
+    return `<div class="subpanel" style="margin-top:12px;border-color:rgba(212,175,55,.45)">
+      <div style="font-size:17px;font-weight:950">VÍTĚZ NA STOLE • 3 HRÁČI</div>
+      <div class="muted" style="margin-top:4px">Každý hráč je vyhodnocen samostatně za celou session bez ohledu na to, kdo byl na stole při jejím ukončení.</div>
+    </div>`+winnerTableProgressHtml(m)+wt.players.map((_,i)=>winnerTablePlayerStatsCard(m,i)).join('');
+  }
+
+  function playerStatsCardNormal(m,i){
+    const br=breakStats(m,i);
+    return `<div class="subpanel" style="margin-top:12px">
+      <div style="font-size:18px;font-weight:950;margin-bottom:10px">${esc(m.playerNames[i])}</div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(100px,1fr));gap:8px">
+        ${statBox('SKÓRE',m.scores[i])}
+        ${statBox('BREAKY',br.tracked?br.total:'—')}
+        ${statBox('DRY BREAK',br.tracked?br.dry:'—')}
+        ${statBox('SOFT BREAK',br.tracked?br.soft:'—')}
+        ${statBox('ÚSPĚŠNOST BREAKU',br.pct===null?'—':br.pct+' %')}
+        ${statBox('KOULÍ Z BREAKU',br.pottedTracked?br.potted:'—')}
+        ${statBox('Ø KOULÍ / BREAK',br.pottedAvg===null?'—':br.pottedAvg.toLocaleString('cs-CZ',{minimumFractionDigits:1,maximumFractionDigits:2}))}
+        ${statBox('ESO Z BREAKU',statVal(m,i,'aces'))}
+        ${statBox('B&R CONVERSION',br.successful?Math.round(statVal(m,i,'breakAndRun')/br.successful*100)+' %':'—')}
+        ${statBox('B&R',statVal(m,i,'breakAndRun'))}
+        ${statBox('RUNOUT',statVal(m,i,'runouts'))}
+        ${statBox('PUSH OUT',statVal(m,i,'pushOuts'))}
+        ${statBox('PUSH OUT VRÁCEN',statVal(m,i,'pushOutsReturned'))}
+        ${statBox('2-WAY SHOT',statVal(m,i,'twoWaySuccessful')+'/'+statVal(m,i,'twoWayAttempts'))}
+        ${statBox('NEJČASTĚJŠÍ MISS KOULE',mostMissedBall(m.stats?.[i]))}
+        ${statBox('NEJČASTĚJI Z BREAKU',mostBreakBall(m.stats?.[i]))}
+        ${statBox('SAFE',statVal(m,i,'safeties'))}
+        ${statBox('ÚNIKY Z JISTOT',statVal(m,i,'successfulSafetyEscapes')+'/'+statVal(m,i,'safetyEscapes'))}
+        ${statBox('ÚSPĚŠNOST ÚNIKŮ',safetyEscapePct(m.stats?.[i]))}
+        ${statBox('RESAFE',statVal(m,i,'resafes'))}
+        ${statBox('NECHTĚNÁ SAFE',statVal(m,i,'accidentalSafeties'))}
+        ${statBox('MISS',matchOnlyMissVal(m,i))}
+        ${statBox('MISS • OBTÍŽNÁ POZICE',statVal(m,i,'matchOnlyMissBadPosition'))}
+        ${statBox('MISS • ŠPATNĚ ZAHRÁNO',statVal(m,i,'matchOnlyMissPot'))}
+      </div>
+      ${playerComparisonPanel(m,i)}
+    </div>`;
+  }
+
+  function ghostOutcomeCounts(m){
+    return {
+      clean:statVal(m,0,'ghostCleanRunouts'),
+      bih:statVal(m,0,'ghostBIHRunouts'),
+      ace:statVal(m,0,'ghostAces'),
+      failed:statVal(m,0,'ghostFailedRacks'),
+      dry:statVal(m,0,'ghostDryBreaks'),
+      soft:statVal(m,0,'ghostSoftBreaks'),
+      breakFoul:statVal(m,0,'ghostBreakFouls')
+    };
+  }
+
+  function ghostMissBallSummaryHtml(m){
+    const map=m?.stats?.[0]?.ghostMissesByBall||{};
+    const rows=Object.entries(map)
+      .map(([ball,count])=>({ball:Number(ball),count:Number(count||0)}))
+      .filter(x=>x.ball>0&&x.count>0)
+      .sort((a,b)=>a.ball-b.ball);
+    if(!rows.length)return '<div class="muted">Zatím není evidovaná žádná chyba na konkrétní kouli.</div>';
+    return '<div style="display:flex;gap:7px;flex-wrap:wrap">'+rows.map(x=>
+      '<span class="tournament-badge">KOULE '+x.ball+' • '+x.count+'×</span>'
+    ).join('')+'</div>';
+  }
+
+  function ghostRackHistoryRows(m){
+    const h=Array.isArray(m?.ghostRackHistory)?m.ghostRackHistory.filter(Boolean):[];
+    if(h.length)return h;
+
+    // Zpětná kompatibilita: u starší session zkusíme sestavit alespoň textový
+    // přehled z Ghost událostí. Čísla racků u starých záznamů nemusí být známá.
+    return (m?.events||[])
+      .filter(e=>/Ghost\s*•/i.test(String(e?.text||'')) && !/^Skóre\s/i.test(String(e?.text||'')))
+      .map((e,i)=>({
+        rack:i+1,
+        type:'legacy',
+        label:String(e.text||'Ghost událost').replace(/^Ghost\s*•\s*/i,''),
+        errorBall:null,
+        playerDelta:0,
+        ghostDelta:0,
+        scorePlayer:null,
+        scoreGhost:null,
+        ts:e.ts||null
+      }));
+  }
+
+  function ghostRackTimelineHtml(m){
+    const rows=ghostRackHistoryRows(m);
+    if(!rows.length)return '<div class="muted">Průběh racků zatím není k dispozici.</div>';
+
+    return '<div style="display:grid;gap:7px">'+rows.map(r=>{
+      const ball=r.errorBall?' • chyba na kouli '+r.errorBall:'';
+      const delta=r.playerDelta?(' • HRÁČ +'+r.playerDelta):(r.ghostDelta?(' • GHOST +'+r.ghostDelta):'');
+      const score=(r.scorePlayer!=null&&r.scoreGhost!=null)?(' • stav '+r.scorePlayer+':'+r.scoreGhost):'';
+      return '<div style="padding:9px 10px;border:1px solid #303034;border-radius:10px">'+
+        '<strong>Rack '+esc(String(r.rack||'—'))+'</strong> • '+esc(String(r.label||r.type||'—'))+
+        esc(ball+delta+score)+'</div>';
+    }).join('')+'</div>';
+  }
+
+  function ghostFullEventLogHtml(m){
+    const events=Array.isArray(m?.events)?m.events:[];
+    if(!events.length)return '<div class="muted">Žádné události nejsou uložené.</div>';
+    return '<div style="display:grid;gap:6px">'+events.map(e=>
+      '<div class="event"><strong>'+esc(String(e.time||''))+'</strong> — '+esc(String(e.text||''))+'</div>'
+    ).join('')+'</div>';
+  }
+
+  function ghostMatchStatsCard(m){
+    const c=ghostOutcomeCounts(m);
+    const racks=c.clean+c.bih+c.ace+c.failed+c.dry+c.soft+c.breakFoul;
+    const missMap=m?.stats?.[0]?.ghostMissesByBall||{};
+    const missRows=Object.entries(missMap)
+      .map(([ball,count])=>({ball:Number(ball),count:Number(count||0)}))
+      .filter(x=>x.ball>0&&x.count>0)
+      .sort((a,b)=>b.count-a.count||a.ball-b.ball);
+    const mostCommonMissBall=missRows.length?'#'+missRows[0].ball+' • '+missRows[0].count+'×':'—';
+    return `<div class="subpanel" style="margin-top:12px">
+      <div style="font-size:18px;font-weight:950;margin-bottom:10px">${esc(m.playerNames[0])} vs GHOST</div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:8px">
+        ${statBox('HRÁČ BODY',m.scores[0])}
+        ${statBox('GHOST BODY',m.scores[1])}
+        ${ghostBallCountLabel(m)?statBox('POČET KOULÍ',ghostBallCountLabel(m)):''}
+        ${statBox('RACKY',racks)}
+        ${statBox('ČISTĚ +2',c.clean)}
+        ${statBox('BIH +1',c.bih)}
+        ${statBox('ESO +2',c.ace)}
+        ${statBox('NEDOHRÁNO',c.failed)}
+        ${statBox('DRY BREAK',c.dry)}
+        ${statBox('SOFT BREAK',c.soft)}
+        ${statBox('FAUL Z BREAKU',c.breakFoul)}
+        ${(m.discipline==='9-ball'||m.discipline==='10-ball')?statBox('NEJČASTĚJI SKONČIL',mostCommonMissBall):''}
+      </div>
+    </div>
+    <div class="subpanel" style="margin-top:10px">
+      <div style="font-size:16px;font-weight:950;margin-bottom:9px">CHYBY PODLE KOULE</div>
+      ${ghostMissBallSummaryHtml(m)}
+    </div>
+    <div class="subpanel" style="margin-top:10px">
+      <div style="font-size:16px;font-weight:950;margin-bottom:9px">PRŮBĚH GHOST SESSION • RACK PO RACKU</div>
+      ${ghostRackTimelineHtml(m)}
+    </div>
+    <div class="subpanel" style="margin-top:10px">
+      <div style="font-size:16px;font-weight:950;margin-bottom:9px">KOMPLETNÍ LOG UDÁLOSTÍ</div>
+      ${ghostFullEventLogHtml(m)}
+    </div>`;
+  }
+
+  function tournamentWouldFinishWithMatch(m){
+    if(!m?.tournamentLink || !(m.winner===0 || m.winner===1))return false;
+    const t=(data.tournaments||[]).find(x=>x.id===m.tournamentLink.tournamentId);
+    if(!t)return false;
+    const tm=findTournamentMatch(t,m.tournamentLink.tournamentMatchId);
+    if(!tm)return false;
+
+    const winnerId=m.playerIds?.[m.winner]||tm.player1Id;
+    const loserId=m.playerIds?.[1-m.winner]||tm.player2Id;
+
+    // Čisté skupiny končí posledním skupinovým zápasem.
+    if(t.format==='groups'){
+      const groupMatches=(t.groups||[]).flatMap(g=>g.matches||[]);
+      return groupMatches.every(x=>x.id===tm.id || x.status==='done' || !!x.winnerId || !!x.loserId);
+    }
+
+    if(t.format==='swiss' && t.swiss){
+      const current=swissCurrentRound(t);
+      if(!current)return false;
+      const allOthersDone=(current.matches||[]).every(x=>
+        x.id===tm.id || x.status==='done' || !!x.winnerId
+      );
+      return allOthersDone && Number(t.swiss.currentRound||0)>=Number(t.swiss.roundsTotal||0);
+    }
+
+    // SKO / Skupiny → SKO: po této prohře zůstane jediný aktivní hráč.
+    if(t.ko){
+      const k=ensureSKOState(t);
+      const eliminated=new Set(k?.eliminatedIds||[]);
+      if(loserId)eliminated.add(loserId);
+      const active=(k?.participantIds||t.playerIds||[]).filter(id=>!eliminated.has(id));
+      const bronzeRequired=!!k?.thirdPlacePlayoff;
+      const bronze=knockoutThirdMatch(t);
+      const bronzeDone=!bronzeRequired || !!(bronze && (bronze.status==='done'||bronze.winnerId));
+      if(active.length===1 && active[0]===winnerId && bronzeDone)return true;
+      if(tm.bracket==='F' && bronzeDone)return true;
+    }
+
+    // DKO / Skupiny → DKO: Grand Final uzavírá turnaj,
+    // pokud není ještě potřeba dohrát zápas o 3. místo.
+    if(t.dko && tm.bracket==='GF'){
+      const bronzeRequired=!!t.dko.thirdPlacePlayoff;
+      const bronze=dkoThirdPlaceMatch(t);
+      const bronzeDone=!bronzeRequired || !!(bronze && (bronze.status==='done'||bronze.winnerId));
+      return bronzeDone;
+    }
+
+    return false;
+  }
+
+
+  function rebuildSKOStateFromFinishedMatches(t){
+    const k=ensureSKOState(t);
+    if(!k)return false;
+
+    const participants=[...(k.participantIds||t.playerIds||[])];
+    if(participants.length<2)return false;
+
+    const rounds=k.rounds||[];
+    const mainMatches=rounds
+      .flatMap(r=>r.matches||[])
+      .filter(m=>m && m.bracket!=='3P' && m.player1Id && m.player2Id);
+
+    if(!mainMatches.length)return false;
+
+    // Výsledek staršího zápasu případně dopočítáme i ze skóre.
+    mainMatches.forEach(m=>{
+      if((m.winnerId && m.loserId) || m.status!=='done')return;
+      const s1=Number(m.score1);
+      const s2=Number(m.score2);
+      if(Number.isFinite(s1) && Number.isFinite(s2) && s1!==s2){
+        m.winnerId=s1>s2?m.player1Id:m.player2Id;
+        m.loserId=s1>s2?m.player2Id:m.player1Id;
+      }
+    });
+
+    const allMainFinished=mainMatches.every(m=>
+      m.status==='done' && !!m.winnerId && !!m.loserId
+    );
+    if(!allMainFinished)return false;
+
+    const losers=new Set(mainMatches.map(m=>m.loserId).filter(Boolean));
+    const survivors=participants.filter(id=>!losers.has(id));
+
+    // V čistém SKO musí po kompletním pavouku zůstat právě jeden hráč bez prohry.
+    if(survivors.length!==1)return false;
+
+    const championId=survivors[0];
+
+    // Poslední dohraný zápas vítěze je finále i u starších pavouků,
+    // které nemají správně uložený bracket='F'.
+    const championMatches=mainMatches.filter(m=>m.winnerId===championId);
+    const finalMatch=championMatches[championMatches.length-1]||null;
+    if(!finalMatch || !finalMatch.loserId)return false;
+
+    const previousStatus=t.status;
+    const previousChampion=k.championId;
+    const previousRunner=k.runnerUpId;
+
+    k.championId=championId;
+    k.runnerUpId=finalMatch.loserId;
+    k.eliminatedIds=[...new Set([...(k.eliminatedIds||[]),...losers])];
+
+    // Znovu sestavíme vyřazení podle skutečně odehraného pořadí zápasů.
+    // Tím se opraví i výsledková tabulka starších rozehraných turnajů.
+    const seen=new Set();
+    const reconstructed=[];
+    mainMatches.forEach(m=>{
+      const loser=m.loserId;
+      if(!loser || seen.has(loser))return;
+      seen.add(loser);
+      const activeAfter=participants.length-seen.size;
+      reconstructed.push({
+        playerId:loser,
+        place:activeAfter+1,
+        matchId:m.id,
+        at:m.finishedAt||new Date().toISOString()
+      });
+    });
+    k.eliminations=reconstructed;
+
+    if(k.thirdPlacePlayoff){
+      const bronze=knockoutThirdMatch(t);
+      const bronzeDone=!!(bronze && (bronze.status==='done'||bronze.winnerId));
+      if(bronzeDone){
+        k.thirdPlaceWinnerId=bronze.winnerId||k.thirdPlaceWinnerId||null;
+        k.thirdPlaceLoserId=bronze.loserId||k.thirdPlaceLoserId||null;
+        t.status='complete';
+      }else{
+        t.status='active';
+      }
+    }else{
+      t.status='complete';
+    }
+
+    return previousStatus!==t.status ||
+      previousChampion!==k.championId ||
+      previousRunner!==k.runnerUpId;
+  }
+
+  function forceFinalizeTournamentIfResolved(t,lastMatch=null){
+    if(!t)return false;
+
+    let repaired=false;
+    if(t.ko){
+      repaired=rebuildSKOStateFromFinishedMatches(t) || repaired;
+      if(t.status==='complete')return true;
+    }
+
+    if(t.format==='groups' && groupPhaseComplete(t)){
+      t.status='complete';
+      return true;
+    }
+
+    if(t.ko){
+      const k=ensureSKOState(t);
+      if(!k)return false;
+      const active=(k.participantIds||t.playerIds||[]).filter(id=>!(k.eliminatedIds||[]).includes(id));
+
+      if(active.length===1){
+        k.championId=k.championId||active[0];
+        if(!k.runnerUpId && lastMatch?.winnerId===k.championId)k.runnerUpId=lastMatch.loserId||null;
+
+        const bronzeRequired=!!k.thirdPlacePlayoff;
+        const bronze=knockoutThirdMatch(t);
+        const bronzeDone=!bronzeRequired || !!(bronze && (bronze.status==='done'||bronze.winnerId));
+
+        if(bronzeDone){
+          t.status='complete';
+          return true;
+        }
+      }
+
+      const final=knockoutFinalMatch(t);
+      if(final && (final.status==='done'||final.winnerId)){
+        k.championId=k.championId||final.winnerId;
+        k.runnerUpId=k.runnerUpId||final.loserId;
+        const bronzeRequired=!!k.thirdPlacePlayoff;
+        const bronze=knockoutThirdMatch(t);
+        const bronzeDone=!bronzeRequired || !!(bronze && (bronze.status==='done'||bronze.winnerId));
+        if(bronzeDone){
+          t.status='complete';
+          return true;
+        }
+      }
+    }
+
+    if(t.dko && !t.ko){
+      dkoUpdateCompletion(t);
+      if(t.status==='complete')return true;
+    }
+
+    return t.status==='complete';
+  }
+
+function openMatchStatsCard(m,isCurrent=false){
+    if(!m) return;
+    statsCardMatch=m;
+    statsCardIsCurrent=isCurrent;
+
+    const complete=(m.status||'complete')==='complete';
+    const date=new Date(m.startedAt).toLocaleString('cs-CZ',{dateStyle:'medium',timeStyle:'short'});
+    let title='STATISTIKY ZÁPASU';
+    let result='';
+    let body='';
+
+    if(m.solo14){
+      title=m.solo14GhostMode?'STATISTIKY • 14.1 SÓLO VS GHOST':'STATISTIKY • 14.1 SÓLO';
+      result=m.solo14GhostMode
+        ? esc(m.playerNames[0])+' '+m.scores[0]+' : '+m.scores[1]+' GHOST'
+        : esc(m.playerNames[0])+' • '+m.scores[0]+' b';
+      body=`<div class="subpanel" style="margin-top:12px;border-color:rgba(212,175,55,.5);text-align:center">
+          <div class="muted" style="font-size:11px;font-weight:950">NEJVYŠŠÍ NÁBĚH SESSION</div>
+          <div style="font-size:38px;font-weight:950;color:var(--gold2);margin-top:4px">${esc(String(statVal(m,0,'highRun14')))}</div>
+        </div>`+playerStatsCard14(m,0)+(m.solo14GhostMode
+        ? `<div class="subpanel" style="margin-top:10px">
+            <strong>GHOST • ${esc(solo14GhostDifficultyLabel(m,true))}</strong>
+            <div class="muted" style="margin-top:5px">
+              Chyby hráče (MISS / faul): ${esc(String(m.solo14GhostErrors||0))}
+            </div>
+          </div>`
+        : '')+fourteenInningsTimelineHtml(m);
+    }else if(m.ghostMode){
+      title='GHOST STATISTIKY • '+m.discipline.toUpperCase();
+      result=esc(m.playerNames[0])+' '+m.scores[0]+' : '+m.scores[1]+' GHOST';
+      body=ghostMatchStatsCard(m);
+    }else if(m.winnerTableMode && m.winnerTable){
+      title='STATISTIKY • '+m.discipline.toUpperCase()+' • VÍTĚZ NA STOLE';
+      result=winnerTableResultHtml(m);
+      body=winnerTableStatsCard(m);
+    }else if(m.discipline==='14.1'){
+      title='STATISTIKY • 14.1 NEKONEČNÁ';
+      result=esc(m.playerNames[0])+' '+m.scores[0]+' : '+m.scores[1]+' '+esc(m.playerNames[1]);
+      body=playerStatsCard14(m,0)+playerStatsCard14(m,1)+fourteenInningsTimelineHtml(m);
+    }else{
+      title='STATISTIKY • '+m.discipline.toUpperCase()+(matchIsDoubles(m)?' • DVOJICE':'')+(matchHasHandicap(m)?' • HANDICAP':'');
+      result=esc(savedMatchSideDisplayName(m,0))+' '+m.scores[0]+' : '+m.scores[1]+' '+esc(savedMatchSideDisplayName(m,1));
+      body=matchEvidenceMode(m)==='basic'
+        ? basicMatchSummaryCard(m)
+        : matchAnalyticsPanel(m)+playerStatsCardNormal(m,0)+playerStatsCardNormal(m,1);
+    }
+
+    const matchDescriptionBlock=m.streamMatchTitle
+      ? `<div class="subpanel" style="margin-bottom:12px;border-color:rgba(212,175,55,.45)"><div style="font-size:11px;font-weight:950;color:var(--muted);letter-spacing:.5px">NÁZEV / POPIS ZÁPASU</div><div style="font-size:16px;font-weight:950;color:var(--gold2);margin-top:5px">${esc(m.streamMatchTitle)}</div></div>`
+      : '';
+    body=matchDescriptionBlock+body;
+
+    let winnerBanner='';
+    if(complete && !m.solo14 && !m.ghostMode && !m.winnerTableMode && (m.winner===0 || m.winner===1)){
+      winnerBanner=`<div style="
+        margin-bottom:14px;
+        padding:12px 14px;
+        border:1px solid var(--gold);
+        border-radius:12px;
+        background:rgba(212,175,55,.09);
+        text-align:center;
+        font-size:20px;
+        font-weight:950;
+        color:var(--gold2)
+      ">🏆 VÍTĚZ: ${esc(savedMatchSideDisplayName(m,m.winner))} • ${esc(String(m.scores[0]))}:${esc(String(m.scores[1]))}</div>`;
+    }
+
+    const matchTypeInfo=(matchIsDoubles(m)||matchHasHandicap(m))
+      ? `<div class="subpanel" style="margin-bottom:10px;padding:10px 12px;text-align:center;border-color:rgba(212,175,55,.45)">
+          ${matchFormatBadgesHtml(m)}
+          ${matchIsDoubles(m)
+            ? `<div class="muted" style="margin-top:7px;font-size:12px">
+                ${esc(savedMatchSideDisplayName(m,0))}
+                vs
+                ${esc(savedMatchSideDisplayName(m,1))}
+              </div>`
+            : ''}
+        </div>`
+      : '';
+    const handicapInfo=handicapInfoHtml(m);
+    const evidenceInfo=`<div class="subpanel" style="margin-bottom:10px;padding:9px 12px">
+      <strong>${matchEvidenceMode(m)==='full'?'ROZŠÍŘENÉ STATISTIKY':'ZÁKLADNÍ SKÓRE'}</strong>
+      <div class="muted" style="margin-top:4px;font-size:12px">${matchEvidenceMode(m)==='full'?'Zápas byl veden přes rozšířené počítadlo a jeho akční statistiky se započítávají do detailních statistik hráčů.':'Zápas byl veden pouze jako základní skóre; používá se pro výsledky, ELO a rackovou bilanci, ne pro detailní akční procenta.'}</div>
+    </div>`;
+    body=winnerBanner+matchTypeInfo+handicapInfo+evidenceInfo+`<div class="muted" style="font-weight:800">
+      ${esc(date)} • délka ${esc(durationText(m))} • ${complete?'dokončeno':'nedohráno'}
+    </div>
+    <div class="subpanel" style="margin-top:10px;padding:10px 12px">
+      <div class="muted" style="font-size:11px;font-weight:900;letter-spacing:.06em">ID ZÁPASU / FIREBASE</div>
+      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:5px">
+        <code style="font-size:12px;word-break:break-all;flex:1;min-width:180px">${esc(String(m.id||'—'))}</code>
+        <button class="btn ghost" style="padding:8px 10px" onclick="copyCurrentStatsMatchId()">KOPÍROVAT ID</button>
+      </div>
+    </div>`+body;
+
+    $('matchStatsTitle').textContent=title;
+    $('matchStatsResult').innerHTML=result;
+    $('matchStatsBody').innerHTML=body;
+    $('matchStatsUndo').classList.toggle('hidden',!isCurrent);
+    const endsTournament=isCurrent && tournamentWouldFinishWithMatch(m);
+    $('matchStatsClose').textContent=isCurrent
+      ? (endsTournament
+          ? 'UKONČIT ZÁPAS A TURNAJ'
+          : (m.tournamentLink?'ULOŽIT VÝSLEDEK A ZPĚT DO TURNAJE':'ULOŽIT A ZAVŘÍT'))
+      : 'ZAVŘÍT';
+    $('matchStatsClose').dataset.endsTournament=endsTournament?'1':'0';
+    $('winnerModal').classList.remove('show');
+    $('matchStatsModal').classList.add('show');
+  }
+
+  window.copyCurrentStatsMatchId=async function(){
+    const id=String(statsCardMatch?.id||'').trim();
+    if(!id){ toast('ID zápasu není k dispozici.'); return; }
+    try{
+      if(navigator.clipboard?.writeText){
+        await navigator.clipboard.writeText(id);
+      }else{
+        const ta=document.createElement('textarea');
+        ta.value=id; ta.style.position='fixed'; ta.style.opacity='0';
+        document.body.appendChild(ta); ta.select();
+        document.execCommand('copy'); ta.remove();
+      }
+      toast('ID zápasu zkopírováno.');
+    }catch(e){
+      try{ window.prompt('Zkopíruj ID zápasu:',id); }catch(_){}
+    }
+  };
+
+  window.showSavedMatchStats=function(id){
+    const m=data.matches.find(x=>x.id===id);
+    if(!m){ toast('Zápas nebyl nalezen.'); return; }
+    openMatchStatsCard(m,false);
+  };
+
+  $('matchStatsShare').onclick=()=>{
+    if(statsCardMatch) shareMatchStats(statsCardMatch);
+  };
+
+  $('matchStatsPdf').onclick=()=>{
+    if(statsCardMatch) generateAndShareMatchPdf(statsCardMatch);
+  };
+
+  $('matchStatsUndo').onclick=()=>{
+    if(!statsCardIsCurrent || !match) return;
+    match.endedAt=null;
+    match.status=null;
+    match.winner=null;
+    $('matchStatsModal').classList.remove('show');
+    statsCardMatch=null;
+    statsCardIsCurrent=false;
+    undo();
+    autosaveCurrent();
+    startLiveHeartbeat();
+  };
+
+  $('matchStatsClose').onclick=async()=>{
+    $('matchStatsModal').classList.remove('show');
+
+    if(statsCardIsCurrent && match){
+      const wasTournament=!!match.tournamentLink;
+      const tournamentId=match.tournamentLink?.tournamentId||null;
+      const tournamentMatchId=match.tournamentLink?.tournamentMatchId||null;
+      if(tournamentId) forcedTournamentReturnId=tournamentId;
+
+      const ok=await persistFinishedMatch();
+      if(!ok){
+        $('matchStatsModal').classList.add('show');
+        return;
+      }
+
+      match=null;
+      saveDeviceActiveMatch(null);
+      statsCardMatch=null;
+      statsCardIsCurrent=false;
+
+      renderHistory();
+      renderStats();
+      renderPlayers();
+
+      if(wasTournament){
+        const targetTournamentId=postMatchTournamentId||tournamentId;
+
+        // Výsledek turnaje už persistFinishedMatch zapsal do lokálního modelu.
+        // Návrat do turnaje proto NESMÍ čekat na další cloudové načítání.
+        selectedTournamentId=targetTournamentId;
+        forcedTournamentReturnId=targetTournamentId;
+        updateCurrentTournamentShortcut();
+
+        const localTournament=(data.tournaments||[]).find(x=>x.id===targetTournamentId);
+        if(localTournament){
+          const linkedTm=tournamentMatchId
+            ? findTournamentMatch(localTournament,tournamentMatchId)
+            : null;
+          forceFinalizeTournamentIfResolved(localTournament,linkedTm);
+        }
+
+        renderTournament();
+
+        if(localTournament?.status==='complete'){
+          renderResultsTournaments();
+          tournamentDetailReturnScreen='results-tournaments';
+          preserveTournamentDetailReturn=true;
+          renderTournamentDetail();
+          showScreen('tournament-detail');
+          toast('Turnaj dokončen • výsledky byly vygenerovány.');
+        }else{
+          renderTournamentDetail();
+          showScreen('tournament-detail');
+          toast('Výsledek uložen. Pokračuj v turnaji.');
+        }
+
+        // Cloud pouze dosynchronizujeme na pozadí. Uživatele to nesmí držet
+        // na obrazovce právě skončeného zápasu.
+        Promise.allSettled([loadSecureMatches(),loadSecureTournaments()])
+          .then(async()=>{
+            try{
+              reconcileTournamentResultsFromMatches(targetTournamentId);
+              const refreshedTournament=(data.tournaments||[]).find(x=>x.id===targetTournamentId);
+              if(refreshedTournament){
+                const linkedTm=tournamentMatchId
+                  ? findTournamentMatch(refreshedTournament,tournamentMatchId)
+                  : null;
+                const repaired=forceFinalizeTournamentIfResolved(refreshedTournament,linkedTm);
+                if(repaired || refreshedTournament.status==='complete'){
+                  try{await saveSecureTournament(refreshedTournament);}catch(e){
+                    console.error('Tournament background resave:',e);
+                  }
+                }
+              }
+
+              // Pokud je uživatel stále v tomto turnaji, jen překreslíme aktuální stav.
+              if(selectedTournamentId===targetTournamentId){
+                renderTournament();
+                renderResultsTournaments();
+                renderTournamentDetail();
+              }
+            }catch(e){
+              console.error('Tournament background refresh:',e);
+            }
+          })
+          .catch(e=>console.error('Tournament background sync:',e));
+      }else{
+        showScreen('history');
+      }
+    }else{
+      statsCardMatch=null;
+      statsCardIsCurrent=false;
+    }
+  };
+
+  function pdfSafeName(value){
+    return String(value||'report')
+      .normalize('NFD').replace(/[\u0300-\u036f]/g,'')
+      .replace(/[^a-zA-Z0-9_-]+/g,'_')
+      .replace(/^_+|_+$/g,'')
+      .slice(0,80) || 'report';
+  }
+
+  function pdfReportStat(label,value){
+    return `<div style="
+      border:1px solid #d4af37;
+      border-radius:10px;
+      padding:10px 8px;
+      background:#171719;
+      text-align:center;
+      min-height:66px;
+    ">
+      <div style="font-size:10px;color:#bcbcbc;font-weight:800;letter-spacing:.4px">${esc(label)}</div>
+      <div style="font-size:22px;color:#f1d67a;font-weight:950;margin-top:5px">${esc(String(value))}</div>
+    </div>`;
+  }
+
+  function pdfPlayerBlock14(m,i){
+    const penalty=statVal(m,i,'foulPenaltyPoints14');
+    return `<div style="border:1px solid #3e3e42;border-radius:14px;padding:14px;margin-top:12px;background:#101012">
+      <div style="font-size:20px;font-weight:950;color:#fff;margin-bottom:10px">${esc(m.playerNames[i])}</div>
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px">
+        ${pdfReportStat('SKÓRE',m.scores[i])}
+        ${pdfReportStat('HIGH RUN',statVal(m,i,'highRun14'))}
+        ${pdfReportStat('NÁBĚHY',statVal(m,i,'innings14'))}
+        ${pdfReportStat('PRŮMĚR / NÁBĚH',averagePerInning14Text(m,i))}
+        ${pdfReportStat('MISS',matchOnlyMissVal(m,i))}
+        ${pdfReportStat('SAFE',statVal(m,i,'safeties'))}
+        ${pdfReportStat('FAULY',statVal(m,i,'fouls'))}
+        ${pdfReportStat('TRESTNÉ BODY',penalty?'−'+penalty:'0')}
+        ${pdfReportStat('3× FAUL',statVal(m,i,'threeFoulPenalties14'))}
+      </div>
+    </div>`;
+  }
+
+  function pdfPlayerBlockNormal(m,i){
+    const br=breakStats(m,i);
+    return `<div style="border:1px solid #3e3e42;border-radius:14px;padding:14px;margin-top:12px;background:#101012">
+      <div style="font-size:20px;font-weight:950;color:#fff;margin-bottom:10px">${esc(m.playerNames[i])}</div>
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px">
+        ${pdfReportStat('SKÓRE',m.scores[i])}
+        ${pdfReportStat('BREAKY',br.tracked?br.total:'—')}
+        ${pdfReportStat('DRY BREAK',br.tracked?br.dry:'—')}
+        ${pdfReportStat('SOFT BREAK',br.tracked?br.soft:'—')}
+        ${pdfReportStat('ÚSPĚŠNOST BREAKU',br.pct===null?'—':br.pct+' %')}
+        ${pdfReportStat('KOULÍ Z BREAKU',br.pottedTracked?br.potted:'—')}
+        ${pdfReportStat('Ø KOULÍ / BREAK',br.pottedAvg===null?'—':br.pottedAvg.toLocaleString('cs-CZ',{minimumFractionDigits:1,maximumFractionDigits:2}))}
+        ${pdfReportStat('ESO Z BREAKU',statVal(m,i,'aces'))}
+        ${pdfReportStat('B&R',statVal(m,i,'breakAndRun'))}
+        ${pdfReportStat('RUNOUT',statVal(m,i,'runouts'))}
+        ${pdfReportStat('PUSH OUT',statVal(m,i,'pushOuts'))}
+        ${pdfReportStat('PUSH OUT VRÁCEN',statVal(m,i,'pushOutsReturned'))}
+        ${pdfReportStat('2-WAY SHOT',statVal(m,i,'twoWaySuccessful')+'/'+statVal(m,i,'twoWayAttempts'))}
+        ${pdfReportStat('MISS KOULE',mostMissedBall(m.stats?.[i]))}
+        ${pdfReportStat('BREAK KOULE',mostBreakBall(m.stats?.[i]))}
+        ${pdfReportStat('SAFE',statVal(m,i,'safeties'))}
+        ${pdfReportStat('ÚNIKY',statVal(m,i,'successfulSafetyEscapes')+'/'+statVal(m,i,'safetyEscapes'))}
+        ${pdfReportStat('ÚNIKY %',safetyEscapePct(m.stats?.[i]))}
+        ${pdfReportStat('RESAFE',statVal(m,i,'resafes'))}
+        ${pdfReportStat('NECHTĚNÁ SAFE',statVal(m,i,'accidentalSafeties'))}
+        ${pdfReportStat('MISS',matchOnlyMissVal(m,i))}
+        ${pdfReportStat('MISS • NAHRÁVKA',statVal(m,i,'matchOnlyMissBadPosition'))}
+        ${pdfReportStat('MISS • KOULE',statVal(m,i,'matchOnlyMissPot'))}
+      </div>
+    </div>`;
+  }
+
+  function pdfWinnerTableBlock(m){
+    const wt=m.winnerTable;
+    if(!wt) return '';
+    const order=[0,1,2].sort((a,b)=>(wt.wins[b]||0)-(wt.wins[a]||0));
+    return `<div style="border:1px solid #3e3e42;border-radius:14px;padding:14px;margin-top:12px;background:#101012">
+      <div style="font-size:20px;font-weight:950;color:#fff;margin-bottom:10px">VÍTĚZ NA STOLE</div>
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px">
+        ${order.map(i=>pdfReportStat(wt.players[i].displayName, (wt.wins[i]||0)+' výher')).join('')}
+      </div>
+      <div style="margin-top:12px">${winnerTableProgressHtml(m)}</div>
+      <div style="margin-top:12px;padding:10px;border-radius:10px;background:#1b1710;color:#e7e0c8;font-size:12px;line-height:1.5">
+        Vítěz racku zůstává na stole. Poražený jde čekat a staví nový trojúhelník.
+        Čekající hráč jde na stůl a rozstřeluje.
+      </div>
+    </div>`;
+  }
+
+  function pdfGhostBlock(m){
+    const c=ghostOutcomeCounts(m);
+    const racks=c.clean+c.bih+c.ace+c.failed+c.dry+c.soft+c.breakFoul;
+    const missMap=m?.stats?.[0]?.ghostMissesByBall||{};
+    const missRows=Object.entries(missMap).filter(([,v])=>Number(v)>0).sort((a,b)=>Number(a[0])-Number(b[0]));
+    const history=ghostRackHistoryRows(m);
+
+    return `<div style="border:1px solid #3e3e42;border-radius:14px;padding:14px;margin-top:12px;background:#101012">
+      <div style="font-size:20px;font-weight:950;color:#fff;margin-bottom:10px">${esc(m.playerNames[0])} vs GHOST</div>
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px">
+        ${pdfReportStat('HRÁČ BODY',m.scores[0])}
+        ${pdfReportStat('GHOST BODY',m.scores[1])}
+        ${ghostBallCountLabel(m)?pdfReportStat('POČET KOULÍ',ghostBallCountLabel(m)):''}
+        ${pdfReportStat('RACKY',racks)}
+        ${pdfReportStat('ČISTĚ +2',c.clean)}
+        ${pdfReportStat('BIH +1',c.bih)}
+        ${pdfReportStat('ESO +2',c.ace)}
+        ${pdfReportStat('NEDOHRÁNO',c.failed)}
+        ${pdfReportStat('DRY BREAK',c.dry)}
+        ${pdfReportStat('SOFT BREAK',c.soft)}
+        ${pdfReportStat('FAUL Z BREAKU',c.breakFoul)}
+      </div>
+      <div style="margin-top:12px;padding:10px;border-radius:10px;background:#1b1710;color:#e7e0c8;font-size:12px;line-height:1.5">
+        <strong style="color:#f1d67a">Chyby podle koule:</strong>
+        ${missRows.length?missRows.map(([b,n])=>'#'+b+' '+n+'×').join(' • '):'žádná evidovaná chyba'}
+      </div>
+      <div style="margin-top:12px;font-size:12px;line-height:1.55">
+        <strong style="color:#f1d67a">Průběh racků:</strong><br>
+        ${history.length?history.map(r=>{
+          const ball=r.errorBall?' • chyba na '+r.errorBall:'';
+          const delta=r.playerDelta?(' • hráč +'+r.playerDelta):(r.ghostDelta?(' • Ghost +'+r.ghostDelta):'');
+          const score=(r.scorePlayer!=null&&r.scoreGhost!=null)?(' • stav '+r.scorePlayer+':'+r.scoreGhost):'';
+          return 'Rack '+esc(String(r.rack||'—'))+' • '+esc(String(r.label||r.type||'—'))+esc(ball+delta+score);
+        }).join('<br>'):'Průběh racků není uložen.'}
+      </div>
+    </div>`;
+  }
+
+  function buildPdfReportHtml(m){
+    const logo=(document.querySelector('.brand-logo')||{}).src||'';
+    const date=new Date(m.startedAt).toLocaleString('cs-CZ',{dateStyle:'long',timeStyle:'short'});
+    const status=(m.status||'complete')==='complete'?'DOKONČENO':'NEDOHRÁNO';
+
+    let title='';
+    let result='';
+    let blocks='';
+
+    if(m.solo14){
+      title=m.solo14GhostMode?'14.1 NEKONEČNÁ - SÓLO VS GHOST':'14.1 NEKONEČNÁ - SÓLO TRÉNINK';
+      result=m.solo14GhostMode
+        ? `${esc(m.playerNames[0])} ${esc(String(m.scores[0]))} : ${esc(String(m.scores[1]))} GHOST • ${esc(solo14GhostDifficultyLabel(m,true))}`
+        : `${esc(m.playerNames[0])} • ${esc(String(m.scores[0]))} bodů`;
+      blocks=pdfPlayerBlock14(m,0)+(m.solo14GhostMode
+        ? `<div style="border:1px solid #3e3e42;border-radius:14px;padding:12px;margin-top:10px;background:#101012"><strong>GHOST • ${esc(solo14GhostDifficultyLabel(m,true))}</strong><div style="margin-top:5px;color:#a7a7ad">Chyby hráče (MISS / faul): ${esc(String(m.solo14GhostErrors||0))}</div></div>`
+        : '');
+    }else if(m.winnerTableMode){
+      title=(m.discipline||'').toUpperCase()+' - VÍTĚZ NA STOLE';
+      const order=[0,1,2].sort((a,b)=>(m.winnerTable.wins[b]||0)-(m.winnerTable.wins[a]||0));
+      result=order.map(i=>`${esc(m.winnerTable.players[i].displayName)} ${esc(String(m.winnerTable.wins[i]||0))}`).join(' • ');
+      blocks=pdfWinnerTableBlock(m);
+    }else if(m.ghostMode){
+      title=(m.discipline||'').toUpperCase()+' - GHOST';
+      result=`${esc(m.playerNames[0])} ${esc(String(m.scores[0]))} : ${esc(String(m.scores[1]))} GHOST`;
+      blocks=pdfGhostBlock(m);
+    }else if(m.discipline==='14.1'){
+      title='14.1 NEKONEČNÁ';
+      result=`${esc(m.playerNames[0])} ${esc(String(m.scores[0]))} : ${esc(String(m.scores[1]))} ${esc(m.playerNames[1])}`;
+      blocks=pdfPlayerBlock14(m,0)+pdfPlayerBlock14(m,1);
+    }else{
+      title=(m.discipline||'').toUpperCase();
+      result=`${esc(m.playerNames[0])} ${esc(String(m.scores[0]))} : ${esc(String(m.scores[1]))} ${esc(m.playerNames[1])}`;
+      blocks=pdfPlayerBlockNormal(m,0)+pdfPlayerBlockNormal(m,1);
+    }
+
+    const matchTitle=m.streamMatchTitle ? `<div style="font-size:14px;color:#f1d67a;font-weight:850;margin-top:3px">${esc(m.streamMatchTitle)}</div>` : '';
+
+    return `<div id="pdfReportRoot" style="
+      width:794px;
+      min-height:1123px;
+      background:#09090b;
+      color:#fff;
+      padding:36px 40px 32px;
+      font-family:Arial,Helvetica,sans-serif;
+      box-sizing:border-box;
+    ">
+      <div style="display:flex;align-items:center;gap:18px;border-bottom:2px solid #d4af37;padding-bottom:18px">
+        ${logo?`<img src="${logo}" style="width:78px;height:78px;object-fit:contain">`:''}
+        <div style="flex:1">
+          <div style="font-size:12px;color:#d4af37;font-weight:900;letter-spacing:1.5px">BC RYBÁRNA SCOREBOARD</div>
+          <div style="font-size:28px;font-weight:950;margin-top:4px">STATISTIKY ZÁPASU</div>
+          ${matchTitle}
+        </div>
+        <div style="text-align:right">
+          <div style="font-size:11px;color:#bcbcbc;font-weight:800">${status}</div>
+          <div style="font-size:11px;color:#bcbcbc;margin-top:4px">${esc(date)}</div>
+        </div>
+      </div>
+
+      <div style="margin-top:22px;text-align:center">
+        <div style="font-size:17px;color:#d4af37;font-weight:950;letter-spacing:.5px">${esc(title)}</div>
+        <div style="font-size:31px;font-weight:950;margin-top:8px">${result}</div>
+        <div style="font-size:12px;color:#bcbcbc;margin-top:8px">
+          Délka zápasu: ${esc(durationText(m))}
+          ${m.discipline==='14.1' ? ` • Cíl: ${esc(String(m.target||''))} bodů` :
+             m.winnerTableMode ? ` • 3 hráči • nekonečná session` :
+             m.ghostMode ? ` • Hraje se do ${esc(String(m.target||''))} bodů` :
+             ` • Race to ${esc(String(m.target||''))}`}
+        </div>
+      </div>
+
+      <div style="margin-top:18px">
+        ${blocks}
+      </div>
+
+      <div style="margin-top:22px;border-top:1px solid #38383c;padding-top:12px;display:flex;justify-content:space-between;gap:20px;font-size:10px;color:#8f8f93">
+        <div>Vygenerováno z BC Rybárna Scoreboard</div>
+        <div>${esc(new Date().toLocaleString('cs-CZ'))}</div>
+      </div>
+    </div>`;
+  }
+
+  async function createMatchPdfBlob(m){
+    if(!window.html2canvas || !window.jspdf || !window.jspdf.jsPDF){
+      throw new Error('PDF knihovny se nenačetly. Zkontroluj internet a zkus to znovu.');
+    }
+
+    const host=$('pdfReportHost');
+    host.innerHTML=buildPdfReportHtml(m);
+    const root=host.querySelector('#pdfReportRoot');
+
+    // Give embedded logo/layout a moment to settle.
+    await new Promise(r=>setTimeout(r,120));
+
+    const canvas=await html2canvas(root,{
+      backgroundColor:'#09090b',
+      scale:2,
+      useCORS:true,
+      logging:false
+    });
+
+    const {jsPDF}=window.jspdf;
+    const pdf=new jsPDF({orientation:'portrait',unit:'mm',format:'a4',compress:true});
+    const pageW=210;
+    const pageH=297;
+    const margin=7;
+    const usableW=pageW-margin*2;
+    const usableH=pageH-margin*2;
+
+    // Slice tall canvas into A4-sized raster pages.
+    const slicePx=Math.floor(canvas.width*(usableH/usableW));
+    let y=0;
+    let page=0;
+
+    while(y<canvas.height){
+      const h=Math.min(slicePx,canvas.height-y);
+      const slice=document.createElement('canvas');
+      slice.width=canvas.width;
+      slice.height=h;
+      const ctx=slice.getContext('2d');
+      ctx.drawImage(canvas,0,y,canvas.width,h,0,0,canvas.width,h);
+
+      const img=slice.toDataURL('image/jpeg',0.92);
+      const imgH=usableW*(h/canvas.width);
+
+      if(page>0) pdf.addPage();
+      pdf.addImage(img,'JPEG',margin,margin,usableW,imgH,undefined,'FAST');
+
+      y+=h;
+      page++;
+    }
+
+    host.innerHTML='';
+    return pdf.output('blob');
+  }
+
+  async function generateAndShareMatchPdf(m){
+    if(!m) return;
+    const btn=$('matchStatsPdf');
+    const oldLabel=btn?btn.textContent:'';
+    if(btn){btn.disabled=true;btn.textContent='GENERUJI PDF…';}
+
+    try{
+      const blob=await createMatchPdfBlob(m);
+      const discipline=pdfSafeName(m.discipline||'zapas');
+      const p1=pdfSafeName(m.playerNames?.[0]||'hrac');
+      const date=new Date(m.startedAt||Date.now()).toISOString().slice(0,10);
+      const filename=`BC_Rybarna_${date}_${discipline}_${p1}.pdf`;
+      const file=new File([blob],filename,{type:'application/pdf'});
+
+      if(navigator.share && navigator.canShare && navigator.canShare({files:[file]})){
+        await navigator.share({
+          title:'BC Rybárna - statistiky zápasu',
+          text:'PDF report statistik zápasu',
+          files:[file]
+        });
+      }else{
+        const url=URL.createObjectURL(blob);
+        const a=document.createElement('a');
+        a.href=url;
+        a.download=filename;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        setTimeout(()=>URL.revokeObjectURL(url),5000);
+        toast('PDF report stažen.');
+      }
+    }catch(e){
+      if(e && e.name==='AbortError') return;
+      console.warn('PDF report:',e);
+      toast(String(e && e.message ? e.message : 'PDF se nepodařilo vytvořit.'));
+    }finally{
+      if(btn){btn.disabled=false;btn.textContent=oldLabel||'PDF REPORT';}
+    }
+  }
+
+  async function createStatisticsSectionPdfBlob(kind){
+    if(!window.html2canvas || !window.jspdf || !window.jspdf.jsPDF){
+      throw new Error('PDF knihovny se nenačetly. Zkontroluj internet a zkus to znovu.');
+    }
+
+    const host=$('pdfReportHost');
+    const isClub=kind==='stats';
+    const source=isClub?$('screen-stats'):$('myStatsView');
+    if(!source) throw new Error('Statistiky nejsou dostupné.');
+
+    const content=document.createElement('div');
+    if(isClub){
+      const main=$('statsView');
+      const h2h=$('h2hView');
+      const tournament=$('tournamentStatsPanel');
+      if(main) content.appendChild(main.cloneNode(true));
+
+      const h2h1=$('h2hPlayer1'),h2h2=$('h2hPlayer2'),h2hd=$('h2hDiscipline');
+      if(h2h && h2h.textContent.trim()){
+        const h=document.createElement('div');
+        h.innerHTML='<div style="margin-top:22px;border-top:1px solid #38383c;padding-top:16px">'+
+          '<div style="font-size:18px;font-weight:950;color:#f1d67a">VZÁJEMNÉ ZÁPASY</div>'+
+          '<div style="font-size:12px;color:#bcbcbc;margin-top:4px">'+
+          esc(h2h1?.selectedOptions?.[0]?.textContent||'')+' × '+esc(h2h2?.selectedOptions?.[0]?.textContent||'')+
+          ' • '+esc(h2hd?.selectedOptions?.[0]?.textContent||'')+'</div></div>';
+        content.appendChild(h);
+        content.appendChild(h2h.cloneNode(true));
+      }
+      if(tournament){
+        const tc=tournament.cloneNode(true);
+        tc.querySelectorAll('button,input,select').forEach(el=>el.remove());
+        content.appendChild(tc);
+      }
+    }else{
+      content.appendChild(source.cloneNode(true));
+    }
+
+    content.querySelectorAll('button,input,select').forEach(el=>el.remove());
+    content.querySelectorAll('[onclick]').forEach(el=>el.removeAttribute('onclick'));
+
+    const player=currentUserPlayerId?data.players?.[currentUserPlayerId]:null;
+    const discipline=typeof myStatsDiscipline!=='undefined'?myStatsDiscipline:'all';
+    const reportTitle=isClub?'STATISTICKÝ PŘEHLED HRÁČŮ':'MOJE STATISTIKY';
+    const reportSub=isClub
+      ? 'Souhrnný přehled hráčů, vzájemných zápasů a turnajových statistik'
+      : (playerDisplayName(player||{})||'Hráč')+' • '+(discipline==='all'?'CELKEM':String(discipline).toUpperCase());
+
+    const root=document.createElement('div');
+    root.id='sectionPdfReportRoot';
+    root.style.cssText='width:'+(isClub?'1380px':'794px')+';background:#09090b;color:#f4f4f4;padding:30px;font-family:Inter,Segoe UI,Arial,sans-serif;box-sizing:border-box;';
+    root.innerHTML=
+      '<div style="display:flex;justify-content:space-between;align-items:flex-end;gap:20px;border-bottom:2px solid #d4af37;padding-bottom:15px;margin-bottom:20px">'+
+        '<div><div style="font-size:12px;color:#d4af37;font-weight:950;letter-spacing:1.1px">POOLČÍTADLO • BC RYBÁRNA</div>'+
+        '<div style="font-size:30px;font-weight:950;margin-top:5px">'+esc(reportTitle)+'</div>'+
+        '<div style="font-size:13px;color:#bcbcbc;margin-top:5px">'+esc(reportSub)+'</div></div>'+
+        '<div style="font-size:11px;color:#8f8f93;text-align:right">Vygenerováno<br>'+esc(new Date().toLocaleString('cs-CZ'))+'</div>'+
+      '</div>';
+    root.appendChild(content);
+
+    root.querySelectorAll('.card,.subpanel').forEach(el=>{
+      el.style.background='#101012';
+      el.style.borderColor='#333338';
+      el.style.boxShadow='none';
+    });
+    root.querySelectorAll('.stats-table').forEach(table=>{
+      table.style.fontSize=isClub?'10px':'12px';
+      table.style.width='100%';
+    });
+    root.querySelectorAll('.stats-table th,.stats-table td').forEach(cell=>{
+      cell.style.padding=isClub?'6px 4px':'8px 6px';
+    });
+
+    host.style.width=isClub?'1380px':'794px';
+    host.innerHTML='';
+    host.appendChild(root);
+    await new Promise(resolve=>setTimeout(resolve,120));
+
+    const canvas=await html2canvas(root,{backgroundColor:'#09090b',scale:isClub?1.5:2,useCORS:true,logging:false});
+    const {jsPDF}=window.jspdf;
+    const orientation=isClub?'landscape':'portrait';
+    const pdf=new jsPDF({orientation,unit:'mm',format:'a4',compress:true});
+    const pageW=orientation==='landscape'?297:210;
+    const pageH=orientation==='landscape'?210:297;
+    const margin=7,usableW=pageW-margin*2,usableH=pageH-margin*2;
+    const slicePx=Math.floor(canvas.width*(usableH/usableW));
+    let y=0,page=0;
+    while(y<canvas.height){
+      const h=Math.min(slicePx,canvas.height-y);
+      const slice=document.createElement('canvas');
+      slice.width=canvas.width;slice.height=h;
+      slice.getContext('2d').drawImage(canvas,0,y,canvas.width,h,0,0,canvas.width,h);
+      const img=slice.toDataURL('image/jpeg',0.92);
+      const imgH=usableW*(h/canvas.width);
+      if(page>0)pdf.addPage();
+      pdf.addImage(img,'JPEG',margin,margin,usableW,imgH,undefined,'FAST');
+      y+=h;page++;
+    }
+    host.innerHTML='';
+    host.style.width='794px';
+    return pdf.output('blob');
+  }
+
+  async function generateStatisticsSectionPdf(kind){
+    const isClub=kind==='stats';
+    const btn=$(isClub?'statsPdfBtn':'myStatsPdfBtn');
+    const oldLabel=btn?.textContent||'PDF REPORT';
+    if(btn){btn.disabled=true;btn.textContent='GENERUJI PDF…';}
+    try{
+      if(!isClub && (!cloudAuthenticated || !currentUserPlayerId)){
+        toast('Pro vytvoření osobního PDF reportu musí být účet propojený s hráčským profilem.');
+        return;
+      }
+      const blob=await createStatisticsSectionPdfBlob(kind);
+      const player=currentUserPlayerId?data.players?.[currentUserPlayerId]:null;
+      const date=new Date().toISOString().slice(0,10);
+      const filename=isClub
+        ? 'Poolcitadlo_statistiky_'+date+'.pdf'
+        : 'Poolcitadlo_moje_statistiky_'+pdfSafeName(playerDisplayName(player||{})||'hrac')+'_'+date+'.pdf';
+      const file=new File([blob],filename,{type:'application/pdf'});
+      if(navigator.share && navigator.canShare && navigator.canShare({files:[file]})){
+        await navigator.share({title:isClub?'Poolčítadlo - statistiky':'Poolčítadlo - moje statistiky',text:'PDF report statistik',files:[file]});
+      }else{
+        const url=URL.createObjectURL(blob),a=document.createElement('a');
+        a.href=url;a.download=filename;document.body.appendChild(a);a.click();a.remove();
+        setTimeout(()=>URL.revokeObjectURL(url),5000);
+        toast('PDF report stažen.');
+      }
+    }catch(e){
+      if(e?.name==='AbortError')return;
+      console.warn('Statistics PDF report:',e);
+      toast(String(e?.message||'PDF se nepodařilo vytvořit.'));
+    }finally{
+      if(btn){btn.disabled=false;btn.textContent=oldLabel;}
+    }
+  }
+
+  $('statsPdfBtn')?.addEventListener('click',()=>generateStatisticsSectionPdf('stats'));
+  $('myStatsPdfBtn')?.addEventListener('click',()=>generateStatisticsSectionPdf('my-stats'));
+
+  window.generateSavedMatchPdf=function(id){
+    const m=data.matches.find(x=>x.id===id);
+    if(!m){toast('Zápas nebyl nalezen.');return;}
+    generateAndShareMatchPdf(m);
+  };
+
+  function statVal(m,i,key){
+    try{ return Number((m.stats && m.stats[i] && m.stats[i][key]) || 0); }
+    catch(e){ return 0; }
+  }
+
+  function breakStats(m,i){
+    const s=m?.stats?.[i]||null;
+    const tracked=!!(s && Object.prototype.hasOwnProperty.call(s,'dryBreaks'));
+    if(!tracked){
+      return {tracked:false,total:0,dry:0,soft:0,fouls:0,successful:0,pct:null,potted:0,pottedTracked:0,pottedAvg:null};
+    }
+    const total=Math.max(0,Number(s.breaks||0));
+    const dry=Math.max(0,Math.min(total,Number(s.dryBreaks||0)));
+    const soft=Math.max(0,Math.min(total,Number(s.softBreaks||0)));
+    const softDry=Math.max(0,Math.min(Math.min(dry,soft),Number(s.softDryBreaks||0)));
+    const fouls=Math.max(0,Math.min(total,Number(s.breakFouls||0)));
+    // soft+dry je jeden a tentýž break, proto překryv jednou přičteme zpět.
+    const successful=Math.max(0,total-dry-soft+softDry-fouls);
+    const pct=total?Math.round(successful/total*100):null;
+    const potted=Math.max(0,Number(s.breakPottedBalls||0));
+    const pottedTracked=Math.max(0,Number(s.breakPottedTracked||0));
+    const pottedAvg=pottedTracked ? potted/pottedTracked : null;
+    return {tracked:true,total,dry,soft,fouls,successful,pct,potted,pottedTracked,pottedAvg};
+  }
+
+  function buildMatchShareText(m){
+    if(!m) return '';
+    const date=new Date(m.startedAt).toLocaleString('cs-CZ',{dateStyle:'medium',timeStyle:'short'});
+    const lines=['🎱 BC Rybárna Scoreboard'];
+
+    if(m.solo14){
+      if(m.solo14GhostMode){
+        lines.push('14.1 NEKONEČNÁ • SÓLO VS GHOST • '+solo14GhostDifficultyLabel(m,true));
+        lines.push(m.playerNames[0]+' '+m.scores[0]+' : '+m.scores[1]+' GHOST');
+      }else{
+        lines.push('14.1 NEKONEČNÁ • SÓLO TRÉNINK');
+        lines.push(m.playerNames[0]+' • '+m.scores[0]+' bodů');
+      }
+    }else if(m.ghostMode){
+      lines.push(m.discipline.toUpperCase()+' • GHOST'+(ghostBallCountLabel(m)?' • '+ghostBallCountLabel(m):''));
+      lines.push(m.playerNames[0]+' '+m.scores[0]+' : '+m.scores[1]+' GHOST');
+    }else{
+      lines.push(m.discipline.toUpperCase()+(m.doublesMode?' • DVOJICE':''));
+      lines.push(m.playerNames[0]+' '+m.scores[0]+' : '+m.scores[1]+' '+m.playerNames[1]);
+    }
+
+    lines.push(date+' • délka '+durationText(m));
+
+    if(m.discipline==='14.1'){
+      const count=m.solo14?1:2;
+      for(let i=0;i<count;i++){
+        const s=[];
+        s.push('nejvyšší náběh '+statVal(m,i,'highRun14'));
+        s.push('náběhy '+statVal(m,i,'innings14'));
+        s.push('průměr '+averagePerInning14Text(m,i)+' b/náběh');
+        s.push('MISS '+matchOnlyMissVal(m,i));
+        s.push('SAFE '+statVal(m,i,'safeties'));
+        s.push('fauly '+statVal(m,i,'fouls'));
+        const pen=statVal(m,i,'foulPenaltyPoints14');
+        if(pen) s.push('trestné body −'+pen);
+        const three=statVal(m,i,'threeFoulPenalties14');
+        if(three) s.push('3× faul '+three+'×');
+        lines.push(m.playerNames[i]+': '+s.join(' • '));
+      }
+    }else if(m.ghostMode){
+      const c=ghostOutcomeCounts(m);
+      lines.push(
+        'Čistě +2: '+c.clean+
+        ' • BIH +1: '+c.bih+
+        ' • Eso +2: '+c.ace+
+        ' • Nedohráno: '+c.failed+
+        ' • Dry break: '+c.dry+
+        ' • Soft break: '+c.soft+
+        ' • Faul z rozstřelu: '+c.breakFoul
+      );
+      const missMap=m?.stats?.[0]?.ghostMissesByBall||{};
+      const missRows=Object.entries(missMap).filter(([,v])=>Number(v)>0).sort((a,b)=>Number(a[0])-Number(b[0]));
+      if(missRows.length)lines.push('Chyby na koulích: '+missRows.map(([b,n])=>'#'+b+' '+n+'×').join(' • '));
+
+      const history=ghostRackHistoryRows(m);
+      if(history.length){
+        lines.push('');
+        lines.push('PRŮBĚH RACKŮ:');
+        history.forEach(r=>{
+          const ball=r.errorBall?' • chyba na '+r.errorBall:'';
+          const delta=r.playerDelta?(' • hráč +'+r.playerDelta):(r.ghostDelta?(' • Ghost +'+r.ghostDelta):'');
+          const score=(r.scorePlayer!=null&&r.scoreGhost!=null)?(' • '+r.scorePlayer+':'+r.scoreGhost):'';
+          lines.push('Rack '+(r.rack||'—')+' • '+(r.label||r.type||'—')+ball+delta+score);
+        });
+      }
+    }else{
+      for(let i=0;i<2;i++){
+        const br=breakStats(m,i);
+        lines.push(
+          m.playerNames[i]+': break '+(br.tracked?br.total:'—')+
+          ' • dry '+(br.tracked?br.dry:'—')+
+          ' • úspěšnost '+(br.pct===null?'—':br.pct+' %')+
+          ' • B&R '+statVal(m,i,'breakAndRun')+
+          ' • runout '+statVal(m,i,'runouts')+
+          ' • SAFE '+statVal(m,i,'safeties')
+        );
+      }
+    }
+
+    return lines.join('\n');
+  }
+
+  
+  async function sharePlainText(title,text,successMessage='Text zkopírován do schránky.'){
+    try{
+      if(navigator.share){
+        await navigator.share({title:title||'BC Rybárna',text:String(text||'')});
+        return true;
+      }
+      if(navigator.clipboard?.writeText){
+        await navigator.clipboard.writeText(String(text||''));
+        toast(successMessage);
+        return true;
+      }
+    }catch(e){
+      if(e?.name==='AbortError')return false;
+    }
+    try{
+      const ta=document.createElement('textarea');
+      ta.value=String(text||'');
+      ta.style.position='fixed';
+      ta.style.opacity='0';
+      document.body.appendChild(ta);
+      ta.select();
+      document.execCommand('copy');
+      ta.remove();
+      toast(successMessage);
+      return true;
+    }catch(e){
+      toast('Sdílení se nepodařilo.');
+      return false;
+    }
+  }
+
+  function tournamentCompletedMatchesText(t){
+    const rows=allTournamentMatches(t)
+      .filter(m=>m && (m.status==='done'||m.winnerId||m.loserId))
+      .map(m=>{
+        const a=tournamentPlayerName(m.player1Id,t);
+        const b=tournamentPlayerName(m.player2Id,t);
+        return `${m.roundLabel||'Zápas'} • ${a} ${Number(m.score1||0)}:${Number(m.score2||0)} ${b}`;
+      });
+    return rows;
+  }
+
+  function buildTournamentShareText(t){
+    if(!t)return '';
+    const lines=[];
+    lines.push('🎱 BC Rybárna');
+    lines.push(String(t.name||'Turnaj'));
+    lines.push(`${tournamentFormatLabel(t)} • ${tournamentDisciplineSummary(t)} • Race to ${t.raceTo}`);
+    lines.push(t.status==='complete'?'DOKONČENO':'PRŮBĚŽNÉ VÝSLEDKY');
+
+    if(tournamentHasGroups(t) && Array.isArray(t.groups)){
+      t.groups.forEach(g=>{
+        lines.push('');
+        lines.push(`SKUPINA ${g.id}`);
+        const st=groupStandings(g,t);
+        st.forEach((r,i)=>{
+          lines.push(`${i+1}. ${tournamentPlayerName(r.id,t)} • ${r.v}V ${r.p}P • racky ${r.rf}:${r.ra} • ${r.diff>0?'+':''}${r.diff}`);
+        });
+        const gm=(g.matches||[])
+          .filter(m=>m && (m.status==='done'||m.winnerId||m.loserId));
+        if(gm.length){
+          lines.push('Výsledky:');
+          gm.forEach(m=>lines.push(`• ${tournamentPlayerName(m.player1Id,t)} ${Number(m.score1||0)}:${Number(m.score2||0)} ${tournamentPlayerName(m.player2Id,t)}`));
+        }
+      });
+    }
+
+    if(t.ko){
+      const rows=knockoutPlacementRows(t);
+      if(rows.length){
+        lines.push('');
+        lines.push(t.status==='complete'?'KONEČNÉ POŘADÍ':'PRŮBĚŽNÉ POŘADÍ');
+        rows.forEach(r=>lines.push(`${r.place}: ${r.ids.map(id=>tournamentPlayerName(id,t)).join(', ')}`));
+      }
+    }else if(t.dko){
+      if(t.dko.championId||t.dko.runnerUpId){
+        lines.push('');
+        if(t.dko.championId)lines.push(`1. místo: ${tournamentPlayerName(t.dko.championId,t)}`);
+        if(t.dko.runnerUpId)lines.push(`2. místo: ${tournamentPlayerName(t.dko.runnerUpId,t)}`);
+        if(t.dko.thirdPlaceWinnerId)lines.push(`3. místo: ${tournamentPlayerName(t.dko.thirdPlaceWinnerId,t)}`);
+      }
+    }else if(t.format==='swiss'){
+      const completed=tournamentCompletedMatchesText(t);
+      if(completed.length){
+        lines.push('');
+        lines.push('ODEHRANÉ ZÁPASY');
+        completed.forEach(x=>lines.push('• '+x));
+      }
+    }
+
+    if(!tournamentHasGroups(t) && !t.ko && !t.dko && t.format!=='swiss'){
+      const completed=tournamentCompletedMatchesText(t);
+      if(completed.length){
+        lines.push('');
+        lines.push('VÝSLEDKY');
+        completed.forEach(x=>lines.push('• '+x));
+      }
+    }
+
+    return lines.join('\n');
+  }
+
+  window.shareTournament=async function(tid){
+    const t=(data.tournaments||[]).find(x=>x.id===tid);
+    if(!t){toast('Turnaj nebyl nalezen.');return;}
+    const text=buildTournamentShareText(t);
+    await sharePlainText('BC Rybárna – '+(t.name||'turnaj'),text,'Výsledky turnaje zkopírovány do schránky.');
+  };
+
+async function shareMatchStats(m){
+    if(!m)return;
+    const shareText=buildMatchShareText(m);
+    await sharePlainText('BC Rybárna – výsledek zápasu',shareText,'Výsledek zápasu zkopírován do schránky.');
+  }
+
+  window.shareSavedMatch=function(id){
+    const m=data.matches.find(x=>x.id===id);
+    if(!m){ toast('Zápas nebyl nalezen.'); return; }
+    shareMatchStats(m);
+  };
+
+  function durationText(m){
+    if(!m.endedAt) return '—';
+    const s=Math.max(0,Math.round((new Date(m.endedAt)-new Date(m.startedAt))/1000));
+    const h=Math.floor(s/3600),min=Math.floor((s%3600)/60),sec=s%60;
+    return (h?String(h).padStart(2,'0')+':':'')+String(min).padStart(2,'0')+':'+String(sec).padStart(2,'0');
+  }
+
+    function matchConfirmationBadge(m){
+    if(m?.adminConfirmation?.confirmed===true)return '<span class="badge gold">POTVRZENO ADMINEM</span>';
+    if(!m?.confirmationRequired)return '';
+    if(m.status==='needs_correction'||m.confirmationState==='needs_correction')return '<span class="badge" style="border-color:#7d2424;color:#ff9c9c">K OPRAVĚ</span>';
+    if(matchConfirmationComplete(m))return '<span class="badge gold">POTVRZENO OBOUSTRANNĚ</span>';
+    return '<span class="badge" style="border-color:#705820;color:#f1d67a">ČEKÁ NA POTVRZENÍ</span>';
+  }
+
+
+  function matchIsDoubles(m){
+    if(!m)return false;
+    if(m.doublesMode===true)return true;
+    if(Array.isArray(m.teamPlayerIds) && m.teamPlayerIds.some(side=>Array.isArray(side)&&side.filter(Boolean).length>1))return true;
+    if(Array.isArray(m.teamPlayerNames) && m.teamPlayerNames.some(side=>Array.isArray(side)&&side.filter(Boolean).length>1))return true;
+    if(Array.isArray(m.playerNames) && m.playerNames.some(n=>String(n||'').includes(' + ')))return true;
+    return false;
+  }
+
+  function matchHandicapScores(m){
+    const hs=Array.isArray(m?.handicapScores)?m.handicapScores:[0,0];
+    return [Number(hs[0]||0),Number(hs[1]||0)];
+  }
+
+  function matchHasHandicap(m){
+    const hs=matchHandicapScores(m);
+    return !!m?.handicapEnabled || hs[0]!==0 || hs[1]!==0;
+  }
+
+  function matchFormatBadgesHtml(m){
+    const doubles=matchIsDoubles(m);
+    const handicap=matchHasHandicap(m);
+    const hs=matchHandicapScores(m);
+    if(!doubles && !handicap)return '';
+    return `${doubles?'<span class="badge gold">DVOJICE</span>':''}
+      ${handicap?`<span class="badge" style="margin-left:${doubles?'6px':'0'};border-color:#705820;color:#f1d67a">HANDICAP ${esc(String(hs[0]))}:${esc(String(hs[1]))}</span>`:''}`;
+  }
+
+
+  function winnerTableProgressRows(m){
+    const wt=m?.winnerTable,players=Array.isArray(wt?.players)?wt.players.slice(0,3):[];
+    if(!m?.winnerTableMode||players.length!==3)return [];
+    const rows=Array.isArray(wt.rackHistory)?wt.rackHistory:[];
+    if(rows.length)return rows.map((r,i)=>({rack:i+1,winnerIndex:Number(r?.winnerIndex),scores:Array.isArray(r?.wins)?r.wins.slice(0,3).map(n=>Math.max(0,Number(n)||0)):null}))
+      .filter(r=>Number.isInteger(r.winnerIndex)&&r.winnerIndex>=0&&r.winnerIndex<3&&r.scores?.length===3);
+    // Historická data: rekonstrukce jen podle jednoznačných jmen a uložených událostí.
+    const names=players.map(p=>String(p?.displayName||p?.realName||'').trim());
+    if(!names.every(Boolean)||new Set(names).size!==3)return [];
+    const scores=[0,0,0],out=[],marker=' vyhrává rack • celkem ';
+    (Array.isArray(m.events)?m.events:[]).forEach(e=>{
+      const txt=String(e?.text||''),at=txt.indexOf(marker);
+      if(at<=0)return;
+      const wi=names.indexOf(txt.slice(0,at)),next=parseInt(txt.slice(at+marker.length),10);
+      if(wi<0||!Number.isInteger(next)||next!==scores[wi]+1)return;
+      scores[wi]=next;out.push({rack:out.length+1,winnerIndex:wi,scores:scores.slice()});
+    });
+    return out;
+  }
+  function winnerTableProgressHtml(m,compact=false){
+    if(!m?.winnerTableMode||!m.winnerTable)return '';
+    const names=m.winnerTable.players.map((p,i)=>p?.displayName||p?.realName||('Hráč '+(i+1)));
+    const all=winnerTableProgressRows(m),visible=compact?all.slice(-5):all;
+    const heading=compact?'POSLEDNÍ RACKY • VÝVOJ SKÓRE':'VÝVOJ SKÓRE • RACK PO RACKU';
+    const content=visible.length
+      ? '<div class="wt-progress-scroll"><table class="wt-progress-table"><thead><tr><th>Rack</th><th>Vítěz</th>'+
+        names.map(n=>'<th>'+esc(n)+'</th>').join('')+'</tr></thead><tbody>'+
+        visible.map(r=>'<tr><td>#'+r.rack+'</td><td class="wt-progress-winner">'+esc(names[r.winnerIndex])+'</td>'+
+        r.scores.map((score,i)=>'<td class="'+(i===r.winnerIndex?'wt-progress-highlight':'')+'">'+esc(String(score))+'</td>').join('')+'</tr>').join('')+
+        '</tbody></table></div>'+
+        (compact&&all.length>visible.length?'<div class="muted" style="font-size:11px;margin-top:5px">Posledních '+visible.length+' z '+all.length+' racků. Kompletní průběh je ve statistikách.</div>':'')
+      : '<div class="muted" style="font-size:12px">Zatím žádný vyhraný rack.</div>';
+    return '<div class="wt-progress-box"><div class="wt-progress-title">'+heading+'</div>'+content+'</div>';
+  }
+function winnerTableHistoryRows(m){
+    if(!m?.winnerTableMode || !m?.winnerTable)return [];
+    const players=Array.isArray(m.winnerTable.players)?m.winnerTable.players:[];
+    const wins=Array.isArray(m.winnerTable.wins)?m.winnerTable.wins:[];
+    return players.slice(0,3).map((p,i)=>({
+      index:i,
+      name:p?.displayName||p?.realName||('Hráč '+(i+1)),
+      wins:Number(wins[i]||0)
+    })).sort((a,b)=>b.wins-a.wins || a.index-b.index);
+  }
+
+  function winnerTableHistoryHtml(m){
+    const rows=winnerTableHistoryRows(m);
+    if(!rows.length)return '';
+    return `<div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:7px;margin-top:10px">
+      ${rows.map((r,pos)=>`<div class="subpanel" style="margin:0;padding:9px 7px;text-align:center;${pos===0?'border-color:var(--gold);':''}">
+        <div class="muted" style="font-size:10px;font-weight:900">${pos===0?'NEJVÍCE VÝHER':'HRÁČ'}</div>
+        <div style="font-weight:950;margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(r.name)}</div>
+        <div style="font-size:22px;font-weight:950;color:var(--gold2);margin-top:3px">${r.wins}</div>
+        <div class="muted" style="font-size:10px">VÝHER</div>
+      </div>`).join('')}
+    </div>`;
+  }
+
+function renderHistory(){
+    // Rozehrané cloudové zálohy patří do LIVESCORE, ne do historie výsledků.
+    const list=[...data.matches]
+      .filter(m=>m && !['playing','active'].includes(m.status))
+      .sort((a,b)=>new Date(b.startedAt)-new Date(a.startedAt));
+    $('historyList').innerHTML = list.length ? list.map(m=>{
+      const date=new Date(m.startedAt).toLocaleString('cs-CZ',{dateStyle:'medium',timeStyle:'short'});
+      const complete=(m.status||'complete')==='complete';
+      return `<div class="history-item">
+        <div class="history-line">
+          <div>
+            <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+              ${m.solo14
+                ? `<strong>${esc(m.playerNames[0])}</strong> • <strong>SÓLO 14.1${m.solo14GhostMode?' VS GHOST':''}</strong>`
+                : (m.winnerTableMode
+                    ? `<strong>VÍTĚZ NA STOLE</strong> • ${winnerTableHistoryRows(m).map(r=>`<strong>${esc(r.name)}</strong>`).join(' • ')}`
+                    : (m.ghostMode
+                        ? `<strong>${esc(m.playerNames[0])}</strong> vs <strong>GHOST</strong>`
+                        : `<strong>${esc(savedMatchSideDisplayName(m,0))}</strong> vs <strong>${esc(savedMatchSideDisplayName(m,1))}</strong>`))}
+              ${matchFormatBadgesHtml(m)}
+              <span class="status-badge ${complete?'complete':'incomplete'}">${complete?'DOKONČENO':(m.status==='pending_confirmation'?'ČEKÁ NA POTVRZENÍ':(m.status==='needs_correction'?'K OPRAVĚ':'NEDOHRÁNO'))}</span>
+              ${matchConfirmationBadge(m)}
+            </div>
+            <div class="muted">${esc(m.discipline.toUpperCase())}${m.ghostMode&&ghostBallCountLabel(m)?' • '+esc(ghostBallCountLabel(m)):''}${m.solo14GhostMode?' • '+esc(solo14GhostDifficultyLabel(m,true)):''} • ${m.discipline==='14.1'?'do '+m.target:'Race to '+m.target} • ${esc(date)}</div>
+          </div>
+          ${m.winnerTableMode
+            ? `<div class="history-score" style="font-size:15px;text-align:right">3 HRÁČI</div>`
+            : `<div class="history-score">${m.scores[0]} : ${m.scores[1]}</div>`}
+        </div>
+        ${m.winnerTableMode ? winnerTableHistoryHtml(m)+winnerTableProgressHtml(m) : ''}
+        <div class="muted" style="margin-top:8px">Délka ${durationText(m)} • ${m.discipline==='14.1'?'pouze první rozstřel':breakModeLabel(m.breakMode).toLowerCase()} • shot clock ${m.useClock?(m.clock.first+'/'+m.clock.normal):'ne'}</div>
+        ${(matchIsDoubles(m)||matchHasHandicap(m))
+          ? `<div style="margin-top:6px;font-size:12px;font-weight:950;color:var(--gold2)">
+              ${matchIsDoubles(m)?'DVOJICE':''}
+              ${matchIsDoubles(m)&&matchHasHandicap(m)?' • ':''}
+              ${matchHasHandicap(m)?'HANDICAP '+esc(String(matchHandicapScores(m)[0]))+':'+esc(String(matchHandicapScores(m)[1])):''}
+            </div>`
+          : ''}
+        ${m.solo14
+          ? `<div style="margin-top:7px;font-weight:950;color:var(--gold2)">NEJVYŠŠÍ NÁBĚH: ${esc(String(statVal(m,0,'highRun14')))}</div>`
+          : ''}
+        <div class="item-actions">
+          ${canResumeIncompleteMatch(m)
+            ? `<button class="btn primary" onclick="resumeLocalMatch('${m.id}')">▶ POKRAČOVAT V ZÁPASE</button>`
+            : ''}
+          <button class="btn primary" onclick="showSavedMatchStats('${m.id}')">STATISTIKY ZÁPASU</button>
+          <button class="btn" onclick="shareSavedMatch('${m.id}')">SDÍLET VÝSLEDEK</button>
+          <button class="btn" onclick="generateSavedMatchPdf('${m.id}')">PDF</button>
+          ${currentUserIsSystemAdmin()?`<button class="btn" onclick="openMatchMetadataAdmin('${m.id}')">UPRAVIT INFO</button>`:''}
+          ${currentUserIsSystemAdmin() && !m.tournamentLink && m.confirmationRequired && m.adminConfirmation?.confirmed!==true && (m.status==='pending_confirmation'||m.status==='needs_correction')
+            ? `<button class="btn primary" onclick="adminConfirmMatchResult('${m.id}')">POTVRDIT JAKO ADMIN</button>`
+            : ''}
+          ${!currentUserIsSystemAdmin() && !m.tournamentLink && m.status==='needs_correction' && m.createdByUid===cloudUid
+            ? `<button class="btn primary" onclick="openMatchCorrection('${m.id}')">OPRAVIT SKÓRE</button>`
+            : ''}
+          ${currentUserIsSystemAdmin()?`<button class="btn danger" onclick="deleteMatch('${m.id}')">Smazat zápas</button>`:''}
+        </div>
+      </div>`;
+    }).join('') : '<div class="empty">Zatím nejsou uložené žádné zápasy.</div>';
+  }
+
+  let correctionMatchId=null;
+  let metadataAdminMatchId=null;
+
+
+  function activePlayerOptionsHtml(selectedId=''){
+    return Object.values(data.players||{})
+      .filter(p=>p && p.active!==false && p.hiddenFromPlayers!==true)
+      .sort((a,b)=>playerSelectionLabel(a).localeCompare(playerSelectionLabel(b),'cs'))
+      .map(p=>`<option value="${esc(p.id)}" ${p.id===selectedId?'selected':''}>${esc(playerSelectionLabel(p))}</option>`)
+      .join('');
+  }
+
+  function playerIdByStoredName(name){
+    return findPlayerByLooseName(name)?.id||'';
+  }
+
+  function matchPrimaryPlayerId(m,side){
+    if(Array.isArray(m?.teamPlayerIds?.[side]) && m.teamPlayerIds[side][0])return m.teamPlayerIds[side][0];
+    if(Array.isArray(m?.playerIds) && m.playerIds[side])return m.playerIds[side];
+    const names=savedDoublesSideNames(m,side);
+    return playerIdByStoredName(names[0]||m?.playerNames?.[side]||'');
+  }
+
+  function matchPartnerPlayerId(m,side){
+    if(Array.isArray(m?.teamPlayerIds?.[side]) && m.teamPlayerIds[side][1])return m.teamPlayerIds[side][1];
+    const names=savedDoublesSideNames(m,side);
+    return playerIdByStoredName(names[1]||'');
+  }
+
+  function refreshMatchMetadataVisibility(){
+    $('matchMetadataDoublesFields')?.classList.toggle('hidden',!$('matchMetadataDoubles')?.checked);
+    $('matchMetadataHandicapFields')?.classList.toggle('hidden',!$('matchMetadataHandicap')?.checked);
+  }
+
+  window.openMatchMetadataAdmin=function(id){
+    if(!currentUserIsSystemAdmin())return toast('Nemáš oprávnění.');
+    const m=(data.matches||[]).find(x=>x.id===id);
+    if(!m)return toast('Zápas nebyl nalezen.');
+
+    metadataAdminMatchId=id;
+    $('matchMetadataAdminInfo').textContent=
+      (m.playerNames?.[0]||'Strana A')+' vs '+(m.playerNames?.[1]||'Strana B')+
+      ' • '+String(m.discipline||'').toUpperCase()+' • '+id;
+
+    const selections=[
+      ['matchMetadataA1',matchPrimaryPlayerId(m,0)],
+      ['matchMetadataA2',matchPartnerPlayerId(m,0)],
+      ['matchMetadataB1',matchPrimaryPlayerId(m,1)],
+      ['matchMetadataB2',matchPartnerPlayerId(m,1)]
+    ];
+    selections.forEach(([eid,selected])=>{
+      const el=$(eid);
+      if(!el)return;
+      el.innerHTML='<option value="">— vyber hráče —</option>'+activePlayerOptionsHtml(selected);
+      if(selected)el.value=selected;
+    });
+
+    $('matchMetadataDoubles').checked=matchIsDoubles(m);
+    $('matchMetadataHandicap').checked=matchHasHandicap(m);
+    const hs=matchHandicapScores(m);
+    $('matchMetadataH1').value=hs[0];
+    $('matchMetadataH2').value=hs[1];
+    $('matchMetadataAdminMessage').textContent='';
+    refreshMatchMetadataVisibility();
+    $('matchMetadataAdminModal').classList.add('show');
+  };
+
+  $('matchMetadataDoubles')?.addEventListener('change',refreshMatchMetadataVisibility);
+  $('matchMetadataHandicap')?.addEventListener('change',refreshMatchMetadataVisibility);
+
+  $('matchMetadataAdminCancel').onclick=()=>{
+    metadataAdminMatchId=null;
+    $('matchMetadataAdminModal').classList.remove('show');
+  };
+
+  $('matchMetadataAdminSave').onclick=async()=>{
+    if(!currentUserIsSystemAdmin() || !metadataAdminMatchId)return;
+    const m=(data.matches||[]).find(x=>x.id===metadataAdminMatchId);
+    if(!m)return;
+
+    const doubles=!!$('matchMetadataDoubles').checked;
+    const handicap=!!$('matchMetadataHandicap').checked;
+    const h1=Math.max(0,parseInt($('matchMetadataH1').value||'0',10)||0);
+    const h2=Math.max(0,parseInt($('matchMetadataH2').value||'0',10)||0);
+    const msg=$('matchMetadataAdminMessage');
+    const btn=$('matchMetadataAdminSave');
+
+    if(doubles){
+      const ids=[
+        $('matchMetadataA1').value,$('matchMetadataA2').value,
+        $('matchMetadataB1').value,$('matchMetadataB2').value
+      ];
+      if(ids.some(x=>!x)){msg.textContent='U dvojic vyber všechny čtyři hráče.';return;}
+      if(new Set(ids).size!==4){msg.textContent='Každý hráč může být v zápase dvojic pouze jednou.';return;}
+
+      const [a1,a2,b1,b2]=ids.map(id=>data.players?.[id]);
+      if([a1,a2,b1,b2].some(x=>!x)){msg.textContent='Některý vybraný hráč nebyl nalezen.';return;}
+
+      m.doublesMode=true;
+      m.teamPlayerIds=[[a1.id,a2.id],[b1.id,b2.id]];
+      m.teamPlayerNames=[[playerDisplayName(a1),playerDisplayName(a2)],[playerDisplayName(b1),playerDisplayName(b2)]];
+      m.playerIds=[a1.id,b1.id];
+      m.playerNames=[playerDisplayName(a1)+' + '+playerDisplayName(a2),playerDisplayName(b1)+' + '+playerDisplayName(b2)];
+    }else{
+      m.doublesMode=false;
+      delete m.teamPlayerIds;
+      delete m.teamPlayerNames;
+      m.playerNames=(m.playerNames||[]).map(n=>String(n||'').split(' + ')[0].trim());
+    }
+
+    m.handicapEnabled=handicap;
+    m.handicapScores=handicap?[h1,h2]:[0,0];
+    m.metadataEditedAt=new Date().toISOString();
+    m.metadataEditedByUid=cloudUid||'';
+
+    btn.disabled=true;
+    msg.textContent='Ukládám…';
+    try{
+      await saveSecureMatch(m);
+      metadataAdminMatchId=null;
+      $('matchMetadataAdminModal').classList.remove('show');
+      await loadSecureMatches();
+      renderHistory();
+      renderStats();
+      toast('Informace zápasu byly opraveny.');
+    }catch(e){
+      console.error('Match metadata repair:',e);
+      msg.textContent='Uložení selhalo: '+String(e.message||e);
+    }finally{
+      btn.disabled=false;
+    }
+  };
+
+  window.openMatchCorrection=function(id){
+    const m=(data.matches||[]).find(x=>x.id===id);
+    if(!m || m.tournamentLink || m.status!=='needs_correction' || m.createdByUid!==cloudUid)return;
+
+    correctionMatchId=id;
+    $('matchCorrectionPlayers').textContent=(m.playerNames?.[0]||'Hráč 1')+' vs '+(m.playerNames?.[1]||'Hráč 2');
+    $('matchCorrectionP1Label').textContent=m.playerNames?.[0]||'Hráč 1';
+    $('matchCorrectionP2Label').textContent=m.playerNames?.[1]||'Hráč 2';
+    $('matchCorrectionScore1').value=Number(m.scores?.[0]||0);
+    $('matchCorrectionScore2').value=Number(m.scores?.[1]||0);
+    $('matchCorrectionModal').classList.add('show');
+  };
+
+  $('matchCorrectionCancel').onclick=()=>{
+    correctionMatchId=null;
+    $('matchCorrectionModal').classList.remove('show');
+  };
+
+  $('matchCorrectionSave').onclick=async()=>{
+    const m=(data.matches||[]).find(x=>x.id===correctionMatchId);
+    if(!m || m.createdByUid!==cloudUid)return;
+
+    const s1=Math.max(0,parseInt($('matchCorrectionScore1').value||'0',10));
+    const s2=Math.max(0,parseInt($('matchCorrectionScore2').value||'0',10));
+
+    if(s1===s2){
+      toast('Výsledek zápasu nemůže skončit remízou.');
+      return;
+    }
+
+    const winner=s1>s2?0:1;
+    m.scores=[s1,s2];
+    m.winner=winner;
+    m.status='pending_confirmation';
+    m.confirmationState='pending';
+    m.confirmations={};
+
+    // Zapisující hráč musí opravený výsledek potvrdit znovu.
+    if(Array.isArray(m.confirmationUids) && m.confirmationUids.includes(cloudUid)){
+      m.confirmations[cloudUid]='confirmed';
+    }
+
+    m.correctedAt=new Date().toISOString();
+    m.updatedAt=new Date().toISOString();
+
+    try{
+      await saveSecureMatch(m);
+      correctionMatchId=null;
+      $('matchCorrectionModal').classList.remove('show');
+      await loadSecureMatches();
+      renderHistory();
+      renderStats();
+      toast('Opravený výsledek byl znovu odeslán soupeři k potvrzení.');
+    }catch(e){
+      console.error('Match correction save:',e);
+      toast('Opravený výsledek se nepodařilo uložit.');
+    }
+  };
+
+  window.adminConfirmMatchResult=async function(id){
+    if(!currentUserIsSystemAdmin()){
+      toast('Tuto akci může provést pouze administrátor.');
+      return;
+    }
+
+    let m=(data.matches||[]).find(x=>x.id===id);
+    if(!m)return;
+    if(m.tournamentLink){
+      toast('Turnajové zápasy potvrzení hráčů nevyžadují.');
+      return;
+    }
+
+    if(!confirm(
+      'Potvrdit jako administrátor výsledek '+m.playerNames[0]+' '+m.scores[0]+' : '+m.scores[1]+' '+m.playerNames[1]+'?\n\n'+
+      'Výsledek bude okamžitě platný a započítá se do statistik.'
+    ))return;
+
+    const wasAlreadyComplete=(m.status==='complete' && m.adminConfirmation?.confirmed===true);
+
+    m.adminConfirmation={
+      confirmed:true,
+      uid:cloudUid||'',
+      email:cloudUserEmail||'',
+      confirmedAt:new Date().toISOString()
+    };
+    m.confirmationState='admin_confirmed';
+    m.status='complete';
+
+    try{
+      m=await saveSecureMatch(m);
+
+      // Nepotvrzený turnajový zápas zatím pavouk neposunul.
+      // Po admin potvrzení ho proto zpracujeme stejně jako běžně potvrzený výsledek.
+      if(!wasAlreadyComplete && m.tournamentLink && m.winner!==null){
+        const tournamentId=m.tournamentLink.tournamentId;
+        let t=(data.tournaments||[]).find(x=>x.id===tournamentId);
+
+        const tm=t ? findTournamentMatch(t,m.tournamentLink.tournamentMatchId) : null;
+        const alreadyApplied=!!(tm && (tm.status==='done'||tm.winnerId||tm.loserId));
+
+        if(!alreadyApplied){
+          const linkedTournament=processTournamentResult(m);
+          if(linkedTournament){
+            await saveSecureTournament(linkedTournament);
+          }
+        }
+      }
+
+      await loadSecureMatches();
+      renderHistory();
+      renderStats();
+      renderPlayers();
+      renderTournament();
+      renderResultsTournaments();
+      renderResultsSeries();
+
+      toast('Výsledek byl potvrzen administrátorem.');
+    }catch(e){
+      console.error('Admin match confirmation:',e);
+      toast('Admin potvrzení se nepodařilo uložit: '+String(e.message||e));
+    }
+  };
+
+  window.deleteMatch=async function(id){
+    if(!currentUserIsSystemAdmin()){
+      toast('Mazání zápasů je dostupné pouze SYSTEM ADMINOVI.');
+      return;
+    }
+    const m=data.matches.find(x=>x.id===id);
+    if(!m) return;
+    const tournamentNote=m.tournamentLink
+      ? '\n\nPozor: tento zápas patří do turnaje. Smazání z Historie odstraní statistiky a ELO, ale samotný turnajový pavouk zůstane beze změny.'
+      : '';
+    if(!confirm(`Opravdu smazat zápas ${m.playerNames[0]} ${m.scores[0]} : ${m.scores[1]} ${m.playerNames[1]}? Tím se odstraní i všechny statistiky z tohoto zápasu.${tournamentNote}`)) return;
+    try{
+      await deleteSecureMatch(id);
+    }catch(e){
+      toast('Zápas se nepodařilo smazat: '+String(e.message||e));
+      return;
+    }
+    renderHistory(); renderStats(); renderPlayers();
+    toast('Zápas byl trvale smazán ze statistik a ELO.');
+  };
+
+  // ===== ELO RATING =====
+  const ELO_START=1500;
+  const ELO_K=32;
+
+  function calculateEloRatings(discipline=null){
+    const ratings={};
+    Object.keys(data.players||{}).forEach(id=>ratings[id]=ELO_START);
+
+    const eligible=completedRealMatchFacts()
+      .filter(f=>{
+        if(!f || !f.winnerId) return false;
+        if(!Array.isArray(f.playerIds) || f.playerIds.length<2) return false;
+        if(!data.players[f.playerIds[0]] || !data.players[f.playerIds[1]]) return false;
+        if(discipline && f.discipline!==discipline) return false;
+        return true;
+      })
+      .sort((a,b)=>new Date(a.endedAt||0)-new Date(b.endedAt||0));
+
+    eligible.forEach(f=>{
+      const a=f.playerIds[0],b=f.playerIds[1];
+      const ra=ratings[a]??ELO_START, rb=ratings[b]??ELO_START;
+      const ea=1/(1+Math.pow(10,(rb-ra)/400));
+      const eb=1-ea;
+      const sa=f.winnerId===a?1:0;
+      const sb=f.winnerId===b?1:0;
+
+      ratings[a]=ra+ELO_K*(sa-ea);
+      ratings[b]=rb+ELO_K*(sb-eb);
+    });
+
+    Object.keys(ratings).forEach(id=>ratings[id]=Math.round(ratings[id]));
+    return ratings;
+  }
+
+  function playerElo(pid,discipline=null){
+    return calculateEloRatings(discipline)[pid] ?? ELO_START;
+  }
+
+  function matchEvidenceMode(matchLike){
+    if(!matchLike) return 'basic';
+    if(matchLike.evidenceMode==='full' || matchLike.evidenceMode==='basic') return matchLike.evidenceMode;
+    if(matchLike.counterMode==='simple') return 'basic';
+    if(matchLike.counterMode==='full') return 'full';
+    // Ručně zapsané turnajové výsledky neobsahují akční statistiky.
+    if(matchLike.source==='tournament' || matchLike.savedMatchId===null) return 'basic';
+    // Starší uložené zápasy vznikly před explicitním označením režimu; bereme je jako rozšířené.
+    return 'full';
+  }
+
+  function evidenceModeLabel(mode){
+    return mode==='full' ? 'ROZŠÍŘENÉ' : 'ZÁKLADNÍ';
+  }
+
+  function evidenceModeBadge(mode){
+    const full=mode==='full';
+    return `<span class="elo-badge" style="margin-left:6px;${full?'':'opacity:.72'}">${full?'ROZŠÍŘENÉ STATISTIKY':'ZÁKLADNÍ SKÓRE'}</span>`;
+  }
+
+  function completedRealMatchFacts(){
+    const byKey=new Map();
+
+    // Nejdřív vezmeme uložené /matches. U turnajových zápasů deduplikujeme
+    // podle tournamentId + tournamentMatchId, ne podle id archivního záznamu.
+    (data.matches||[]).forEach(m=>{
+      if(!m || (m.status||'complete')!=='complete')return;
+      if(m.solo14 || m.ghostMode || m.winnerTableMode || m.doublesMode)return;
+      if(!Array.isArray(m.playerIds) || m.playerIds.length<2)return;
+
+      const tournamentId=m.tournamentLink?.tournamentId||'';
+      const tournamentMatchId=m.tournamentLink?.tournamentMatchId||'';
+      const key=(tournamentId && tournamentMatchId)
+        ? 'T:'+tournamentId+'|'+tournamentMatchId
+        : 'M:'+String(m.id||uid());
+
+      const endedAt=m.endedAt||m.finishedAt||m.startedAt||'';
+      const fact={
+        key,
+        source:'saved',
+        evidenceMode:matchEvidenceMode(m),
+        savedMatchId:m.id||null,
+        tournamentId:tournamentId||null,
+        tournamentMatchId:tournamentMatchId||null,
+        tournamentName:tournamentId
+          ? ((data.tournaments||[]).find(t=>t.id===tournamentId)?.name||'Turnaj')
+          : '',
+        playerIds:[m.playerIds[0],m.playerIds[1]],
+        playerNames:Array.isArray(m.playerNames)?[m.playerNames[0]||'',m.playerNames[1]||'']:['',''],
+        scores:[Number(m.scores?.[0]||0),Number(m.scores?.[1]||0)],
+        handicapEnabled:matchHasHandicap(m),
+        handicapScores:matchHandicapScores(m),
+        doublesMode:matchIsDoubles(m),
+        winnerId:(m.winner===0||m.winner===1)?m.playerIds[m.winner]:null,
+        discipline:m.discipline||'',
+        roundLabel:'',
+        endedAt,
+        stats:m.stats||null
+      };
+
+      const prev=byKey.get(key);
+      if(!prev || new Date(fact.endedAt||0)>new Date(prev.endedAt||0)){
+        byKey.set(key,fact);
+      }
+    });
+
+    // Potom doplníme turnajové zápasy, které v /matches vůbec nejsou
+    // (např. ručně zapsané výsledky play-off).
+    (data.tournaments||[]).forEach(t=>{
+      if(!t)return;
+      allTournamentMatches(t).forEach(tm=>{
+        if(!tm || !tm.player1Id || !tm.player2Id)return;
+        if(!(tm.status==='done' || tm.winnerId || tm.loserId))return;
+
+        const key='T:'+t.id+'|'+tm.id;
+        if(byKey.has(key))return;
+
+        let winnerId=tm.winnerId||null;
+        if(!winnerId && Number.isFinite(Number(tm.score1)) && Number.isFinite(Number(tm.score2))){
+          if(Number(tm.score1)>Number(tm.score2))winnerId=tm.player1Id;
+          else if(Number(tm.score2)>Number(tm.score1))winnerId=tm.player2Id;
+        }
+
+        byKey.set(key,{
+          key,
+          source:'tournament',
+          evidenceMode:'basic',
+          savedMatchId:null,
+          tournamentId:t.id,
+          tournamentMatchId:tm.id,
+          tournamentName:t.name||'Turnaj',
+          playerIds:[tm.player1Id,tm.player2Id],
+          playerNames:[
+            tournamentPlayerName(tm.player1Id,t),
+            tournamentPlayerName(tm.player2Id,t)
+          ],
+          scores:[Number(tm.score1||0),Number(tm.score2||0)],
+          handicapEnabled:!!t.handicapEnabled,
+          handicapScores:[tournamentHandicapForPlayer(t,tm.player1Id),tournamentHandicapForPlayer(t,tm.player2Id)],
+          winnerId,
+          discipline:tournamentDisciplineForMatch(t,tm),
+          roundLabel:tm.roundLabel||tm.bracket||'',
+          endedAt:tm.finishedAt||t.updatedAt||t.createdAt||'',
+          stats:null
+        });
+      });
+    });
+
+    return [...byKey.values()];
+  }
+
+  function playerMatchHistoryFacts(pid){
+    return completedRealMatchFacts()
+      .filter(f=>f.playerIds.includes(pid))
+      .sort((a,b)=>new Date(b.endedAt||0)-new Date(a.endedAt||0));
+  }
+
+  function playerAggregate(pid){
+    const facts=playerMatchHistoryFacts(pid);
+    let wins=0,losses=0,racksFor=0,racksAgainst=0;
+    let detailedMatches=0;
+    let soloSessions14=0,ghostSessions=0;
+
+    let extras={
+      breaks:0,dryBreaks:0,softBreaks:0,softDryBreaks:0,breakFouls:0,breakPottedBalls:0,breakPottedTracked:0,aces:0,breakAndRun:0,runouts:0,pushOuts:0,pushOutsReturned:0,twoWayAttempts:0,twoWaySuccessful:0,twoWayPotSuccess:0,twoWaySafetySuccess:0,nineBallCombos:0,nineBallCaroms:0,tenBallCombos:0,tenBallCaroms:0,missBall1:0,missBall2:0,missBall3:0,missBall4:0,missBall5:0,missBall6:0,missBall7:0,missBall8:0,missBall9:0,missBall10:0,breakBall1:0,breakBall2:0,breakBall3:0,breakBall4:0,breakBall5:0,breakBall6:0,breakBall7:0,breakBall8:0,breakBall9:0,breakBall10:0,fouls:0,
+      safeties:0,successfulSafeties:0,trackedSafeties:0,accidentalSafeties:0,safetyEscapes:0,
+      successfulSafetyEscapes:0,resafes:0,misses:0,matchOnlyMisses:0,
+      matchOnlyMissBadPosition:0,matchOnlyMissPot:0,threeFoulLosses:0,
+      lagWins:0,openingBreakFouls14:0,threeFoulPenalties14:0,
+      foulPenaltyPoints14:0,innings14:0,highRun14:0,
+      ghostDryBreaks:0,ghostFailedRacks:0,ghostBIHRunouts:0,ghostCleanRunouts:0
+    };
+
+    // W/L a skóre počítáme z jednotného deduplikovaného seznamu,
+    // který zahrnuje i ručně zapsané turnajové play-off.
+    facts.forEach(f=>{
+      const i=f.playerIds.indexOf(pid);
+      if(i<0)return;
+      const j=1-i;
+
+      const actual=actualRackScores(f);
+      racksFor+=Number(actual[i]||0);
+      racksAgainst+=Number(actual[j]||0);
+
+      if(f.winnerId===pid)wins++;
+      else if(f.winnerId && f.winnerId===f.playerIds[j])losses++;
+
+      // Detailní akční statistiky bereme pouze ze zápasů vedených rozšířeným počítadlem.
+      // Základní skóre a ručně zadané turnajové výsledky ovlivňují W/L, ELO a racky, ale ne detailní procenta.
+      if(matchEvidenceMode(f)!=='full')return;
+      const statRow=(f.stats && f.stats[i]) ? f.stats[i] : null;
+      if(!statRow)return;
+      detailedMatches++;
+
+      Object.keys(extras).forEach(k=>{
+        if((k==='breaks' || k==='dryBreaks') &&
+           !Object.prototype.hasOwnProperty.call(statRow,'dryBreaks')){
+          return;
+        }
+        const v=Number(statRow[k]||0);
+        if(k==='highRun14')extras[k]=Math.max(extras[k],v);
+        else extras[k]+=v;
+      });
+    });
+
+    // Sólo/Ghost zůstávají vedené z uložené historie /matches a nejsou součástí W/L.
+    (data.matches||[]).forEach(m=>{
+      if(!m || (m.status||'complete')!=='complete' || !Array.isArray(m.playerIds) || !m.playerIds.includes(pid))return;
+      if(m.solo14)soloSessions14++;
+      if(m.ghostMode)ghostSessions++;
+    });
+
+    return {
+      matches:facts.length,
+      detailedMatches,
+      wins,
+      losses,
+      racksFor,
+      racksAgainst,
+      soloSessions14,
+      ghostSessions,
+      ...extras
+    };
+  }
+
+  let editingPlayerId=null;
+  let pendingProfilePhoto=null;
+
+  $('refreshProfileClaimsBtn').onclick=renderProfileClaimsAdmin;
+  $('migratePlayersBtn').onclick=migratePlayersToSecureBranch;
+
+
+  function normalizePersonName(s){
+    return String(s||'').trim().replace(/\s+/g,' ').toLowerCase();
+  }
+
+  function findNameDuplicates(firstName,lastName){
+    const full=normalizePersonName((firstName||'')+' '+(lastName||''));
+    if(!full)return [];
+    return Object.values(data.players||{}).filter(p=>normalizePersonName(p.name)===full);
+  }
+
+  function normalizeClubName(s){
+    return String(s||'').trim().replace(/\s+/g,' ').toLowerCase();
+  }
+
+  function findNameAndClubDuplicates(firstName,lastName,club){
+    const full=normalizePersonName((firstName||'')+' '+(lastName||''));
+    const clubKey=normalizeClubName(club);
+    if(!full || !clubKey)return [];
+    return Object.values(data.players||{}).filter(p=>
+      normalizePersonName(p.name)===full &&
+      normalizeClubName(p.club)===clubKey
+    );
+  }
+
+  function normalizePlayerIdentifier(s){
+    return String(s||'').trim().toLowerCase();
+  }
+
+  function playerIdentifierTaken(identifier){
+    const key=normalizePlayerIdentifier(identifier);
+    if(!key)return false;
+    return Object.values(data.players||{}).some(p=>
+      p && normalizePlayerIdentifier(p.identifier)===key
+    );
+  }
+
+  function openOnboarding(){
+    $('onboardingFirstName').value='';
+    $('onboardingLastName').value='';
+    $('onboardingIdentifier').value='';
+    $('onboardingIdentifierWrap').classList.add('hidden');
+    $('onboardingClub').value='';
+    $('onboardingDuplicateBox').classList.add('hidden');
+    $('onboardingDuplicateList').innerHTML='';
+    $('onboardingMessage').textContent='';
+    $('onboardingModal').classList.add('show');
+    setTimeout(()=>$('onboardingFirstName').focus(),50);
+  }
+
+  function renderOnboardingDuplicates(){
+    const first=$('onboardingFirstName').value.trim();
+    const last=$('onboardingLastName').value.trim();
+    const club=$('onboardingClub').value.trim();
+
+    const nameDupes=findNameDuplicates(first,last);
+    const exactDupes=findNameAndClubDuplicates(first,last,club);
+
+    const box=$('onboardingDuplicateBox');
+    const list=$('onboardingDuplicateList');
+    const identifierWrap=$('onboardingIdentifierWrap');
+
+    if(!first||!last||!nameDupes.length){
+      box.classList.add('hidden');
+      list.innerHTML='';
+    }else{
+      box.classList.remove('hidden');
+      list.innerHTML=nameDupes
+        .sort((a,b)=>String(a.club||'').localeCompare(String(b.club||''),'cs'))
+        .map(p=>{
+          const ownerText=p.ownerUid?'Profil už je přiřazen k účtu':'Profil zatím nemá vlastníka';
+          const clubText=p.club?` • ${esc(p.club)}`:' • bez klubu';
+          const ident=p.identifier?` • ${esc(p.identifier)}`:'';
+          return `<div class="player-item" style="margin-top:8px">
+            <div>
+              <strong>${esc(p.name)}</strong>${clubText}${ident}
+              <div class="muted">${ownerText}</div>
+            </div>
+            <div class="item-actions" style="margin-top:8px">
+              ${p.ownerUid
+                ? `<button class="btn" disabled>UŽ PŘIŘAZENO</button>`
+                : `<button class="btn primary" onclick="requestClaimFromOnboarding('${p.id}')">TOHLE JSEM JÁ – POŽÁDAT O PŘEVZETÍ</button>`}
+            </div>
+          </div>`;
+        }).join('');
+    }
+
+    if(first && last && club && exactDupes.length){
+      identifierWrap.classList.remove('hidden');
+    }else{
+      identifierWrap.classList.add('hidden');
+      $('onboardingIdentifier').value='';
+    }
+  }
+
+  window.requestClaimFromOnboarding=async function(playerId){
+    const p=data.players[playerId];
+    if(!p)return;
+
+    if(p.ownerUid){
+      toast('Tento profil už je přiřazen jinému účtu.');
+      return;
+    }
+
+    if(!confirm('Odeslat správci žádost o převzetí profilu „'+p.name+'“?'))return;
+
+    try{
+      await createProfileClaim(playerId);
+      $('onboardingModal').classList.remove('show');
+      toast('Žádost byla odeslána hlavnímu správci.');
+    }catch(e){
+      toast('Žádost se nepodařilo odeslat: '+String(e.message||e));
+    }
+  };
+
+  async function createNewPlayerFromOnboarding(){
+    const first=$('onboardingFirstName').value.trim();
+    const last=$('onboardingLastName').value.trim();
+    const identifier=$('onboardingIdentifier').value.trim();
+    const club=$('onboardingClub').value.trim();
+
+    if(!first){
+      $('onboardingMessage').textContent='Vyplň jméno.';
+      return;
+    }
+    if(!last){
+      $('onboardingMessage').textContent='Vyplň příjmení.';
+      return;
+    }
+    if(!club){
+      $('onboardingMessage').textContent='Vyplň klub.';
+      return;
+    }
+
+    const fullName=(first+' '+last).replace(/\s+/g,' ').trim();
+    const nameDupes=findNameDuplicates(first,last);
+    const exactDupes=findNameAndClubDuplicates(first,last,club);
+
+    if(exactDupes.length){
+      if(!identifier){
+        $('onboardingMessage').textContent='Už existuje hráč se stejným jménem i klubem. Zadej prosím unikátní identifikátor.';
+        $('onboardingIdentifierWrap').classList.remove('hidden');
+        $('onboardingIdentifier').focus();
+        return;
+      }
+      if(identifier.length<2){
+        $('onboardingMessage').textContent='Identifikátor musí mít alespoň 2 znaky.';
+        $('onboardingIdentifier').focus();
+        return;
+      }
+      if(playerIdentifierTaken(identifier)){
+        $('onboardingMessage').textContent='Tento identifikátor už používá jiný hráč. Zvol jiný.';
+        $('onboardingIdentifier').focus();
+        return;
+      }
+
+      const ok=confirm(
+        'Už existuje '+(exactDupes.length===1?'hráč':'více hráčů')+
+        ' se jménem „'+fullName+'“ a klubem „'+club+'“.\n\n'+
+        'Nový profil bude odlišen identifikátorem „'+identifier+'“.\n\n'+
+        'Opravdu vytvořit NOVÝ profil?'
+      );
+      if(!ok){
+        renderOnboardingDuplicates();
+        return;
+      }
+    }else if(nameDupes.length){
+      const ok=confirm(
+        'Už existuje '+(nameDupes.length===1?'hráč':'více hráčů')+
+        ' se jménem „'+fullName+'“, ale v jiném klubu.\n\n'+
+        'Nový profil bude rozlišen klubem „'+club+'“.\n\n'+
+        'Opravdu vytvořit NOVÝ profil?'
+      );
+      if(!ok){
+        renderOnboardingDuplicates();
+        return;
+      }
+    }
+
+    const p={
+      id:uid(),
+      name:fullName,
+      firstName:first,
+      lastName:last,
+      nickname:'',
+      identifier:exactDupes.length?identifier:'',
+      useNicknameInMatch:false,
+      club:club,
+      clubId:currentUserClubId||'',
+      ownerUid:cloudUid,
+      note:'',
+      equipment:'',
+      achievements:'',
+      photo:'',
+      active:true,
+      createdAt:new Date().toISOString()
+    };
+
+    data.players[p.id]=p;
+    currentUserPlayerId=p.id;
+    await saveSecurePlayer(p);
+
+    try{
+      await updateUserAccessRecord({playerId:p.id});
+    }catch(e){
+      console.warn(e);
+      toast('Profil vznikl, ale vazbu účtu se nepodařilo uložit do Firebase.');
+    }
+
+    $('onboardingModal').classList.remove('show');
+    renderPlayers();
+    refreshAccountUI();
+    openPlayerProfile(p.id);
+    toast('Profil byl vytvořen.');
+  }
+
+  $('onboardingFirstName').addEventListener('input',renderOnboardingDuplicates);
+  $('onboardingLastName').addEventListener('input',renderOnboardingDuplicates);
+  $('onboardingClub').addEventListener('input',renderOnboardingDuplicates);
+  $('onboardingCancelBtn').onclick=()=>{$('onboardingModal').classList.remove('show');};
+  $('onboardingCreateBtn').onclick=createNewPlayerFromOnboarding;
+
+  $('myPlayerProfileBtn').onclick=async()=>{
+    if(!cloudAuthenticated || !cloudUid){
+      $('cloudLoginModal').classList.add('show');
+      return;
+    }
+
+    try{
+      await ensureUserAccessRecord(true);
+
+      // Pokud je účet už propojený s profilem, ale profil ještě není v lokálních datech,
+      // nejdřív znovu natáhneme cloud.
+      if(currentUserPlayerId && !data.players[currentUserPlayerId]){
+        await loadSecurePlayers();
+      await loadSecureMatches();
+      await loadSecureTournaments();
+      await promoteLegacyTournamentGuestsToProfiles();
+      }
+
+      if(currentUserPlayerId && data.players[currentUserPlayerId]){
+        openPlayerProfile(currentUserPlayerId);
+        return;
+      }
+
+      const claim=await loadOwnProfileClaim();
+
+      if(claim&&claim.status==='pending'){
+        toast('Žádost o profil '+(claim.playerName||'')+' čeká na schválení.');
+        return;
+      }
+
+      if(claim&&claim.status==='approved'){
+        await ensureUserAccessRecord(true);
+
+        if(currentUserPlayerId && !data.players[currentUserPlayerId]){
+          await loadSecurePlayers();
+      await loadSecureMatches();
+      await loadSecureTournaments();
+      await promoteLegacyTournamentGuestsToProfiles();
+        }
+
+        if(currentUserPlayerId&&data.players[currentUserPlayerId]){
+          openPlayerProfile(currentUserPlayerId);
+          return;
+        }
+
+        toast('Profil je schválený, ale zatím se nenačetl z cloudu. Zkus obnovit stránku.');
+        return;
+      }
+
+      openOnboarding();
+    return;
+    }catch(e){
+      console.error(e);
+      toast('Profil se nepodařilo otevřít: '+String(e.message||e));
+    }
+  };
+
+
+  let playersReloadInProgress=false;
+
+
+  function playerHasHistory(playerId){
+    const matches=Array.isArray(data.matches)?data.matches:Object.values(data.matches||{});
+    const tournaments=Array.isArray(data.tournaments)?data.tournaments:Object.values(data.tournaments||{});
+
+    const hasMatch=matches.some(m=>{
+      if(!m)return false;
+      const ids=[
+        m.player1Id,m.player2Id,m.p1Id,m.p2Id,
+        m.playerId,m.winnerId,m.loserId
+      ].filter(Boolean);
+      return ids.includes(playerId);
+    });
+
+    if(hasMatch)return true;
+
+    return tournaments.some(t=>{
+      if(!t)return false;
+      const pools=[]
+        .concat(t.playerIds||[])
+        .concat(t.players||[])
+        .concat(t.participants||[]);
+      return pools.some(x=>{
+        if(typeof x==='string')return x===playerId;
+        return x && (x.playerId===playerId || x.id===playerId);
+      });
+    });
+  }
+
+  window.deactivatePlayerProfile=async function(playerId){
+    const p=data.players[playerId];
+    if(!p)return;
+
+    if(!canEditPlayer(p)){
+      toast('Tento profil nemůžeš spravovat.');
+      return;
+    }
+
+    if(!confirm('Deaktivovat profil „'+p.name+'“?\n\nHistorie, ELO, H2H a turnajové výsledky zůstanou zachované. Hráč se jen nebude nabízet do nových zápasů.'))return;
+
+    p.active=false;
+    p.deactivatedAt=new Date().toISOString();
+    await saveSecurePlayer(p);
+    renderPlayers();
+    refreshAccountUI();
+    toast('Profil byl deaktivován.');
+  };
+
+  window.reactivatePlayerProfile=async function(playerId){
+    const p=data.players[playerId];
+    if(!p)return;
+
+    if(!canEditPlayer(p)){
+      toast('Tento profil nemůžeš spravovat.');
+      return;
+    }
+
+    p.active=true;
+    delete p.deactivatedAt;
+    await saveSecurePlayer(p);
+    renderPlayers();
+    refreshAccountUI();
+    toast('Profil byl znovu aktivován.');
+  };
+
+
+  const PLAYER_DEVELOPMENT_MIN_MATCHES=20;
+  const PLAYER_DEVELOPMENT_MIN_OPPONENTS=5;
+
+  function playerDevelopmentEligibility(playerId){
+    const facts=playerMatchHistoryFacts(playerId);
+    const opponents=new Set();
+    facts.forEach(f=>{
+      const other=(f.playerIds||[]).find(id=>id!==playerId);
+      if(other)opponents.add(other);
+    });
+    return {
+      matches:facts.length,
+      opponents:opponents.size,
+      unlocked:facts.length>=PLAYER_DEVELOPMENT_MIN_MATCHES && opponents.size>=PLAYER_DEVELOPMENT_MIN_OPPONENTS
+    };
+  }
+
+  function chronologicalRealMatchFacts(){
+    return completedRealMatchFacts()
+      .filter(f=>f && f.winnerId && Array.isArray(f.playerIds) && f.playerIds.length>=2)
+      .sort((a,b)=>new Date(a.endedAt||0)-new Date(b.endedAt||0));
+  }
+
+  function playerEloTimeline(playerId){
+    const ratings={};
+    Object.keys(data.players||{}).forEach(id=>ratings[id]=ELO_START);
+    const out=[];
+
+    chronologicalRealMatchFacts().forEach(f=>{
+      const a=f.playerIds[0], b=f.playerIds[1];
+      if(!a || !b || !f.winnerId)return;
+
+      const ra=ratings[a]??ELO_START;
+      const rb=ratings[b]??ELO_START;
+      const ea=1/(1+Math.pow(10,(rb-ra)/400));
+      const eb=1-ea;
+      const sa=f.winnerId===a?1:0;
+      const sb=f.winnerId===b?1:0;
+
+      ratings[a]=ra+ELO_K*(sa-ea);
+      ratings[b]=rb+ELO_K*(sb-eb);
+
+      if(a===playerId || b===playerId){
+        out.push({
+          n:out.length+1,
+          value:Math.round(ratings[playerId]??ELO_START),
+          date:f.endedAt||'',
+          fact:f
+        });
+      }
+    });
+
+    return out;
+  }
+
+  function playerRollingDevelopment(playerId,metric){
+    const facts=playerMatchHistoryFacts(playerId).slice().reverse();
+    const points=[];
+
+    facts.forEach((f,idx)=>{
+      const windowFacts=facts.slice(Math.max(0,idx-9),idx+1);
+      let value=null;
+
+      if(metric==='form'){
+        const decided=windowFacts.filter(x=>x.winnerId);
+        if(decided.length){
+          const wins=decided.filter(x=>x.winnerId===playerId).length;
+          value=Math.round(wins/decided.length*100);
+        }
+      }else if(metric==='break'){
+        let breaks=0,failed=0;
+        windowFacts.forEach(x=>{
+          const i=x.playerIds.indexOf(playerId);
+          const s=(i>=0 && x.stats && x.stats[i])?x.stats[i]:null;
+          if(!s)return;
+          const b=Number(s.breaks||0);
+          breaks+=b;
+          failed+=Number(s.dryBreaks||0)+Number(s.softBreaks||0)-Number(s.softDryBreaks||0)+Number(s.breakFouls||0);
+        });
+        if(breaks>0)value=Math.round(Math.max(0,breaks-failed)/breaks*100);
+      }else if(metric==='safety'){
+        let tracked=0,success=0;
+        windowFacts.forEach(x=>{
+          const i=x.playerIds.indexOf(playerId);
+          const s=(i>=0 && x.stats && x.stats[i])?x.stats[i]:null;
+          if(!s)return;
+          tracked+=Number(s.trackedSafeties||0);
+          success+=Number(s.successfulSafeties||0);
+        });
+        if(tracked>0)value=Math.round(success/tracked*100);
+      }else if(metric==='clean'){
+        let count=0;
+        windowFacts.forEach(x=>{
+          const i=x.playerIds.indexOf(playerId);
+          const s=(i>=0 && x.stats && x.stats[i])?x.stats[i]:null;
+          if(!s)return;
+          count+=Number(s.breakAndRun||0)+Number(s.runouts||0);
+        });
+        value=count;
+      }
+
+      points.push({n:idx+1,value,date:f.endedAt||'',fact:f});
+    });
+
+    return points;
+  }
+
+  function developmentMetricConfig(metric){
+    if(metric==='form')return {title:'FORMA • posledních 10 zápasů',suffix:' %',min:0,max:100,info:'Podíl výher v klouzavém okně posledních 10 dokončených zápasů.'};
+    if(metric==='break')return {title:'ÚSPĚŠNOST BREAKU • posledních 10 zápasů',suffix:' %',min:0,max:100,info:'Úspěšné breaky po odečtení dry breaků, soft breaků a faulů z breaku. Počítá se jen ze zápasů s detailními statistikami.'};
+    if(metric==='safety')return {title:'ÚSPĚŠNOST SAFETY • posledních 10 zápasů',suffix:' %',min:0,max:100,info:'Podíl úspěšných safety z evidovaných safety v posledních 10 zápasech.'};
+    if(metric==='clean')return {title:'ČISTÉ HRY + DOHRÁVKY • posledních 10 zápasů',suffix:'',min:0,max:null,info:'Počet čistých her a dohrávek nasbíraných v klouzavém okně posledních 10 zápasů.'};
+    return {title:'VÝVOJ ELO',suffix:'',min:null,max:null,info:'ELO po každém dokončeném zápase. Počítají se i dohledatelné turnajové výsledky zapsané přímo v turnaji.'};
+  }
+
+  function renderDevelopmentLineChart(points,metric){
+    const box=$('playerDevelopmentChart');
+    const info=$('playerDevelopmentMetricInfo');
+    if(!box || !info)return;
+
+    const cfg=developmentMetricConfig(metric);
+    info.innerHTML=`<strong>${esc(cfg.title)}</strong><br>${esc(cfg.info)}`;
+
+    const valid=points.filter(p=>Number.isFinite(Number(p.value)));
+    if(valid.length<2){
+      box.innerHTML='<div class="empty">Pro tuto metriku zatím není dost detailních dat.</div>';
+      return;
+    }
+
+    const width=900,height=360,padL=56,padR=18,padT=22,padB=52;
+    const values=valid.map(p=>Number(p.value));
+    let min=cfg.min!=null?cfg.min:Math.min(...values);
+    let max=cfg.max!=null?cfg.max:Math.max(...values);
+    if(min===max){ min-=1; max+=1; }
+    if(cfg.min==null && cfg.max==null){
+      const margin=Math.max(5,(max-min)*0.12);
+      min-=margin; max+=margin;
+    }
+
+    const x=p=>padL+(p.n-1)/Math.max(1,(points.length-1))*(width-padL-padR);
+    const y=v=>padT+(max-v)/(max-min)*(height-padT-padB);
+
+    const path=valid.map((p,idx)=>(idx?'L':'M')+x(p).toFixed(1)+' '+y(Number(p.value)).toFixed(1)).join(' ');
+    const last=valid[valid.length-1];
+
+    const yTicks=[0,.25,.5,.75,1].map(t=>{
+      const v=max-(max-min)*t;
+      return {y:padT+(height-padT-padB)*t,v};
+    });
+    const xTicks=[];
+    const total=points.length;
+    [1,Math.max(1,Math.round(total*.25)),Math.max(1,Math.round(total*.5)),Math.max(1,Math.round(total*.75)),total]
+      .forEach(n=>{if(!xTicks.includes(n))xTicks.push(n);});
+
+    box.innerHTML=`<div style="overflow:auto">
+      <svg viewBox="0 0 ${width} ${height}" style="width:100%;min-width:720px;display:block;background:rgba(255,255,255,.015);border:1px solid var(--border);border-radius:14px">
+        ${yTicks.map(t=>`
+          <line x1="${padL}" x2="${width-padR}" y1="${t.y}" y2="${t.y}" stroke="rgba(255,255,255,.12)" stroke-width="1"/>
+          <text x="${padL-10}" y="${t.y+4}" text-anchor="end" fill="#a8a8ad" font-size="12">${Math.round(t.v)}${cfg.suffix}</text>
+        `).join('')}
+        ${xTicks.map(n=>`
+          <line x1="${x({n})}" x2="${x({n})}" y1="${padT}" y2="${height-padB}" stroke="rgba(255,255,255,.05)" stroke-width="1"/>
+          <text x="${x({n})}" y="${height-20}" text-anchor="middle" fill="#a8a8ad" font-size="12">#${n}</text>
+        `).join('')}
+        <path d="${path}" fill="none" stroke="#d4af37" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+        ${valid.map(p=>`<circle cx="${x(p)}" cy="${y(Number(p.value))}" r="3.5" fill="#f1d67a">
+          <title>Zápas #${p.n}: ${Math.round(Number(p.value))}${cfg.suffix}</title>
+        </circle>`).join('')}
+        <circle cx="${x(last)}" cy="${y(Number(last.value))}" r="6" fill="#fff"/>
+        <text x="${Math.min(width-padR-8,x(last)+10)}" y="${Math.max(18,y(Number(last.value))-10)}" text-anchor="end" fill="#fff" font-size="13" font-weight="900">
+          ${Math.round(Number(last.value))}${cfg.suffix}
+        </text>
+      </svg>
+    </div>`;
+  }
+
+  let currentDevelopmentPlayerId=null;
+  let currentDevelopmentMetric='elo';
+
+  function renderPlayerDevelopment(playerId,metric='elo'){
+    const p=data.players?.[playerId];
+    if(!p)return;
+
+    const eligible=playerDevelopmentEligibility(playerId);
+    const title=$('playerDevelopmentTitle');
+    const summary=$('playerDevelopmentSummary');
+    const cards=$('playerDevelopmentCards');
+    if(!title || !summary || !cards)return;
+
+    title.textContent='VÝVOJ HRÁČE • '+playerDisplayName(p);
+    summary.textContent=`${eligible.matches} zápasů • ${eligible.opponents} různých soupeřů • odemčeno od ${PLAYER_DEVELOPMENT_MIN_MATCHES} zápasů / ${PLAYER_DEVELOPMENT_MIN_OPPONENTS} soupeřů`;
+
+    if(!eligible.unlocked){
+      cards.innerHTML='';
+      $('playerDevelopmentChart').innerHTML=`<div class="empty">
+        Vývoj hráče se odemkne po ${PLAYER_DEVELOPMENT_MIN_MATCHES} dokončených zápasech proti alespoň ${PLAYER_DEVELOPMENT_MIN_OPPONENTS} různým soupeřům.<br>
+        Aktuálně: <strong>${eligible.matches}/${PLAYER_DEVELOPMENT_MIN_MATCHES} zápasů</strong> •
+        <strong>${eligible.opponents}/${PLAYER_DEVELOPMENT_MIN_OPPONENTS} soupeřů</strong>.
+      </div>`;
+      $('playerDevelopmentMetricInfo').textContent='';
+      return;
+    }
+
+    const agg=playerAggregate(playerId);
+    const eloTimeline=playerEloTimeline(playerId);
+    const currentElo=eloTimeline.length?eloTimeline[eloTimeline.length-1].value:ELO_START;
+    const last10=playerRollingDevelopment(playerId,'form').filter(x=>Number.isFinite(Number(x.value)));
+    const formNow=last10.length?last10[last10.length-1].value:null;
+    const breakPts=playerRollingDevelopment(playerId,'break').filter(x=>Number.isFinite(Number(x.value)));
+    const breakNow=breakPts.length?breakPts[breakPts.length-1].value:null;
+
+    cards.innerHTML=`
+      <div class="subpanel"><div class="muted">ELO</div><div style="font-size:28px;font-weight:950;color:var(--gold2)">${currentElo}</div></div>
+      <div class="subpanel"><div class="muted">FORMA • posledních 10</div><div style="font-size:28px;font-weight:950;color:var(--gold2)">${formNow==null?'—':formNow+' %'}</div></div>
+      <div class="subpanel"><div class="muted">BREAK • posledních 10</div><div style="font-size:28px;font-weight:950;color:var(--gold2)">${breakNow==null?'—':breakNow+' %'}</div></div>
+    `;
+
+    currentDevelopmentMetric=metric;
+    document.querySelectorAll('#playerDevelopmentTabs [data-dev-metric]').forEach(btn=>{
+      btn.classList.toggle('primary',btn.dataset.devMetric===metric);
+    });
+
+    const points=metric==='elo' ? eloTimeline : playerRollingDevelopment(playerId,metric);
+    renderDevelopmentLineChart(points,metric);
+  }
+
+  window.openPlayerDevelopment=function(playerId){
+    const p=data.players?.[playerId];
+    if(!p)return;
+    const eligible=playerDevelopmentEligibility(playerId);
+    currentDevelopmentPlayerId=playerId;
+    currentDevelopmentMetric='elo';
+    renderPlayerDevelopment(playerId,'elo');
+    $('playerDevelopmentModal').classList.add('show');
+
+    if(!eligible.unlocked){
+      toast(`Vývoj se odemkne po ${PLAYER_DEVELOPMENT_MIN_MATCHES} zápasech proti alespoň ${PLAYER_DEVELOPMENT_MIN_OPPONENTS} soupeřům.`);
+    }
+  };
+
+  function renderPlayers(){
+    const searchEl=$('playerSearchInput');
+    const query=(searchEl?.value||'').trim().toLocaleLowerCase('cs');
+    const ps=Object.values(data.players||{})
+      .filter(p=>p.hiddenFromPlayers!==true)
+      .filter(p=>{
+        if(!query) return true;
+        const haystack=[p.name,p.nickname,p.club]
+          .filter(Boolean)
+          .join(' ')
+          .toLocaleLowerCase('cs');
+        return haystack.includes(query);
+      })
+      .sort((a,b)=>(a.name||'').localeCompare(b.name||'','cs'));
+    const eloRatings=calculateEloRatings();
+
+    if(!ps.length){
+      if(query){
+        $('playersView').innerHTML='<div class="empty">Žádný hráč neodpovídá hledání.</div>';
+        return;
+      }
+
+      $('playersView').innerHTML='<div class="empty">Načítám hráče…</div>';
+
+      if(cloudAuthenticated && !playersReloadInProgress){
+        playersReloadInProgress=true;
+        loadSecurePlayers()
+          .then(()=>{
+            playersReloadInProgress=false;
+            const count=Object.keys(data.players||{}).length;
+            if(count) renderPlayers();
+            else $('playersView').innerHTML='<div class="empty">V cloudu nejsou načteni žádní hráči.</div>';
+          })
+          .catch(e=>{
+            playersReloadInProgress=false;
+            console.warn('Players reload:',e);
+            $('playersView').innerHTML='<div class="empty">Hráče se nepodařilo načíst z cloudu.</div>';
+          });
+      }
+      return;
+    }
+
+    $('playersView').innerHTML = ps.map(p=>{
+      const s=playerAggregate(p.id);
+      const wr=s.matches?((s.wins/s.matches)*100).toFixed(1):'0.0';
+      const editable=canEditPlayer(p);
+      const isMine=!!(currentUserPlayerId && currentUserPlayerId===p.id);
+
+      return `<div class="player-item">
+        <div class="history-line">
+          <div style="display:flex;align-items:center;gap:12px;min-width:0">
+            ${avatarHTML(p)}
+            <div style="min-width:0">
+              <strong style="font-size:20px">${esc(p.name)}</strong>
+              ${isMine?'<span class="elo-badge" style="margin-left:8px">MŮJ PROFIL</span>':''}
+              ${p.placeholderProfile && !p.ownerUid
+                ? '<span class="elo-badge" style="margin-left:8px">PROFIL K PŘEVZETÍ</span>'
+                : ''}
+              ${currentUserIsSystemAdmin()
+                ? (p.ownerUid
+                    ? '<span class="elo-badge" style="margin-left:8px">ÚČET PROPOJEN</span>'
+                    : '<span class="elo-badge" style="margin-left:8px;opacity:.65">BEZ ÚČTU</span>')
+                : ''}
+              ${p.active===false?'<span class="elo-badge" style="margin-left:8px">NEAKTIVNÍ</span>':''}
+              ${p.nickname?`<div class="muted">„${esc(p.nickname)}“${p.useNicknameInMatch?' • zobrazuje se ve skóre':''}${p.club?' • '+esc(p.club):''}</div>`:(p.club?`<div class="muted">${esc(p.club)}</div>`:'')}
+              <div class="muted">${s.matches} zápasů • ${s.wins} výher • ${s.losses} proher • ${s.detailedMatches||0} rozšířeně evidováno${s.soloSessions14?' • '+s.soloSessions14+' sólo 14.1':''}${s.ghostSessions?' • '+s.ghostSessions+' Ghost':''}</div>
+              <div class="elo-badge">ELO ${eloRatings[p.id]??ELO_START}</div>
+              ${p.equipment?`<div class="muted" style="margin-top:5px"><strong style="color:var(--text)">Vybavení:</strong> ${esc(p.equipment)}</div>`:''}
+              ${p.achievements?`<div class="muted" style="margin-top:3px"><strong style="color:var(--text)">Největší úspěchy:</strong> ${esc(p.achievements)}</div>`:''}
+            </div>
+          </div>
+          <div class="history-score">${wr}%</div>
+        </div>
+        <div class="item-actions">
+          ${(()=>{
+            const dev=playerDevelopmentEligibility(p.id);
+            const devBtn=dev.unlocked
+              ? `<button class="btn primary" onclick="openPlayerDevelopment('${p.id}')">VÝVOJ HRÁČE</button>`
+              : `<button class="btn" onclick="openPlayerDevelopment('${p.id}')" title="Odemkne se po ${PLAYER_DEVELOPMENT_MIN_MATCHES} zápasech proti alespoň ${PLAYER_DEVELOPMENT_MIN_OPPONENTS} soupeřům">VÝVOJ HRÁČE 🔒</button>`;
+            return editable
+              ? `<button class="btn" onclick="openPlayerProfile('${p.id}')">${isMine?'MŮJ PROFIL':'PROFIL'}</button>
+                 <button class="btn primary" onclick="openPlayerMatchHistory('${p.id}')">HISTORIE ZÁPASŮ</button>
+                 ${devBtn}
+                 ${p.active===false
+                   ? `<button class="btn primary" onclick="reactivatePlayerProfile('${p.id}')">AKTIVOVAT</button>`
+                   : `<button class="btn" onclick="deactivatePlayerProfile('${p.id}')">DEAKTIVOVAT</button>`}`
+              : `<button class="btn" onclick="openPlayerProfile('${p.id}')" title="Profil je pouze pro čtení">PROFIL</button>
+                 <button class="btn primary" onclick="openPlayerMatchHistory('${p.id}')">HISTORIE ZÁPASŮ</button>
+                 ${devBtn}`;
+          })()}
+        </div>
+        ${(()=>{
+          const dev=playerDevelopmentEligibility(p.id);
+          return dev.unlocked ? '' : `<div class="muted" style="margin-top:7px;font-size:12px">Vývoj hráče: ${dev.matches}/${PLAYER_DEVELOPMENT_MIN_MATCHES} zápasů • ${dev.opponents}/${PLAYER_DEVELOPMENT_MIN_OPPONENTS} soupeřů</div>`;
+        })()}
+      </div>`;
+    }).join('');
+  }
+
+
+  document.addEventListener('input',function(e){
+    if(e.target && e.target.id==='playerSearchInput'){
+      renderPlayers();
+    }
+  });
+
+  let playerMatchHistoryFilter='all';
+  let currentPlayerMatchHistoryId=null;
+
+  window.setPlayerMatchHistoryFilter=function(mode){
+    playerMatchHistoryFilter=['all','full','basic'].includes(mode)?mode:'all';
+    if(currentPlayerMatchHistoryId)renderPlayerMatchHistory(currentPlayerMatchHistoryId);
+  };
+
+  function renderPlayerMatchHistory(playerId){
+    const wrap=$('playerMatchHistoryBody');
+    const summary=$('playerMatchHistorySummary');
+    const title=$('playerMatchHistoryTitle');
+    if(!wrap || !summary || !title)return;
+
+    const p=data.players?.[playerId];
+    if(!p){
+      title.textContent='Historie zápasů';
+      summary.textContent='';
+      wrap.innerHTML='<div class="empty">Profil hráče nebyl nalezen.</div>';
+      return;
+    }
+
+    const allFacts=playerMatchHistoryFacts(playerId);
+    const fullCount=allFacts.filter(f=>matchEvidenceMode(f)==='full').length;
+    const basicCount=allFacts.length-fullCount;
+    const facts=playerMatchHistoryFilter==='all' ? allFacts : allFacts.filter(f=>matchEvidenceMode(f)===playerMatchHistoryFilter);
+    const wins=allFacts.filter(f=>f.winnerId===playerId).length;
+    const losses=allFacts.filter(f=>f.winnerId && f.winnerId!==playerId).length;
+    const racksFor=allFacts.reduce((sum,f)=>{
+      const i=f.playerIds.indexOf(playerId);
+      const actual=actualRackScores(f);
+      return sum+Number(i>=0?actual[i]||0:0);
+    },0);
+    const racksAgainst=allFacts.reduce((sum,f)=>{
+      const i=f.playerIds.indexOf(playerId);
+      const j=i>=0?1-i:-1;
+      const actual=actualRackScores(f);
+      return sum+Number(j>=0?actual[j]||0:0);
+    },0);
+
+    title.textContent='HISTORIE ZÁPASŮ • '+playerDisplayName(p);
+    summary.textContent=allFacts.length
+      ? `${allFacts.length} zápasů • ${wins} výher • ${losses} proher • skóre ${racksFor}:${racksAgainst} • ${fullCount} rozšířeně • ${basicCount} základně`
+      : 'Zatím není uložený žádný dokončený zápas.';
+
+    const filterBar=`<div class="subpanel" style="margin-bottom:12px">
+      <div style="font-weight:950;margin-bottom:7px">REŽIM EVIDENCE</div>
+      <div class="item-actions">
+        <button class="btn ${playerMatchHistoryFilter==='all'?'primary':''}" onclick="setPlayerMatchHistoryFilter('all')">VŠECHNY (${allFacts.length})</button>
+        <button class="btn ${playerMatchHistoryFilter==='full'?'primary':''}" onclick="setPlayerMatchHistoryFilter('full')">ROZŠÍŘENÉ (${fullCount})</button>
+        <button class="btn ${playerMatchHistoryFilter==='basic'?'primary':''}" onclick="setPlayerMatchHistoryFilter('basic')">ZÁKLADNÍ (${basicCount})</button>
+      </div>
+      <div class="muted" style="margin-top:8px;font-size:12px">Detailní akční statistiky se počítají pouze ze zápasů vedených přes rozšířené počítadlo.</div>
+    </div>`;
+
+    if(!allFacts.length){
+      wrap.innerHTML=filterBar+'<div class="empty">Historie zápasů je zatím prázdná.</div>';
+      return;
+    }
+    if(!facts.length){
+      wrap.innerHTML=filterBar+'<div class="empty">V tomto filtru nejsou žádné zápasy.</div>';
+      return;
+    }
+
+    wrap.innerHTML=filterBar+facts.map(f=>{
+      const i=f.playerIds.indexOf(playerId);
+      const j=1-i;
+      const opponentId=f.playerIds[j];
+      const opponent=data.players?.[opponentId];
+      const opponentName=opponent
+        ? playerDisplayName(opponent)
+        : (f.playerNames?.[j]||tournamentPlayerName(opponentId)||'Soupeř');
+
+      const won=f.winnerId===playerId;
+      const loss=f.winnerId && f.winnerId!==playerId;
+      const resultLabel=won?'VÝHRA':(loss?'PROHRA':'BEZ VÍTĚZE');
+      const date=f.endedAt
+        ? new Date(f.endedAt).toLocaleString('cs-CZ',{dateStyle:'medium',timeStyle:'short'})
+        : 'datum neuvedeno';
+
+      return `<div class="history-item" style="margin-bottom:10px">
+        <div class="history-line">
+          <div style="min-width:0">
+            <strong>${resultLabel} • ${esc(opponentName)}</strong>${evidenceModeBadge(matchEvidenceMode(f))}
+            ${f.doublesMode?'<span class="badge gold" style="margin-left:6px">DVOJICE</span>':''}
+            ${f.handicapEnabled
+              ? `<span class="badge" style="margin-left:6px;border-color:#705820;color:#f1d67a">HANDICAP ${esc(String(Number(f.handicapScores?.[0]||0)))}:${esc(String(Number(f.handicapScores?.[1]||0)))}</span>`
+              : ''}
+            ${f.streamMatchTitle?`<div style="margin-top:4px;color:var(--gold2);font-weight:850;font-size:12px">${esc(f.streamMatchTitle)}</div>`:''}
+            <div class="muted" style="margin-top:4px">
+              ${esc((f.discipline||'').toUpperCase())}
+              ${f.tournamentName?' • '+esc(f.tournamentName):''}
+              ${f.roundLabel?' • '+esc(f.roundLabel):''}
+              • ${esc(date)}
+            </div>
+          </div>
+          <div class="history-score">${Number(f.scores?.[i]||0)} : ${Number(f.scores?.[j]||0)}</div>
+        </div>
+        ${f.savedMatchId
+          ? `<div class="item-actions" style="margin-top:8px">
+              <button class="btn" onclick="showSavedMatchStats('${f.savedMatchId}')">STATISTIKY ZÁPASU</button>
+            </div>`
+          : `<div class="muted" style="margin-top:7px;font-size:12px">Výsledek byl zapsán přímo v turnaji.</div>`}
+      </div>`;
+    }).join('');
+  }
+
+  window.openPlayerMatchHistory=function(playerId){
+    const p=data.players?.[playerId];
+    if(!p)return;
+    currentPlayerMatchHistoryId=playerId;
+    playerMatchHistoryFilter='all';
+    renderPlayerMatchHistory(playerId);
+    $('playerMatchHistoryModal').classList.add('show');
+  };
+
+  window.openPlayerProfile=function(id){
+    const p=data.players[id]; if(!p) return;
+    const readOnly=!canEditPlayer(p);
+    editingPlayerId=id;
+    pendingProfilePhoto=p.photo||'';
+    $('profileName').value=p.name||'';
+    $('profileNickname').value=p.nickname||'';
+    $('profileUseNickname').checked=!!p.useNicknameInMatch;
+    $('profileClub').value=p.club||'';
+    $('profileNote').value=p.note||'';
+    $('profileEquipment').value=p.equipment||'';
+    $('profileAchievements').value=p.achievements||'';
+    $('profilePhotoFile').value='';
+
+    ['profileName','profileNickname','profileUseNickname','profileClub','profileNote','profileEquipment','profileAchievements','profilePhotoFile','removeProfilePhoto']
+      .forEach(fid=>{ const el=$(fid); if(el) el.disabled=readOnly; });
+
+    if($('saveProfile')){
+      $('saveProfile').style.display=readOnly?'none':'';
+      $('saveProfile').disabled=readOnly;
+    }
+    if($('deletePlayer')){
+      $('deletePlayer').style.display=readOnly?'none':'';
+      $('deletePlayer').disabled=readOnly;
+    }
+
+    const challengeAction=$('profileChallengeAction');
+    const challengeBtn=$('profileChallengeBtn');
+    const canChallenge=!!(cloudAuthenticated && currentUserPlayerId && p.ownerUid && String(p.id)!==String(currentUserPlayerId) && String(p.ownerUid)!==String(cloudUid));
+    if(challengeAction)challengeAction.classList.toggle('hidden',!canChallenge);
+    if(challengeBtn){
+      challengeBtn.dataset.playerId=p.id||id;
+      challengeBtn.disabled=!canChallenge;
+    }
+
+    renderProfilePreview();
+    $('profileModal').classList.add('show');
+  };
+
+  function renderProfilePreview(){
+    const p={name:$('profileName').value||data.players[editingPlayerId]?.name||'',photo:pendingProfilePhoto};
+    if(p.photo){
+      $('profileAvatar').src=p.photo;
+      $('profileAvatar').classList.remove('hidden');
+      $('profileAvatarFallback').classList.add('hidden');
+    }else{
+      $('profileAvatar').removeAttribute('src');
+      $('profileAvatar').classList.add('hidden');
+      $('profileAvatarFallback').classList.remove('hidden');
+      $('profileAvatarFallback').textContent=initials(p.name);
+    }
+  }
+
+  $('profileName').addEventListener('input',renderProfilePreview);
+  $('closeProfile').onclick=()=>{$('profileModal').classList.remove('show'); editingPlayerId=null;};
+  if($('playerMatchHistoryClose'))$('playerMatchHistoryClose').onclick=()=>{
+    $('playerMatchHistoryModal').classList.remove('show');
+  };
+  if($('playerDevelopmentClose'))$('playerDevelopmentClose').onclick=()=>{
+    $('playerDevelopmentModal').classList.remove('show');
+    currentDevelopmentPlayerId=null;
+  };
+
+  function openPlayerDevelopmentHelp(){
+    $('playerDevelopmentHelpModal')?.classList.add('show');
+  }
+  if($('playerDevelopmentHelpBtn'))$('playerDevelopmentHelpBtn').onclick=openPlayerDevelopmentHelp;
+  if($('playerDevelopmentHelpBtnBottom'))$('playerDevelopmentHelpBtnBottom').onclick=openPlayerDevelopmentHelp;
+  if($('playerDevelopmentHelpClose'))$('playerDevelopmentHelpClose').onclick=()=>{
+    $('playerDevelopmentHelpModal')?.classList.remove('show');
+  };
+  document.addEventListener('click',e=>{
+    const btn=e.target?.closest?.('#playerDevelopmentTabs [data-dev-metric]');
+    if(!btn || !currentDevelopmentPlayerId)return;
+    renderPlayerDevelopment(currentDevelopmentPlayerId,btn.dataset.devMetric||'elo');
+  });
+  $('removeProfilePhoto').onclick=()=>{pendingProfilePhoto=''; $('profilePhotoFile').value=''; renderProfilePreview();};
+
+  $('profilePhotoFile').addEventListener('change',async e=>{
+    const file=(e.target.files && e.target.files[0]); if(!file) return;
+    try{
+      pendingProfilePhoto=await resizePhoto(file,320,0.82);
+      renderProfilePreview();
+    }catch(err){ toast('Fotku se nepodařilo načíst.'); }
+  });
+
+  function resizePhoto(file,maxSize=320,quality=.82){
+    return new Promise((resolve,reject)=>{
+      const reader=new FileReader();
+      reader.onerror=reject;
+      reader.onload=()=>{
+        const img=new Image();
+        img.onerror=reject;
+        img.onload=()=>{
+          let w=img.width,h=img.height;
+          const scale=Math.min(1,maxSize/Math.max(w,h));
+          w=Math.max(1,Math.round(w*scale)); h=Math.max(1,Math.round(h*scale));
+          const c=document.createElement('canvas'); c.width=w; c.height=h;
+          c.getContext('2d').drawImage(img,0,0,w,h);
+          resolve(c.toDataURL('image/jpeg',quality));
+        };
+        img.src=reader.result;
+      };
+      reader.readAsDataURL(file);
+    });
+  }
+
+  $('saveProfile').onclick=async()=>{
+    if(editingPlayerId && data.players[editingPlayerId] && !canEditPlayer(data.players[editingPlayerId])){ toast('Tento profil je pouze pro čtení.'); return; }
+    const p=data.players[editingPlayerId]; if(!p) return;
+    const newName=$('profileName').value.trim();
+    if(!newName){toast('Jméno nesmí být prázdné.');return;}
+    const duplicate=Object.values(data.players).find(x=>x.id!==p.id && x.name.trim().toLowerCase()===newName.toLowerCase());
+    if(duplicate){toast('Hráč s tímto jménem už existuje.');return;}
+
+    p.name=newName;
+    p.nickname=$('profileNickname').value.trim();
+    p.useNicknameInMatch=$('profileUseNickname').checked && !!p.nickname;
+    p.club=$('profileClub').value.trim();
+    p.note=$('profileNote').value.trim();
+    p.equipment=$('profileEquipment').value.trim();
+    p.achievements=$('profileAchievements').value.trim();
+    p.photo=pendingProfilePhoto||'';
+
+    // Keep historical/current display names synchronized with profile rename.
+    data.matches.forEach(m=>{
+      const idx=m.playerIds.indexOf(p.id);
+      if(idx>=0){
+        m.playerNames[idx]=playerDisplayName(p);
+        if(!m.playerRealNames) m.playerRealNames=[...(m.playerNames||[])];
+        m.playerRealNames[idx]=p.name;
+      }
+    });
+    if(match && Array.isArray(match.playerIds)){
+      const idx=match.playerIds.indexOf(p.id);
+      if(idx>=0){
+        match.playerNames[idx]=playerDisplayName(p);
+        if(!match.playerRealNames) match.playerRealNames=[...(match.playerNames||[])];
+        match.playerRealNames[idx]=p.name;
+        saveDeviceActiveMatch(match);
+      }
+    }
+    if(match){
+      const idx=match.playerIds.indexOf(p.id);
+      if(idx>=0){
+        match.playerNames[idx]=playerDisplayName(p);
+        if(!match.playerRealNames) match.playerRealNames=[...(match.playerNames||[])];
+        match.playerRealNames[idx]=p.name;
+      }
+    }
+
+    await saveSecurePlayer(p);
+    $('profileModal').classList.remove('show');
+    editingPlayerId=null;
+    renderPlayers();
+    if(match) renderMatch();
+    toast('Profil hráče uložen.');
+  };
+
+  $('deletePlayer').onclick=async()=>{
+    if(editingPlayerId && data.players[editingPlayerId] && !canEditPlayer(data.players[editingPlayerId])){
+      toast('Tento profil nelze upravovat ani mazat.');
+      return;
+    }
+
+    const p=data.players[editingPlayerId];
+    if(!p)return;
+
+    if(playerHasHistory(editingPlayerId)){
+      $('profileModal').classList.remove('show');
+      deactivatePlayerProfile(editingPlayerId);
+      return;
+    }
+
+    if(!confirm('Profil „'+p.name+'“ nemá žádnou historii. Opravdu ho úplně smazat?'))return;
+
+    await deleteSecurePlayer(editingPlayerId);
+
+    if(currentUserPlayerId===editingPlayerId){
+      currentUserPlayerId=null;
+      try{ updateUserAccessRecord({playerId:''}); }catch(e){}
+    }
+
+    editingPlayerId=null;
+    $('profileModal').classList.remove('show');
+    renderPlayers();
+    refreshAccountUI();
+    toast('Profil byl smazán.');
+  };
+
+  function ghostAggregate(pid){
+    const sessions=data.matches.filter(m=>
+      m.ghostMode &&
+      (m.status||'complete')==='complete' &&
+      m.playerIds &&
+      m.playerIds[0]===pid
+    );
+
+    let playerPoints=0,ghostPoints=0,clean=0,bih=0,failed=0,dry=0;
+    const byDiscipline={'8-ball':0,'9-ball':0,'10-ball':0};
+    const missByBall={};
+
+    sessions.forEach(m=>{
+      playerPoints+=Number(m.scores[0]||0);
+      ghostPoints+=Number(m.scores[1]||0);
+      clean+=statVal(m,0,'ghostCleanRunouts');
+      bih+=statVal(m,0,'ghostBIHRunouts');
+      failed+=statVal(m,0,'ghostFailedRacks');
+      dry+=statVal(m,0,'ghostDryBreaks');
+      if(byDiscipline[m.discipline]!=null) byDiscipline[m.discipline]++;
+
+      if(m.discipline==='9-ball'||m.discipline==='10-ball'){
+        const map=m?.stats?.[0]?.ghostMissesByBall||{};
+        Object.entries(map).forEach(([ball,count])=>{
+          const b=Number(ball), n=Number(count||0);
+          if(b>0&&n>0)missByBall[b]=Number(missByBall[b]||0)+n;
+        });
+      }
+    });
+
+    const ballRows=Object.entries(missByBall)
+      .map(([ball,count])=>({ball:Number(ball),count:Number(count||0)}))
+      .filter(x=>x.ball>0&&x.count>0)
+      .sort((a,b)=>b.count-a.count||a.ball-b.ball);
+    const mostCommonBall=ballRows.length?ballRows[0]:null;
+    const ballBreakdown=ballRows.length
+      ? [...ballRows].sort((a,b)=>a.ball-b.ball).map(x=>'#'+x.ball+' '+x.count+'×').join(' • ')
+      : '—';
+
+    return {
+      sessions:sessions.length,
+      playerPoints,ghostPoints,clean,bih,failed,dry,
+      racks:clean+bih+failed+dry,
+      byDiscipline,
+      missByBall,
+      mostCommonBall,
+      ballBreakdown
+    };
+  }
+
+  
+  function baseTournamentPlacementRecords(t){
+    if(!t || t.status!=='complete') return [];
+    const records=[];
+
+    const addGroupEliminations=()=>{
+      (t.groupEliminations||[]).forEach(e=>{
+        const exactPlace=Math.max(1,Number(e.place||1));
+        const r=eliminationBand(exactPlace);
+        records.push({
+          playerId:e.playerId,
+          label:r.from===r.to?r.from+'. místo':r.from+'.–'+r.to+'. místo',
+          // Pro sérii zachováváme skutečné individuální pořadí.
+          // Label může dál zobrazovat společné pásmo turnaje.
+          value:exactPlace
+        });
+      });
+    };
+
+    if(t.ko){
+      const k=t.ko;
+      if(k.championId)records.push({playerId:k.championId,label:'1. místo',value:1});
+      if(k.runnerUpId)records.push({playerId:k.runnerUpId,label:'2. místo',value:2});
+      if(k.thirdPlacePlayoff){
+        if(k.thirdPlaceWinnerId)records.push({playerId:k.thirdPlaceWinnerId,label:'3. místo',value:3});
+        if(k.thirdPlaceLoserId)records.push({playerId:k.thirdPlaceLoserId,label:'4. místo',value:4});
+      }else{
+        (k.eliminations||[]).filter(e=>Number(e.place||999)<=4).slice(0,2)
+          .forEach(e=>records.push({playerId:e.playerId,label:'3. místo',value:3}));
+      }
+      (k.eliminations||[]).forEach(e=>{
+        const exactPlace=Number(e.place||0);
+        if(exactPlace<=4)return;
+        const r=eliminationBand(exactPlace);
+        records.push({
+          playerId:e.playerId,
+          label:r.from+'.–'+r.to+'. místo',
+          value:exactPlace
+        });
+      });
+      addGroupEliminations();
+      return records;
+    }
+
+    if(t.dko){
+      const d=t.dko;
+      if(d.championId)records.push({playerId:d.championId,label:'1. místo',value:1});
+      const gf=dkoFinalMatch(t);
+      const runner=d.runnerUpId||gf?.loserId||null;
+      if(runner)records.push({playerId:runner,label:'2. místo',value:2});
+
+      if(d.thirdPlacePlayoff){
+        if(d.thirdPlaceWinnerId)records.push({playerId:d.thirdPlaceWinnerId,label:'3. místo',value:3});
+        if(d.thirdPlaceLoserId)records.push({playerId:d.thirdPlaceLoserId,label:'4. místo',value:4});
+      }else{
+        (d.eliminations||[]).filter(e=>Number(e.place||999)<=4).sort((a,b)=>Number(a.place)-Number(b.place)).slice(0,2)
+          .forEach(e=>records.push({playerId:e.playerId,label:'3. místo',value:3}));
+      }
+      (d.eliminations||[]).forEach(e=>{
+        const p=Number(e.place||0);if(p<=4)return;
+        const range=dkoPlacementRange(p);
+        records.push({
+          playerId:e.playerId,
+          label:range.from+'.–'+range.to+'. místo',
+          value:p
+        });
+      });
+      addGroupEliminations();
+      return records;
+    }
+
+
+    if(t.format==='swiss'){
+      swissStandings(t).forEach(r=>{
+        records.push({
+          playerId:r.id,
+          label:r.place+'. místo',
+          value:r.place
+        });
+      });
+      return records;
+    }
+
+    if(t.format==='groups'){
+      const rr=roundRobinOverallStandings(t);
+      rr.forEach(r=>{
+        records.push({
+          playerId:r.playerId,
+          label:r.label,
+          value:r.place
+        });
+      });
+      return records;
+    }
+
+    return records;
+  }
+
+  function tournamentPlacementSeriesRule(t){
+    if(!t?.id)return null;
+
+    const candidates=(data.tournamentSeries||[])
+      .filter(s=>(s.tournamentIds||[]).includes(t.id))
+      .filter(s=>seriesPlacementTieBreakMode(s)!=='legacy');
+    if(candidates[0])return candidates[0];
+
+    if(t.seriesPlacementTieBreak==='score_h2h_group'){
+      return {name:'Lounská tour',placementTieBreak:'score_h2h_group'};
+    }
+
+    const normalized=String(t.name||'')
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g,'')
+      .toLowerCase();
+
+    return normalized.includes('loun')
+      ? {name:t.name||'Lounská tour',placementTieBreak:'score_h2h_group'}
+      : null;
+  }
+
+  function tournamentPlacementRecords(t){
+    const records=baseTournamentPlacementRecords(t);
+    const series=tournamentPlacementSeriesRule(t);
+    return series ? seriesRefineTournamentPlacements(series,t,records) : records;
+  }
+
+  function completedTournamentMatchResults(t){
+    if(!t)return [];
+    return allTournamentMatches(t)
+      .filter(m=>m && (m.status==='done'||m.winnerId||m.loserId) && m.player1Id && m.player2Id)
+      .map(m=>{
+        const winnerId=m.winnerId || (
+          Number.isFinite(Number(m.score1)) && Number.isFinite(Number(m.score2))
+            ? (Number(m.score1)>Number(m.score2)?m.player1Id:(Number(m.score2)>Number(m.score1)?m.player2Id:null))
+            : null
+        );
+        return {
+          tournamentId:t.id,
+          tournamentMatchId:m.id,
+          playerIds:[m.player1Id,m.player2Id],
+          winnerId,
+          score1:Number(m.score1||0),
+          score2:Number(m.score2||0)
+        };
+      });
+  }
+
+  function buildTournamentStats(){
+    const map=new Map();
+
+    const ensure=(playerId)=>{
+      if(!map.has(playerId)){
+        map.set(playerId,{
+          playerId,
+          tournaments:0,
+          wins:0,
+          seconds:0,
+          thirds:0,
+          podiums:0,
+          best:null,
+          placementSum:0,
+          placementCount:0,
+          tournamentMatches:0,
+          tournamentMatchWins:0,
+          history:[]
+        });
+      }
+      return map.get(playerId);
+    };
+
+    const completed=(data.tournaments||[]).filter(t=>t && t.status==='complete');
+
+    completed.forEach(t=>{
+      const placements=tournamentPlacementRecords(t);
+      const seen=new Set();
+
+      placements.forEach(r=>{
+        if(!r.playerId || String(r.playerId).startsWith('guest_')) return;
+        const s=ensure(r.playerId);
+        if(!seen.has(r.playerId)){
+          s.tournaments++;
+          seen.add(r.playerId);
+        }
+
+        if(!r.groupOnly){
+          if(r.value===1)s.wins++;
+          if(r.value===2)s.seconds++;
+          if(r.value===3)s.thirds++;
+          if(r.value<=3)s.podiums++;
+          if(s.best===null || r.value<s.best)s.best=r.value;
+          s.placementSum+=Number(r.value||0);
+          s.placementCount++;
+        }
+
+        s.history.push({
+          tournamentId:t.id,
+          tournamentName:t.name||'Turnaj',
+          date:t.createdAt||'',
+          discipline:t.discipline||'',
+          label:r.label,
+          value:r.value,
+          format:t.format
+        });
+      });
+    });
+
+    // Ručně doplněné historické turnaje ze sérií.
+    // Neovlivňují ELO ani detailní herní statistiky, ale doplňují umístění a W/L.
+    const seenHistoricalTournamentIds=new Set();
+    (data.tournamentSeries||[]).forEach(series=>{
+      (series.historicalTournaments||[]).forEach(ht=>{
+        if(!ht?.id||seenHistoricalTournamentIds.has(ht.id))return;
+        seenHistoricalTournamentIds.add(ht.id);
+
+        const seenPlayers=new Set();
+        (ht.results||[]).forEach(r=>{
+          const pid=r.playerId;
+          if(!pid||!data.players?.[pid])return;
+          const st=ensure(pid);
+          if(!seenPlayers.has(pid)){st.tournaments++;seenPlayers.add(pid);}
+          const place=Number(r.place||r.value||999);
+          if(Number.isFinite(place)&&place<999){
+            if(place===1)st.wins++;
+            if(place===2)st.seconds++;
+            if(place===3)st.thirds++;
+            if(place<=3)st.podiums++;
+            if(st.best===null||place<st.best)st.best=place;
+            st.placementSum+=place;
+            st.placementCount++;
+          }
+          st.history.push({
+            tournamentId:ht.id,
+            tournamentName:ht.name||'Historický turnaj',
+            date:ht.date||ht.createdAt||'',
+            discipline:'',
+            label:place<999?(place+'. místo'+(r.sharedPlace?' (dělené)':'')):'—',
+            value:place,
+            historical:true
+          });
+        });
+
+        if(ht.statsComplete){
+          (ht.matches||[]).forEach(m=>{
+            [m.player1Id,m.player2Id].forEach(pid=>{
+              if(pid&&data.players?.[pid])ensure(pid).tournamentMatches++;
+            });
+            if(m.winnerId&&data.players?.[m.winnerId])ensure(m.winnerId).tournamentMatchWins++;
+          });
+        }
+      });
+    });
+
+    // Turnajové W/L počítáme ze stejného deduplikovaného zdroje jako hlavní statistiky.
+    // Jeden turnajový zápas se započítá právě jednou, ať vznikl přes počítadlo
+    // nebo byl výsledek zapsán ručně přímo v turnaji.
+    completedRealMatchFacts()
+      .filter(f=>!!f.tournamentId)
+      .forEach(f=>{
+        f.playerIds.forEach(pid=>{
+          if(!pid || String(pid).startsWith('guest_'))return;
+          ensure(pid).tournamentMatches++;
+        });
+
+        if(f.winnerId && !String(f.winnerId).startsWith('guest_')){
+          ensure(f.winnerId).tournamentMatchWins++;
+        }
+      });
+
+    return [...map.values()];
+  }
+
+  function tournamentBestLabel(s){
+    if(s.best===null || s.best===undefined)return '—';
+    if(s.best===1)return '1. místo';
+    if(s.best===2)return '2. místo';
+    if(s.best===3)return '3. místo';
+    if(s.best===4)return '4. místo';
+    return Number.isInteger(s.best)?(s.best+'. místo'):String(s.best).replace('.',',');
+  }
+
+  function renderTournamentStats(){
+    const summary=$('tournamentStatsSummary');
+    const history=$('tournamentStatsHistory');
+    if(!summary || !history)return;
+
+    const stats=buildTournamentStats()
+      .filter(s=>data.players?.[s.playerId] && data.players[s.playerId].active!==false && data.players[s.playerId].hiddenFromPlayers!==true)
+      .sort((a,b)=>
+        b.wins-a.wins ||
+        b.podiums-a.podiums ||
+        (a.best??999)-(b.best??999) ||
+        b.tournamentMatchWins-a.tournamentMatchWins ||
+        playerDisplayName(data.players[a.playerId]).localeCompare(playerDisplayName(data.players[b.playerId]),'cs')
+      );
+
+    if(!stats.length){
+      summary.innerHTML='<div class="muted">Zatím nejsou dokončené turnaje s výsledky.</div>';
+      history.innerHTML='';
+      return;
+    }
+
+    summary.innerHTML=`
+      <div style="overflow-x:auto">
+        <table style="width:100%;border-collapse:collapse;min-width:900px">
+          <thead>
+            <tr>
+              <th style="text-align:left;padding:8px;border-bottom:1px solid var(--border)">Hráč</th>
+              <th style="text-align:center;padding:8px;border-bottom:1px solid var(--border)">Turnaje</th>
+              <th style="text-align:center;padding:8px;border-bottom:1px solid var(--border)">1.</th>
+              <th style="text-align:center;padding:8px;border-bottom:1px solid var(--border)">2.</th>
+              <th style="text-align:center;padding:8px;border-bottom:1px solid var(--border)">3.</th>
+              <th style="text-align:center;padding:8px;border-bottom:1px solid var(--border)">Podia</th>
+              <th style="text-align:center;padding:8px;border-bottom:1px solid var(--border)">Nejlepší</th>
+              <th style="text-align:center;padding:8px;border-bottom:1px solid var(--border)">Průměr</th>
+              <th style="text-align:center;padding:8px;border-bottom:1px solid var(--border)">Zápasy W/L</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${stats.map(s=>{
+              const p=data.players[s.playerId];
+              const avg=s.placementCount ? (s.placementSum/s.placementCount).toFixed(1).replace('.',',') : '—';
+              const losses=Math.max(0,s.tournamentMatches-s.tournamentMatchWins);
+              return `<tr>
+                <td style="padding:8px;border-bottom:1px solid var(--border);font-weight:900">${esc(playerDisplayName(p))}</td>
+                <td style="padding:8px;border-bottom:1px solid var(--border);text-align:center">${s.tournaments}</td>
+                <td style="padding:8px;border-bottom:1px solid var(--border);text-align:center">${s.wins}</td>
+                <td style="padding:8px;border-bottom:1px solid var(--border);text-align:center">${s.seconds}</td>
+                <td style="padding:8px;border-bottom:1px solid var(--border);text-align:center">${s.thirds}</td>
+                <td style="padding:8px;border-bottom:1px solid var(--border);text-align:center">${s.podiums}</td>
+                <td style="padding:8px;border-bottom:1px solid var(--border);text-align:center;color:var(--gold2);font-weight:950">${esc(tournamentBestLabel(s))}</td>
+                <td style="padding:8px;border-bottom:1px solid var(--border);text-align:center">${avg}</td>
+                <td style="padding:8px;border-bottom:1px solid var(--border);text-align:center">${s.tournamentMatchWins}/${losses}</td>
+              </tr>`;
+            }).join('')}
+          </tbody>
+        </table>
+      </div>`;
+
+    history.innerHTML=`
+      <h3 style="margin:0 0 8px">TURNAJOVÁ HISTORIE HRÁČŮ</h3>
+      <div style="display:grid;gap:10px">
+        ${stats.map(s=>{
+          const p=data.players[s.playerId];
+          const hist=[...s.history].sort((a,b)=>String(b.date||'').localeCompare(String(a.date||'')));
+          return `<div class="subpanel">
+            <div style="font-weight:950;font-size:17px">${esc(playerDisplayName(p))}</div>
+            <div style="display:grid;gap:6px;margin-top:8px">
+              ${hist.length?hist.map(h=>`
+                <div style="display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap">
+                  <span>${esc(h.tournamentName)}${h.discipline?' • '+esc(String(h.discipline).toUpperCase()):''}</span>
+                  <strong style="color:var(--gold2)">${esc(h.label)}</strong>
+                </div>
+              `).join(''):'<div class="muted">Bez dokončeného turnaje.</div>'}
+            </div>
+          </div>`;
+        }).join('')}
+      </div>`;
+  }
+
+
+  let myStatsDiscipline='all';
+
+  function playerAggregateByDiscipline(pid,discipline='all'){
+    if(discipline==='all') return playerAggregate(pid);
+    const facts=playerMatchHistoryFacts(pid).filter(f=>f.discipline===discipline);
+    let wins=0,losses=0,racksFor=0,racksAgainst=0,detailedMatches=0;
+    let extras={
+      breaks:0,dryBreaks:0,softBreaks:0,softDryBreaks:0,breakFouls:0,breakPottedBalls:0,breakPottedTracked:0,aces:0,breakAndRun:0,runouts:0,pushOuts:0,pushOutsReturned:0,twoWayAttempts:0,twoWaySuccessful:0,twoWayPotSuccess:0,twoWaySafetySuccess:0,nineBallCombos:0,nineBallCaroms:0,tenBallCombos:0,tenBallCaroms:0,missBall1:0,missBall2:0,missBall3:0,missBall4:0,missBall5:0,missBall6:0,missBall7:0,missBall8:0,missBall9:0,missBall10:0,breakBall1:0,breakBall2:0,breakBall3:0,breakBall4:0,breakBall5:0,breakBall6:0,breakBall7:0,breakBall8:0,breakBall9:0,breakBall10:0,fouls:0,
+      safeties:0,successfulSafeties:0,trackedSafeties:0,accidentalSafeties:0,safetyEscapes:0,successfulSafetyEscapes:0,resafes:0,misses:0,matchOnlyMisses:0,
+      matchOnlyMissBadPosition:0,matchOnlyMissPot:0,threeFoulLosses:0,lagWins:0,openingBreakFouls14:0,threeFoulPenalties14:0,foulPenaltyPoints14:0,innings14:0,highRun14:0
+    };
+    facts.forEach(f=>{
+      const i=f.playerIds.indexOf(pid); if(i<0)return;
+      const j=1-i,actual=actualRackScores(f);
+      racksFor+=Number(actual[i]||0); racksAgainst+=Number(actual[j]||0);
+      if(f.winnerId===pid)wins++; else if(f.winnerId===f.playerIds[j])losses++;
+      if(matchEvidenceMode(f)!=='full')return;
+      const statRow=(f.stats&&f.stats[i])?f.stats[i]:null; if(!statRow)return;
+      detailedMatches++;
+      Object.keys(extras).forEach(k=>{const v=Number(statRow[k]||0); if(k==='highRun14')extras[k]=Math.max(extras[k],v); else extras[k]+=v;});
+    });
+    let soloSessions14=0,ghostSessions=0;
+    (data.matches||[]).forEach(m=>{
+      if(!m || (m.status||'complete')!=='complete' || !Array.isArray(m.playerIds) || !m.playerIds.includes(pid) || m.discipline!==discipline)return;
+      if(m.solo14)soloSessions14++; if(m.ghostMode)ghostSessions++;
+    });
+    return {matches:facts.length,detailedMatches,wins,losses,racksFor,racksAgainst,soloSessions14,ghostSessions,...extras};
+  }
+
+  function myStatsForm(pid,discipline='all',limit=10){
+    const facts=playerMatchHistoryFacts(pid).filter(f=>discipline==='all'||f.discipline===discipline).filter(f=>!!f.winnerId).slice(0,limit);
+    if(!facts.length)return {matches:0,wins:0,pct:null};
+    const wins=facts.filter(f=>f.winnerId===pid).length;
+    return {matches:facts.length,wins,pct:Math.round(wins/facts.length*100)};
+  }
+  function pctStat(success,total){success=Number(success||0);total=Number(total||0);return total?Math.round(success/total*100)+' %':'—';}
+  function myStatsBreakPct(a){const total=Number(a.breaks||0);if(!total)return '—';const failed=Number(a.dryBreaks||0)+Number(a.softBreaks||0)-Number(a.softDryBreaks||0)+Number(a.breakFouls||0);return Math.round(Math.max(0,total-failed)/total*100)+' %';}
+  function myStatsBreakConversion(a){const total=Number(a.breaks||0);const failed=Number(a.dryBreaks||0)+Number(a.softBreaks||0)-Number(a.softDryBreaks||0)+Number(a.breakFouls||0);const successful=Math.max(0,total-failed);return successful?Math.round(Number(a.breakAndRun||0)/successful*100)+' %':'—';}
+  function myStatsRecentMatches(pid,discipline='all'){return playerMatchHistoryFacts(pid).filter(f=>discipline==='all'||f.discipline===discipline).slice(0,8);}
+
+  function myStatsFactLine(f,pid){
+    const i=f.playerIds.indexOf(pid),j=1-i;if(i<0)return '';
+    const won=f.winnerId===pid,opp=f.playerNames?.[j]||data.players?.[f.playerIds[j]]?.name||'Soupeř';
+    const date=f.endedAt?new Date(f.endedAt).toLocaleDateString('cs-CZ'):'';
+    const desc=[date,f.discipline?String(f.discipline).toUpperCase():'',f.tournamentName||'',f.roundLabel||''].filter(Boolean).join(' • ');
+    return `<div class="history-line" style="align-items:center"><div style="min-width:0"><strong>${won?'VÝHRA':'PROHRA'} • ${esc(opp)}</strong><div class="muted" style="margin-top:3px">${esc(desc)} ${evidenceModeBadge(matchEvidenceMode(f))}</div></div><div style="font-size:22px;font-weight:950;color:${won?'var(--gold2)':'inherit'}">${Number(f.scores?.[i]||0)}:${Number(f.scores?.[j]||0)}</div></div>`;
+  }
+
+  function renderMyStats(discipline=myStatsDiscipline){
+    const box=$('myStatsView'),devBtn=$('myStatsDevelopmentBtn');if(!box)return;
+    if(!cloudAuthenticated){if(devBtn)devBtn.classList.add('hidden');box.innerHTML='<div class="empty">Pro zobrazení osobních statistik se nejdřív přihlas.</div>';return;}
+    const pid=currentUserPlayerId,p=pid?data.players?.[pid]:null;
+    if(!p){if(devBtn)devBtn.classList.add('hidden');box.innerHTML='<div class="empty">Tvůj účet zatím nemá přiřazený hráčský profil. Jakmile bude profil propojen, tady se automaticky zobrazí všechny dříve uložené výsledky.</div>';return;}
+    myStatsDiscipline=discipline;
+    if(devBtn){devBtn.classList.remove('hidden');devBtn.onclick=()=>openPlayerDevelopment(pid);}
+    const a=playerAggregateByDiscipline(pid,discipline),elo=playerElo(pid,discipline==='all'?null:discipline),wr=a.matches?Math.round(a.wins/a.matches*100):0,form=myStatsForm(pid,discipline,10);
+    const avgBreak=Number(a.breakPottedTracked||0)?(Number(a.breakPottedBalls||0)/Number(a.breakPottedTracked||0)).toLocaleString('cs-CZ',{minimumFractionDigits:1,maximumFractionDigits:2}):'—';
+    const recent=myStatsRecentMatches(pid,discipline),disciplines=[['all','CELKEM'],['8-ball','8-BALL'],['9-ball','9-BALL'],['10-ball','10-BALL'],['14.1','14.1']];
+    box.innerHTML=`
+      <div class="subpanel" style="margin-bottom:14px"><div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap">${avatarHTML(p)}<div style="min-width:0;flex:1"><div style="font-size:24px;font-weight:950">${esc(playerDisplayName(p))}</div><div class="muted">${esc(p.name||'')}${p.club?' • '+esc(p.club):''}</div></div><div style="text-align:right"><div class="muted">ELO${discipline==='all'?'':' • '+esc(discipline.toUpperCase())}</div><div style="font-size:30px;font-weight:950;color:var(--gold2)">${elo}</div></div></div></div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px">${disciplines.map(([key,label])=>`<button class="btn ${discipline===key?'primary':''}" onclick="renderMyStats('${key}')">${label}</button>`).join('')}</div>
+      <div class="grid three" style="margin-bottom:14px">
+        <div class="subpanel"><div class="muted">ZÁPASY</div><div style="font-size:28px;font-weight:950">${a.matches}</div><div class="muted">rozšířeně ${a.detailedMatches||0}</div></div>
+        <div class="subpanel"><div class="muted">WINRATE</div><div style="font-size:28px;font-weight:950;color:var(--gold2)">${a.matches?wr+' %':'—'}</div><div class="muted">${a.wins} V • ${a.losses} P</div></div>
+        <div class="subpanel"><div class="muted">FORMA • POSLEDNÍCH 10</div><div style="font-size:28px;font-weight:950">${form.pct==null?'—':form.pct+' %'}</div><div class="muted">${form.matches?form.wins+'/'+form.matches+' výher':'bez zápasů'}</div></div>
+        <div class="subpanel"><div class="muted">RACKY</div><div style="font-size:28px;font-weight:950">${a.racksFor}:${a.racksAgainst}</div><div class="muted">bez startovních handicapů</div></div>
+        <div class="subpanel"><div class="muted">ÚSPĚŠNOST BREAKU</div><div style="font-size:28px;font-weight:950">${myStatsBreakPct(a)}</div><div class="muted">${a.breaks||0} evidovaných breaků</div></div>
+        <div class="subpanel"><div class="muted">B&amp;R CONVERSION</div><div style="font-size:28px;font-weight:950">${myStatsBreakConversion(a)}</div><div class="muted">${a.breakAndRun||0} čistých her</div></div>
+      </div>
+      <div class="subpanel" style="margin-bottom:14px"><div style="font-weight:950;font-size:18px;margin-bottom:10px">DETAILNÍ STATISTIKY</div><div class="grid three">
+        <div><span class="muted">Dry break</span><div style="font-size:21px;font-weight:900">${a.dryBreaks||0}</div></div><div><span class="muted">Soft break</span><div style="font-size:21px;font-weight:900">${a.softBreaks||0}</div></div><div><span class="muted">Faul z breaku</span><div style="font-size:21px;font-weight:900">${a.breakFouls||0}</div></div>
+        <div><span class="muted">Ø koulí / break</span><div style="font-size:21px;font-weight:900">${avgBreak}</div></div><div><span class="muted">Eso z breaku</span><div style="font-size:21px;font-weight:900">${a.aces||0}</div></div><div><span class="muted">Dohrávky</span><div style="font-size:21px;font-weight:900">${a.runouts||0}</div></div>
+        <div><span class="muted">Jistoty</span><div style="font-size:21px;font-weight:900">${a.safeties||0}</div></div><div><span class="muted">Úspěšnost jistot</span><div style="font-size:21px;font-weight:900">${pctStat(a.successfulSafeties,a.trackedSafeties)}</div></div><div><span class="muted">Úspěšnost úniků</span><div style="font-size:21px;font-weight:900">${pctStat(a.successfulSafetyEscapes,a.safetyEscapes)}</div></div>
+        <div><span class="muted">RESAFE</span><div style="font-size:21px;font-weight:900">${a.resafes||0}</div></div><div><span class="muted">2-WAY</span><div style="font-size:21px;font-weight:900">${a.twoWaySuccessful||0}/${a.twoWayAttempts||0}</div></div><div><span class="muted">PUSH OUT</span><div style="font-size:21px;font-weight:900">${a.pushOuts||0}</div></div><div><span class="muted">Vrácený PUSH OUT</span><div style="font-size:21px;font-weight:900">${a.pushOutsReturned||0}</div></div>
+        <div><span class="muted">Fauly</span><div style="font-size:21px;font-weight:900">${a.fouls||0}</div></div><div><span class="muted">3-foul prohry</span><div style="font-size:21px;font-weight:900">${a.threeFoulLosses||0}</div></div><div><span class="muted">Vyhraná tempa</span><div style="font-size:21px;font-weight:900">${a.lagWins||0}</div></div>
+        ${(discipline==='14.1'||discipline==='all')?`<div><span class="muted">14.1 High Run</span><div style="font-size:21px;font-weight:900">${a.highRun14||0}</div></div><div><span class="muted">14.1 sólo session</span><div style="font-size:21px;font-weight:900">${a.soloSessions14||0}</div></div>`:''}
+      </div><div class="muted" style="margin-top:10px">Detailní herní statistiky se počítají pouze ze zápasů vedených přes rozšířené počítadlo. Výsledky, W/L, ELO a racky zahrnují i základní evidenci.</div></div>
+      <div class="subpanel"><div style="font-weight:950;font-size:18px;margin-bottom:10px">POSLEDNÍ ZÁPASY</div>${recent.length?recent.map(f=>myStatsFactLine(f,pid)).join(''):'<div class="empty">V této disciplíně zatím nejsou uložené zápasy.</div>'}</div>`;
+  }
+  window.renderMyStats=renderMyStats;
+
+function renderStats(){
+    const ps=Object.values(data.players).filter(p=>p && p.active!==false && p.hiddenFromPlayers!==true);
+    if(!ps.length){
+      $('statsView').innerHTML='<div class="empty">Zatím nejsou žádná data.</div>';
+      $('h2hPlayer1').innerHTML='';
+      $('h2hPlayer2').innerHTML='';
+      $('h2hView').innerHTML='<div class="empty">Nejdřív je potřeba mít alespoň dva hráče.</div>';
+      return;
+    }
+
+    const eloRatings=calculateEloRatings();
+    const rows=ps.map(p=>({p,s:playerAggregate(p.id),elo:eloRatings[p.id]??ELO_START})).sort((a,b)=>b.elo-a.elo || b.s.wins-a.s.wins);
+    const normalTable=`<div class="subpanel" style="margin-bottom:12px">
+      <div style="font-weight:950;margin-bottom:5px">INFORMAČNÍ PŘEHLED</div>
+      <div class="muted">
+        Toto není oficiální žebříček hráčů. Jde pouze o statistický přehled všech hráčů, u kterých byl do aplikace zaznamenán výsledek zápasu nebo turnaje. Přehled slouží výhradně ke statistickým a analytickým účelům.<br><br>
+        Ve statistikách se mohou zobrazovat také hráči, kteří zatím nemají vytvořený vlastní profil v aplikaci. Jakmile je jejich profil později založen a správně přiřazen, dříve zaznamenané výsledky a statistiky se k hráči zpětně přiřadí.<br><br>
+        <strong>Výsledkové údaje</strong> (zápasy, výhry/prohry, ELO a racková bilance) používají všechny evidované zápasy. <strong>Detailní herní statistiky</strong> (break, jistoty, úniky, RESAFE, B&amp;R conversion apod.) se počítají pouze ze zápasů vedených přes <strong>ROZŠÍŘENÉ POČÍTADLO</strong>.
+      </div>
+    </div>
+    <div class="muted" style="margin-bottom:8px">ELO začíná na ${ELO_START} • K=${ELO_K} • počítají se pouze dokončené zápasy hráč vs hráč.</div>
+    <div style="overflow:auto"><table class="stats-table">
+      <thead><tr><th>Hráč</th><th>ELO</th><th>Zápasy</th><th>Rozšířeně</th><th>V</th><th>P</th><th>+/-</th><th>Breaky</th><th>Faul z breaku</th><th>Dry break</th><th>Soft break</th><th>Úspěšnost breaku</th><th>Koule z breaku</th><th>Ø / break</th><th>Eso</th><th>Čisté</th><th>Dohrávky</th><th>Jistoty</th><th>Úspěšnost jistot</th><th>Úspěšnost úniků z jistot</th><th>RESAFE</th><th>14.1 sólo</th><th>14.1 HR</th></tr></thead>
+      <tbody>${rows.map(x=>{
+        const breakPct=x.s.breaks
+          ? Math.round(Math.max(0,(x.s.breaks-(x.s.dryBreaks||0)-(x.s.softBreaks||0)+(x.s.softDryBreaks||0)-(x.s.breakFouls||0)))/x.s.breaks*100)+' %'
+          : '—';
+        return `<tr>
+        <td><strong>${esc(x.p.name)}</strong></td>
+        <td class="num"><strong style="color:var(--gold2)">${x.elo}</strong></td>
+        <td class="num">${x.s.matches}</td><td class="num">${x.s.detailedMatches||0}</td><td class="num">${x.s.wins}</td><td class="num">${x.s.losses}</td>
+        <td class="num">${x.s.racksFor}:${x.s.racksAgainst}</td>
+        <td class="num">${x.s.breaks||0}</td><td class="num">${x.s.breakFouls||0}</td><td class="num">${x.s.dryBreaks||0}</td><td class="num">${x.s.softBreaks||0}</td><td class="num">${breakPct}</td>
+        <td class="num">${x.s.breakPottedTracked?x.s.breakPottedBalls:'—'}</td><td class="num">${x.s.breakPottedTracked?(x.s.breakPottedBalls/x.s.breakPottedTracked).toLocaleString('cs-CZ',{minimumFractionDigits:1,maximumFractionDigits:2}):'—'}</td>
+        <td class="num">${x.s.aces||0}</td><td class="num">${x.s.breakAndRun}</td><td class="num">${x.s.runouts}</td><td class="num">${x.s.safeties}</td>
+        <td class="num">${x.s.trackedSafeties?Math.round((x.s.successfulSafeties||0)/x.s.trackedSafeties*100)+' %':'—'}</td>
+        <td class="num">${safetyEscapePct(x.s)}</td><td class="num">${x.s.resafes||0}</td>
+        <td class="num">${x.s.soloSessions14||0}</td><td class="num">${x.s.highRun14||0}</td>
+      </tr>`;}).join('')}</tbody></table></div>
+    <div class="subpanel" style="margin-top:10px">
+      <strong>VYSVĚTLIVKY KE STATISTIKÁM</strong>
+      <div class="muted" style="margin-top:7px;line-height:1.55">
+        <strong>ELO</strong> = výkonnostní rating hráče •
+        <strong>V</strong> = výhry •
+        <strong>P</strong> = prohry •
+        <strong>+/-</strong> = vyhrané : prohrané racky •
+        <strong>Faul z breaku</strong> = faul při rozstřelu •
+        <strong>Dry break</strong> = z rozstřelu nepadla žádná koule •
+        <strong>Soft break</strong> = neplatný / nedostatečný rozstřel podle nastaveného pravidla •
+        <strong>Eso</strong> = devítka potopená přímo z platného rozstřelu v 9-ballu •
+        <strong>Koule z breaku</strong> = součet potopených koulí z evidovaných rozstřelů; Ø / break = průměr na evidovaný rozstřel •
+        <strong>RESAFE</strong> = úspěšný únik z jistoty zakončený novou úspěšnou jistotou •
+        <strong>Čisté</strong> = Break &amp; Run / čistá hra •
+        <strong>Dohrávky</strong> = dohrání stolu po soupeřově dry breaku, faulu z breaku nebo po vráceném push outu •
+        <strong>Faul z breaku</strong> = samostatně evidovaný faul při rozstřelu •
+        <strong>Jistoty</strong> = zahrané safety •
+        <strong>14.1 HR</strong> = High Run, nejvyšší náběh v 14.1.
+      </div>
+    </div>`;
+
+    const ghostRows=ps
+      .map(p=>({p,g:ghostAggregate(p.id)}))
+      .filter(x=>x.g.sessions>0)
+      .sort((a,b)=>b.g.sessions-a.g.sessions);
+
+    const ghostTable=ghostRows.length
+      ? `<h3 style="margin:24px 0 10px">GHOST STATISTIKY</h3>
+        <div class="muted" style="margin-bottom:10px">
+          Tyto výsledky jsou vedené samostatně a neovlivňují zápasy, výhry/prohry ani H2H mezi reálnými hráči.
+        </div>
+        <div style="overflow:auto"><table class="stats-table">
+          <thead><tr>
+            <th>Hráč</th><th>Sessions</th><th>8-ball</th><th>9-ball</th><th>10-ball</th>
+            <th>Body H:G</th><th>Racky</th><th>Čistě +2</th><th>BIH +1</th><th>Nedohráno</th><th>Suchý break</th><th>Nejčastěji skončil</th><th>Koule</th>
+          </tr></thead>
+          <tbody>${ghostRows.map(x=>`<tr>
+            <td><strong>${esc(x.p.name)}</strong></td>
+            <td class="num">${x.g.sessions}</td>
+            <td class="num">${x.g.byDiscipline['8-ball']}</td>
+            <td class="num">${x.g.byDiscipline['9-ball']}</td>
+            <td class="num">${x.g.byDiscipline['10-ball']}</td>
+            <td class="num">${x.g.playerPoints}:${x.g.ghostPoints}</td>
+            <td class="num">${x.g.racks}</td>
+            <td class="num">${x.g.clean}</td>
+            <td class="num">${x.g.bih}</td>
+            <td class="num">${x.g.failed}</td>
+            <td class="num">${x.g.dry}</td>
+            <td class="num">${x.g.mostCommonBall?'#'+x.g.mostCommonBall.ball+' ('+x.g.mostCommonBall.count+'×)':'—'}</td>
+            <td>${esc(x.g.ballBreakdown||'—')}</td>
+          </tr>`).join('')}</tbody>
+        </table></div>
+        <div class="subpanel" style="margin-top:10px">
+          <strong>VYSVĚTLIVKY • GHOST</strong>
+          <div class="muted" style="margin-top:7px;line-height:1.55">
+            <strong>Sessions</strong> = počet dokončených Ghost session •
+            <strong>H:G</strong> = body hráče : body Ghosta •
+            <strong>BIH</strong> = Ball in Hand, dohrání s koulí v ruce na první strk •
+            <strong>Čistě +2</strong> = čisté dohrání bez Ball in Hand za 2 body •
+            <strong>Nedohráno</strong> = rack získal Ghost •
+            <strong>Nejčastěji skončil</strong> = koule, na které hráč v 9-ball / 10-ball nejčastěji nedohrál rack •
+            <strong>Koule</strong> = dlouhodobý rozpad všech evidovaných koncových koulí •
+            <strong>Suchý break</strong> = dry break, z rozstřelu nepadla koule.
+          </div>
+        </div>`
+      : `<h3 style="margin:24px 0 10px">GHOST STATISTIKY</h3>
+         <div class="empty">Zatím není uložená žádná dokončená Ghost session.</div>`;
+
+    $('statsView').innerHTML=normalTable+ghostTable;
+
+    populateH2HPlayers();
+    renderH2H();
+    renderTournamentStats();
+  }
+
+  function populateH2HPlayers(){
+    const ps=Object.values(data.players||{})
+      .filter(p=>p && p.active!==false && p.hiddenFromPlayers!==true)
+      .sort((a,b)=>
+        String(a.club||'').localeCompare(String(b.club||''),'cs') ||
+        playerDisplayName(a).localeCompare(playerDisplayName(b),'cs') ||
+        String(a.identifier||'').localeCompare(String(b.identifier||''),'cs')
+      );
+
+    const s1=$('h2hPlayer1'), s2=$('h2hPlayer2');
+    if(!s1 || !s2)return;
+
+    const old1=s1.value, old2=s2.value;
+
+    s1.innerHTML=ps.map(p=>`<option value="${p.id}">${esc(playerSelectionLabel(p))}</option>`).join('');
+    s2.innerHTML=ps.map(p=>`<option value="${p.id}">${esc(playerSelectionLabel(p))}</option>`).join('');
+
+    const old1Visible=!!ps.find(p=>p.id===old1);
+    const old2Visible=!!ps.find(p=>p.id===old2);
+
+    if(old1Visible) s1.value=old1;
+    if(old2Visible) s2.value=old2;
+
+    if(ps.length>=1 && !old1Visible){
+      s1.value=ps[0].id;
+    }
+
+    if(ps.length>=2){
+      if(!old2Visible || s2.value===s1.value){
+        const other=ps.find(p=>p.id!==s1.value);
+        if(other) s2.value=other.id;
+      }
+    }else if(ps.length===1){
+      s2.value=ps[0].id;
+    }
+  }
+
+  function aggregateH2H(p1id,p2id,discipline='all'){
+    const matches=data.matches.filter(m=>{
+      if((m.status||'complete')!=='complete') return false;
+      if(m.solo14 || m.ghostMode || m.winnerTableMode) return false;
+      if(!m.playerIds.includes(p1id) || !m.playerIds.includes(p2id)) return false;
+      if(discipline!=='all' && m.discipline!==discipline) return false;
+      return true;
+    });
+
+    const out={
+      matches:matches.length,
+      p1:{wins:0,racks:0,breaks:0,dryBreaks:0,breakAndRun:0,runouts:0,fouls:0,breakFouls:0,safeties:0,successfulSafeties:0,trackedSafeties:0,safetyEscapes:0,successfulSafetyEscapes:0,misses:0,matchOnlyMisses:0,matchOnlyMissBadPosition:0,matchOnlyMissPot:0,threeFoulLosses:0},
+      p2:{wins:0,racks:0,breaks:0,dryBreaks:0,breakAndRun:0,runouts:0,fouls:0,breakFouls:0,safeties:0,successfulSafeties:0,trackedSafeties:0,safetyEscapes:0,successfulSafetyEscapes:0,misses:0,matchOnlyMisses:0,matchOnlyMissBadPosition:0,matchOnlyMissPot:0,threeFoulLosses:0},
+      history:[]
+    };
+
+    matches.forEach(m=>{
+      const i1=m.playerIds.indexOf(p1id), i2=m.playerIds.indexOf(p2id);
+      const actual=actualRackScores(m);
+      out.p1.racks+=actual[i1]||0;
+      out.p2.racks+=actual[i2]||0;
+
+      if(m.winner===i1) out.p1.wins++;
+      if(m.winner===i2) out.p2.wins++;
+
+      ['breaks','dryBreaks','breakAndRun','runouts','fouls','breakFouls','safeties','successfulSafeties','trackedSafeties','safetyEscapes','successfulSafetyEscapes','threeFoulLosses'].forEach(k=>{
+        const s1=(m.stats && m.stats[i1]) ? m.stats[i1] : null;
+        const s2=(m.stats && m.stats[i2]) ? m.stats[i2] : null;
+
+        if(k==='breaks' || k==='dryBreaks'){
+          if(s1 && Object.prototype.hasOwnProperty.call(s1,'dryBreaks')){
+            out.p1[k]+=Number(s1[k]||0);
+          }
+          if(s2 && Object.prototype.hasOwnProperty.call(s2,'dryBreaks')){
+            out.p2[k]+=Number(s2[k]||0);
+          }
+          return;
+        }
+
+        out.p1[k]+=Number(s1?.[k]||0);
+        out.p2[k]+=Number(s2?.[k]||0);
+      });
+
+      out.history.push({
+        id:m.id,
+        startedAt:m.startedAt,
+        discipline:m.discipline,
+        p1score:m.scores[i1]||0,
+        p2score:m.scores[i2]||0,
+        winner:m.winner===i1?1:(m.winner===i2?2:0)
+      });
+    });
+
+    out.history.sort((a,b)=>new Date(b.startedAt)-new Date(a.startedAt));
+    return out;
+  }
+
+  function renderH2H(){
+    const p1id=$('h2hPlayer1').value, p2id=$('h2hPlayer2').value;
+    const discipline=$('h2hDiscipline').value;
+    const box=$('h2hView');
+
+    if(!p1id || !p2id){
+      box.innerHTML='<div class="empty">Vyber dva hráče.</div>';
+      return;
+    }
+    if(p1id===p2id){
+      box.innerHTML='<div class="empty">Pro vzájemnou bilanci vyber dva různé hráče.</div>';
+      return;
+    }
+
+    const p1=data.players[p1id], p2=data.players[p2id];
+    if(!p1 || !p2) return;
+
+    const h=aggregateH2H(p1id,p2id,discipline);
+    if(!h.matches){
+      box.innerHTML=`<div class="empty">${esc(p1.name)} a ${esc(p2.name)} nemají v tomto výběru žádný dokončený vzájemný zápas.</div>`;
+      return;
+    }
+
+    const p1pct=((h.p1.wins/h.matches)*100).toFixed(1);
+    const p2pct=((h.p2.wins/h.matches)*100).toFixed(1);
+
+    box.innerHTML=`
+      <div class="grid two">
+        <div class="player-item" style="text-align:center">
+          <div style="display:flex;justify-content:center;margin-bottom:8px">${avatarHTML(p1)}</div>
+          <strong style="font-size:20px">${esc(p1.name)}</strong>
+          <div class="history-score" style="font-size:34px;margin-top:8px">${h.p1.wins}</div>
+          <div class="muted">výher • ${p1pct}%</div>
+        </div>
+        <div class="player-item" style="text-align:center">
+          <div style="display:flex;justify-content:center;margin-bottom:8px">${avatarHTML(p2)}</div>
+          <strong style="font-size:20px">${esc(p2.name)}</strong>
+          <div class="history-score" style="font-size:34px;margin-top:8px">${h.p2.wins}</div>
+          <div class="muted">výher • ${p2pct}%</div>
+        </div>
+      </div>
+
+      <div class="player-item" style="margin-top:12px">
+        <div class="history-line">
+          <strong>Vzájemná bilance</strong>
+          <div class="history-score">${h.p1.wins} : ${h.p2.wins}</div>
+        </div>
+        <div class="history-line" style="margin-top:8px">
+          <span class="muted">Racky / body</span>
+          <strong>${h.p1.racks} : ${h.p2.racks}</strong>
+        </div>
+        <div class="muted" style="margin-top:8px">${h.matches} dokončených vzájemných zápasů</div>
+      </div>
+
+      <div style="overflow:auto;margin-top:12px">
+        <table class="stats-table">
+          <thead><tr><th>Statistika</th><th>${esc(p1.name)}</th><th>${esc(p2.name)}</th></tr></thead>
+          <tbody>
+            <tr><td>Breaky</td><td class="num">${h.p1.breaks}</td><td class="num">${h.p2.breaks}</td></tr>
+            <tr><td>Faul z breaku</td><td class="num">${h.p1.breakFouls||0}</td><td class="num">${h.p2.breakFouls||0}</td></tr>
+            <tr><td>Dry break</td><td class="num">${h.p1.dryBreaks}</td><td class="num">${h.p2.dryBreaks}</td></tr>
+            <tr><td>Úspěšnost breaku</td>
+              <td class="num">${h.p1.breaks?Math.round(Math.max(0,h.p1.breaks-h.p1.dryBreaks)/h.p1.breaks*100)+' %':'—'}</td>
+              <td class="num">${h.p2.breaks?Math.round(Math.max(0,h.p2.breaks-h.p2.dryBreaks)/h.p2.breaks*100)+' %':'—'}</td>
+            </tr>
+            <tr><td>Break & Run</td><td class="num">${h.p1.breakAndRun}</td><td class="num">${h.p2.breakAndRun}</td></tr>
+            <tr><td>Runout</td><td class="num">${h.p1.runouts}</td><td class="num">${h.p2.runouts}</td></tr>
+            <tr><td>Safety</td><td class="num">${h.p1.safeties}</td><td class="num">${h.p2.safeties}</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3 style="margin:18px 0 10px">Poslední vzájemné zápasy</h3>
+      ${h.history.slice(0,10).map(x=>{
+        const d=new Date(x.startedAt).toLocaleDateString('cs-CZ');
+        return `<div class="history-item">
+          <div class="history-line">
+            <div><strong>${esc(x.discipline.toUpperCase())}</strong><div class="muted">${esc(d)}</div></div>
+            <div class="history-score">${x.p1score} : ${x.p2score}</div>
+          </div>
+        </div>`;
+      }).join('')}
+    `;
+  }
+
+  $('h2hPlayer1').addEventListener('change',()=>{
+    if($('h2hPlayer1').value===$('h2hPlayer2').value){
+      const other=Object.values(data.players).find(p=>
+        p && p.active!==false && p.hiddenFromPlayers!==true && p.id!==$('h2hPlayer1').value
+      );
+      if(other) $('h2hPlayer2').value=other.id;
+    }
+    renderH2H();
+  });
+  $('h2hPlayer2').addEventListener('change',renderH2H);
+  $('h2hDiscipline').addEventListener('change',renderH2H);
+
+  $('exportBtn').onclick=()=>{
+    const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});
+    const a=document.createElement('a'); a.href=URL.createObjectURL(blob);
+    a.download='BC_Rybarna_Scoreboard_Backup_'+new Date().toISOString().slice(0,10)+'.json';
+    a.click(); URL.revokeObjectURL(a.href);
+  };
+  $('importFile').addEventListener('change',async e=>{
+    const f=(e.target.files && e.target.files[0]); if(!f) return;
+    try{
+      const parsed=JSON.parse(await f.text());
+      if(!parsed || !parsed.players || !Array.isArray(parsed.matches)) throw new Error('bad');
+      data=parsed; saveData(); renderStats(); refreshPlayerList(); toast('Data importována.');
+    }catch(err){ toast('Import se nepodařil.'); }
+    e.target.value='';
+  });
+
+  refreshPlayerList();
+  updateDisciplineSetup();
+  try{ renderTournament(); }catch(e){}
+  if(match && match.discipline==='14.1' && match.ballsOnTable==null) match.ballsOnTable=15;
+  if(match && match.discipline==='14.1' && match.reracksInInning14==null) match.reracksInInning14=0;
+  if(match && match.streamEnabled==null) match.streamEnabled=false;
+  if(match && !match.streamMode) match.streamMode='live';
+  if(match && match.streamMatchTitle==null) match.streamMatchTitle='';
+  if(match && match.ghostMode && (match.discipline==='9-ball'||match.discipline==='10-ball') && match.ghostBallCount==null){
+    match.ghostBallCount=ghostFullBallCountForDiscipline(match.discipline);
+  }
+  if(match && match.isBreakShot==null) match.isBreakShot=false;
+  if(match && match.discipline==='14.1' && !match.consecutiveFouls14) match.consecutiveFouls14=[0,0];
+  if(match && match.discipline==='14.1' && match.openingBreakAvailable14==null) match.openingBreakAvailable14=false;
+  if(match && !match.endedAt){
+    showScreen('match');
+    if(match.useClock) resetClock(false,false);
+    renderMatch();
+    toast('Obnoven rozehraný zápas.');
+  }
+
+  // Připojení ke cloudu proběhne až po inicializaci lokálního UI.
+  setTimeout(autoCloudInit,150);
+
+  // LIVE indikátor musí fungovat i bez otevření obrazovky Livescore.
+  // Po startu počkáme na Firebase Auth a hned načteme aktivní LIVE zápasy.
+  async function refreshLiveNavInBackground(force=false){
+    try{
+      await loadCloudLiveMatches(force);
+    }catch(e){}
+    try{updateLiveNavStatus();}catch(e){}
+  }
+
+  setTimeout(()=>refreshLiveNavInBackground(true),900);
+
+  try{updateLoggedInUserBadge();}catch(e){}
+  if(match && !match.endedAt){ try{startLiveHeartbeat();}catch(e){} }
+  try{updateLiveNavStatus();}catch(e){}
+
+  if(!liveRefreshTimer){
+    liveRefreshTimer=setInterval(async()=>{
+      const liveScreen=$('screen-live');
+      const modal=$('liveScoreModal');
+      const liveVisible=!!(liveScreen && liveScreen.classList.contains('active'));
+      const modalVisible=!!(modal && modal.classList.contains('show'));
+
+      // Stav horního LIVESCORE tlačítka hlídáme i mimo Livescore obrazovku.
+      // Cloud se na pozadí dotazuje jednou za 15 s; při otevřeném Livescore okamžitě.
+      const shouldBackgroundPoll=(Date.now()-liveLastCloudPollAt)>=15000;
+      if(liveVisible || modalVisible || shouldBackgroundPoll){
+        try{
+          await loadCloudLiveMatches(liveVisible || modalVisible);
+        }catch(e){}
+      }
+
+      updateLiveNavStatus();
+      if(liveVisible)renderLive();
+      if(modalVisible)renderLiveScoreModal();
+    },1000);
+  }
+
+  // ===== MODERN TEST DASHBOARD BRIDGE =====
+  // Bezpečně zpřístupní pouze data potřebná pro testovací domovskou stránku.
+  window.getModernDashboardSnapshot=function(){
+    try{
+      const rawPlayers=(data && data.players && typeof data.players==='object') ? data.players : {};
+      let ratings={};
+      try{ratings=calculateEloRatings()||{};}catch(e){ratings={};}
+
+      const players=Object.keys(rawPlayers).map(id=>{
+        const p=rawPlayers[id];
+        if(!p || p.active===false || p.hiddenFromPlayers===true)return null;
+        let displayName=String(p.name||p.nickname||'Hráč');
+        try{
+          const n=playerDisplayName(p);
+          if(n)displayName=String(n);
+        }catch(e){}
+        let aggregate={matches:0,wins:0};
+        try{aggregate=playerAggregate(p.id||id)||aggregate;}catch(e){}
+        let elo=1500;
+        try{
+          const v=ratings[p.id||id];
+          if(Number.isFinite(Number(v)))elo=Number(v);
+        }catch(e){}
+        return {
+          id:String(p.id||id),
+          name:displayName,
+          elo:elo,
+          matches:Number(aggregate.matches||0),
+          wins:Number(aggregate.wins||0)
+        };
+      }).filter(Boolean).sort((a,b)=>b.elo-a.elo || b.wins-a.wins || a.name.localeCompare(b.name,'cs'));
+
+      const rawMatches=Array.isArray(data?.matches)?data.matches:[];
+      const recentMatches=rawMatches
+        .filter(m=>m && !['playing','active'].includes(m.status))
+        .slice()
+        .sort((a,b)=>new Date(b.endedAt||b.startedAt||b.createdAt||0)-new Date(a.endedAt||a.startedAt||a.createdAt||0))
+        .slice(0,5)
+        .map(m=>{
+          let p1=String(m.playerNames?.[0]||'Hráč 1');
+          let p2=String(m.playerNames?.[1]||'Hráč 2');
+          let displayMode='duel';
+
+          if(m.winnerTableMode){
+            displayMode='winner-table';
+            p1='VÍTĚZ NA STOLE';
+            p2=String(m.discipline||'');
+          }else if(m.ghostMode){
+            displayMode='ghost';
+            p2='GHOST';
+          }else if(m.solo14){
+            displayMode='solo14';
+            p2='SÓLO 14.1';
+          }else{
+            try{
+              p1=String(savedMatchSideDisplayName(m,0)||p1);
+              p2=String(savedMatchSideDisplayName(m,1)||p2);
+            }catch(e){}
+          }
+
+          return {
+            id:String(m.id||''),
+            p1:p1,
+            p2:p2,
+            s1:Number(m.scores?.[0]||0),
+            s2:Number(m.scores?.[1]||0),
+            discipline:String(m.discipline||''),
+            displayMode:displayMode
+          };
+        });
+
+      const completed=rawMatches.filter(m=>m && !['playing','active'].includes(m.status) && (m.status||'complete')==='complete');
+      const disciplines={};
+      completed.forEach(m=>{
+        const d=String(m.discipline||'—');
+        disciplines[d]=(disciplines[d]||0)+1;
+      });
+      const mostPlayed=Object.entries(disciplines).sort((a,b)=>b[1]-a[1])[0]?.[0]||'—';
+
+      let isAdmin=false;
+      try{isAdmin=!!currentUserIsSystemAdmin();}catch(e){}
+
+      return {
+        ok:true,
+        cloudAuthenticated:!!cloudAuthenticated,
+        activeMatch:match ? {
+          score1:Number(match.scores?.[0]||0),
+          score2:Number(match.scores?.[1]||0)
+        } : null,
+        isSystemAdmin:isAdmin,
+        players:players,
+        recentMatches:recentMatches,
+        stats:{
+          completedMatches:completed.length,
+          activePlayers:players.length,
+          mostPlayedDiscipline:String(mostPlayed),
+          tournaments:Array.isArray(data?.tournaments)?data.tournaments.length:0
+        }
+      };
+    }catch(e){
+      console.error('Modern dashboard snapshot failed:',e);
+      return {
+        ok:false,
+        error:String((e&&e.message)?e.message:e),
+        cloudAuthenticated:false,
+        activeMatch:null,
+        isSystemAdmin:false,
+        players:[],
+        recentMatches:[],
+        stats:{completedMatches:0,activePlayers:0,mostPlayedDiscipline:'—',tournaments:0}
+      };
+    }
+  };
+  window.refreshModernDashboardCloud=async function(){
+    if(!cloudAuthenticated)return window.getModernDashboardSnapshot();
+    const jobs=[loadSecurePlayers(),loadSecureMatches(),loadSecureTournaments()];
+    if(typeof window.refreshMatchChallenges==='function')jobs.push(window.refreshMatchChallenges(false));
+    await Promise.allSettled(jobs);
+    return window.getModernDashboardSnapshot();
+  };
+
+  window.openModernDashboardPlayer=function(id){
+    try{openPlayerProfile(id);}catch(e){console.warn(e);}
+  };
+  window.openModernDashboardMatch=function(id){
+    try{showSavedMatchStats(id);}catch(e){console.warn(e);}
+  };
+
+(function(){
+  var cache=[];
+  var counterChallengeId=null;
+  var LOCAL_KEY='poolcitadlo_match_challenges_cache_v1';
+
+  function q(id){return document.getElementById(id)}
+  function esc2(v){return String(v==null?'':v).replace(/[&<>"']/g,function(m){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]})}
+  function nowIso(){return new Date().toISOString()}
+  function myPlayer(){return currentUserPlayerId?data.players?.[currentUserPlayerId]:null}
+  function playerNameById(id){var p=data.players?.[id];return p?playerSelectionLabel(p):'Hráč'}
+  function currentUid(){return String(cloudUid||'')}
+  function isMine(ch){var u=currentUid();return !!u&&(ch.senderUid===u||ch.recipientUid===u)}
+  function otherPlayerId(ch){return ch.senderUid===currentUid()?ch.recipientPlayerId:ch.senderPlayerId}
+  function statusLabel(s){
+    return {pending:'ČEKÁ NA ODPOVĚĎ',countered:'NAVRŽEN JINÝ TERMÍN',accepted:'DOMLUVENO',declined:'ODMÍTNUTO',cancelled:'ZRUŠENO',played:'ODEHRÁNO'}[s]||String(s||'');
+  }
+  function formatDate(ch){
+    if(ch.flexibleTime)return 'Termín domluvíme později';
+    if(!ch.date)return 'Termín neuveden';
+    var d=new Date(ch.date+'T12:00:00');
+    var txt=isNaN(d)?ch.date:d.toLocaleDateString('cs-CZ',{day:'numeric',month:'numeric',year:'numeric'});
+    return txt+(ch.time?' · '+ch.time:'');
+  }
+  function cacheSave(){
+    try{localStorage.setItem(LOCAL_KEY,JSON.stringify(cache.filter(isMine)));}catch(e){}
+  }
+  function cacheLoad(){
+    try{
+      var x=JSON.parse(localStorage.getItem(LOCAL_KEY)||'[]');
+      if(Array.isArray(x))cache=x.filter(Boolean);
+    }catch(e){}
+  }
+
+  function challengeObjects(obj){
+    return obj&&typeof obj==='object'&&!Array.isArray(obj)?Object.values(obj).filter(Boolean):[];
+  }
+
+  function mergedChallenge(base,response){
+    var b=JSON.parse(JSON.stringify(base||{}));
+    if(!response)return b;
+    var bt=new Date(b.updatedAt||b.createdAt||0).getTime()||0;
+    var rt=new Date(response.updatedAt||0).getTime()||0;
+    if(rt<bt)return b;
+    ['status','flexibleTime','date','time','venue','note','counterByUid','acceptedAt','playedMatchId','playedAt'].forEach(function(k){
+      if(response[k]!==undefined)b[k]=response[k];
+    });
+    b.responseUpdatedAt=response.updatedAt||'';
+    return b;
+  }
+
+  function allChallengesFromPlayers(){
+    var rows=[];
+    Object.values(data.players||{}).forEach(function(sender){
+      challengeObjects(sender?.matchChallengesSent).forEach(function(base){
+        if(!base||!base.id)return;
+        var recipient=data.players?.[base.recipientPlayerId];
+        var response=recipient?.matchChallengeResponses?.[base.id]||null;
+        rows.push(mergedChallenge(base,response));
+      });
+    });
+    return rows;
+  }
+
+  function rebuildFromPlayers(){
+    var mineId=String(currentUserPlayerId||'');
+    var mineUid=currentUid();
+    var rows=allChallengesFromPlayers().filter(function(ch){
+      return String(ch.senderUid||'')===mineUid || String(ch.recipientUid||'')===mineUid ||
+        String(ch.senderPlayerId||'')===mineId || String(ch.recipientPlayerId||'')===mineId;
+    });
+    rows.sort(function(a,b){return new Date(b.updatedAt||b.responseUpdatedAt||b.createdAt||0)-new Date(a.updatedAt||a.responseUpdatedAt||a.createdAt||0)});
+    cache=rows;
+    cacheSave();
+    return cache;
+  }
+
+  async function load(force){
+    cacheLoad();
+    if(!cloudAuthenticated||!cloudUid){
+      render();renderHome();return cache;
+    }
+    try{
+      if(force)await loadSecurePlayers();
+      rebuildFromPlayers();
+    }catch(e){
+      console.warn('Match challenges load:',e);
+    }
+    render();renderHome();
+    return cache;
+  }
+
+  function linkedOpponents(){
+    var mine=myPlayer();
+    return Object.values(data.players||{}).filter(function(p){
+      return p&&p.active!==false&&p.hiddenFromPlayers!==true&&p.ownerUid&&mine&&p.id!==mine.id&&String(p.ownerUid)!==String(cloudUid);
+    }).sort(function(a,b){return playerSelectionLabel(a).localeCompare(playerSelectionLabel(b),'cs')});
+  }
+
+  function populateOpponents(selected){
+    var sel=q('matchChallengeOpponent');if(!sel)return;
+    var arr=linkedOpponents();
+    sel.innerHTML='<option value="">— vyber soupeře —</option>'+arr.map(function(p){
+      return '<option value="'+esc2(p.id)+'" '+(selected===p.id?'selected':'')+'>'+esc2(playerSelectionLabel(p))+'</option>';
+    }).join('');
+    var help=q('matchChallengeOpponentHelp');
+    if(help)help.textContent=arr.length?'Zobrazují se pouze hráči s propojeným účtem.':'Zatím není k dispozici žádný další hráč s propojeným účtem.';
+  }
+
+  function challengeCard(ch){
+    var incoming=(ch.status==='pending'&&ch.recipientUid===currentUid()) ||
+      (ch.status==='countered'&&ch.counterByUid&&ch.counterByUid!==currentUid()&&isMine(ch));
+    var opponent=playerNameById(otherPlayerId(ch));
+    var actions='';
+    if(incoming){
+      actions='<button class="btn primary" onclick="acceptMatchChallenge(\''+ch.id+'\')">PŘIJMOUT</button>'+
+        '<button class="btn" onclick="counterMatchChallenge(\''+ch.id+'\')">JINÝ TERMÍN</button>'+
+        '<button class="btn danger" onclick="declineMatchChallenge(\''+ch.id+'\')">ODMÍTNOUT</button>';
+    }else if(ch.status==='accepted'){
+      actions='<button class="btn primary" onclick="startScheduledMatch(\''+ch.id+'\')">▶ SPUSTIT ZÁPAS</button>'+
+        '<button class="btn" onclick="counterMatchChallenge(\''+ch.id+'\')">ZMĚNIT TERMÍN</button>'+
+        '<button class="btn danger" onclick="cancelMatchChallenge(\''+ch.id+'\')">ZRUŠIT</button>';
+    }else if((ch.status==='pending'||ch.status==='countered')&&ch.senderUid===currentUid()){
+      actions='<button class="btn" onclick="counterMatchChallenge(\''+ch.id+'\')">UPRAVIT NÁVRH</button>'+
+        '<button class="btn danger" onclick="cancelMatchChallenge(\''+ch.id+'\')">ZRUŠIT VÝZVU</button>';
+    }
+    return '<div class="match-challenge-card '+(incoming?'incoming ':'')+(ch.status==='accepted'?'accepted':'')+'">'+
+      '<div class="match-challenge-card-head"><div><div class="match-challenge-card-title">'+esc2(playerNameById(ch.senderPlayerId))+' × '+esc2(playerNameById(ch.recipientPlayerId))+'</div>'+
+      '<div class="muted" style="margin-top:4px">'+esc2(formatDate(ch))+(ch.venue?' · '+esc2(ch.venue):'')+'</div></div>'+
+      '<span class="match-challenge-status '+esc2(ch.status)+'">'+esc2(statusLabel(ch.status))+'</span></div>'+
+      '<div class="match-challenge-meta"><span>'+esc2(String(ch.discipline||'').toUpperCase())+'</span><span>Race to '+Number(ch.raceTo||1)+'</span><span>'+(ch.isPublic?'VEŘEJNÝ':'SOUKROMÝ')+'</span></div>'+
+      (ch.note?'<div style="margin-top:10px;line-height:1.45">'+esc2(ch.note)+'</div>':'')+
+      (ch.counterByUid?'<div class="muted" style="margin-top:7px;font-size:11px">Poslední změnu termínu navrhl '+(ch.counterByUid===currentUid()?'ty':'soupeř')+'.</div>':'')+
+      (actions?'<div class="match-challenge-actions">'+actions+'</div>':'')+
+    '</div>';
+  }
+
+  function render(){
+    var content=q('matchChallengesContent'),notice=q('matchChallengesLoginNotice');
+    var ready=!!(cloudAuthenticated&&cloudUid&&currentUserPlayerId&&myPlayer());
+    if(content)content.classList.toggle('hidden',!ready);
+    if(notice)notice.classList.toggle('hidden',ready);
+    if(!ready)return;
+    populateOpponents(q('matchChallengeOpponent')?.value||'');
+
+    var incoming=cache.filter(function(ch){
+      return (ch.status==='pending'&&ch.recipientUid===currentUid()) ||
+        (ch.status==='countered'&&ch.counterByUid&&ch.counterByUid!==currentUid()&&isMine(ch));
+    });
+    var accepted=cache.filter(function(ch){return ch.status==='accepted'}).sort(function(a,b){
+      return String(a.date||'9999-12-31').localeCompare(String(b.date||'9999-12-31'))||String(a.time||'').localeCompare(String(b.time||''));
+    });
+    var other=cache.filter(function(ch){return !incoming.includes(ch)&&!accepted.includes(ch)});
+    var sum=q('matchChallengeSummary');
+    if(sum)sum.innerHTML=
+      '<div class="match-challenge-stat"><strong>'+incoming.length+'</strong><span>Čeká na tebe</span></div>'+
+      '<div class="match-challenge-stat"><strong>'+accepted.length+'</strong><span>Domluveno</span></div>'+
+      '<div class="match-challenge-stat"><strong>'+cache.filter(function(x){
+        return x.senderUid===currentUid() && (x.status==='pending'||(x.status==='countered'&&x.counterByUid===currentUid()));
+      }).length+'</strong><span>Čeká na soupeře</span></div>';
+    if(q('matchChallengeIncomingCount'))q('matchChallengeIncomingCount').textContent=String(incoming.length);
+    if(q('matchChallengeIncomingList'))q('matchChallengeIncomingList').innerHTML=incoming.length?incoming.map(challengeCard).join(''):'<div class="empty">Žádná nová výzva.</div>';
+    if(q('matchChallengeAcceptedList'))q('matchChallengeAcceptedList').innerHTML=accepted.length?accepted.map(challengeCard).join(''):'<div class="empty">Nemáš žádný domluvený zápas.</div>';
+    if(q('matchChallengeOtherList'))q('matchChallengeOtherList').innerHTML=other.length?other.map(challengeCard).join(''):'<div class="empty">Žádné další výzvy.</div>';
+  }
+
+  function nextAccepted(){
+    var rows=cache.filter(function(ch){return ch.status==='accepted'});
+    rows.sort(function(a,b){
+      var ax=a.flexibleTime?'9999-12-31T23:59':String(a.date||'9999-12-31')+'T'+String(a.time||'23:59');
+      var bx=b.flexibleTime?'9999-12-31T23:59':String(b.date||'9999-12-31')+'T'+String(b.time||'23:59');
+      return ax.localeCompare(bx);
+    });
+    return rows[0]||null;
+  }
+
+  function publicUpcomingChallenges(){
+    if(!cloudAuthenticated)return [];
+    var now=Date.now();
+    return allChallengesFromPlayers().filter(function(ch){
+      if(!ch||ch.status!=='accepted'||ch.isPublic!==true)return false;
+      if(ch.flexibleTime||!ch.date)return true;
+      var ts=new Date(ch.date+'T'+(ch.time||'23:59')).getTime();
+      return !Number.isFinite(ts)||ts>=now-(6*60*60*1000);
+    }).sort(function(a,b){
+      var ax=a.flexibleTime?'9999-12-31T23:59':String(a.date||'9999-12-31')+'T'+String(a.time||'23:59');
+      var bx=b.flexibleTime?'9999-12-31T23:59':String(b.date||'9999-12-31')+'T'+String(b.time||'23:59');
+      return ax.localeCompare(bx);
+    });
+  }
+
+  function publicProgramRow(ch,own){
+    return '<div class="modern-scheduled-program-row">'+
+      '<div><strong>'+esc2(playerNameById(ch.senderPlayerId))+' × '+esc2(playerNameById(ch.recipientPlayerId))+'</strong>'+
+      '<span>'+esc2(String(ch.discipline||'').toUpperCase())+' · Race to '+Number(ch.raceTo||1)+'</span></div>'+
+      '<div><strong>'+esc2(formatDate(ch))+'</strong><span>'+esc2(ch.venue||'Místo neuvedeno')+'</span></div>'+
+      (own?'<button class="btn primary" type="button" onclick="startScheduledMatch(\''+ch.id+'\')">▶ SPUSTIT</button>':'')+
+    '</div>';
+  }
+
+  function renderHome(){
+    var tileText=q('modernChallengeTileText'),badge=q('modernChallengeBadge'),panel=q('modernScheduledMatchPanel'),body=q('modernScheduledMatchBody'),title=q('modernScheduledMatchTitle');
+    var incoming=cache.filter(function(ch){
+      return (ch.status==='pending'&&ch.recipientUid===currentUid()) ||
+        (ch.status==='countered'&&ch.counterByUid&&ch.counterByUid!==currentUid()&&isMine(ch));
+    }).length;
+    if(badge){badge.textContent=String(incoming);badge.classList.toggle('hidden',!incoming);}
+    if(tileText){
+      if(incoming)tileText.textContent=incoming===1?'1 nová příchozí výzva':incoming+' nové příchozí výzvy';
+      else{
+        var acceptedCount=cache.filter(function(ch){return ch.status==='accepted'}).length;
+        tileText.textContent=acceptedCount?(acceptedCount===1?'1 domluvený zápas':acceptedCount+' domluvené zápasy'):'Výzvy a domluvené zápasy';
+      }
+    }
+
+    var own=nextAccepted();
+    var pub=publicUpcomingChallenges().slice(0,4);
+    if(!panel)return;
+
+    /* Tento blok zůstává na homepage viditelný vždy.
+       I bez domluveného zápasu tak nový uživatel okamžitě vidí,
+       že Poolčítadlo umí výzvy a plánování zápasů. */
+    panel.classList.remove('hidden');
+
+    if(own){
+      if(title)title.textContent='Tvůj nejbližší domluvený zápas';
+      var rest=pub.filter(function(x){return x.id!==own.id}).slice(0,3);
+      if(body)body.innerHTML=publicProgramRow(own,true)+(rest.length?'<div class="modern-scheduled-program-label">DALŠÍ VEŘEJNĚ DOMLUVENÉ ZÁPASY</div>'+rest.map(function(x){return publicProgramRow(x,false)}).join(''):'');
+    }else if(pub.length){
+      if(title)title.textContent='Nadcházející domluvené zápasy';
+      if(body)body.innerHTML=pub.map(function(x){return publicProgramRow(x,false)}).join('');
+    }else{
+      if(title)title.textContent='Nadcházející domluvené zápasy';
+      if(body)body.innerHTML=
+        '<div class="modern-scheduled-empty">'+
+          '<div class="modern-scheduled-empty-icon">⚔</div>'+
+          '<div><strong>Domluv si zápas přímo v Poolčítadle</strong>'+
+          '<span>Vyber soupeře, disciplínu, Race to a termín. Soupeř může výzvu přijmout nebo navrhnout jiný čas.</span></div>'+
+          '<button type="button" class="btn primary" data-nav="challenges">DOMLUVIT ZÁPAS</button>'+
+        '</div>';
+    }
+    try{renderNotificationCenter();}catch(e){}
+  }
+
+  async function persist(ch){
+    if(!ch||!ch.id)throw new Error('CHALLENGE_INVALID');
+    var me=myPlayer();
+    if(!me||!currentUid())throw new Error('NO_LINKED_PLAYER');
+    var stamp=nowIso();
+
+    if(ch.senderUid===currentUid()){
+      me.matchChallengesSent=(me.matchChallengesSent&&typeof me.matchChallengesSent==='object'&&!Array.isArray(me.matchChallengesSent))?me.matchChallengesSent:{};
+      var copy=JSON.parse(JSON.stringify(ch));
+      copy.updatedAt=stamp;
+      delete copy.responseUpdatedAt;
+      me.matchChallengesSent[ch.id]=copy;
+    }else if(ch.recipientUid===currentUid()){
+      me.matchChallengeResponses=(me.matchChallengeResponses&&typeof me.matchChallengeResponses==='object'&&!Array.isArray(me.matchChallengeResponses))?me.matchChallengeResponses:{};
+      me.matchChallengeResponses[ch.id]={
+        id:ch.id,status:ch.status,flexibleTime:!!ch.flexibleTime,date:ch.date||'',time:ch.time||'',
+        venue:ch.venue||'',note:ch.note||'',counterByUid:ch.counterByUid||'',acceptedAt:ch.acceptedAt||'',
+        playedMatchId:ch.playedMatchId||'',playedAt:ch.playedAt||'',updatedAt:stamp
+      };
+    }else{
+      throw new Error('NOT_PARTICIPANT');
+    }
+
+    await saveSecurePlayer(me);
+    rebuildFromPlayers();
+    render();renderHome();
+    try{window.renderModernHome&&window.renderModernHome()}catch(e){}
+    return cache.find(function(x){return x.id===ch.id})||ch;
+  }
+
+  window.sendMatchChallenge=async function(){
+    var mine=myPlayer(),opId=q('matchChallengeOpponent')?.value||'',op=data.players?.[opId];
+    if(!mine||!cloudUid){toast('Nejdřív se přihlas účtem propojeným s hráčským profilem.');return;}
+    if(!op||!op.ownerUid){toast('Vyber hráče s propojeným účtem.');return;}
+    var flexible=!!q('matchChallengeFlexibleTime')?.checked;
+    var date=String(q('matchChallengeDate')?.value||''),time=String(q('matchChallengeTime')?.value||'');
+    if(!flexible&&!date){toast('Vyber datum, nebo zapni „Termín domluvíme později“.');return;}
+    var btn=q('matchChallengeSendBtn');if(btn)btn.disabled=true;
+    try{
+      var ch={
+        id:'challenge_'+(crypto?.randomUUID?crypto.randomUUID():Date.now().toString(36)+Math.random().toString(36).slice(2)),
+        senderUid:String(cloudUid),senderPlayerId:mine.id,
+        recipientUid:String(op.ownerUid),recipientPlayerId:op.id,
+        discipline:q('matchChallengeDiscipline')?.value||'9-ball',
+        raceTo:Math.max(1,Math.floor(Number(q('matchChallengeRaceTo')?.value||7))),
+        flexibleTime:flexible,date:flexible?'':date,time:flexible?'':time,
+        venue:String(q('matchChallengeVenue')?.value||'').trim(),
+        note:String(q('matchChallengeNote')?.value||'').trim(),
+        isPublic:!!q('matchChallengePublic')?.checked,
+        status:'pending',createdAt:nowIso(),updatedAt:nowIso(),acceptedAt:'',playedMatchId:''
+      };
+      await persist(ch);
+      q('matchChallengeNote').value='';
+      if(q('matchChallengeSaveInfo'))q('matchChallengeSaveInfo').textContent='Výzva byla odeslána hráči '+playerSelectionLabel(op)+'.';
+      toast('Výzva k zápasu byla odeslána.');
+    }catch(e){
+      console.error(e);
+      var msg=String(e?.message||e);
+      toast(msg.includes('401')||msg.includes('403')?'Nemáš oprávnění uložit výzvu do svého profilu. Zkus se znovu přihlásit.':'Výzvu se nepodařilo uložit.');
+    }finally{if(btn)btn.disabled=false;}
+  };
+
+  function canAnswerChallenge(ch){
+    if(!ch||!isMine(ch))return false;
+    if(ch.status==='pending')return ch.recipientUid===currentUid();
+    if(ch.status==='countered')return !!ch.counterByUid&&ch.counterByUid!==currentUid();
+    return false;
+  }
+  window.acceptMatchChallenge=async function(id){
+    var ch=cache.find(function(x){return x.id===id});if(!canAnswerChallenge(ch))return;
+    ch.status='accepted';ch.acceptedAt=nowIso();ch.counterByUid='';
+    try{await persist(ch);toast('Zápas je domluvený.');}catch(e){console.error(e);toast('Výzvu se nepodařilo přijmout.');}
+  };
+  window.declineMatchChallenge=async function(id){
+    var ch=cache.find(function(x){return x.id===id});if(!canAnswerChallenge(ch))return;
+    ch.status='declined';
+    try{await persist(ch);toast('Výzva byla odmítnuta.');}catch(e){console.error(e);toast('Změnu se nepodařilo uložit.');}
+  };
+  window.cancelMatchChallenge=async function(id){
+    var ch=cache.find(function(x){return x.id===id});if(!ch||!isMine(ch))return;
+    if(!confirm('Opravdu tuto domluvu zrušit?'))return;
+    ch.status='cancelled';
+    try{await persist(ch);toast('Domluva byla zrušena.');}catch(e){toast('Změnu se nepodařilo uložit.');}
+  };
+  window.counterMatchChallenge=function(id){
+    var ch=cache.find(function(x){return x.id===id});if(!ch||!isMine(ch))return;
+    counterChallengeId=id;
+    q('matchChallengeCounterTitle').textContent=playerNameById(ch.senderPlayerId)+' × '+playerNameById(ch.recipientPlayerId);
+    q('matchChallengeCounterFlexible').checked=!!ch.flexibleTime;
+    q('matchChallengeCounterDate').value=ch.date||'';
+    q('matchChallengeCounterTime').value=ch.time||'';
+    q('matchChallengeCounterVenue').value=ch.venue||'';
+    q('matchChallengeCounterNote').value='';
+    q('matchChallengeCounterDateTime').classList.toggle('hidden',!!ch.flexibleTime);
+    q('matchChallengeCounterModal').classList.add('show');
+  };
+  window.saveMatchChallengeCounter=async function(){
+    var ch=cache.find(function(x){return x.id===counterChallengeId});if(!ch)return;
+    var flexible=!!q('matchChallengeCounterFlexible').checked;
+    var date=String(q('matchChallengeCounterDate').value||''),time=String(q('matchChallengeCounterTime').value||'');
+    if(!flexible&&!date){toast('Zadej datum, nebo zvol domluvu termínu později.');return;}
+    ch.flexibleTime=flexible;ch.date=flexible?'':date;ch.time=flexible?'':time;ch.venue=String(q('matchChallengeCounterVenue').value||'').trim();
+    var note=String(q('matchChallengeCounterNote').value||'').trim();if(note)ch.note=note;
+    ch.status='countered';ch.counterByUid=currentUid();ch.acceptedAt='';
+    try{await persist(ch);q('matchChallengeCounterModal').classList.remove('show');counterChallengeId=null;toast('Nový termín byl odeslán.');}catch(e){toast('Nový návrh se nepodařilo uložit.');}
+  };
+
+  window.startScheduledMatch=function(id){
+    var ch=cache.find(function(x){return x.id===id});if(!ch||ch.status!=='accepted'||!isMine(ch))return;
+    var me=myPlayer(),opp=data.players?.[otherPlayerId(ch)];
+    if(!me||!opp){toast('Hráčský profil se nepodařilo načíst.');return;}
+    window.pendingScheduledChallenge=JSON.parse(JSON.stringify(ch));
+    q('p1Name').value=me.name||playerDisplayName(me);
+    q('p2Name').value=opp.name||playerDisplayName(opp);
+    q('discipline').value=ch.discipline||'9-ball';
+    q('raceTo').value=String(Math.max(1,Number(ch.raceTo||7)));
+    if(q('streamMatchTitle'))q('streamMatchTitle').value='Domluvený zápas • '+playerDisplayName(me)+' × '+playerDisplayName(opp);
+    q('discipline').dispatchEvent(new Event('change',{bubbles:true}));
+    showScreen('setup');
+    toast('Zápas je předvyplněný. Zkontroluj nastavení a zahaj ho.');
+  };
+
+  window.completeScheduledChallengeForMatch=async function(m){
+    if(!m?.scheduledChallengeId||!m?.endedAt)return;
+    var ch=cache.find(function(x){return x.id===m.scheduledChallengeId});
+    if(!ch||ch.status==='played')return;
+    ch.status='played';ch.playedMatchId=m.id;ch.playedAt=m.endedAt||nowIso();
+    try{await persist(ch);}catch(e){console.warn('Complete challenge:',e);}
+  };
+
+  const NOTIFICATION_READ_KEY='poolcitadlo_notification_read_v1';
+
+  function notificationReadMap(){
+    var uid=currentUid();
+    if(!uid)return {};
+    try{
+      var all=JSON.parse(localStorage.getItem(NOTIFICATION_READ_KEY)||'{}');
+      return (all&&typeof all==='object'&&all[uid]&&typeof all[uid]==='object')?all[uid]:{};
+    }catch(e){return {};}
+  }
+
+  function saveNotificationReadMap(map){
+    var uid=currentUid();
+    if(!uid)return;
+    try{
+      var all=JSON.parse(localStorage.getItem(NOTIFICATION_READ_KEY)||'{}');
+      if(!all||typeof all!=='object'||Array.isArray(all))all={};
+      all[uid]=map||{};
+      localStorage.setItem(NOTIFICATION_READ_KEY,JSON.stringify(all));
+    }catch(e){}
+  }
+
+  function notificationEventKey(ch,type){
+    var stamp=ch.responseUpdatedAt||ch.updatedAt||ch.acceptedAt||ch.createdAt||'';
+    return [ch.id,type,stamp].join('|');
+  }
+
+  function notificationEvents(){
+    if(!cloudAuthenticated||!currentUid())return [];
+    var me=currentUid(),rows=[];
+    cache.forEach(function(ch){
+      if(!ch||!isMine(ch))return;
+      var opponent=playerNameById(otherPlayerId(ch));
+      var meta=String(ch.discipline||'').toUpperCase()+' · Race to '+Number(ch.raceTo||1)+(ch.date||ch.flexibleTime?' · '+formatDate(ch):'');
+
+      if(ch.status==='pending'&&ch.recipientUid===me){
+        rows.push({
+          key:notificationEventKey(ch,'challenge_pending'),challengeId:ch.id,
+          title:opponent+' tě vyzval k zápasu',meta:meta,
+          ts:ch.updatedAt||ch.createdAt||''
+        });
+        return;
+      }
+
+      if(ch.status==='countered'&&ch.counterByUid&&ch.counterByUid!==me){
+        rows.push({
+          key:notificationEventKey(ch,'challenge_counter'),challengeId:ch.id,
+          title:opponent+' navrhl jiný termín',meta:meta,
+          ts:ch.responseUpdatedAt||ch.updatedAt||''
+        });
+        return;
+      }
+
+      if(ch.status==='accepted'&&ch.senderUid===me){
+        rows.push({
+          key:notificationEventKey(ch,'challenge_accepted'),challengeId:ch.id,
+          title:opponent+' přijal výzvu k zápasu',meta:meta,
+          ts:ch.acceptedAt||ch.responseUpdatedAt||ch.updatedAt||''
+        });
+        return;
+      }
+
+      if(ch.status==='declined'&&ch.senderUid===me){
+        rows.push({
+          key:notificationEventKey(ch,'challenge_declined'),challengeId:ch.id,
+          title:opponent+' odmítl tvoji výzvu',meta:meta,
+          ts:ch.responseUpdatedAt||ch.updatedAt||''
+        });
+      }
+    });
+    rows.sort(function(a,b){return new Date(b.ts||0)-new Date(a.ts||0)});
+    return rows.slice(0,30);
+  }
+
+  function renderNotificationCenter(){
+    var bell=q('notificationBellBtn'),count=q('notificationCount'),list=q('notificationList');
+    if(!bell||!count||!list)return;
+    if(!cloudAuthenticated||!currentUid()){
+      count.classList.add('hidden');count.textContent='0';bell.classList.remove('has-unread');
+      list.innerHTML='<div class="notification-empty">Po přihlášení se zde zobrazí upozornění.</div>';
+      return;
+    }
+    var read=notificationReadMap(),events=notificationEvents();
+    var unread=events.filter(function(n){return !read[n.key]}).length;
+    count.textContent=unread>99?'99+':String(unread);
+    count.classList.toggle('hidden',!unread);
+    bell.classList.toggle('has-unread',!!unread);
+    list.innerHTML=events.length?events.map(function(n){
+      return '<button type="button" class="notification-item '+(!read[n.key]?'unread':'')+'" data-notification-key="'+esc2(n.key)+'" data-challenge-id="'+esc2(n.challengeId)+'">'+
+        '<div class="notification-item-title">'+esc2(n.title)+'</div>'+
+        '<div class="notification-item-meta">'+esc2(n.meta)+'</div>'+
+      '</button>';
+    }).join(''):'<div class="notification-empty">Nemáš žádná upozornění.</div>';
+
+    list.querySelectorAll('[data-notification-key]').forEach(function(el){
+      el.addEventListener('click',function(){
+        var map=notificationReadMap();
+        map[this.dataset.notificationKey]=Date.now();
+        saveNotificationReadMap(map);
+        renderNotificationCenter();
+        q('notificationPanel')?.classList.add('hidden');
+        q('notificationBellBtn')?.setAttribute('aria-expanded','false');
+        showScreen('challenges');
+        setTimeout(function(){
+          var target=q('matchChallengeIncomingList')||q('matchChallengesContent');
+          target?.scrollIntoView({behavior:'smooth',block:'start'});
+        },100);
+      });
+    });
+  }
+
+  function markAllNotificationsRead(){
+    var map=notificationReadMap();
+    notificationEvents().forEach(function(n){map[n.key]=Date.now()});
+    saveNotificationReadMap(map);
+    renderNotificationCenter();
+  }
+
+  window.renderNotificationCenter=renderNotificationCenter;
+
+  q('notificationBellBtn')?.addEventListener('click',function(e){
+    e.stopPropagation();
+    var panel=q('notificationPanel');
+    if(!panel)return;
+    var opening=panel.classList.contains('hidden');
+    panel.classList.toggle('hidden',!opening);
+    this.setAttribute('aria-expanded',opening?'true':'false');
+    if(opening)renderNotificationCenter();
+  });
+  q('notificationPanel')?.addEventListener('click',function(e){e.stopPropagation()});
+  q('notificationMarkAllBtn')?.addEventListener('click',function(){markAllNotificationsRead()});
+  document.addEventListener('click',function(){
+    q('notificationPanel')?.classList.add('hidden');
+    q('notificationBellBtn')?.setAttribute('aria-expanded','false');
+  });
+
+  window.openMatchChallengesScreen=function(){
+    render();
+    populateOpponents();
+    load(true);
+  };
+  window.refreshMatchChallenges=function(force){return load(!!force)};
+  window.renderMatchChallengeHome=renderHome;
+  window.openChallengeForPlayer=function(playerId){
+    var p=data.players?.[playerId];
+    if(!p||!p.ownerUid){toast('Tento hráč nemá propojený účet.');return;}
+    if(String(playerId)===String(currentUserPlayerId)){toast('Nemůžeš vyzvat sám sebe.');return;}
+    q('profileModal')?.classList.remove('show');
+    showScreen('challenges');
+    setTimeout(function(){populateOpponents(playerId);q('matchChallengeOpponent').value=playerId;},0);
+  };
+
+  q('matchChallengeSendBtn')?.addEventListener('click',window.sendMatchChallenge);
+  q('matchChallengesRefreshBtn')?.addEventListener('click',function(){load(true)});
+  q('matchChallengeFlexibleTime')?.addEventListener('change',function(){q('matchChallengeDateTimeFields')?.classList.toggle('hidden',this.checked)});
+  q('matchChallengeCounterFlexible')?.addEventListener('change',function(){q('matchChallengeCounterDateTime')?.classList.toggle('hidden',this.checked)});
+  q('matchChallengeCounterCancel')?.addEventListener('click',function(){q('matchChallengeCounterModal')?.classList.remove('show');counterChallengeId=null});
+  q('matchChallengeCounterSave')?.addEventListener('click',window.saveMatchChallengeCounter);
+  q('profileChallengeBtn')?.addEventListener('click',function(){window.openChallengeForPlayer(this.dataset.playerId||'')});
+
+  window.poolPresenceContext=async function(){
+    if(!cloudAuthenticated||!cloudUid||!await ensureCloudToken())return null;
+    const p=currentUserPlayerId&&data.players?.[currentUserPlayerId];
+    return {uid:cloudUid,token:cloudIdToken,db:FIREBASE_DB,playerId:currentUserPlayerId||'',name:p?playerDisplayName(p):'Registrovaný uživatel',isAdminAccount:isMainAdminEmail(cloudUserEmail)||currentUserRole==='system_admin'};
+  };
+  cacheLoad();renderHome();renderNotificationCenter();
+  setTimeout(function(){
+    if(cloudAuthenticated)loadSecurePlayers().then(function(){load(false)}).catch(function(){load(false)});
+    else load(false);
+  },1200);
+  setInterval(function(){if(!document.hidden&&cloudAuthenticated)load(false)},30000);
+})();
+
+// === FEDERAL CUP 2026 ========================================================
+(function(){
+  const FIXTURES=[
+    {n:1,b:1,t:'team',label:'Team'},
+    {n:2,b:1,t:'doubles',label:'Doubles',note:'libovolná dvojice'},
+    {n:3,b:1,t:'singles',label:'Singles',note:'libovolný jednotlivec • nesmí nastoupit hráč ze zápasu 2'},
+    {n:4,b:1,t:'doubles',label:'Doubles',note:'hráči, kteří nehráli zápasy 2 a 3'},
+    {n:5,b:2,t:'team',label:'Team'},
+    {n:6,b:2,t:'singles',label:'Singles',note:'libovolný hráč'},
+    {n:7,b:2,t:'doubles',label:'Doubles',note:'libovolná dvojice'},
+    {n:8,b:2,t:'singles',label:'Singles',note:'libovolný hráč'},
+    {n:9,b:2,t:'doubles',label:'Doubles',note:'libovolná dvojice • v zápasech 7, 8 a 9 musí hrát každý hráč ze soupisky'},
+    {n:10,b:3,t:'team',label:'Team'},
+    {n:11,b:3,t:'singles',label:'Singles',note:'libovolný hráč'},
+    {n:12,b:3,t:'doubles',label:'Doubles',note:'libovolná dvojice'},
+    {n:13,b:3,t:'singles',label:'Singles',note:'libovolný hráč'},
+    {n:14,b:3,t:'doubles',label:'Doubles',note:'libovolná dvojice • v zápasech 12, 13 a 14 musí hrát každý hráč ze soupisky'},
+    {n:15,b:3,t:'singles',label:'Singles',note:'libovolný hráč'},
+    {n:16,b:4,t:'singles',label:'Singles',note:'libovolný hráč'},
+    {n:17,b:4,t:'singles',label:'Singles',note:'libovolný hráč'},
+    {n:18,b:4,t:'singles',label:'Singles',note:'libovolný hráč'},
+    {n:19,b:4,t:'singles',label:'Singles',note:'libovolný hráč'},
+    {n:20,b:4,t:'singles',label:'Singles',note:'libovolný hráč • každý hráč musí odehrát jeden Singles v zápasech 16–20'},
+    {n:21,b:4,t:'singles',label:'Singles',note:'výběr kapitána • může nastoupit jakýkoliv hráč ze soupisky'}
+  ];
+
+  function cfg(){
+    const c=data.federalCup2026||(data.federalCup2026=defaultFederalCup2026());
+    // Migruj dřívější ID hráčských profilů na samostatná jména jen po jejich načtení.
+    if(c.rosterMode!=='manual'){
+      const a=(c.rosterA||[]).slice(),b=(c.rosterB||[]).slice();
+      const mappedA=a.map(v=>data.players?.[v]?.name||v);
+      const mappedB=b.map(v=>data.players?.[v]?.name||v);
+      const changed=a.some((v,i)=>v&&v!==mappedA[i])||b.some((v,i)=>v&&v!==mappedB[i]);
+      if(changed){
+        Object.values(c.lineups||{}).forEach(l=>{
+          if(!l||typeof l!=='object')return;
+          if(Array.isArray(l.a))l.a=l.a.map(v=>{const i=a.indexOf(v);return i>=0?mappedA[i]:v;});
+          if(Array.isArray(l.b))l.b=l.b.map(v=>{const i=b.indexOf(v);return i>=0?mappedB[i]:v;});
+        });
+        c.rosterA=mappedA;c.rosterB=mappedB;
+      }
+      if(changed||![...a,...b].some(Boolean))c.rosterMode='manual';
+    }
+    // Federal Cup 2026: pořadí zemí je pevné, domácí vlevo.
+    c.teamAName='Slovensko';
+    c.teamBName='Česko';
+    return c;
+  }
+  function canEdit(){ return currentUserIsSystemAdmin(); }
+  function normalizedName(s){return String(s||'').replace(/\s+/g,' ').trim();}
+  function roster(side){return side==='a'?cfg().rosterA:cfg().rosterB;}
+  function options(selected,side){
+    return '<option value="">— vyber hráče ze soupisky —</option>'+roster(side).map(normalizedName).filter(Boolean).map(n=>
+      '<option value="'+esc(n)+'" '+(String(selected||'')===n?'selected':'')+'>'+esc(n)+'</option>'
+    ).join('');
+  }
+  function lineup(n){
+    const x=cfg().lineups?.[n]||{};
+    return {a:Array.isArray(x.a)?x.a:[],b:Array.isArray(x.b)?x.b:[]};
+  }
+  function requiredSlots(f){return f.t==='doubles'?2:(f.t==='singles'?1:0);}
+  function pairKey(arr){ return (arr||[]).filter(Boolean).map(String).sort().join('|'); }
+  function allChosen(arr,n){return Array.isArray(arr)&&arr.length>=n&&arr.slice(0,n).every(Boolean);}
+  function uniqueRoster(side){
+    const r=roster(side).map(normalizedName).filter(Boolean);
+    return r.length===5&&new Set(r.map(x=>x.toLocaleLowerCase('cs'))).size===5;
+  }
+
+  function validateSideFixture(f,side){
+    const l=lineup(f.n)[side],need=requiredSlots(f),r=roster(side).filter(Boolean);
+    if(need && !allChosen(l,need))return {ok:false,msg:'Doplň sestavu.'};
+    if(need && new Set(l.slice(0,need)).size!==need)return {ok:false,msg:'Stejný hráč nemůže být v jednom zápase dvakrát.'};
+    if(need && l.slice(0,need).some(id=>!r.includes(id)))return {ok:false,msg:'Vybraný hráč není v soupisce týmu.'};
+
+    if(f.t==='doubles'){
+      const key=pairKey(l.slice(0,2));
+      for(const other of FIXTURES.filter(x=>x.t==='doubles'&&x.n!==f.n)){
+        const ol=lineup(other.n)[side];
+        if(allChosen(ol,2)&&pairKey(ol.slice(0,2))===key)return {ok:false,msg:'Stejná dvojice už je nasazená v zápase '+other.n+'.'};
+      }
+    }
+    if(f.n===3){
+      const used=new Set(lineup(2)[side].slice(0,2).filter(Boolean));
+      if(l[0]&&used.has(l[0]))return {ok:false,msg:'V zápase 3 nesmí nastoupit hráč ze zápasu 2.'};
+    }
+    if(f.n===4){
+      const used=new Set([...lineup(2)[side].slice(0,2),...lineup(3)[side].slice(0,1)].filter(Boolean));
+      if(l.slice(0,2).some(id=>used.has(id)))return {ok:false,msg:'Zápas 4 musí odehrát hráči, kteří nehráli zápasy 2 a 3.'};
+    }
+
+    const groups=[[7,8,9],[12,13,14],[16,17,18,19,20]];
+    for(const nums of groups){
+      if(!nums.includes(f.n))continue;
+      const vals=[];
+      nums.forEach(n=>vals.push(...lineup(n)[side].slice(0,requiredSlots(FIXTURES.find(x=>x.n===n))).filter(Boolean)));
+      if(new Set(vals).size!==vals.length)return {ok:false,msg:'V této povinné skupině nesmí jeden hráč nastoupit dvakrát.'};
+      const full=nums.every(n=>allChosen(lineup(n)[side],requiredSlots(FIXTURES.find(x=>x.n===n))));
+      if(full && (vals.length!==5 || new Set(vals).size!==5))return {ok:false,msg:'V této skupině musí nastoupit všech 5 hráčů ze soupisky právě jednou.'};
+    }
+    return {ok:true,msg:'Sestava je v pořádku.'};
+  }
+
+  function validateFixture(f){
+    if(f.t==='team')return {ok:true,msg:''};
+    if(!uniqueRoster('a')||!uniqueRoster('b'))return {ok:false,msg:'Nejdřív nastav 5 různých hráčů v obou soupiskách.'};
+    const a=validateSideFixture(f,'a'),b=validateSideFixture(f,'b');
+    return a.ok&&b.ok?{ok:true,msg:'Sestava splňuje pravidla.'}:{ok:false,msg:(a.ok?'Tým B: '+b.msg:'Tým A: '+a.msg)};
+  }
+
+  function globalRuleStatus(){
+    const out=[];
+    out.push({ok:uniqueRoster('a')&&uniqueRoster('b'),txt:'Oba týmy mají kompletní soupisku 5 různých hráčů.'});
+    [3,4,7,8,9,12,13,14,16,17,18,19,20].forEach(()=>{});
+    const configured=FIXTURES.filter(f=>f.t!=='team'&&allChosen(lineup(f.n).a,requiredSlots(f))&&allChosen(lineup(f.n).b,requiredSlots(f)));
+    const invalid=configured.filter(f=>!validateFixture(f).ok);
+    out.push({ok:invalid.length===0,txt:invalid.length?'Některá zadaná sestava porušuje pravidla rozpisu.':'Zadané sestavy zatím neporušují pravidla rozpisu.'});
+    return out;
+  }
+
+  function completedMatch(n){
+    return (data.matches||[]).filter(m=>m&&m.federalCupLink?.year===2026&&Number(m.federalCupLink.fixtureNo)===Number(n)&&m.endedAt)
+      .sort((a,b)=>new Date(b.endedAt||b.updatedAt||0)-new Date(a.endedAt||a.updatedAt||0))[0]||null;
+  }
+
+
+  const FEDERAL_CUP_TARGET_WINS=11;
+
+  // Výsledek je jeden vítězný bod pro Slovensko (a) nebo Česko (b),
+  // nikoliv počet racků. Výsledky se vyhodnocují v pořadí rozpisu.
+  function federalCupResult(f){
+    if(f.t==='team'){
+      const r=cfg().teamResults?.[f.n];
+      if(!r?.done)return null;
+      const a=Number(r.a),b=Number(r.b);
+      if(!Number.isFinite(a)||!Number.isFinite(b)||a===b)return null;
+      return {winner:a>b?'a':'b',scores:[a,b]};
+    }
+    const match=completedMatch(f.n);
+    if(!match)return null;
+    const a=Number(match.scores?.[0]),b=Number(match.scores?.[1]);
+    if(!Number.isFinite(a)||!Number.isFinite(b)||a===b)return null;
+    return {winner:a>b?'a':'b',scores:[a,b]};
+  }
+
+  function raceState(){
+    let winsA=0,winsB=0,played=0,clinchedAt=null,winner=null;
+    for(const f of FIXTURES){
+      const result=federalCupResult(f);
+      if(!result)continue;
+      played++;
+      if(result.winner==='a')winsA++;else winsB++;
+      if(winsA>=FEDERAL_CUP_TARGET_WINS||winsB>=FEDERAL_CUP_TARGET_WINS){
+        winner=winsA>=FEDERAL_CUP_TARGET_WINS?'a':'b';
+        clinchedAt=f.n;
+        break;
+      }
+    }
+    return {winsA,winsB,played,clinchedAt,winner,decided:winner!==null};
+  }
+
+  // Používá se i v hlavním tlačítku ZAHÁJIT ZÁPAS, aby nešlo otevřít
+  // dříve připravený zápas, pokud už mezitím jedna reprezentace vyhrála.
+  window.fc26CanStartMatch=function(n){
+    return !raceState().decided&&!completedMatch(Number(n));
+  };
+  function saveLineupSelect(n,side,idx,value){
+    if(!canEdit())return toast('Sestavu Federal Cupu může měnit pouze systémový administrátor.');
+    if(raceState().decided)return toast('Federal Cup již skončil. Nové sestavy není potřeba zadávat.');
+    const conf=cfg();
+    conf.lineups[n]=conf.lineups[n]||{a:[],b:[]};
+    conf.lineups[n][side]=Array.isArray(conf.lineups[n][side])?conf.lineups[n][side]:[];
+    conf.lineups[n][side][idx]=value||'';
+    conf.updatedAt=Date.now();
+    saveData();
+    render();
+  }
+  window.fc26SetLineup=saveLineupSelect;
+
+  function lineupSelectHtml(f,side){
+    const need=requiredSlots(f),l=lineup(f.n)[side];
+    const cls=need===1?'fc26-side-selects single':'fc26-side-selects';
+    return '<div class="'+cls+'">'+Array.from({length:need},(_,i)=>
+      '<select '+(!canEdit()?'disabled ':'')+'onchange="fc26SetLineup('+f.n+',\''+side+'\','+i+',this.value)">'+options(l[i]||'',side)+'</select>'
+    ).join('')+'</div>';
+  }
+
+  function manualTeamResultHtml(f){
+    const r=cfg().teamResults?.[f.n]||{a:'',b:'',done:false};
+    if(r.done){
+      return '<div class="fc26-score">'+esc(String(r.a))+' : '+esc(String(r.b))+'</div>'+
+        (canEdit()?'<div class="fc26-actions"><button class="btn" onclick="fc26EditTeamResult('+f.n+')">UPRAVIT VÝSLEDEK</button></div>':'');
+    }
+    if(!canEdit())return '<div class="muted" style="margin-top:10px">Výsledek Team utkání zatím není zapsán.</div>';
+    return '<div class="fc26-team-score-inputs">'+
+      '<input id="fc26TeamScoreA'+f.n+'" type="number" min="0" inputmode="numeric" placeholder="0">'+
+      '<strong>:</strong>'+
+      '<input id="fc26TeamScoreB'+f.n+'" type="number" min="0" inputmode="numeric" placeholder="0">'+
+      '</div><div class="fc26-actions"><button class="btn primary" onclick="fc26SaveTeamResult('+f.n+')">ULOŽIT TEAM VÝSLEDEK</button></div>';
+  }
+
+  window.fc26SaveTeamResult=function(n){
+    if(!canEdit())return toast('Federal Cup může upravovat systémový administrátor.');
+    if(raceState().decided&&!cfg().teamResults?.[n]?.done)
+      return toast('Utkání už skončilo na 11 vítězných zápasů. Další výsledek nelze zapsat.');
+    const a=Math.max(0,Number($('fc26TeamScoreA'+n)?.value||0));
+    const b=Math.max(0,Number($('fc26TeamScoreB'+n)?.value||0));
+    if(a===b)return toast('Team utkání musí mít vítěze.');
+    cfg().teamResults[n]={a,b,done:true,updatedAt:new Date().toISOString()};
+    cfg().updatedAt=Date.now();saveData();render();toast('Team výsledek uložen.');
+  };
+  window.fc26EditTeamResult=function(n){
+    if(!canEdit())return;
+    const r=cfg().teamResults?.[n];if(r)r.done=false;
+    cfg().updatedAt=Date.now();saveData();render();
+  };
+
+  window.fc26StartFixture=function(n){
+    if(!canEdit())return toast('Zápas Federal Cup může připravit systémový administrátor.');
+    if(raceState().decided)return toast('Federal Cup už má vítěze. Další zápasy se nehrají.');
+    if(completedMatch(Number(n)))return toast('Tento zápas už má uložený výsledek.');
+    const f=FIXTURES.find(x=>x.n===Number(n));if(!f||f.t==='team')return;
+    const v=validateFixture(f);if(!v.ok)return toast(v.msg);
+    const l=lineup(f.n),a=l.a.slice(0,requiredSlots(f)),bb=l.b.slice(0,requiredSlots(f));
+    const pa=a.map(name=>({name:normalizedName(name)})).filter(x=>x.name);
+    const pb=bb.map(name=>({name:normalizedName(name)})).filter(x=>x.name);
+    if(pa.length!==requiredSlots(f)||pb.length!==requiredSlots(f))return toast('Sestavu se nepodařilo načíst.');
+
+    pendingFederalCupLink={
+      year:2026,fixtureNo:f.n,block:f.b,type:f.t,
+      teamAName:cfg().teamAName,teamBName:cfg().teamBName,
+      rosterA:[...cfg().rosterA],rosterB:[...cfg().rosterB],
+      lineupA:[...a],lineupB:[...bb]
+    };
+    $('p1Name').value=pa[0].name;
+    $('p2Name').value=pb[0].name;
+    if($('doublesMode')){
+      $('doublesMode').checked=f.t==='doubles';
+      $('doublesMode').dispatchEvent(new Event('change',{bubbles:true}));
+    }
+    if(f.t==='doubles'){
+      $('p1PartnerName').value=pa[1].name;
+      $('p2PartnerName').value=pb[1].name;
+    }else{
+      if($('p1PartnerName'))$('p1PartnerName').value='';
+      if($('p2PartnerName'))$('p2PartnerName').value='';
+    }
+    if($('streamMatchTitle'))$('streamMatchTitle').value='Federal Cup 2026 • #'+f.n+' '+f.label+' • '+cfg().teamAName+' × '+cfg().teamBName;
+    showScreen('setup');
+    toast('Federal Cup zápas #'+f.n+' je připravený. Nastav disciplínu a Race to.');
+  };
+
+  function renderFixture(f){
+    const m=completedMatch(f.n),v=validateFixture(f),done=!!m;
+    const cancelled=raceState().decided&&!done;
+    let result='';
+    if(done){
+      result='<div class="fc26-score">'+esc(String(m.scores?.[0]??0))+' : '+esc(String(m.scores?.[1]??0))+'</div>'+
+        '<div class="muted" style="text-align:center">'+esc(savedMatchSideDisplayName(m,0))+' × '+esc(savedMatchSideDisplayName(m,1))+'</div>'+
+        '<div class="fc26-actions"><button class="btn" onclick="showSavedMatchStats(\''+esc(m.id)+'\')">STATISTIKY ZÁPASU</button></div>';
+    }else if(cancelled){
+      result='<div class="muted" style="text-align:center;padding:12px">NEHRAJE SE · Utkání skončilo dosažením 11 vítězství.</div>';
+    }else if(f.t==='team'){
+      result=manualTeamResultHtml(f);
+    }else{
+      result='<div class="fc26-lineup-grid">'+
+        '<div class="fc26-side"><strong>'+esc(cfg().teamAName)+'</strong>'+lineupSelectHtml(f,'a')+'</div>'+
+        '<div class="fc26-side"><strong>'+esc(cfg().teamBName)+'</strong>'+lineupSelectHtml(f,'b')+'</div>'+
+      '</div>'+
+      '<div class="'+(v.ok?'fc26-rule-ok':'fc26-rule-warn')+'" style="font-size:11px;margin-top:8px">'+esc(v.msg)+'</div>'+
+      '<div class="fc26-actions"><button class="btn primary" '+(!v.ok?'disabled':'')+' onclick="fc26StartFixture('+f.n+')">HRÁT PŘES POČÍTADLO</button></div>';
+    }
+    return '<div class="fc26-fixture '+(done?'done':'')+(cancelled?' cancelled':'')+'">'+
+      '<div class="fc26-fixture-head"><div style="display:flex;gap:9px;align-items:center"><span class="fc26-fixture-no">'+f.n+'</span><div><div class="fc26-type">'+esc(f.label)+'</div><div class="muted" style="font-size:11px">'+esc(f.note||'')+'</div></div></div>'+
+      (done?'<span class="badge gold">ODEHRÁNO</span>':cancelled?'<span class="badge">NEHRAJE SE</span>':'')+'</div>'+result+'</div>';
+  }
+
+  function teamAggregate(side){
+    const x={matchWins:0,matchLosses:0,racksFor:0,racksAgainst:0,breaks:0,dryBreaks:0,breakFouls:0,aces:0,breakAndRun:0,runouts:0,safeties:0,successfulSafeties:0,misses:0};
+    const state=raceState();
+    FIXTURES.forEach(f=>{
+      // Případné historicky zadané výsledky po rozhodující jedenácté výhře
+      // ponecháme uložené, ale nepočítáme je do výsledku Federal Cupu.
+      if(state.decided&&f.n>state.clinchedAt)return;
+      if(f.t==='team'){
+        const r=cfg().teamResults?.[f.n];if(!r?.done)return;
+        const a=Number(r.a||0),b=Number(r.b||0),sf=side===0?a:b,sa=side===0?b:a;
+        x.racksFor+=sf;x.racksAgainst+=sa;if(sf>sa)x.matchWins++;else x.matchLosses++;return;
+      }
+      const m=completedMatch(f.n);if(!m)return;
+      const sf=Number(m.scores?.[side]||0),sa=Number(m.scores?.[1-side]||0);
+      x.racksFor+=sf;x.racksAgainst+=sa;if(sf>sa)x.matchWins++;else x.matchLosses++;
+      const s=m.stats?.[side]||{};
+      ['breaks','dryBreaks','breakFouls','aces','breakAndRun','runouts','safeties','successfulSafeties','misses'].forEach(k=>x[k]+=Number(s[k]||0));
+    });
+    return x;
+  }
+
+  function renderStats(){
+    const a=teamAggregate(0),b=teamAggregate(1);
+    const rows=[
+      ['Vyhrané zápasy','matchWins'],['Prohrané zápasy','matchLosses'],['Racky +','racksFor'],['Racky −','racksAgainst'],
+      ['Breaky','breaks'],['Dry break','dryBreaks'],['Faul z breaku','breakFouls'],['Eso','aces'],['Break & Run','breakAndRun'],
+      ['Dohrávky','runouts'],['Jistoty','safeties'],['Úspěšné jistoty','successfulSafeties'],['Miss','misses']
+    ];
+    $('fc26TeamStats').innerHTML='<div style="overflow:auto"><table class="fc26-stat-table"><thead><tr><th>Statistika</th><th>'+esc(cfg().teamAName)+'</th><th>'+esc(cfg().teamBName)+'</th></tr></thead><tbody>'+
+      rows.map(r=>'<tr><td>'+esc(r[0])+'</td><td>'+a[r[1]]+'</td><td>'+b[r[1]]+'</td></tr>').join('')+
+      '</tbody></table></div>';
+    $('fc26Summary').innerHTML=
+      '<div class="fc26-summary-card"><h3>'+esc(cfg().teamAName)+'</h3><div class="fc26-score">'+a.matchWins+' : '+a.matchLosses+'</div><div class="muted" style="text-align:center">zápasy • racky '+a.racksFor+':'+a.racksAgainst+'</div></div>'+
+      '<div class="fc26-summary-card"><h3>'+esc(cfg().teamBName)+'</h3><div class="fc26-score">'+b.matchWins+' : '+b.matchLosses+'</div><div class="muted" style="text-align:center">zápasy • racky '+b.racksFor+':'+b.racksAgainst+'</div></div>';
+  }
+
+
+  // Výhradně čtecí obrazovka; žádný druhý zápis dat ani editace utkání.
+  function renderFederalCupViewer(){
+    if(!$('fc26ViewerScoreboard'))return;
+    const conf=cfg();
+    const admin=canEdit();
+    $('fc26ViewerEditor').classList.toggle('hidden',!admin);
+    $('fc26ViewerNotice').textContent=cloudAuthenticated
+      ? 'Aktuální výsledky se pravidelně obnovují. U odehraných Singles a Doubles lze otevřít detailní statistiky.'
+      : 'Pro aktuální cloudové výsledky je potřeba přihlášení. Zobrazená data mohou být ze zařízení.';
+    const a=teamAggregate(0),b=teamAggregate(1);
+    const state=raceState(),done=state.played;
+    function teamBox(name,flag,place,results,cls){
+      return '<div class="fc26-scoreboard-team '+cls+'"><svg class="fc26-flag-svg fc26-flag-large" role="img" aria-label="Vlajka '+(flag==='sk'?'Slovenska':'Česka')+'" viewBox="0 0 600 400"><use href="#fc26Flag'+(flag==='sk'?'SK':'CZ')+'"></use></svg>'+
+        '<div class="fc26-scoreboard-name">'+name+'</div>'+
+        '<div class="fc26-scoreboard-meta">'+place+'</div>'+
+        '<div class="fc26-scoreboard-wins">'+results.matchWins+'</div>'+
+        '<div class="fc26-scoreboard-meta">VYHRANÉ ZÁPASY · SKÓRE '+results.racksFor+':'+results.racksAgainst+'</div></div>';
+    }
+    $('fc26ViewerScoreboard').innerHTML='<div class="fc26-scoreboard">'+
+      teamBox('Slovensko','sk','DOMÁCÍ',a,'home')+
+      '<div class="fc26-scoreboard-vs">:</div>'+
+      teamBox('Česko','cz','HOSTÉ',b,'away')+'</div>'+
+      (state.decided
+        ? '<div class="fc26-winner-banner"><strong>🏆 '+(state.winner==='a'?'Slovensko':'Česko')+' vítězí '+state.winsA+':'+state.winsB+'</strong><span>Utkání rozhodnuto v zápase #'+state.clinchedAt+' · hraje se na 11 vítězných</span></div>'
+        : '<div class="fc26-match-status" style="margin-top:12px">Hraje se na 11 vítězných zápasů · Slovensku chybí '+(11-state.winsA)+' výher, Česku '+(11-state.winsB)+'.</div>');
+    $('fc26ViewerProgress').innerHTML=
+      '<div class="fc26-view-progress"><span><strong>'+done+'</strong> odehraných zápasů (nejvýše '+FIXTURES.length+')</span>'+
+      '<span>'+(state.decided?'UTKÁNÍ UKONČENO':'Zbývá maximálně '+Math.max(0,FIXTURES.length-done)+' zápasů')+'</span></div>'+
+      '<div class="fc26-view-progressbar" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="'+
+      (state.decided?100:Math.round(100*done/FIXTURES.length))+'"><span style="width:'+
+      (state.decided?'100':(100*done/FIXTURES.length).toFixed(1))+'%"></span></div>';
+
+    function fixture(f){
+      const m=f.t==='team'?null:completedMatch(f.n);
+      const r=f.t==='team'?conf.teamResults?.[f.n]:null;
+      const l=lineup(f.n);
+      const finished=!!m||r?.done===true;
+      const cancelled=state.decided&&!finished;
+      const outsideResult=state.decided&&f.n>state.clinchedAt&&finished;
+      const sideName=(side,index)=>m?savedMatchSideDisplayName(m,index):
+        f.t==='team'?(index===0?'Slovensko':'Česko'):
+        (l[side]||[]).slice(0,requiredSlots(f)).filter(Boolean).join(' + ')||'Sestava bude doplněna';
+      const score=finished
+        ? (m?Number(m.scores?.[0]||0)+' : '+Number(m.scores?.[1]||0):
+          Number(r.a||0)+' : '+Number(r.b||0))
+        : '– : –';
+      return '<div class="fc26-view-match '+(finished?'done':'')+(cancelled?' cancelled':'')+'">'+
+        '<div class="fc26-view-match-type"><strong>#'+f.n+'</strong>'+esc(f.label)+'</div>'+
+        '<div class="fc26-view-match-side">'+esc(String(sideName('a',0)))+'</div>'+
+        '<div><div class="fc26-view-match-score">'+score+'</div>'+
+        '<div class="fc26-view-match-status">'+(outsideResult?'MIMO HODNOCENÍ':cancelled?'NEHRAJE SE':finished?'DOHRÁNO':'ČEKÁ SE')+'</div></div>'+
+        '<div class="fc26-view-match-side right">'+esc(String(sideName('b',1)))+'</div>'+
+        (m?'<div class="fc26-view-match-detail"><button type="button" class="btn" data-fc26-view-match="'+
+          esc(String(m.id||''))+'">DETAILNÍ STATISTIKY ZÁPASU</button></div>':'')+'</div>';
+    }
+    $('fc26ViewerSchedule').innerHTML=[1,2,3,4].map(block=>
+      '<div class="fc26-block"><div class="fc26-block-head"><h3>Blok '+block+'</h3>'+
+      '<span class="muted">'+FIXTURES.filter(f=>f.b===block&&f.t!=='team').length+' Singles / Doubles</span></div>'+
+      FIXTURES.filter(f=>f.b===block).map(fixture).join('')+'</div>').join('');
+
+    const stats=[
+      ['Vyhrané zápasy','matchWins'],['Prohrané zápasy','matchLosses'],
+      ['Součet skóre +','racksFor'],['Součet skóre −','racksAgainst'],
+      ['Breaky','breaks'],['Dry break','dryBreaks'],['Fauly z breaku','breakFouls'],
+      ['Eso','aces'],['Break & Run','breakAndRun'],['Dohrávky','runouts'],
+      ['Jistoty','safeties'],['Úspěšné jistoty','successfulSafeties'],['MISS','misses']
+    ];
+    $('fc26ViewerStats').innerHTML='<div style="overflow:auto"><table class="fc26-stat-table">'+
+      '<thead><tr><th>Statistika</th><th>🇸🇰 Slovensko</th><th>🇨🇿 Česko</th></tr></thead><tbody>'+
+      stats.map(([label,key])=>'<tr><td>'+esc(label)+'</td><td>'+a[key]+'</td><td>'+b[key]+'</td></tr>').join('')+
+      '</tbody></table></div>'+
+      '<div class="muted" style="font-size:11px;margin-top:9px">Herní statistiky vycházejí ze Singles a Doubles; Team utkání zahrnují výsledek a skóre.</div>';
+    const rosterHtml=(side,title)=>'<div class="fc26-view-roster"><h3>'+title+'</h3>'+
+      roster(side).map((name,i)=>'<div class="fc26-view-roster-line"><span class="muted">'+(i+1)+'.</span> '+
+        esc(String(name||'Bude doplněno'))+'</div>').join('')+'</div>';
+    $('fc26ViewerRosters').innerHTML='<div class="fc26-view-rosters">'+
+      rosterHtml('a','<svg class="fc26-flag-svg fc26-flag-roster" aria-hidden="true" viewBox="0 0 600 400"><use href="#fc26FlagSK"></use></svg>Slovensko · domácí')+
+      rosterHtml('b','<svg class="fc26-flag-svg fc26-flag-roster" aria-hidden="true" viewBox="0 0 600 400"><use href="#fc26FlagCZ"></use></svg>Česko · hosté')+'</div>';
+  }
+  let refreshingSpectator=false;
+  async function refreshFederalCupViewer(){
+    if(refreshingSpectator)return;
+    if(!cloudAuthenticated){renderFederalCupViewer();return;}
+    refreshingSpectator=true;
+    const btn=$('fc26ViewerRefresh');
+    if(btn)btn.disabled=true;
+    try{await Promise.allSettled([pollCloudData(),loadSecureMatches()]);}
+    catch(e){console.warn('Federal Cup spectator refresh:',e);}
+    finally{
+      refreshingSpectator=false;
+      if(btn)btn.disabled=false;
+      renderFederalCupViewer();
+    }
+  }
+  window.refreshFederalCupViewer=refreshFederalCupViewer;
+  $('fc26ViewerRefresh')?.addEventListener('click',refreshFederalCupViewer);
+  $('fc26ViewerEditor')?.addEventListener('click',()=>{if(canEdit())showScreen('federal-cup-editor')});
+  $('fc26EditorBack')?.addEventListener('click',()=>showScreen('federal-cup-2026'));
+  $('fc26ViewerSchedule')?.addEventListener('click',e=>{
+    const btn=e.target.closest('[data-fc26-view-match]');
+    if(btn?.dataset.fc26ViewMatch)showSavedMatchStats(btn.dataset.fc26ViewMatch);
+  });
+  setInterval(()=>{
+    if(!document.hidden&&$('screen-federal-cup-2026')?.classList.contains('active'))refreshFederalCupViewer();
+  },25000);
+
+  function render(){
+    const root=$('screen-federal-cup-editor');if(!root)return;
+    const editable=canEdit(),state=raceState();
+    $('fc26EditorMatchStatus').classList.toggle('done',state.decided);
+    $('fc26EditorMatchStatus').innerHTML=state.decided
+      ? '<strong>🏆 Utkání skončilo: '+(state.winner==='a'?'Slovensko':'Česko')+' vítězí '+state.winsA+':'+state.winsB+'.</strong> Rozhodující zápas #'+state.clinchedAt+'. Další zápasy už se nehrají.'
+      : '<strong>Stav série: Slovensko '+state.winsA+' : '+state.winsB+' Česko</strong> · Hraje se na 11 vítězných zápasů (maximálně 21).';
+    $('fc26TeamAName').value='Slovensko';
+    $('fc26TeamBName').value='Česko';
+    $('fc26SaveSettings').classList.toggle('hidden',!editable);
+    $('fc26EditNotice').textContent=editable
+      ? 'Zadej pět hráčů Slovenska vlevo a pět hráčů Česka vpravo. Hráči nepotřebují registraci v Poolčítadle.'
+      : 'Soupisky může měnit systémový administrátor. Pro zadání jmen se přihlas administrátorským účtem.';
+
+    ['A','B'].forEach(side=>{
+      const key='roster'+side;
+      const host=$('fc26Roster'+side);
+      if(!host)return;
+      // Při automatické aktualizaci stránky se nesmí ztratit rozepsaná jména.
+      if(host.querySelectorAll('input.fc26-roster-player').length!==5){
+        host.innerHTML=Array.from({length:5},(_,i)=>
+          '<label class="fc26-roster-entry"><span>Hráč '+(i+1)+'</span><input class="fc26-roster-player" type="text" maxlength="100" autocomplete="off" id="fc26'+side+'Player'+i+'" placeholder="Jméno a příjmení" '+(!editable?'disabled':'')+'></label>'
+        ).join('');
+      }
+      Array.from(host.querySelectorAll('input.fc26-roster-player')).forEach((input,i)=>{
+        input.disabled=!editable;
+        if(!input.dataset.dirty&&input!==document.activeElement)input.value=cfg()[key][i]||'';
+      });
+    });
+
+    $('fc26RuleStatus').innerHTML='<strong>PRAVIDLA ROZPISU</strong><div style="margin-top:6px">'+globalRuleStatus().map(r=>
+      '<div class="'+(r.ok?'fc26-rule-ok':'fc26-rule-warn')+'">'+(r.ok?'✓ ':'⚠ ')+esc(r.txt)+'</div>'
+    ).join('')+'<div class="muted" style="margin-top:6px">Stejná dvojice nesmí nastoupit dvakrát. Blok 1: zápas 3 nesmí obsahovat hráče ze zápasu 2 a zápas 4 hrají zbývající hráči. Blok 2: zápasy 7–9 musí využít všech 5 hráčů. Blok 3: zápasy 12–14 musí využít všech 5 hráčů. Blok 4: zápasy 16–20 musí odehrát každý hráč právě jednou; zápas 21 je volba kapitána.</div></div>';
+
+    let html='';
+    for(let block=1;block<=4;block++){
+      const notes={
+        1:'1 Team • 2 Doubles • 3 Singles • 4 Doubles',
+        2:'5 Team • 6 Singles • 7 Doubles • 8 Singles • 9 Doubles',
+        3:'10 Team • 11 Singles • 12 Doubles • 13 Singles • 14 Doubles • 15 Singles',
+        4:'16–20 Singles • 21 Singles – výběr kapitána'
+      };
+      html+='<div class="fc26-block"><div class="fc26-block-head"><h2>Blok č.'+block+'</h2><span class="muted">'+notes[block]+'</span></div>'+
+        FIXTURES.filter(f=>f.b===block).map(renderFixture).join('')+'</div>';
+    }
+    $('fc26Schedule').innerHTML=html;
+    renderStats();
+    renderFederalCupViewer();
+  }
+
+  $('fc26SaveSettings')?.addEventListener('click',function(){
+    if(!canEdit())return;
+    const conf=cfg();
+    const rosterA=Array.from({length:5},(_,i)=>normalizedName($('fc26APlayer'+i)?.value));
+    const rosterB=Array.from({length:5},(_,i)=>normalizedName($('fc26BPlayer'+i)?.value));
+    const unique=arr=>new Set(arr.filter(Boolean).map(x=>x.toLocaleLowerCase('cs'))).size===arr.filter(Boolean).length;
+    if(!unique(rosterA)||!unique(rosterB)){
+      toast('Jména v jedné soupisce se nesmí opakovat.');
+      return;
+    }
+    conf.teamAName='Slovensko';conf.teamBName='Česko';
+    conf.rosterA=rosterA;conf.rosterB=rosterB;conf.rosterMode='manual';
+    Object.values(conf.lineups||{}).forEach(l=>{
+      if(!l||typeof l!=='object')return;
+      if(Array.isArray(l.a))l.a=l.a.map(n=>rosterA.includes(n)?n:'');
+      if(Array.isArray(l.b))l.b=l.b.map(n=>rosterB.includes(n)?n:'');
+    });
+    document.querySelectorAll('.fc26-roster-player').forEach(input=>{delete input.dataset.dirty;});
+    conf.updatedAt=Date.now();saveData();render();
+    toast(rosterA.every(Boolean)&&rosterB.every(Boolean)
+      ? 'Soupisky Slovenska a Česka uloženy.'
+      : 'Rozpracované soupisky uloženy. Před zápasem doplň pět hráčů za každý tým.');
+  });
+  document.getElementById('screen-federal-cup-editor')?.addEventListener('input',function(e){
+    if(e.target?.classList?.contains('fc26-roster-player'))e.target.dataset.dirty='1';
+  });
+  $('fc26Refresh')?.addEventListener('click',async function(){
+    try{if(cloudAuthenticated)await loadSecureMatches();}catch(e){}
+    render();
+    toast('Federal Cup výsledky obnoveny.');
+  });
+
+  window.renderFederalCup2026=render;
+})();
+
+})();

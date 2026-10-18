@@ -1,0 +1,8 @@
+
+  #modernResumeTile:disabled,
+  #modernResumeTile.is-disabled{
+    cursor:not-allowed!important;
+    pointer-events:none!important;
+    opacity:.52!important;
+    filter:grayscale(.2);
+  }
