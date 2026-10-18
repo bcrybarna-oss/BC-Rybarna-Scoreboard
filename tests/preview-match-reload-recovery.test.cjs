@@ -103,10 +103,45 @@ test('recovery must skip explicitly deleted and finished matches',()=>{
   assert.equal(h.calls.save.length,0);
 });
 
-test('successful manual and automatic login both recover after loading saved matches',()=>{
-  assert.match(core,/await promoteLegacyTournamentGuestsToProfiles\(\);\s+restoreOwnedTestMatchAfterLogin\(\);/);
-  assert.equal((core.match(/restoreOwnedTestMatchAfterLogin\(\);/g)||[]).length,2);
+test('manual and automatic login load saved data before recovery and preserve tournament fallback',async()=>{
+  // Execute both real post-login sequences with isolated dependencies. This
+  // checks ordering and fallback behavior rather than one exact call spelling.
+  const sequences=[...core.matchAll(/await initialCloudMerge\(\);[\s\S]*?if\(!matchRestored\)restoreTestTournamentAfterLogin\(\);/g)].map(m=>m[0]);
+  assert.equal(sequences.length,2,'manual and automatic login must both recover');
+  for(const sequence of sequences){
+    for(const restored of [true,false]){
+      const calls=[];
+      const context={};
+      for(const name of ['initialCloudMerge','loadSecurePlayers','loadSecureMatches','loadSecureTournaments','promoteLegacyTournamentGuestsToProfiles']){
+        context[name]=async()=>{await Promise.resolve();calls.push(name);};
+      }
+      context.restoreOwnedTestMatchAfterLogin=()=>{calls.push('match');return restored;};
+      context.restoreTestTournamentAfterLogin=()=>calls.push('tournament');
+      await vm.runInNewContext('(async()=>{'+sequence+'})()',context);
+      assert.deepEqual(calls,[
+        'initialCloudMerge','loadSecurePlayers','loadSecureMatches','loadSecureTournaments',
+        'promoteLegacyTournamentGuestsToProfiles','match',...(!restored?['tournament']:[])
+      ]);
+    }
+  }
   assert.doesNotThrow(()=>new Function(core));
+});
+
+test('delayed identity keeps the snapshot recoverable only by its verified owner',()=>{
+  const live=mk('delayed-owner','owner',[5,4]);
+  const h=harness({uid:'owner',authenticated:false,current:live,saved:[live]});
+  assert.equal(h.ctx.discardForeignLocalActiveMatch(),true);
+  assert.equal(h.ctx.match,null,'a stale UID does not authorize editing');
+  assert.equal(h.ctx.restoreOwnedTestMatchAfterLogin(),false);
+  h.ctx.cloudAuthenticated=true;
+  h.ctx.cloudUid='stranger';
+  assert.equal(h.ctx.restoreOwnedTestMatchAfterLogin(),false);
+  assert.equal(h.calls.remove.length,0);
+  assert.equal(h.calls.save.length,0);
+  h.ctx.cloudUid='owner';
+  assert.equal(h.ctx.restoreOwnedTestMatchAfterLogin(),true);
+  assert.deepEqual(Array.from(h.ctx.match.scores),[5,4]);
+  assert.deepEqual(h.calls.clocks,[[false,false]]);
 });
 
 test('active secure test-database backup is discoverable even if local snapshot is absent',()=>{

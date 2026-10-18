@@ -7679,9 +7679,13 @@ $('winnerText').textContent = match.solo14
 
   function discardForeignLocalActiveMatch(){
     if(!match)return false;
-    // TEST: Firebase obnovuje přihlášení asynchronně. Do té doby ponecháme
-    // rozehraný zápas v paměti i lokální záloze (bez udělení dalších práv).
-    if(window.POOL_TEST_MODE && !cloudAuthenticated)return false;
+    // TEST: před ověřením identity odpojíme editovatelný stav, ale zachováme
+    // lokální snapshot i ukazatel pro obnovení po přihlášení vlastníka.
+    if(window.POOL_TEST_MODE && !cloudAuthenticated){
+      match=null;
+      data.currentMatch=null;
+      return true;
+    }
     if(editableMatchOwnedByCurrentUser(match))return false;
 
     const foreignId=match.id;
