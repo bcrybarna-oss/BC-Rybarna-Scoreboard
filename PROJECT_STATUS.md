@@ -38,6 +38,7 @@ Aktualizace: 19. 10. 2026. Zadavatel aktuální revize: **Dominik**.
 ## Známé chyby a omezení
 
 - Nové historické turnaje: skutečné produkční Rules/Auth, fyzické mobily/nativní aplikace, zátěž velkých startovních polí a reálný souběh zařízení nebyly ověřeny. Zápisy používají fail-closed ETag a kontrolu oprávnění. Stávající generátory nepokrývají libovolný cizí historický pavouk; alternativou zůstávají jednotlivé ruční zápasy/pořadí. U více samostatných skupin bez pavouka není nově odhadované společné pořadí – zadává se ručně.
+- Původní textový/řádkový `historicalAutoPlacements` obsahuje některá pomocná kritéria navíc oproti hlavnímu Lounskému `seriesTournamentPlacementRecords`. Obě starší cesty zůstaly beze změny; nový editor používá hlavní turnajový/sériový výpočet. Parita byla ověřena na odpovídajícím SKO se shodnými semifinalisty a vůči původnímu ručnímu konečnému pořadí; univerzální shoda starých různých algoritmů není tvrzena. Jejich sjednocení je samostatná změna.
 
 - Dva dřívější testy `preview-match-reload-recovery.test.cjs` selhávají již na původním main: odpojení při nedostupné identitě a očekávané volání obnovy po přihlášení. Ve v4.51.79 RC 64/66 a v4.51.80 RC 68/70 lokálně i v GitHub CI. Nejde o nové selhání PDF opravy.
 - Souběžná editace celé konfigurace Federal Cupu z více zařízení může přepsat jinou změnu. Lokální ochrana duplicit není distribuovaný zámek; jeden fixture obsluhovat na jednom zařízení.

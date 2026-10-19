@@ -19702,7 +19702,12 @@ function renderTournamentDetail(){
     return t;
   }
   function historicalReplay(source){
-    const model=historicalClone(source.historicalStructure),t=historicalClone(model.initial);
+    const model=historicalClone(source.historicalStructure),t=historicalClone(source);
+    // Reset sporting state only. Keep the current administrative metadata,
+    // especially organizer permissions changed since the original seeding.
+    for(const key of ['groups','ko','dko','swiss','status','groupEliminations','playoffStarted','awaitingPlayoffSeeding','groupPenaltyWinners','manualGroupPlayoffSemiRouting']){
+      if(model.initial[key]!==undefined)t[key]=historicalClone(model.initial[key]);else delete t[key];
+    }
     model.results=model.results||{};model.audit=model.audit||[];
     t.historicalStructure=model;t.updatedAt=source.updatedAt||t.createdAt;
     const used=new Set();

@@ -22,9 +22,13 @@ Původní ruční přidávání jednotlivých historických zápasů, textový i
 
 Popisky některých starších formulářů zjednodušují kritéria jinak než jejich implementace. Tato revize jejich algoritmus nemění; výše je popsán skutečný kód.
 
+Původní `historicalAutoPlacements` (alternativní řádkový/textový historický import) má navíc pomocná porovnání nastřílených racků a skupinového rozdílu; není totožnou funkcí s hlavním výpočtem Lounské série. Staré uložené výsledky ani tento import se zde nemění. Nová struktura používá výhradně hlavní stávající turnajový/sériový výpočet popsaný výše. Parita byla vedle ručního konečného pořadí nezávisle ověřena i proti původnímu automatickému importu na odpovídajícím SKO se shodnými semifinalisty; univerzální shoda obou starších algoritmů není tvrzena. Jejich případné sjednocení by bylo samostatnou změnou historických pravidel.
+
 ## Opravy a bezpečnost uložení
 
 Nový turnaj obsahuje `historicalStructure`: výchozí ručně nasazený strom, uložené výsledky, ruční pořadí postupujících, případný override konečného pořadí, revizi a audit. Oprava přehraje výsledky přes původní `processTournamentResult` nad kopií turnaje bez jeho informačních oken. Neotevírá počítadlo, hodiny ani LIVE a nevytváří záznamy v `/matches` či vymyšlené detailní statistiky.
+
+Při přepočtu se obnovuje pouze sportovní stav z výchozího nasazení. Současný název, vlastnictví, pořadatelé a další administrativní metadata se zachovávají ze současného záznamu; nepřebírají se zastaralé hodnoty z původní přípravy. Test ověřuje i změnu pořadatelů/názvu po vytvoření turnaje a následné uložení dalšího výsledku.
 
 Výsledky stejných dvojic zůstanou zachované. U nově odvozené dvojice s jinými účastníky se před uložením vypíšou konkrétní zápasy a původní skóre, které budou zneplatněné; pořadatel může změnu zrušit. Výsledky dalších kol, jejichž účastníci ještě nejsou určití, zůstávají uložené mimo aktuální strukturu a nepřinášejí body. Při znovuvytvoření stejné dvojice se použijí, při jiné dvojici se znovu vyžádá potvrzení jejich zneplatnění. Audit uchovává UID pořadatele, čas, původní/nové skóre a zneplatněné výsledky. Změna ručního konečného pořadí vyžaduje potvrzení jeho zrušení; pro více skupin je potom nutné pořadí znovu zadat.
 
