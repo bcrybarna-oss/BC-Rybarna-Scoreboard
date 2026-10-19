@@ -60,7 +60,7 @@ assert.ok(html.includes('window.fcTest='));
  async function run(fn,arg){return page.evaluate(fn,arg)}
  async function setup(n=1){await run(n=>{fcTest.admin();fcTest.reset();
    if(n!==1)fcTest.data.federalCup2026.lineups[n]=n===2?{a:['SK1','SK2'],b:['CZ1','CZ2']}:{a:['SK3'],b:['CZ3']};
-   fc26StartFixture(n);document.getElementById('useLag').checked=false;fcTest.start();},n);}
+   fc26StartFixture(n);document.getElementById('fc26LagWinner').value='0';document.getElementById('useLag').checked=false;fcTest.start();},n);}
  async function state(){return run(()=>JSON.parse(JSON.stringify(fcTest.match)))}
  async function select(a='SK2',b='CZ4'){
    await page.locator('#fc26RackPlayers select').nth(0).selectOption(a);
@@ -69,6 +69,7 @@ assert.ok(html.includes('window.fcTest='));
  }
  try{
   await setup();let m=await state();assert.ok(m.federalTeam.pending);assert.deepEqual(m.stats.map(s=>s.breaks),[0,0]);
+  assert.equal(m.lagWinner,0);assert.deepEqual(m.stats.map(s=>s.lagWins),[1,0]);
   if(process.env.FC_SCREENSHOT_DIR){await page.setViewportSize({width:390,height:844});await page.locator('#fc26RackPlayers').screenshot({path:path.join(process.env.FC_SCREENSHOT_DIR,'team-rack-selection.png')});await page.setViewportSize({width:1280,height:720});}
   assert.equal(await page.locator('#setupModeChoice').isVisible(),false);
   await run(()=>{winRack(0);});assert.deepEqual((await state()).scores,[0,0]);
@@ -141,18 +142,29 @@ assert.ok(html.includes('window.fcTest='));
   await run(()=>{fcTest.reset();fcTest.data.federalCup2026.lineups[2]={a:['SK1','SK2'],b:['CZ1','CZ2']};fc26StartFixture(2);
     for(const [id,value] of Object.entries({discipline:'14.1',counterMode:'simple',raceTo:'99',breakMode:'winner',nineBallBreakRule:'none'}))document.getElementById(id).value=value;
     for(const id of ['ghostMode','solo14','winnerTableMode','useHandicap'])document.getElementById(id).checked=true;
-    document.getElementById('doublesMode').checked=false;document.getElementById('useLag').checked=false;fcTest.start()});
+    document.getElementById('doublesMode').checked=false;document.getElementById('useLag').checked=false;document.getElementById('fc26LagWinner').value='0';fcTest.start()});
   m=await state();assert.equal(m.discipline,'9-ball');assert.equal(m.counterMode,'full');assert.equal(m.target,5);assert.equal(m.breakMode,'alternate');assert.equal(m.nineBallBreakRule,'kitchen');assert.equal(m.doublesMode,true);assert.equal(m.ghostMode,false);assert.equal(m.winnerTableMode,false);
   console.log('PASS incomplete fixtures do not score and start enforces Federal Cup settings');
   for(const n of [1,2,3]){
-    await run(n=>{fcTest.reset();if(n!==1)fcTest.data.federalCup2026.lineups[n]=n===2?{a:['SK1','SK2'],b:['CZ1','CZ2']}:{a:['SK3'],b:['CZ3']};fc26StartFixture(n);document.getElementById('useLag').checked=true;document.getElementById('useClock').checked=true;fcTest.start();},n);
-    await page.locator('#lagP2').click();
+    await run(n=>{fcTest.reset();if(n!==1)fcTest.data.federalCup2026.lineups[n]=n===2?{a:['SK1','SK2'],b:['CZ1','CZ2']}:{a:['SK3'],b:['CZ3']};fc26StartFixture(n);document.getElementById('useLag').checked=false;document.getElementById('useClock').checked=true;},n);
+    await page.locator('#fc26LagWinner').selectOption('1');
+    await page.locator('#startMatch').click();
+    assert.equal(await page.locator('#lagModal').isVisible(),false);
     if(n===1){assert.equal(await run(()=>fcTest.clockRunning),false);await select();}
-    m=await state();assert.equal(m.breaker,1);assert.deepEqual(m.stats.map(s=>s.breaks),[0,1]);assert.equal(await run(()=>fcTest.clockRunning),true);
+    m=await state();assert.equal(m.breaker,1);assert.equal(m.lagWinner,1);assert.equal(m.useLag,true);assert.deepEqual(m.stats.map(s=>s.lagWins),[0,1]);assert.deepEqual(m.stats.map(s=>s.breaks),[0,1]);assert.equal(await run(()=>fcTest.clockRunning),true);
     const id=m.id;await run(n=>fc26StartFixture(n),n);assert.equal((await state()).id,id);
     await run(()=>winRack(0));assert.equal((await state()).breaker,0);
   }
   console.log('PASS lag chooses either opening side, Team waits before starting clock, existing fixture resumes');
+  await run(()=>{fcTest.reset();fc26StartFixture(1);fcTest.start()});
+  assert.equal(await state(),null,'Federal Cup cannot start without the lag result');
+  assert.equal(await page.locator('#fc26LagSetup').isVisible(),true);
+  await page.locator('#fc26LagWinner').selectOption('1');await page.locator('#startMatch').click();
+  await select();m=await state();assert.equal(m.lagWinner,1);assert.equal(m.breaker,1);assert.deepEqual(m.stats.map(s=>s.breaks),[0,1]);
+  await page.reload();await page.waitForSelector('#cloudLoginModal.show');await run(async()=>{fcTest.admin();await fcTest.resume()});
+  m=await state();assert.equal(m.lagWinner,1);assert.deepEqual(m.stats.map(s=>s.lagWins),[0,1]);assert.deepEqual(m.stats.map(s=>s.breaks),[0,1]);
+  await run(()=>{fcTest.reset();fc26StartFixture(1)});assert.equal(await page.locator('#fc26LagWinner').inputValue(),'','a new fixture never inherits an earlier lag result');
+  console.log('PASS required pre-match lag result, no inherited default, correct side and reload without double-counting');
   // The setup UI must also recover from a previous Ghost session.
   await run(()=>{fcTest.reset();document.getElementById('setupGhostBtn').click();fc26StartFixture(1)});
   assert.equal(await page.locator('#setupGhostBtn').isVisible(),false);
@@ -162,6 +174,7 @@ assert.ok(html.includes('window.fcTest='));
   // Ordinary starts keep their existing options.
   await run(()=>{fcTest.reset();fcTest.screen('home');fcTest.screen('setup');document.getElementById('p1Name').value='Outside A';document.getElementById('p2Name').value='Outside B';document.getElementById('doublesMode').checked=false;document.getElementById('discipline').value='8-ball';document.getElementById('raceTo').value='7';document.getElementById('counterMode').value='simple';document.getElementById('breakMode').value='winner';fcTest.start()});
   m=await state();assert.equal(m.discipline,'8-ball');assert.equal(m.target,7);assert.equal(m.counterMode,'simple');assert.equal(m.breakMode,'winner');assert.equal(m.federalCupLink,null);
+  assert.equal(await page.locator('#fc26LagSetup').isVisible(),false);
   console.log('PASS ordinary 8-ball simple counter settings');
   for(const mode of ['10-ball','14.1','ghost','winner-table','doubles']){
     await run(mode=>{fcTest.reset();fcTest.screen('home');fcTest.screen('setup');document.getElementById('setupStandardBtn').click();

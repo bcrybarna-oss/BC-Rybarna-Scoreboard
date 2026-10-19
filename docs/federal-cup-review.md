@@ -1,5 +1,11 @@
 # Federal Cup – podklady k revizi
 
+## Výsledek tempa před zahájením zápasu
+
+Příprava všech tří formátů Federal Cupu má povinný výběr **Výsledek tempa: Slovensko / Česko**. Nový formulář začíná bez předvolby, aby nepřevzal výsledek minulého zápasu. Start bez výsledku se odmítne ještě před vytvořením zápasu. Vítěz se uloží do stávajícího `lagWinner`, jednou se přičte `lagWins` a nastaví první rozstřel přes původní `chooseLagWinner`. Federal Cup již po startu nezobrazuje druhý dialog tempa; ostatní režimy jej používají jako dosud.
+
+V Teamu se break přičte teprve po ručním výběru hráčů. Reload a obnovení nevytvářejí nový výsledek tempa ani druhý break. Ruční změna rozstřelu zůstává servisní opravou před breakem s převodem jednoho pokusu a undo, nikoli náhradou za běžné zadání tempa. Izolovaný browser test ověřuje volbu obou stran, povinné zadání, správné statistiky Singles/Doubles/Teamu, vynucení při vypnutém skrytém přepínači tempa, reload, následné střídání a zachování ostatních režimů.
+
 ## Oprava přiřazení rozstřelu nalezená v ručním náhledu
 
 Zachovaný případ `205d066e-3be2-4231-b708-43a063dbabb6` má původně Česko: 2 breaky, 1 faul z breaku a 2 B&R. Výpočet 200 % byl aritmeticky správný pro chybná vstupní data: `2 / (2 - 1) * 100`.

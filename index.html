@@ -2778,6 +2778,16 @@ html[data-theme="light"] #leagueSchedule .history-item .muted{
       </div>
       <p id="setupModeHint" class="muted" style="margin:10px 0 16px">Zápas dvou hráčů. Další možnosti najdeš v pokročilém nastavení.</p>
 
+      <div id="fc26LagSetup" class="subpanel hidden" style="margin-bottom:16px">
+        <label for="fc26LagWinner">Výsledek tempa</label>
+        <select id="fc26LagWinner">
+          <option value="">— kdo vyhrál tempo? —</option>
+          <option value="0">Slovensko</option>
+          <option value="1">Česko</option>
+        </select>
+        <div class="muted" style="margin-top:7px">Vítěz tempa provede první rozstřel. Potom se týmy střídají po jednom racku.</div>
+      </div>
+
       <div class="grid two">
         <div>
           <label id="p1Label">Hráč 1</label>
@@ -8899,6 +8909,7 @@ html[data-theme="light"] #leagueSchedule .history-item .muted{
     $('screen-'+name).classList.add('active');
     $('screen-setup').classList.toggle('federal-setup',name==='setup'&&!!pendingFederalCupLink);
     $('screen-setup').classList.toggle('federal-team-setup',name==='setup'&&pendingFederalCupLink?.type==='team');
+    $('fc26LagSetup').classList.toggle('hidden',name!=='setup'||!pendingFederalCupLink);
     if(name!=='setup'&&name!=='match')pendingFederalCupLink=null;
 
     // Mobilní spodní navigace je užitečná pro běžné sekce,
@@ -9598,6 +9609,11 @@ $('useClock').addEventListener('change',e=>$('clockSettings').classList.toggle('
       return;
     }
     if(federalCupLink)applyFederalCupSetup();
+    const federalCupLagWinner=federalCupLink ? $('fc26LagWinner').value : null;
+    if(federalCupLink && !['0','1'].includes(federalCupLagWinner)){
+      toast('Před zahájením Federal Cup zápasu vyber výsledek tempa.');
+      return;
+    }
     const discipline=federalCupLink ? '9-ball' : $('discipline').value;
     const counterMode=federalCupLink ? 'full' : ($('counterMode')?.value||'full');
     const simpleCounter=counterMode==='simple';
@@ -9781,7 +9797,7 @@ $('useClock').addEventListener('change',e=>$('clockSettings').classList.toggle('
       breakPocketedBalls:[],
       rackRemainingBalls:[],
       lastMissBall:null,
-      useLag: (solo14 || ghostMode || winnerTableMode) ? false : ($('useLag')?.checked ?? true),
+      useLag: federalCupLink ? true : ((solo14 || ghostMode || winnerTableMode) ? false : ($('useLag')?.checked ?? true)),
       lagWinner:null,
       useThreeFoul:simpleCounter ? false : ($('useThreeFoul')?.checked ?? true),
       useClock:simpleCounter ? false : ($('useClock')?.checked ?? false),
@@ -9841,7 +9857,9 @@ $('useClock').addEventListener('change',e=>$('clockSettings').classList.toggle('
     // nepokračujeme s přístupem na null objekt.
     if(!match)return;
 
-    if(match.useLag){
+    if(federalCupLink){
+      chooseLagWinner(Number(federalCupLagWinner));
+    }else if(match.useLag){
       $('lagP1').textContent=match.playerNames[0];
       $('lagP2').textContent=match.playerNames[1];
       $('lagHelp').textContent = match.discipline==='14.1'
@@ -28254,6 +28272,7 @@ function renderStats(){
       rosterA:[...cfg().rosterA],rosterB:[...cfg().rosterB],
       lineupA:[...a],lineupB:[...bb]
     };
+    $('fc26LagWinner').value='';
     $('p1Name').value=pa[0].name;
     $('p2Name').value=pb[0].name;
     if($('doublesMode')){
