@@ -522,7 +522,7 @@
     }
   
 
-/* === v4.51.75 RC • mobilní herní obrazovka portrait / landscape === */
+/* === v4.51.76 RC • mobilní herní obrazovka portrait / landscape === */
 @media (max-width:700px) and (orientation:portrait){
   #screen-match{margin-top:8px}
   #screen-match>.card{padding:10px;border-radius:14px}
@@ -2501,7 +2501,7 @@ html[data-theme="light"] #leagueSchedule .history-item .muted{
           <span class="by">by</span>
           <span class="club">BC Rybárna</span>
         </div>
-        <small class="modern-brand-version">v4.51.75 RC</small>
+        <small class="modern-brand-version">v4.51.76 RC</small>
       </div>
     </div>
     <div class="nav">
@@ -3099,7 +3099,7 @@ html[data-theme="light"] #leagueSchedule .history-item .muted{
         </div>
         <div class="subpanel" style="min-width:210px;text-align:center;margin:0">
           <div class="muted" style="font-size:10px;font-weight:950;letter-spacing:1px">AKTUÁLNÍ VERZE</div>
-          <div style="font-size:22px;font-weight:950;color:var(--gold2);margin-top:5px">v4.51.75 RC</div>
+          <div style="font-size:22px;font-weight:950;color:var(--gold2);margin-top:5px">v4.51.76 RC</div>
         </div>
       </div>
     </div>
@@ -5778,7 +5778,7 @@ html[data-theme="light"] #leagueSchedule .history-item .muted{
       </div>
 
       <div id="groupPlayoffSeedStatus" class="muted" style="margin-top:12px;min-height:20px"></div>
-      <div class="muted" style="margin-top:4px;font-size:11px">RC v4.51.75</div>
+      <div class="muted" style="margin-top:4px;font-size:11px">RC v4.51.76</div>
       <div class="modal-actions">
         <button id="groupPlayoffSeedApplyBtn" class="btn primary big" type="button">NASADIT DO PLAY-OFF</button>
         <button id="groupPlayoffSeedCancelBtn" class="btn">ZRUŠIT</button>
@@ -6962,7 +6962,7 @@ html[data-theme="light"] #leagueSchedule .history-item .muted{
     const btn=$('submitReportBtn');if(btn)btn.disabled=true;
     try{
       const id=uid(),p=currentUserPlayerId?data.players?.[currentUserPlayerId]:null;
-      const report={id,createdByUid:cloudUid,createdByPlayerId:currentUserPlayerId||'',createdByName:p?playerSelectionLabel(p):(cloudUserEmail||'Uživatel'),email:cloudUserEmail||'',type,area,description,appVersion:'v4.51.75 RC',createdAt:new Date().toISOString(),updatedAt:new Date().toISOString(),status:'new',adminNote:''};
+      const report={id,createdByUid:cloudUid,createdByPlayerId:currentUserPlayerId||'',createdByName:p?playerSelectionLabel(p):(cloudUserEmail||'Uživatel'),email:cloudUserEmail||'',type,area,description,appVersion:'v4.51.76 RC',createdAt:new Date().toISOString(),updatedAt:new Date().toISOString(),status:'new',adminNote:''};
       await reportRequest(id,'PUT',report);
       try{
         await writeReportUserMirror(report);
@@ -17003,23 +17003,73 @@ $('liveScoreClose').onclick=()=>{
     }
   }
 
+
+  // Oprava již dokončeného turnajového zápasu bez opětovného rozehrání pavouka.
+  function applyCompletedTournamentScoreCorrection(t,tm,s1,s2,editorUid,at){
+    if(!t || !tm || !(tm.status==='done' || tm.winnerId || tm.loserId)){
+      throw new Error('CORRECTION_MATCH_NOT_FINISHED');
+    }
+    if(!Number.isInteger(s1) || !Number.isInteger(s2) || s1<0 || s2<0 || s1===s2){
+      throw new Error('CORRECTION_INVALID_SCORE');
+    }
+    const previousWinner=tm.winnerId || (
+      Number(tm.score1)>Number(tm.score2) ? tm.player1Id : tm.player2Id
+    );
+    const nextWinner=s1>s2 ? tm.player1Id : tm.player2Id;
+
+    // Jakmile existuje navazující pavouk či švýcarské párování, změna vítěze
+    // by přepsala historii postupu. Takový zásah vyžaduje zvláštní opravu pavouka.
+    if(previousWinner!==nextWinner && (t.format!=='groups' || !!t.ko || !!t.dko || !!t.swiss || !!t.playoffStarted)){
+      throw new Error('CORRECTION_WINNER_CHANGE_REQUIRES_REBUILD');
+    }
+
+    const previous={
+      score1:Number(tm.score1||0),score2:Number(tm.score2||0),
+      winnerId:tm.winnerId||previousWinner,loserId:tm.loserId||(
+        previousWinner===tm.player1Id?tm.player2Id:tm.player1Id
+      )
+    };
+    const correction={
+      at:at||new Date().toISOString(),byUid:editorUid||'',
+      previous,
+      next:{score1:s1,score2:s2,winnerId:nextWinner,loserId:nextWinner===tm.player1Id?tm.player2Id:tm.player1Id}
+    };
+    const history=Array.isArray(tm.scoreCorrectionHistory)?tm.scoreCorrectionHistory:[];
+    tm.scoreCorrectionHistory=[...history,correction].slice(-10);
+    // Stávající záznam z počítadla ponecháváme kvůli podrobným herním statistikám.
+    // Reconciliation nesmí následně chybné původní skóre vrátit do turnaje.
+    tm.scoreCorrection={at:correction.at,byUid:correction.byUid,sourceMatchId:tm.scoreboardMatchId||null};
+    tm.score1=s1;
+    tm.score2=s2;
+    tm.winnerId=correction.next.winnerId;
+    tm.loserId=correction.next.loserId;
+    tm.status='done';
+    t.updatedAt=correction.at;
+    return correction;
+  }
+
   window.openHistoricalTournamentScore=function(tid,matchId){
     const t=(data.tournaments||[]).find(x=>x.id===tid);
     const m=t?findTournamentMatch(t,matchId):null;
-    if(!t || !m || !canManageTournament(t) || m.status==='done' || m.winnerId || m.loserId)return;
+    if(!t || !m || !canManageTournament(t))return;
 
-    historicalScoreContext={tournamentId:tid,matchId};
+    const correcting=(m.status==='done'||!!m.winnerId||!!m.loserId);
+    historicalScoreContext={tournamentId:tid,matchId,correcting};
+    $('historicalTournamentScoreModal').querySelector('h2').textContent=correcting?'OPRAVIT SKÓRE ZÁPASU':'ZADAT VÝSLEDEK RUČNĚ';
     $('historicalTournamentScorePlayers').textContent=tournamentPlayerName(m.player1Id,t)+' vs '+tournamentPlayerName(m.player2Id,t);
     $('historicalTournamentP1Label').textContent=tournamentPlayerName(m.player1Id,t);
     $('historicalTournamentP2Label').textContent=tournamentPlayerName(m.player2Id,t);
-    $('historicalTournamentScore1').value=0;
-    $('historicalTournamentScore2').value=0;
+    $('historicalTournamentScore1').value=correcting?Number(m.score1||0):0;
+    $('historicalTournamentScore2').value=correcting?Number(m.score2||0):0;
+    $('historicalTournamentScoreSaveBtn').textContent=correcting?'ULOŽIT OPRAVU':'ULOŽIT VÝSLEDEK';
 
     const info=$('historicalTournamentScoreModal')?.querySelector('.muted');
     if(info){
-      info.textContent=t.historicalEditMode
-        ? 'Výsledek se zapíše přímo do turnaje bez spuštění počítadla. Nevytvoří podrobné herní statistiky.'
-        : 'Výsledek se zapíše přímo do turnaje bez spuštění počítadla. Započítá se do tabulky a dalšího průběhu turnaje, ale nevytvoří podrobné herní statistiky.';
+      info.textContent=correcting
+        ? 'Oprava upraví turnajové skóre, tabulky, pořadí a případné série. Podrobné herní statistiky původního zápasu z počítadla zůstanou beze změny. Změnu vítěze v již rozehraném pavouku nelze tímto způsobem provést.'
+        : (t.historicalEditMode
+          ? 'Výsledek se zapíše přímo do turnaje bez spuštění počítadla. Nevytvoří podrobné herní statistiky.'
+          : 'Výsledek se zapíše přímo do turnaje bez spuštění počítadla. Započítá se do tabulky a dalšího průběhu turnaje, ale nevytvoří podrobné herní statistiky.');
     }
 
     $('historicalTournamentScoreModal').classList.add('show');
@@ -17030,13 +17080,19 @@ $('liveScoreClose').onclick=()=>{
     const t=ctx?(data.tournaments||[]).find(x=>x.id===ctx.tournamentId):null;
     const tm=t?findTournamentMatch(t,ctx.matchId):null;
     if(!t || !tm || !canManageTournament(t))return;
-    if(tm.status==='done' || tm.winnerId || tm.loserId){
-      toast('Tento zápas už je dohraný.');
+
+    const done=(tm.status==='done'||!!tm.winnerId||!!tm.loserId);
+    if(done!==!!ctx.correcting){
+      toast('Stav zápasu se změnil. Otevři jeho výsledek znovu.');
       return;
     }
 
-    const s1=Math.max(0,Number($('historicalTournamentScore1').value||0));
-    const s2=Math.max(0,Number($('historicalTournamentScore2').value||0));
+    const s1=Number($('historicalTournamentScore1').value);
+    const s2=Number($('historicalTournamentScore2').value);
+    if(!Number.isInteger(s1) || !Number.isInteger(s2) || s1<0 || s2<0){
+      toast('Zadej celé nezáporné skóre obou hráčů.');
+      return;
+    }
     if(s1===s2){
       toast('Výsledek nemůže skončit remízou.');
       return;
@@ -17047,6 +17103,49 @@ $('liveScoreClose').onclick=()=>{
     if(winnerScore!==race){
       const ok=confirm('Turnaj je nastavený na Race to '+race+', ale vítěz má '+winnerScore+'. Opravdu tento výsledek uložit?');
       if(!ok)return;
+    }
+
+    if(ctx.correcting){
+      if(s1===Number(tm.score1||0) && s2===Number(tm.score2||0)){
+        $('historicalTournamentScoreModal').classList.remove('show');
+        historicalScoreContext=null;
+        return;
+      }
+
+      const previousWinner=tm.winnerId || (
+        Number(tm.score1)>Number(tm.score2) ? tm.player1Id : tm.player2Id
+      );
+      const nextWinner=s1>s2?tm.player1Id:tm.player2Id;
+      if(previousWinner!==nextWinner && (t.format!=='groups' || !!t.ko || !!t.dko || !!t.swiss || !!t.playoffStarted)){
+        toast('Změna vítěze by narušila navazující pavouk nebo párování. Oprav lze bezpečně skóre při stejném vítězi.');
+        return;
+      }
+
+      if(!confirm('Opravit výsledek '+tournamentPlayerName(tm.player1Id,t)+' – '+tournamentPlayerName(tm.player2Id,t)+' z '+tm.score1+':'+tm.score2+' na '+s1+':'+s2+'?'))return;
+
+      const backup=JSON.parse(JSON.stringify(t));
+      try{
+        applyCompletedTournamentScoreCorrection(t,tm,s1,s2,cloudUid||'',new Date().toISOString());
+        await saveSecureTournament(t);
+      }catch(e){
+        const index=(data.tournaments||[]).findIndex(x=>x.id===backup.id);
+        if(index>=0)data.tournaments[index]=backup;
+        try{localStorage.setItem(DB_KEY,JSON.stringify(data));}catch(ignore){}
+        console.error('Tournament score correction:',e);
+        toast('Opravu skóre se nepodařilo bezpečně uložit.');
+        return;
+      }
+
+      $('historicalTournamentScoreModal').classList.remove('show');
+      historicalScoreContext=null;
+      renderTournament();
+      renderResultsTournaments();
+      renderResultsSeries();
+      renderSeriesList();
+      renderTournamentDetail();
+      renderStats();
+      toast('Skóre turnaje bylo opraveno a pořadí přepočítáno.');
+      return;
     }
 
     const synthetic={
@@ -17536,6 +17635,7 @@ $('liveScoreClose').onclick=()=>{
             : ''}
         </div>
       </div>
+      ${done && canManageTournament(t)?`<div style="display:flex;justify-content:center;margin-top:9px"><button class="btn" onclick="openHistoricalTournamentScore('${t.id}','${m.id}')">OPRAVIT SKÓRE</button></div>`:''}
       ${!done?`<div style="display:flex;justify-content:center;align-items:center;gap:8px;margin-top:9px;flex-wrap:wrap">
         ${m.tableNumber?`<span class="tournament-badge gold">STŮL ${m.tableNumber}</span>`:''}
         ${canManageTournament(t)
@@ -18238,6 +18338,9 @@ function renderSKOTournament(t){
           const tm=findTournamentMatch(t,sm.tournamentLink.tournamentMatchId);
           if(!tm)return;
 
+          // Ověřená následná oprava turnajového skóre má přednost před starým zápisem z počítadla.
+          if(tm.scoreCorrection?.at)return;
+
           const winnerId=sm.playerIds?.[sm.winner]||null;
           const loserId=sm.playerIds?.[1-sm.winner]||null;
 
@@ -18784,6 +18887,7 @@ function renderTournamentDetail(){
         ${t.dko?`<button class="btn primary" onclick="openTournamentBracket('${t.id}')">DKO PAVOUK</button>`:''}
         ${t.ko?`<button class="btn primary" onclick="openSKOBracket('${t.id}')">SKO PAVOUK</button>`:''}
         ${canManageTournament(t) && t.status!=='complete'?`<button class="btn" onclick="openActiveTournamentEdit('${t.id}')">UPRAVIT TURNAJ</button>`:''}
+        ${t.status==='complete' && canManageTournament(t)?'<span class="muted">Skóre opravíš tlačítkem OPRAVIT SKÓRE u příslušného zápasu níže.</span>':''}
         ${tournamentCanSeedFromGroups(t)?`<span class="tournament-badge gold">ČEKÁ NA RUČNÍ NASAZENÍ PLAY-OFF</span>`:''}
         ${t.status==='complete' && tournamentCanHistoricalReseed(t)?`<button class="btn" onclick="openTournamentHistoricalEdit('${t.id}')">UPRAVIT / ZNOVU NASADIT PLAY-OFF</button>`:''}
         ${canManageTournament(t)?`
