@@ -4,17 +4,18 @@ Aktualizace: 19. 10. 2026. Zadavatel aktuální revize: **Dominik**.
 
 ## Verze a nasazení
 
-- Aktuální připravená verze: **v4.51.79 RC**, přímo na větvi `main` podle zadání Dominika.
-- Poslední ověřená produkce: **v4.51.78 RC**, commit `6d50db0655f193fa672ebd6277896336ee4d3fc8`; GitHub Pages dokončil nasazení a veřejné HTML odpovídalo commitu.
-- Stav v4.51.79 RC: **otestováno, připraveno k pushi; dosud nenasazeno**. Tento stav je nutné po skutečném nasazení aktualizovat.
+- Aktuální verze: **v4.51.79 RC**, práce proběhla přímo na větvi `main` podle zadání Dominika.
+- Poslední ověřený produkční kód: commit **`413781e753a61876a07602b0a6b96df44220ab00`**, v4.51.79 RC. GitHub Pages [nasazení](https://github.com/bcrybarna-oss/BC-Rybarna-Scoreboard/actions/runs/39313555651) dokončil úspěšně; veřejné HTML se bajtově shoduje s commitem.
+- Stav v4.51.79 RC: **nasazeno a ověřeno** dne 19. 10. 2026 v 19:45 UTC. HTTP 200, v čistém desktop Chrome správná hlavička v4.51.79 RC, 0 chyb JavaScriptu a 0 vzdálených zápisů; Firebase bylo zablokované. SHA256 HTML: `df5eb09c2c00c4955aa225f8458a35ea9e48d393a8cfe3e7c61bf5812e7611ac`.
+- Následný dokumentační záznam tohoto ověření nemění produkční HTML ani verzi. Pro případné novější commity vždy zkontrolovat skutečný běh Pages na GitHubu; nepovažovat starší ověření za důkaz novějšího kódu.
 - Produkce: https://bcrybarna-oss.github.io/BC-Rybarna-Scoreboard/
 - Nasazení probíhá automaticky GitHub Pages po pushi do main; vždy ověřit konkrétní workflow a veřejné HTML.
 
 ## Dokončené a rozpracované úpravy
 
 - Nasazené ve v4.51.78 RC: Federal Cup Singles/Doubles/Team přes detailní počítadlo, výběr Team hráčů před rackem, pevná pravidla a tempo před startem, Soft break rozhodnutí, oprava přiřazení breaků a B&R conversion, konkrétní koule při úniku z jistoty. Podrobně REVIZE.md a docs/federal-cup-review.md.
-- Připravené pro v4.51.79 RC: jednotné ULOŽIT PDF v historii, detailu zápasu, Statistikách a Moje statistiky; stahování místo automatického sdílení, zachované generátory obsahu a názvy souborů.
-- Připravené pro v4.51.79 RC: pravidla spolupráce Dominika a Jaroslava v AGENTS.md, aktuální stav v tomto souboru, návaznost v PROJECT_CONTEXT.md a úplný záznam pod Dominikem v REVIZE.md.
+- Dokončené a nasazené ve v4.51.79 RC: jednotné ULOŽIT PDF v historii, detailu zápasu, Statistikách a Moje statistiky; stahování místo automatického sdílení, zachované generátory obsahu a názvy souborů.
+- Dokončené ve v4.51.79 RC: pravidla spolupráce Dominika a Jaroslava v AGENTS.md, aktuální stav v tomto souboru, návaznost v PROJECT_CONTEXT.md a úplný záznam pod Dominikem v REVIZE.md.
 - Jiné rozpracované úpravy v tomto checkoutu před zahájením nebyly. PR #6 je oddělená rozpracovaná modularizace; není součástí produkční revize.
 
 ## Ověření
@@ -28,7 +29,7 @@ Aktualizace: 19. 10. 2026. Zadavatel aktuální revize: **Dominik**.
 
 ## Známé chyby a omezení
 
-- Dva dřívější testy `preview-match-reload-recovery.test.cjs` selhávají již na původním main: odpojení při nedostupné identitě a očekávané volání obnovy po přihlášení. Dosavadní celá Node sada: 60/62. Nejde o nové selhání PDF opravy.
+- Dva dřívější testy `preview-match-reload-recovery.test.cjs` selhávají již na původním main: odpojení při nedostupné identitě a očekávané volání obnovy po přihlášení. Před touto revizí 60/62, nyní 64/66 lokálně i v GitHub CI. Nejde o nové selhání PDF opravy.
 - Souběžná editace celé konfigurace Federal Cupu z více zařízení může přepsat jinou změnu. Lokální ochrana duplicit není distribuovaný zámek; jeden fixture obsluhovat na jednom zařízení.
 - Skutečné Firebase Auth/Rules, cloudový výpadek, mobilní iOS/Android buildy a skutečné mobilní ukládání PDF nebyly ověřeny. Desktopový download ani emulovaný mobilní viewport nedokazují uložení na fyzickém telefonu.
 - PDF knihovny se načítají z CDN, jejich dostupnost vyžaduje připojení. Chování a cílovou složku stažení určuje prohlížeč a jeho nastavení. Nativní Capacitor WebView musí být samostatně ověřen.
