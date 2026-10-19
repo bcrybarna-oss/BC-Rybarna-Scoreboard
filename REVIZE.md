@@ -1,5 +1,19 @@
 # Revize aplikace Poolčítadlo
 
+## Dominik – provedené změny v revizi ve verzi v4.51.79 RC
+
+Datum: 19. 10. 2026. Výchozí main: `6d50db0655f193fa672ebd6277896336ee4d3fc8`.
+
+- **Oprava ukládání PDF:** tlačítko v historii zápasů přejmenováno na ULOŽIT PDF. Stejné chování a označení mají exporty detailu zápasu, Statistik a Moje statistiky. Společný `savePdfBlob` zahajuje stažení PDF; automatické systémové sdílení již uložení nenahrazuje. Obsah PDF a pravidla názvů souborů zůstávají zachované. Textové sdílení mimo PDF se nemění.
+- **Zavedení pravidel spolupráce Dominika a Jaroslava a povinného čtení a aktualizace dokumentace změn pro každou AI:** vznikl kořenový **AGENTS.md**. Před každou prací ukládá přečíst REVIZE.md, PROJECT_STATUS.md a PROJECT_CONTEXT.md, zkontrolovat větev, necommitnuté změny i nové commity na GitHubu. Autorství označuje zadavatele Dominika/Jaroslava; při nejasném zadání se AI musí zeptat. Před zápisem do main musí znovu ověřit vzdálený stav, zachovat cizí práci, bezpečně zapracovat souběžné změny a nikdy nepoužít force push.
+- **Dokumentace aktuálního stavu:** vznikl **PROJECT_STATUS.md** pro verzi, stav nasazení, dokončené a rozpracované změny, známé chyby, omezení a důležité testy. Každá AI jej musí aktualizovat a rozlišovat připravené, otestované, čekající na nasazení a skutečně nasazené úpravy.
+- **Návaznost dokumentace:** změněn **PROJECT_CONTEXT.md**, který odkazuje na závazná pravidla a aktuální stav a popisuje ukládání PDF. **REVIZE.md** zachovává předchozí historii; nové záznamy musí uvádět Dominika nebo Jaroslava, datum, verzi, popis, ověření a neuzavřené body. Aktualizace dokumentace po dokončení a po ověření nasazení je povinná pro každou AI.
+- **Verze:** v4.51.79 RC v hlavním kódu a hlášeních chyb. Práce probíhá přímo na main podle výslovného zadání Dominika.
+
+Ověření: smoke 12/12, 4 nové regresní testy ukládání a izolovaný desktop Chrome se skutečnými knihovnami prošly. Stažena 4 PDF ze všech exportních míst; ověřeny názvy a přesná shoda souborů s vytvořenými PDF bloby, nulové volání systémového sdílení a nulové chyby JavaScriptu. Oba generátory obsahu jsou beze změny. Celá Node sada 64/66 se stejnými dvěma dřívějšími chybami preview. Síť testu je plně zachycena, produkční Firebase nepoužita. Stav nasazení je evidovaný v PROJECT_STATUS.md; při tomto záznamu otestováno, čeká na push/nasazení.
+
+Nedořešené body: fyzické Android/iOS prohlížeče a nativní Capacitor aplikace zatím neověřeny. Dvě dřívější chyby preview testů a souběh konfigurace Federal Cupu zůstávají oddělenými známými body; produkční Firebase data se nemění.
+
 ## Dominik – provedené změny v revizi ve verzi v4.51.78 RC
 
 Datum: 19. 10. 2026

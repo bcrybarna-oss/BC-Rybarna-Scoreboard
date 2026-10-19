@@ -2,6 +2,8 @@
 
 Tento soubor je hlavní společný kontext pro vývoj aplikace Poolčítadlo. Slouží jako zdroj pravdy pro Jaroslava, Dominika i jejich ChatGPT asistenty.
 
+Povinná pravidla spolupráce jsou v `AGENTS.md`. Před každou prací čti také `REVIZE.md` a `PROJECT_STATUS.md`; aktuální verze, ověřené nasazení, rozpracované body a výsledky testů se udržují v `PROJECT_STATUS.md`. Tento soubor popisuje dlouhodobý kontext a nenahrazuje aktuální stav.
+
 ## Repozitář a produkce
 
 - GitHub: `bcrybarna-oss/BC-Rybarna-Scoreboard`
@@ -11,6 +13,7 @@ Tento soubor je hlavní společný kontext pro vývoj aplikace Poolčítadlo. Sl
 - Změny v `main` mohou ovlivnit reálné používání aplikace.
 
 Doporučený workflow:
+Výslovný požadavek zadavatele na přímou práci v main má přednost; i tehdy platí kontroly vzdálených změn, testy a dokumentace podle `AGENTS.md`.
 1. vytvořit vlastní branch,
 2. implementovat změnu,
 3. otestovat desktop i mobil,
@@ -84,6 +87,8 @@ Má vlastní PDF REPORT.
 Sekce Moje statistiky má filtry CELKEM / 8-ball / 9-ball / 10-ball / 14.1 a také vlastní PDF REPORT.
 
 PDF používá `html2canvas` a `jsPDF`.
+
+Exportní tlačítka ULOŽIT PDF v historii, detailu zápasu, Statistikách a Moje statistiky mají stahovat vytvořený PDF soubor přes společný `savePdfBlob`. Systémové sdílení nesmí nahrazovat uložení. Textové sdílení jiných částí aplikace je samostatná funkce. Ověření konkrétních mobilních prohlížečů a nativních aplikací eviduje PROJECT_STATUS.md.
 
 ## Ghost
 

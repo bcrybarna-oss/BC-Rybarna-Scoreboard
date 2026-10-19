@@ -522,7 +522,7 @@
     }
   
 
-/* === v4.51.78 RC • mobilní herní obrazovka portrait / landscape === */
+/* === v4.51.79 RC • mobilní herní obrazovka portrait / landscape === */
 @media (max-width:700px) and (orientation:portrait){
   #screen-match{margin-top:8px}
   #screen-match>.card{padding:10px;border-radius:14px}
@@ -2513,7 +2513,7 @@ html[data-theme="light"] #leagueSchedule .history-item .muted{
           <span class="by">by</span>
           <span class="club">BC Rybárna</span>
         </div>
-        <small class="modern-brand-version">v4.51.78 RC</small>
+        <small class="modern-brand-version">v4.51.79 RC</small>
       </div>
     </div>
     <div class="nav">
@@ -3121,7 +3121,7 @@ html[data-theme="light"] #leagueSchedule .history-item .muted{
         </div>
         <div class="subpanel" style="min-width:210px;text-align:center;margin:0">
           <div class="muted" style="font-size:10px;font-weight:950;letter-spacing:1px">AKTUÁLNÍ VERZE</div>
-          <div style="font-size:22px;font-weight:950;color:var(--gold2);margin-top:5px">v4.51.78 RC</div>
+          <div style="font-size:22px;font-weight:950;color:var(--gold2);margin-top:5px">v4.51.79 RC</div>
         </div>
       </div>
     </div>
@@ -3616,7 +3616,7 @@ html[data-theme="light"] #leagueSchedule .history-item .muted{
           <li>Pořadí série zahrnuje všechny hráče z turnajů. Neregistrovaný hráč nově dostane předpřipravený profil bez vlastníka, takže se jeho zápasy, ELO, turnaje a série ukládají pod stejným profilem. Po registraci může požádat o převzetí profilu a uvidí výsledky zpětně. Starší turnajoví hosté se při administrátorském načtení převádějí na tyto profily.</li>
           <li>Historické turnaje v sérii lze zadat bezpečně přes formulář. Varianta <strong>pouze pořadí</strong> přidá body do série bez falešných W/L; varianta <strong>kompletní turnaj</strong> může evidovat jednotlivé odehrané zápasy.</li>
           <li>U vlastního bodování série se vždy používá přesné individuální pořadí uložené u hráče. I když turnaj zobrazuje skupinu „5.–8. místo“, série rozliší 5., 6., 7. a 8. místo a přidělí body přesně podle vlastní bodovací tabulky.</li>
-          <li><strong>PDF REPORT</strong> vytvoří report konkrétního zápasu.</li>
+          <li><strong>ULOŽIT PDF</strong> vytvoří report konkrétního zápasu.</li>
           <li>U nedohraného zápasu lze později pokračovat, pokud má uživatel potřebné oprávnění.</li>
           <li>Smazání zápasu odstraní jeho vliv z dlouhodobých statistik a ELO.</li>
           <li><strong>SMAZAT TURNAJ</strong> odstraní turnajovou strukturu, ale může ponechat historické zápasy.</li>
@@ -4804,7 +4804,7 @@ html[data-theme="light"] #leagueSchedule .history-item .muted{
     <div class="card">
       <div style="display:flex;justify-content:space-between;gap:12px;align-items:flex-start;flex-wrap:wrap">
         <h1 class="section-title">Statistický přehled hráčů</h1>
-        <button id="statsPdfBtn" class="btn primary">PDF REPORT</button>
+        <button id="statsPdfBtn" class="btn primary">ULOŽIT PDF</button>
       </div>
       <div id="statsView"></div>
 
@@ -4852,7 +4852,7 @@ html[data-theme="light"] #leagueSchedule .history-item .muted{
         </div>
         <div style="display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end">
           <button id="myStatsDevelopmentBtn" class="btn hidden">VÝVOJ HRÁČE</button>
-          <button id="myStatsPdfBtn" class="btn primary">PDF REPORT</button>
+          <button id="myStatsPdfBtn" class="btn primary">ULOŽIT PDF</button>
         </div>
       </div>
       <div id="myStatsView" style="margin-top:14px"></div>
@@ -4932,7 +4932,7 @@ html[data-theme="light"] #leagueSchedule .history-item .muted{
     <div class="modal-actions" style="display:flex;gap:8px;flex-wrap:wrap;margin-top:18px">
       <button id="matchStatsUndo" class="btn">↶ VRÁTIT POSLEDNÍ AKCI</button>
       <button id="matchStatsShare" class="btn">SDÍLET TEXT</button>
-      <button id="matchStatsPdf" class="btn primary">PDF REPORT</button>
+      <button id="matchStatsPdf" class="btn primary">ULOŽIT PDF</button>
       <button id="matchStatsClose" class="btn primary big">ULOŽIT A ZAVŘÍT</button>
     </div>
   </div>
@@ -5803,7 +5803,7 @@ html[data-theme="light"] #leagueSchedule .history-item .muted{
       </div>
 
       <div id="groupPlayoffSeedStatus" class="muted" style="margin-top:12px;min-height:20px"></div>
-      <div class="muted" style="margin-top:4px;font-size:11px">RC v4.51.78</div>
+      <div class="muted" style="margin-top:4px;font-size:11px">RC v4.51.79</div>
       <div class="modal-actions">
         <button id="groupPlayoffSeedApplyBtn" class="btn primary big" type="button">NASADIT DO PLAY-OFF</button>
         <button id="groupPlayoffSeedCancelBtn" class="btn">ZRUŠIT</button>
@@ -6987,7 +6987,7 @@ html[data-theme="light"] #leagueSchedule .history-item .muted{
     const btn=$('submitReportBtn');if(btn)btn.disabled=true;
     try{
       const id=uid(),p=currentUserPlayerId?data.players?.[currentUserPlayerId]:null;
-      const report={id,createdByUid:cloudUid,createdByPlayerId:currentUserPlayerId||'',createdByName:p?playerSelectionLabel(p):(cloudUserEmail||'Uživatel'),email:cloudUserEmail||'',type,area,description,appVersion:'v4.51.78 RC',createdAt:new Date().toISOString(),updatedAt:new Date().toISOString(),status:'new',adminNote:''};
+      const report={id,createdByUid:cloudUid,createdByPlayerId:currentUserPlayerId||'',createdByName:p?playerSelectionLabel(p):(cloudUserEmail||'Uživatel'),email:cloudUserEmail||'',type,area,description,appVersion:'v4.51.79 RC',createdAt:new Date().toISOString(),updatedAt:new Date().toISOString(),status:'new',adminNote:''};
       await reportRequest(id,'PUT',report);
       try{
         await writeReportUserMirror(report);
@@ -24054,7 +24054,7 @@ function openMatchStatsCard(m,isCurrent=false){
   };
 
   $('matchStatsPdf').onclick=()=>{
-    if(statsCardMatch) generateAndShareMatchPdf(statsCardMatch);
+    if(statsCardMatch) generateAndSaveMatchPdf(statsCardMatch);
   };
 
   $('matchStatsUndo').onclick=()=>{
@@ -24429,7 +24429,23 @@ function openMatchStatsCard(m,isCurrent=false){
     return pdf.output('blob');
   }
 
-  async function generateAndShareMatchPdf(m){
+  function savePdfBlob(blob,filename){
+    const url=URL.createObjectURL(blob);
+    const link=document.createElement('a');
+    link.href=url;
+    link.download=filename;
+    document.body.appendChild(link);
+    try{
+      link.click();
+      toast('Stažení PDF zahájeno.');
+    }finally{
+      link.remove();
+      // Keep the URL alive long enough for mobile browsers to start the download.
+      setTimeout(()=>URL.revokeObjectURL(url),60000);
+    }
+  }
+
+  async function generateAndSaveMatchPdf(m){
     if(!m) return;
     const btn=$('matchStatsPdf');
     const oldLabel=btn?btn.textContent:'';
@@ -24441,31 +24457,13 @@ function openMatchStatsCard(m,isCurrent=false){
       const p1=pdfSafeName(m.playerNames?.[0]||'hrac');
       const date=new Date(m.startedAt||Date.now()).toISOString().slice(0,10);
       const filename=`BC_Rybarna_${date}_${discipline}_${p1}.pdf`;
-      const file=new File([blob],filename,{type:'application/pdf'});
-
-      if(navigator.share && navigator.canShare && navigator.canShare({files:[file]})){
-        await navigator.share({
-          title:'BC Rybárna - statistiky zápasu',
-          text:'PDF report statistik zápasu',
-          files:[file]
-        });
-      }else{
-        const url=URL.createObjectURL(blob);
-        const a=document.createElement('a');
-        a.href=url;
-        a.download=filename;
-        document.body.appendChild(a);
-        a.click();
-        a.remove();
-        setTimeout(()=>URL.revokeObjectURL(url),5000);
-        toast('PDF report stažen.');
-      }
+      savePdfBlob(blob,filename);
     }catch(e){
       if(e && e.name==='AbortError') return;
       console.warn('PDF report:',e);
       toast(String(e && e.message ? e.message : 'PDF se nepodařilo vytvořit.'));
     }finally{
-      if(btn){btn.disabled=false;btn.textContent=oldLabel||'PDF REPORT';}
+      if(btn){btn.disabled=false;btn.textContent=oldLabel||'ULOŽIT PDF';}
     }
   }
 
@@ -24574,7 +24572,7 @@ function openMatchStatsCard(m,isCurrent=false){
   async function generateStatisticsSectionPdf(kind){
     const isClub=kind==='stats';
     const btn=$(isClub?'statsPdfBtn':'myStatsPdfBtn');
-    const oldLabel=btn?.textContent||'PDF REPORT';
+    const oldLabel=btn?.textContent||'ULOŽIT PDF';
     if(btn){btn.disabled=true;btn.textContent='GENERUJI PDF…';}
     try{
       if(!isClub && (!cloudAuthenticated || !currentUserPlayerId)){
@@ -24587,15 +24585,7 @@ function openMatchStatsCard(m,isCurrent=false){
       const filename=isClub
         ? 'Poolcitadlo_statistiky_'+date+'.pdf'
         : 'Poolcitadlo_moje_statistiky_'+pdfSafeName(playerDisplayName(player||{})||'hrac')+'_'+date+'.pdf';
-      const file=new File([blob],filename,{type:'application/pdf'});
-      if(navigator.share && navigator.canShare && navigator.canShare({files:[file]})){
-        await navigator.share({title:isClub?'Poolčítadlo - statistiky':'Poolčítadlo - moje statistiky',text:'PDF report statistik',files:[file]});
-      }else{
-        const url=URL.createObjectURL(blob),a=document.createElement('a');
-        a.href=url;a.download=filename;document.body.appendChild(a);a.click();a.remove();
-        setTimeout(()=>URL.revokeObjectURL(url),5000);
-        toast('PDF report stažen.');
-      }
+      savePdfBlob(blob,filename);
     }catch(e){
       if(e?.name==='AbortError')return;
       console.warn('Statistics PDF report:',e);
@@ -24611,7 +24601,7 @@ function openMatchStatsCard(m,isCurrent=false){
   window.generateSavedMatchPdf=function(id){
     const m=data.matches.find(x=>x.id===id);
     if(!m){toast('Zápas nebyl nalezen.');return;}
-    generateAndShareMatchPdf(m);
+    generateAndSaveMatchPdf(m);
   };
 
   function statVal(m,i,key){
@@ -24993,7 +24983,7 @@ function renderHistory(){
             : ''}
           <button class="btn primary" onclick="showSavedMatchStats('${m.id}')">STATISTIKY ZÁPASU</button>
           <button class="btn" onclick="shareSavedMatch('${m.id}')">SDÍLET VÝSLEDEK</button>
-          <button class="btn" onclick="generateSavedMatchPdf('${m.id}')">PDF</button>
+          <button class="btn" onclick="generateSavedMatchPdf('${m.id}')">ULOŽIT PDF</button>
           ${currentUserIsSystemAdmin()?`<button class="btn" onclick="openMatchMetadataAdmin('${m.id}')">UPRAVIT INFO</button>`:''}
           ${currentUserIsSystemAdmin() && !m.tournamentLink && m.confirmationRequired && m.adminConfirmation?.confirmed!==true && (m.status==='pending_confirmation'||m.status==='needs_correction')
             ? `<button class="btn primary" onclick="adminConfirmMatchResult('${m.id}')">POTVRDIT JAKO ADMIN</button>`
