@@ -1,5 +1,30 @@
 # Federal Cup – podklady k revizi
 
+## Oprava přiřazení rozstřelu nalezená v ručním náhledu
+
+Zachovaný případ `205d066e-3be2-4231-b708-43a063dbabb6` má původně Česko: 2 breaky, 1 faul z breaku a 2 B&R. Výpočet 200 % byl aritmeticky správný pro chybná vstupní data: `2 / (2 - 1) * 100`.
+
+V prvním racku se po výběru hráčů zavolalo `beginRack`, které přičetlo break Slovensku. Obsluha pak použila **Změnit rozstřel**; původní handler změnil `breaker` a `turn`, nikoli již přičtený break. Skutečný Break OK a B&R tak správně patřily Filipovi za Česko, ale pokus nesprávně zůstal u Borise za Slovensko. Také `breakPottedTracked` pro Česko bylo 3 proti pouhým 2 breakům.
+
+| Rack | Skutečný rozstřel | Výsledek breaku | Český hráč | Český B&R |
+| --- | --- | --- | --- | --- |
+| 1 | Česko, ručně změněno před breakem | OK, koule 2 | Filip Ukázkový CZ | 1 |
+| 2 | Slovensko | Soft + dry, soupeř převzal | Jakub Testovací CZ | 0 |
+| 3 | Česko | OK, koule 2, 7, 8 | Hynek Zkušební CZ | 1 |
+| 4 | Slovensko | Dry | Ivan Demo CZ | 0 |
+| 5 | Česko | Faul, koule 1 | Filip Ukázkový CZ | 0 |
+| 6 | Slovensko | Dry | Jakub Testovací CZ | 0 |
+
+Správný výsledek: Slovensko/Česko **3/3 breaky**, Česko **2 úspěšné breaky, úspěšnost 67 %, 2 B&R, B&R conversion 100 %**. Filip: 2 breaky, 1 úspěšný, 1 faul, 1 B&R. Hynek: 1 break, 1 úspěšný, 1 B&R. Koule z českých breaků zůstávají 5 při třech sledovaných pokusech (průměr 5/3). Skóre zůstává 1:5. Výpočet procent se neořezává ani nemění.
+
+Handler nyní přesune právě jeden již přičtený pokus; před výběrem hráčů Teamu nepřičítá nic. Team baseline se nemění, takže rozdíl statistik racku patří zvolenému skutečnému hráči. Federal Cup po odehraném breaku nedovolí změnit rozstřel bez undo. Oprava má snapshot pro hlavní UNDO i pro událostní undo. Současně opraven překlep `scheduleStreamSend` v hlavním UNDO na existující `scheduleStreamState`; původní neexistující funkce po obnově vyvolala chybu JavaScriptu.
+
+Plná původní lokální databáze byla před úpravami archivována mimo repozitář v `federal-cup-preview/reproductions/br-conversion-200-20261019/original-local-mock-data.json`, SHA-256 `cfeaa42afe484b2ce1243b5796717fb5c8709e7b8f0684c383a1e6c208a2bcf4`. Zmenšená reprodukce v `tests/fixtures/federal-team-breaker-correction.json` obsahuje původní chybný uložený zápas a původní snapshot bezprostředně před ruční změnou. Test výslovně ověřuje původních 200 %, aby se případ neztratil.
+
+Nový `federal-cup-break-accounting.test.cjs` má 7 testů proti skutečným funkcím aktuálního main. Browser test navíc přehrává všech šest racků s opravou rozstřelu, hlavním undo, opakovaným dokončením B&R, reloadem a uložením do izolovaného mocku. Kontroluje součty týmových i hráčských statistik, soft/dry překryv, faul, koule z breaku a nezměněné skóre/B&R. Produkční Firebase se nepoužívá.
+
+Po této opravě: celá stávající sada 57 testů, 55 prošlo a stejné 2 dřívější preview testy selhávají. Všech 7 nových regresních testů a celý rozšířený izolovaný browser test prošly.
+
 - Větev: `fix/federal-cup-team-counter`
 - Výchozí `origin/main`: `ede570951e8bed881c93617144f978f705166ad6` (ověřeno fetch 19. 10. 2026).
 - PR #6 ani modularizované preview nejsou zdrojem implementace.

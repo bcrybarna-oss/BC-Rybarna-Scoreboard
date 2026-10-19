@@ -5,11 +5,13 @@ const {chromium}=require('playwright');
 const fs=require('node:fs');
 const path=require('node:path');
 const assert=require('node:assert/strict');
+const breakCase=require('./fixtures/federal-team-breaker-correction.json');
 const original=fs.readFileSync(path.join(__dirname,'..','index.html'),'utf8');
 const hook=`
 window.fcTest={
   get match(){return match},get data(){return data},
   get clockRunning(){return timerRunning},
+  breakStats,
   start:startMatch,undo,beginRack,snapshot,restoreSnapshot,
   save:autosaveCurrent,
   admin(){cloudAuthenticated=true;cloudUid='isolated-admin';cloudEmailVerified=true;currentUserRole='system_admin';cloudIdToken='mock-token';cloudTokenExpiresAt=Date.now()+3600000;$('cloudLoginModal').classList.remove('show');},
@@ -175,6 +177,36 @@ assert.ok(html.includes('window.fcTest='));
     if(mode==='14.1')assert.equal(m.target,100);
   }
   console.log('PASS ordinary 10-ball, 14.1, Ghost, winner-on-table and doubles starts');
+  // Replay the preserved manual test case through current UI. No user preview
+  // server/storage is accessed: this browser still uses its own intercepted mock.
+  await run(f=>{fcTest.admin();fcTest.reset();fcTest.setMatch({...f.saved,...f.beforeManualBreaker,events:[],endedAt:null,status:'playing'});fcTest.screen('match');fcTest.render()},breakCase);
+  await page.locator('#manualBreaker').click();assert.deepEqual((await state()).stats.map(s=>s.breaks),[0,1]);
+  await page.locator('#fullUndoBtn').click();assert.deepEqual((await state()).stats.map(s=>s.breaks),[1,0]);
+  await page.locator('#manualBreaker').click();
+  async function exactBreak(button,balls){await page.locator(button).click();for(const ball of balls)await run(n=>toggleBreakBall(n),ball);await page.locator('#breakBallSelectConfirmBtn').click();}
+  async function originalPlayers(index){const r=breakCase.saved.federalTeam.racks[index];await select(r.players[0].name,r.players[1].name);}
+  await exactBreak('#actionBreakOkBtn',[2]);
+  assert.equal(await page.locator('#manualBreaker').isVisible(),false);
+  await page.locator('#quickRunoutBtn').click();
+  m=await state();assert.deepEqual(m.federalTeam.racks[0].stats.map(s=>s.breaks),[0,1]);assert.equal(m.federalTeam.racks[0].stats[1].breakAndRun,1);
+  await page.locator('#fullUndoBtn').click();m=await state();assert.equal(m.federalTeam.racks.length,0);assert.equal(m.stats[1].breakAndRun,0);assert.deepEqual(m.stats.map(s=>s.breaks),[0,1]);
+  await page.locator('#quickRunoutBtn').click();assert.equal((await state()).stats[1].breakAndRun,1);
+  // Reload immediately after the corrected first rack before choosing players.
+  await page.reload();await page.waitForSelector('#cloudLoginModal.show');await run(async()=>{fcTest.admin();await fcTest.resume()});
+  assert.deepEqual((await state()).stats.map(s=>s.breaks),[0,1]);
+  await originalPlayers(1);await exactBreak('#actionSoftBreakBtn',[]);await page.locator('#acceptSoftBreakBtn').click();await run(()=>winRack(0));
+  await originalPlayers(2);await exactBreak('#actionBreakOkBtn',[2,7,8]);await page.locator('#quickRunoutBtn').click();
+  await originalPlayers(3);await page.locator('#actionDryBreakBtn').click();await page.locator('#quickRunoutBtn').click();
+  await originalPlayers(4);await exactBreak('#actionBreakFoulBtn',[1]);await run(()=>winRack(1));
+  await originalPlayers(5);await page.locator('#actionDryBreakBtn').click();await page.locator('#quickRunoutBtn').click();
+  m=await state();assert.deepEqual(m.scores,[1,5]);assert.deepEqual(m.stats.map(s=>s.breaks),[3,3]);assert.deepEqual(m.stats.map(s=>s.breakAndRun),[0,2]);
+  const metrics=await run(()=>[0,1].map(i=>{const br=fcTest.breakStats(fcTest.match,i);return {successful:br.successful,pct:br.pct,conversion:br.successful?fcTest.match.stats[i].breakAndRun/br.successful*100:null}}));
+  assert.deepEqual(metrics,[{successful:0,pct:0,conversion:null},{successful:2,pct:67,conversion:100}]);
+  assert.deepEqual(m.federalTeam.racks.map(r=>r.stats.map(s=>s.breaks)),[[0,1],[1,0],[0,1],[1,0],[0,1],[1,0]]);
+  assert.equal(m.federalTeam.racks[0].players[1].name,'Filip Ukázkový CZ');assert.equal(m.federalTeam.racks[2].players[1].name,'Hynek Zkušební CZ');
+  assert.deepEqual(m.stats.map(s=>s.breakPottedBalls),[0,5]);assert.deepEqual(m.stats.map(s=>s.breakPottedTracked),[3,3]);
+  assert.equal(await run(()=>fcTest.persist()),true);
+  console.log('PASS preserved six-rack case replay: corrected breaker, undo/reload, Team/player attribution, 67% break success and 100% B&R conversion');
   assert.deepEqual(errors,[]);
   console.log('Mock requests:',external,'mock writes:',writes.length,'page errors:',errors.length);
  }finally{await browser.close()}

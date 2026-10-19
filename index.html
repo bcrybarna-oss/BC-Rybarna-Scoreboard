@@ -10847,7 +10847,7 @@ const isFourteen=match.discipline==='14.1' && !simpleCounter;
       $('openingBreakFoul14').classList.toggle('hidden', !match.openingBreakAvailable14);
     }
     renderFourteenInningsHistory();
-    $('manualBreaker').classList.toggle('hidden',simpleCounter || match.discipline==='14.1' || match.ghostMode || match.winnerTableMode);
+    $('manualBreaker').classList.toggle('hidden',simpleCounter || match.discipline==='14.1' || match.ghostMode || match.winnerTableMode || (match.federalCupLink && !match.isBreakShot && !match.federalTeam?.pending));
     $('p1BreakBadge').classList.toggle('hidden',simpleCounter || waitingForLag || match.breaker!==0);
     $('p2BreakBadge').classList.toggle('hidden',simpleCounter || waitingForLag || match.breaker!==1);
     if(simpleCounter){
@@ -12431,7 +12431,7 @@ const isFourteen=match.discipline==='14.1' && !simpleCounter;
     lastManualEntrySnapshot=null;
     saveDeviceActiveMatch(match);
     renderMatch();
-    scheduleStreamSend?.();
+    scheduleStreamState();
     toast('Poslední zadání bylo vráceno.');
   }
 
@@ -13056,14 +13056,29 @@ const isFourteen=match.discipline==='14.1' && !simpleCounter;
     autosaveCurrent();
   };
 
-  $('manualBreaker').onclick=()=>{
+  function changeRackBreaker(){
     if(!match) return;
+    // Rozstřel lze ve Federal Cupu opravit před jeho odehráním. Po něm
+    // by změna vlastníka oddělila statistiky breaku a B&R od skutečného hráče.
+    if(match.federalCupLink && !match.isBreakShot && !match.federalTeam?.pending){
+      toast('Rozstřel lze změnit pouze před jeho odehráním. Nejdřív vrať akce přes UNDO.');
+      return;
+    }
+    saveManualEntryUndoSnapshot('Ruční změna rozstřelu');
     addActionEvent('Ruční změna rozstřelu');
-    match.breaker=1-match.breaker;
+    const previous=Number(match.breaker||0),next=1-previous;
+    // beginRack() již přičetl jeden break původní straně. Přesuneme tentýž
+    // break, nikoliv nový pokus. Při čekání na Team výběr ještě přičten není.
+    if(match.isBreakShot && !match.federalTeam?.pending){
+      match.stats[previous].breaks=Number(match.stats[previous].breaks||0)-1;
+      match.stats[next].breaks=Number(match.stats[next].breaks||0)+1;
+    }
+    match.breaker=next;
     match.turn=match.breaker;
     if(match.useClock) resetClock(true,true);
     renderMatch();
-  };
+  }
+  $('manualBreaker').onclick=changeRackBreaker;
 
   $('resultConfirmationAccept').onclick=async()=>{
     if(pendingOwnResultConfirmationResolve){
