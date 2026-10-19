@@ -522,7 +522,7 @@
     }
   
 
-/* === v4.51.76 RC • mobilní herní obrazovka portrait / landscape === */
+/* === v4.51.77 RC • mobilní herní obrazovka portrait / landscape === */
 @media (max-width:700px) and (orientation:portrait){
   #screen-match{margin-top:8px}
   #screen-match>.card{padding:10px;border-radius:14px}
@@ -2501,7 +2501,7 @@ html[data-theme="light"] #leagueSchedule .history-item .muted{
           <span class="by">by</span>
           <span class="club">BC Rybárna</span>
         </div>
-        <small class="modern-brand-version">v4.51.76 RC</small>
+        <small class="modern-brand-version">v4.51.77 RC</small>
       </div>
     </div>
     <div class="nav">
@@ -3099,7 +3099,7 @@ html[data-theme="light"] #leagueSchedule .history-item .muted{
         </div>
         <div class="subpanel" style="min-width:210px;text-align:center;margin:0">
           <div class="muted" style="font-size:10px;font-weight:950;letter-spacing:1px">AKTUÁLNÍ VERZE</div>
-          <div style="font-size:22px;font-weight:950;color:var(--gold2);margin-top:5px">v4.51.76 RC</div>
+          <div style="font-size:22px;font-weight:950;color:var(--gold2);margin-top:5px">v4.51.77 RC</div>
         </div>
       </div>
     </div>
@@ -5723,6 +5723,7 @@ html[data-theme="light"] #leagueSchedule .history-item .muted{
       <div class="muted" style="margin-top:10px">
         Výsledek se zapíše přímo do turnaje bez spuštění počítadla. Nevytvoří podrobné herní statistiky.
       </div>
+      <div id="tournamentScoreSaveMessage" class="muted" role="status" aria-live="polite" style="margin-top:10px;color:var(--gold2)"></div>
       <div class="modal-actions">
         <button id="historicalTournamentScoreSaveBtn" class="btn primary">ULOŽIT VÝSLEDEK</button>
         <button id="historicalTournamentScoreCancelBtn" class="btn">ZRUŠIT</button>
@@ -5778,7 +5779,7 @@ html[data-theme="light"] #leagueSchedule .history-item .muted{
       </div>
 
       <div id="groupPlayoffSeedStatus" class="muted" style="margin-top:12px;min-height:20px"></div>
-      <div class="muted" style="margin-top:4px;font-size:11px">RC v4.51.76</div>
+      <div class="muted" style="margin-top:4px;font-size:11px">RC v4.51.77</div>
       <div class="modal-actions">
         <button id="groupPlayoffSeedApplyBtn" class="btn primary big" type="button">NASADIT DO PLAY-OFF</button>
         <button id="groupPlayoffSeedCancelBtn" class="btn">ZRUŠIT</button>
@@ -6962,7 +6963,7 @@ html[data-theme="light"] #leagueSchedule .history-item .muted{
     const btn=$('submitReportBtn');if(btn)btn.disabled=true;
     try{
       const id=uid(),p=currentUserPlayerId?data.players?.[currentUserPlayerId]:null;
-      const report={id,createdByUid:cloudUid,createdByPlayerId:currentUserPlayerId||'',createdByName:p?playerSelectionLabel(p):(cloudUserEmail||'Uživatel'),email:cloudUserEmail||'',type,area,description,appVersion:'v4.51.76 RC',createdAt:new Date().toISOString(),updatedAt:new Date().toISOString(),status:'new',adminNote:''};
+      const report={id,createdByUid:cloudUid,createdByPlayerId:currentUserPlayerId||'',createdByName:p?playerSelectionLabel(p):(cloudUserEmail||'Uživatel'),email:cloudUserEmail||'',type,area,description,appVersion:'v4.51.77 RC',createdAt:new Date().toISOString(),updatedAt:new Date().toISOString(),status:'new',adminNote:''};
       await reportRequest(id,'PUT',report);
       try{
         await writeReportUserMirror(report);
@@ -7399,7 +7400,10 @@ html[data-theme="light"] #leagueSchedule .history-item .muted{
     const opts={method,headers:{'Content-Type':'application/json'},cache:'no-store'};
     if(body!==null) opts.body=JSON.stringify(body);
     const r=await fetch(cloudUrl('tournaments/'+tournamentId),opts);
-    if(!r.ok) throw new Error('TOURNAMENT_SECURE_'+r.status);
+    if(!r.ok){
+      const response=await r.text().catch(()=> '');
+      throw new Error('TOURNAMENT_SECURE_'+r.status+(response?': '+response.slice(0,160):''));
+    }
     return await r.json();
   }
 
@@ -17048,6 +17052,84 @@ $('liveScoreClose').onclick=()=>{
     return correction;
   }
 
+
+  // Najdi přesnou cestu k zápasu v uloženém Firebase turnaji.
+  // PATCH aktualizuje jen vybraný zápas, ne celý turnaj ostatních pořadatelů.
+  function completedTournamentMatchCloudPath(t,matchId){
+    for(const root of ['groups','ko','dko','swiss']){
+      const rounds=root==='groups'?(t.groups||[]):(t[root]?.rounds||[]);
+      for(let ri=0;ri<rounds.length;ri++){
+        const mi=(rounds[ri].matches||[]).findIndex(m=>m && m.id===matchId);
+        if(mi>=0)return root==='groups'
+          ? 'groups/'+ri+'/matches/'+mi
+          : root+'/rounds/'+ri+'/matches/'+mi;
+      }
+    }
+    return null;
+  }
+
+  async function persistCompletedTournamentScoreCorrection(tournamentId,matchId,s1,s2){
+    if(!tournamentId || !matchId)throw new Error('CORRECTION_MISSING_MATCH');
+    const localTournament=(data.tournaments||[]).find(t=>t.id===tournamentId);
+    const localMatch=localTournament?findTournamentMatch(localTournament,matchId):null;
+    if(!localTournament || !localMatch || !canManageTournament(localTournament)){
+      throw new Error('CORRECTION_PERMISSION');
+    }
+
+    // Zdroj pravdy je cloud. Nezapisujeme nad slepým lokálním snapshotem.
+    const remote=await secureTournamentRequest(tournamentId,'GET');
+    if(!remote || remote.id!==tournamentId)throw new Error('CORRECTION_CLOUD_NOT_FOUND');
+    if(!canManageTournament(remote))throw new Error('CORRECTION_PERMISSION');
+    const tm=findTournamentMatch(remote,matchId);
+    const path=completedTournamentMatchCloudPath(remote,matchId);
+    if(!tm || !path)throw new Error('CORRECTION_MISSING_MATCH');
+
+    if(Number(localMatch.score1||0)!==Number(tm.score1||0) ||
+       Number(localMatch.score2||0)!==Number(tm.score2||0) ||
+       String(localMatch.winnerId||'')!==String(tm.winnerId||'')){
+      throw new Error('CORRECTION_STALE_RESULT');
+    }
+
+    const correction=applyCompletedTournamentScoreCorrection(remote,tm,s1,s2,cloudUid||'',new Date().toISOString());
+    const update={updatedAt:remote.updatedAt};
+    update[path]=tm;
+
+    // Firebase Realtime Database umí atomický multi-location PATCH s relativní cestou.
+    // Jiné zápasy/pavouk/stav turnaje zůstávají beze změny.
+    await secureTournamentRequest(tournamentId,'PATCH',update);
+
+    // Ověř skutečný zápis – samotné HTTP 200 nebo lokální render nestačí.
+    const saved=await secureTournamentRequest(tournamentId,'GET');
+    const persisted=saved?findTournamentMatch(saved,matchId):null;
+    if(!persisted ||
+       Number(persisted.score1)!==s1 || Number(persisted.score2)!==s2 ||
+       persisted.winnerId!==correction.next.winnerId ||
+       persisted.scoreCorrection?.at!==correction.at){
+      throw new Error('CORRECTION_NOT_PERSISTED');
+    }
+
+    const index=(data.tournaments||[]).findIndex(t=>t.id===tournamentId);
+    if(index>=0)data.tournaments[index]=saved;
+    else data.tournaments.push(saved);
+    try{localStorage.setItem(DB_KEY,JSON.stringify(data));}catch(e){}
+    return saved;
+  }
+
+  function tournamentScoreCorrectionError(error){
+    const code=String(error?.message||error||'');
+    if(code.includes('401') || code.includes('NO_AUTH'))return 'Firebase nemá platné přihlášení. Přihlas se znovu a opakuj uložení.';
+    if(code.includes('403') || code.includes('PERMISSION_DENIED') || code.includes('CORRECTION_PERMISSION')){
+      return 'Firebase odmítl uložení kvůli oprávnění. Zkontroluj, že jsi přihlášený jako administrátor nebo pořadatel tohoto turnaje.';
+    }
+    if(code.includes('CORRECTION_STALE_RESULT'))return 'Výsledek mezitím někdo změnil. Zavři okno, aktualizuj turnaj a zkus opravu znovu.';
+    if(code.includes('CORRECTION_NOT_PERSISTED'))return 'Cloud nepotvrdil nové skóre. Aktualizuj turnaj a ověř poslední uložený výsledek.';
+    if(code.includes('CORRECTION_CLOUD_NOT_FOUND'))return 'Turnaj nebyl v cloudu nalezen. Nic jsem nepřepisoval.';
+    if(code.includes('CORRECTION_WINNER_CHANGE_REQUIRES_REBUILD')){
+      return 'Změna vítěze by narušila navazující pavouk. Lze bezpečně opravit skóre při zachování vítěze.';
+    }
+    return 'Uložení selhalo ('+code.slice(0,110)+'). Výsledek nebyl na této obrazovce potvrzen.';
+  }
+
   window.openHistoricalTournamentScore=function(tid,matchId){
     const t=(data.tournaments||[]).find(x=>x.id===tid);
     const m=t?findTournamentMatch(t,matchId):null;
@@ -17055,6 +17137,7 @@ $('liveScoreClose').onclick=()=>{
 
     const correcting=(m.status==='done'||!!m.winnerId||!!m.loserId);
     historicalScoreContext={tournamentId:tid,matchId,correcting};
+    if($('tournamentScoreSaveMessage'))$('tournamentScoreSaveMessage').textContent='';
     $('historicalTournamentScoreModal').querySelector('h2').textContent=correcting?'OPRAVIT SKÓRE ZÁPASU':'ZADAT VÝSLEDEK RUČNĚ';
     $('historicalTournamentScorePlayers').textContent=tournamentPlayerName(m.player1Id,t)+' vs '+tournamentPlayerName(m.player2Id,t);
     $('historicalTournamentP1Label').textContent=tournamentPlayerName(m.player1Id,t);
@@ -17123,17 +17206,20 @@ $('liveScoreClose').onclick=()=>{
 
       if(!confirm('Opravit výsledek '+tournamentPlayerName(tm.player1Id,t)+' – '+tournamentPlayerName(tm.player2Id,t)+' z '+tm.score1+':'+tm.score2+' na '+s1+':'+s2+'?'))return;
 
-      const backup=JSON.parse(JSON.stringify(t));
+      const saveButton=$('historicalTournamentScoreSaveBtn');
+      if(saveButton?.disabled)return;
+      if(saveButton){saveButton.disabled=true;saveButton.textContent='UKLÁDÁM…';}
+      if($('tournamentScoreSaveMessage'))$('tournamentScoreSaveMessage').textContent='Ověřuji výsledek v cloudu…';
       try{
-        applyCompletedTournamentScoreCorrection(t,tm,s1,s2,cloudUid||'',new Date().toISOString());
-        await saveSecureTournament(t);
+        await persistCompletedTournamentScoreCorrection(t.id,tm.id,s1,s2);
       }catch(e){
-        const index=(data.tournaments||[]).findIndex(x=>x.id===backup.id);
-        if(index>=0)data.tournaments[index]=backup;
-        try{localStorage.setItem(DB_KEY,JSON.stringify(data));}catch(ignore){}
         console.error('Tournament score correction:',e);
-        toast('Opravu skóre se nepodařilo bezpečně uložit.');
+        const message=tournamentScoreCorrectionError(e);
+        if($('tournamentScoreSaveMessage'))$('tournamentScoreSaveMessage').textContent=message;
+        toast(message);
         return;
+      }finally{
+        if(saveButton){saveButton.disabled=false;saveButton.textContent='ULOŽIT OPRAVU';}
       }
 
       $('historicalTournamentScoreModal').classList.remove('show');
