@@ -12204,7 +12204,6 @@ const isFourteen=match.discipline==='14.1' && !simpleCounter;
 
   function safetyEscapeSuccessful(){
     if(!match || pendingSafetyEscapePlayer===null)return;
-    saveManualEntryUndoSnapshot('Únik z jistoty');
     const i=pendingSafetyEscapePlayer;
     $('safetyEscapeResultModal').classList.remove('show');
     $('safetyEscapeContinueText').textContent='Jak dopadl úspěšný únik hráče '+match.playerNames[i]+'?';
@@ -12251,19 +12250,32 @@ const isFourteen=match.discipline==='14.1' && !simpleCounter;
     autosaveCurrent();
   }
 
-  function finishSafetyEscapeSuccess(outcome){
+  function finishSafetyEscapeSuccess(outcome,selectedBalls=null,undoState=null){
     if(!match || pendingSafetyEscapePlayer===null)return;
     const i=pendingSafetyEscapePlayer;
     const other=1-i;
     $('safetyEscapeContinueModal').classList.remove('show');
+    if(outcome==='continue' && exactBallTrackingDiscipline() && selectedBalls===null){
+      // Výběr koulí je součást stejného strku. Snapshot musí předcházet
+      // jejich odebrání z racku, aby oba způsoby UNDO obnovily celý strk.
+      const before={snapshot:snapshot(),match:cloneForUndo(match)};
+      openShotBallSelector({player:i,requirePot:true,label:'ÚNIK Z JISTOTY • POTOPENÁ KOULE',
+        onDone:balls=>finishSafetyEscapeSuccess(outcome,balls,before)});
+      return;
+    }
+    if(undoState){
+      lastManualEntrySnapshot={match:undoState.match,label:'Únik z jistoty',createdAt:Date.now()};
+    }else saveManualEntryUndoSnapshot('Únik z jistoty');
+    const balls=Array.isArray(selectedBalls)?selectedBalls:[];
     ensureSafetyEscapeStats(i);
 
     const label=outcome==='continue'
-      ? 'Úspěšný únik z jistoty • potopená koule • '+match.playerNames[i]
+      ? 'Úspěšný únik z jistoty • potopená koule'+(balls.length?' • spadly: '+balls.join(', '):'')+' • '+match.playerNames[i]
       : (outcome==='resafe'
         ? 'RESAFE • '+match.playerNames[i]+' úspěšně unikl a zahrál novou jistotu na '+match.playerNames[other]
         : 'Úspěšný únik z jistoty • bez potopené koule • '+match.playerNames[i]);
-    addActionEvent(label);
+    const escapeEventIndex=match.events.length;
+    if(undoState)logEvent(label,{undoSnapshot:undoState.snapshot});else addActionEvent(label);
 
     match.stats[i].safetyEscapes++;
     match.stats[i].successfulSafetyEscapes++;
@@ -12289,6 +12301,21 @@ const isFourteen=match.discipline==='14.1' && !simpleCounter;
     }
 
     pendingSafetyEscapePlayer=null;
+    if(outcome==='continue' && balls.length){
+      const gameBall=match.discipline==='9-ball'?9:(match.discipline==='10-ball'?10:null);
+      if(gameBall && balls.includes(gameBall)){
+        if(gameBall===9 || match.tenBallRule==='early_win' || match.rackRemainingBalls.length===0){
+          finishGameBallFromTrackedPlay(i,gameBall,'potopená při úniku z jistoty');
+          // Výhra racku a statistika úniku patří k jediné vratné akci.
+          for(const e of match.events.slice(escapeEventIndex+1))if(e.meta)delete e.meta.undoSnapshot;
+          autosaveCurrent();
+          return;
+        }
+        match.rackRemainingBalls.push(10);
+        match.rackRemainingBalls.sort((a,b)=>a-b);
+        logEvent('DESÍTKA SE VRACÍ NA BOD • únik z jistoty • '+match.playerNames[i]);
+      }
+    }
     if(match.useClock)resetClock(false,true);
     renderMatch();
   }

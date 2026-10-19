@@ -220,6 +220,31 @@ assert.ok(html.includes('window.fcTest='));
   assert.deepEqual(m.stats.map(s=>s.breakPottedBalls),[0,5]);assert.deepEqual(m.stats.map(s=>s.breakPottedTracked),[3,3]);
   assert.equal(await run(()=>fcTest.persist()),true);
   console.log('PASS preserved six-rack case replay: corrected breaker, undo/reload, Team/player attribution, 67% break success and 100% B&R conversion');
+  async function requestEscapePot(){
+    await page.locator('#actionSafetyEscapeBtn').click();await page.locator('#safetyEscapeSuccessBtn').click();await page.locator('#safetyEscapeContinueBtn').click();
+    assert.equal(await page.locator('#shotBallSelectModal').isVisible(),true);
+  }
+  for(const n of [1,2,3]){
+    await setup(n);if(n===1)await select();
+    await exactBreak('#actionBreakOkBtn',[2]);await page.locator('#actionSafeBtn').click();await page.locator('#safetySuccessBtn').click();
+    await requestEscapePot();await page.locator('#shotBallConfirmBtn').click();
+    assert.equal(await page.locator('#shotBallSelectModal').isVisible(),true,'empty pot selection is rejected');assert.equal((await state()).stats[1].safetyEscapes,0);
+    await page.locator('#shotBallCancelBtn').click();m=await state();assert.equal(m.stats[1].safetyEscapes,0);assert.equal(m.rackRemainingBalls.includes(1),true);
+    await requestEscapePot();await run(()=>toggleShotBallSelection(1));await page.locator('#shotBallConfirmBtn').click();
+    m=await state();assert.equal(m.turn,1);assert.equal(m.rackRemainingBalls.includes(1),false);assert.equal(m.stats[1].safetyEscapes,1);assert.equal(m.stats[1].successfulSafetyEscapes,1);assert.match(m.events.at(-1).text,/spadly: 1/);
+    await page.locator('#fullUndoBtn').click();m=await state();assert.equal(m.rackRemainingBalls.includes(1),true);assert.equal(m.stats[1].safetyEscapes,0);
+    await requestEscapePot();await run(()=>toggleShotBallSelection(1));await page.locator('#shotBallConfirmBtn').click();
+    await run(()=>fcTest.undo());m=await state();assert.equal(m.rackRemainingBalls.includes(1),true);assert.equal(m.stats[1].safetyEscapes,0);
+    await requestEscapePot();await run(()=>toggleShotBallSelection(1));await page.locator('#shotBallConfirmBtn').click();
+    await page.reload();await page.waitForSelector('#cloudLoginModal.show');await run(async()=>{fcTest.admin();await fcTest.resume()});
+    m=await state();assert.equal(m.rackRemainingBalls.includes(1),false);assert.equal(m.stats[1].safetyEscapes,1);assert.equal(m.turn,1);
+    await page.locator('#actionLegalBtn').click();assert.equal(await page.locator('#shotBallSelectButtons [aria-label="Koule 1"]').count(),0,'the next shot cannot pot the escape ball again');await page.locator('#shotBallCancelBtn').click();
+    await run(()=>winRack(1));m=await state();if(n===1){assert.equal(m.federalTeam.racks[0].players[1].name,'CZ4');assert.equal(m.federalTeam.racks[0].stats[1].successfulSafetyEscapes,1)}
+  }
+  await setup();await select();await exactBreak('#actionBreakOkBtn',[2]);await page.locator('#actionSafeBtn').click();await page.locator('#safetySuccessBtn').click();
+  await requestEscapePot();await run(()=>toggleShotBallSelection(9));await page.locator('#shotBallConfirmBtn').click();m=await state();assert.deepEqual(m.scores,[0,1]);assert.equal(m.federalTeam.racks[0].stats[1].successfulSafetyEscapes,1);assert.equal(m.stats[1].breakAndRun,0);
+  await run(()=>fcTest.undo());m=await state();assert.deepEqual(m.scores,[0,0]);assert.equal(m.stats[1].successfulSafetyEscapes,0);assert.equal(m.rackRemainingBalls.includes(9),true);assert.equal(m.federalTeam.racks.length,0);
+  console.log('PASS safety escape exact pot: Singles/Doubles/Team, required selection/cancel, ball removal, event/full undo, reload, next shot and winning 9');
   assert.deepEqual(errors,[]);
   console.log('Mock requests:',external,'mock writes:',writes.length,'page errors:',errors.length);
  }finally{await browser.close()}

@@ -1,5 +1,13 @@
 # Federal Cup – podklady k revizi
 
+## Únik z jistoty s potopenou koulí
+
+Volba **Úspěšný únik → potopená koule** nyní v přesné evidenci 9/10-ball otevře stávající výběr konkrétních koulí. Vyžaduje alespoň jednu kouli; teprve potvrzení odebere vybrané koule ze stolu, zapíše jejich čísla do události, jednou přičte únik/úspěšný únik a ponechá hráče na tahu. Následující strk již tyto koule nenabízí. Zrušení výběru nemění koule ani statistiky a nepřepíše poslední plný undo snapshot.
+
+Snapshot události i hlavního UNDO je pořízen před odebráním koulí. Potopená devítka správně ukončí rack; výhra a statistika úniku se vracejí jako jediná akce. Únik nevytváří B&R. Desítka respektuje dosavadní pravidlo předčasného potopení (spot / early win). Bez potopené koule, resafe a 8-ball používají původní postup.
+
+Přidáno 5 unit regresí a browser ověření přes skutečná tlačítka pro Singles, Doubles i Team: povinné číslo, zrušení dialogu, odebrání koule 1, obě UNDO, reload, nepřítomnost koule 1 v dalším strku, správný Team hráč a devítka ukončující rack. Vše prošlo. Celá Node sada nyní 60/62; stejné dva dřívější preview testy zůstávají červené. Chybějící čísla koulí ve starších událostech se neodhadují ani nepřepisují. Lokální demo databáze před úpravou je zachována v `federal-cup-preview/reproductions/escape-pot-20261019/`.
+
 ## Výsledek tempa před zahájením zápasu
 
 Příprava všech tří formátů Federal Cupu má povinný výběr **Výsledek tempa: Slovensko / Česko**. Nový formulář začíná bez předvolby, aby nepřevzal výsledek minulého zápasu. Start bez výsledku se odmítne ještě před vytvořením zápasu. Vítěz se uloží do stávajícího `lagWinner`, jednou se přičte `lagWins` a nastaví první rozstřel přes původní `chooseLagWinner`. Federal Cup již po startu nezobrazuje druhý dialog tempa; ostatní režimy jej používají jako dosud.
