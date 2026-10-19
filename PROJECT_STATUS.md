@@ -4,7 +4,7 @@ Aktualizace: 19. 10. 2026. Zadavatel aktuální revize: **Dominik**.
 
 ## Verze a nasazení
 
-- Aktuální verze: **v4.51.80 RC**, přímo na větvi `main` podle zadání Dominika. Stav: **nasazeno a ověřeno**.
+- Připravovaná verze: **v4.51.81 RC**, přímo na větvi `main` podle zadání Dominika. Stav: **otestováno, připraveno k pushi; dosud nenasazeno**.
 - Poslední ověřený produkční kód: commit **`8cf279e306ecfd794791dc9da39127a62a0ebbbf`**, v4.51.80 RC. GitHub Pages [nasazení](https://github.com/bcrybarna-oss/BC-Rybarna-Scoreboard/actions/runs/39315482694) úspěšně dokončeno. Dne 19. 10. 2026 ve 20:00 UTC ověřeno HTTP 200, bajtová shoda celého HTML, hlavička v4.51.80 RC a čistý desktop Chrome bez JavaScriptových chyb, bez přístupu k Firebase a bez vzdálených zápisů. SHA256 HTML: `bbfa07461c21a060eb23e3a9c42c131f18ff3f9f1e4f1687c3844661c4535463`.
 - Stav předchozí v4.51.79 RC: **nasazeno a ověřeno** dne 19. 10. 2026 v 19:45 UTC. HTTP 200, v čistém desktop Chrome správná hlavička v4.51.79 RC, 0 chyb JavaScriptu a 0 vzdálených zápisů; Firebase bylo zablokované. SHA256 HTML: `df5eb09c2c00c4955aa225f8458a35ea9e48d393a8cfe3e7c61bf5812e7611ac`.
 - Následný dokumentační záznam tohoto ověření nemění produkční HTML ani verzi. Pro případné novější commity vždy zkontrolovat skutečný běh Pages na GitHubu; nepovažovat starší ověření za důkaz novějšího kódu.
@@ -12,6 +12,8 @@ Aktualizace: 19. 10. 2026. Zadavatel aktuální revize: **Dominik**.
 - Nasazení probíhá automaticky GitHub Pages po pushi do main; vždy ověřit konkrétní workflow a veřejné HTML.
 
 ## Dokončené a rozpracované úpravy
+
+- Připravené a otestované pro v4.51.81 RC: historické turnaje do sérií se strukturou, ručním nasazením a zadáním skóre, automatickým postupem/dokončením, auditem a potvrzením dopadu zpětných oprav, obnovou po reloadu, bez duplicitních bodů a bez smyšlených statistik. Původní historické zadávání a pravidla Lounské série zůstávají. Více čistých skupin vyžaduje ruční konečné pořadí podle výslovného potvrzení Dominika. Podrobně docs/historical-structured-entry.md.
 
 - Dokončené a nasazené ve v4.51.80 RC: EXPORT PDF otevírá společný dialog se jménem souboru, samostatným sdílením souboru, uložením a zavřením. Dialog drží jedno PDF pro obě i opakované akce a zůstává otevřený po jejich dokončení/zrušení/chybě. Nepodporované sdílení je vysvětlené a neblokuje stažení. Pravidla spolupráce zůstávají závazná.
 
@@ -21,6 +23,8 @@ Aktualizace: 19. 10. 2026. Zadavatel aktuální revize: **Dominik**.
 - Jiné rozpracované úpravy v tomto checkoutu před zahájením nebyly. PR #6 je oddělená rozpracovaná modularizace; není součástí produkční revize.
 
 ## Ověření
+
+- V4.51.81 RC: `npm run test:historical` (Chrome/Playwright, veškerá síť zachycena, RTDB včetně ETag a serializace mockovaná) prošel: skutečné formuláře a ruční nasazení, všechny nové formáty, stejné i změněné vítěze, navazující výsledky/odmítnutí potvrzení, dokončení a zpětná neúplnost, reload přípravy i uložených výsledků, ruční postupující/penalty/konečné pořadí, shoda původního umístění a bodů Lounské série, oprávnění, 403/412/stará data, opakování tvorby po ztraceném potvrzení a hosté/profil. Žádné fake matches/statistiky/LIVE ani změny starých/nesouvisejících turnajů; 0 page errors. Federal Cup browser prošel včetně B&R a ostatních startů režimů. Smoke 12/12, celá Node sada 68/70 (dvě původní chyby preview). Ověření se týká aktuálního index.html, nikoli /test/ snapshotu. Nasazení zatím neověřeno.
 
 - V4.51.80 RC: smoke 12/12 a PDF jednotkové testy 8/8 prošly. Celá Node sada 68/70 lokálně i v GitHub CI, pouze dvě známé chyby preview. Izolovaný Chrome se skutečnými PDF knihovnami prošel pro všechna 4 exportní místa: skutečné downloady, simulované sdílení úspěch/zrušení/chyba, shoda bajtů sdíleného souboru a downloadu i původního názvu, přímá aktivace sdílení kliknutím, opakované použití, nepodporované sdílení a zavření/Escape. Řízeně zrušený browser download nechal export otevřený; opakování stáhlo totožná data. Browser 0 page errors a veškerá síť zachycena. Generátory obsahu beze změny. Nasazení ověřeno výše uvedeným read-only postupem; skutečné nativní sdílení zůstává neověřené.
 
@@ -32,6 +36,8 @@ Aktualizace: 19. 10. 2026. Zadavatel aktuální revize: **Dominik**.
 - Testy a kontroly nesmějí vytvářet data nebo účty v produkční Firebase. Ručně uložené případy izolovaného náhledu se nesmějí mazat.
 
 ## Známé chyby a omezení
+
+- Nové historické turnaje: skutečné produkční Rules/Auth, fyzické mobily/nativní aplikace, zátěž velkých startovních polí a reálný souběh zařízení nebyly ověřeny. Zápisy používají fail-closed ETag a kontrolu oprávnění. Stávající generátory nepokrývají libovolný cizí historický pavouk; alternativou zůstávají jednotlivé ruční zápasy/pořadí. U více samostatných skupin bez pavouka není nově odhadované společné pořadí – zadává se ručně.
 
 - Dva dřívější testy `preview-match-reload-recovery.test.cjs` selhávají již na původním main: odpojení při nedostupné identitě a očekávané volání obnovy po přihlášení. Ve v4.51.79 RC 64/66 a v4.51.80 RC 68/70 lokálně i v GitHub CI. Nejde o nové selhání PDF opravy.
 - Souběžná editace celé konfigurace Federal Cupu z více zařízení může přepsat jinou změnu. Lokální ochrana duplicit není distribuovaný zámek; jeden fixture obsluhovat na jednom zařízení.

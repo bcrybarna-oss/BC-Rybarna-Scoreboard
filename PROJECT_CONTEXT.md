@@ -118,6 +118,8 @@ Turnaje mohou mít:
 
 Je možné zpětně přidávat již odehrané turnaje včetně detailních výsledků.
 
+Od v4.51.81 RC má kompletní historické zadání do série také strukturovanou ruční přípravu skupin/SKO/DKO a skupin → pavouk. Ukládá se jako samostatný zabezpečený turnaj s historicalStructure a vazbou na sérii; rozpracovaný stav nepřináší body. Používá stejné generátory, postup a bodování jako běžné turnaje, pouze bez počítadla/statistických/LIVE zápisů. Podrobnosti, původní pravidla Lounské série, potvrzování dopadu oprav a testy popisuje docs/historical-structured-entry.md. Pro více samostatných skupin bez pavouka je po potvrzení Dominikem povinné ruční konečné pořadí. Původní historické ruční zápasy a pořadí zůstávají alternativou; stará data se nepřepisují.
+
 V sekci Série turnajů má být tlačítko `NOVÁ SÉRIE`, ne `Nový turnaj`.
 
 Lounská tour může používat umístění, celkové skóre, vzájemný zápas a dělená místa.

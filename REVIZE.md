@@ -1,5 +1,20 @@
 # Revize aplikace Poolčítadlo
 
+## Dominik – provedené změny v revizi ve verzi v4.51.81 RC
+
+Datum: 19. 10. 2026. Výchozí main/produkce: `105c126401fced4ba6e672f150770a3da97bb398` (v4.51.80 RC). Práce přímo na main; žádná vývojová větev ani ruční izolovaný náhled, PR #6 nepoužito.
+
+- **Historické turnaje do série:** v kompletním zadání přibyla příprava struktury pro skupiny, SKO, DKO a skupiny → SKO/DKO, s datem, hráči/hosty a ručním nasazením bez losování. Používá stávající generátory a pořadí skupinových zápasů. Kontroluje neúplné a duplicitní nasazení; původní jednotlivé zápasy, textový import i ruční pořadí zůstávají.
+- **Výsledky a obnova:** ruční skóre bez počítadla, hodin, LIVE a smyšlených podrobných statistik. Příprava nasazení přežije reload lokálně; vytvořený turnaj a každý potvrzený výsledek se ukládají zabezpečeně. Rozpracované/nevyřešené turnaje se do série nepočítají. Po dokončení se body automaticky odvodí jednou.
+- **Play-off:** návrh používá původní pravidla a lze jej ručně upravit. Nasazení se zachovává při přepočtu; při změně množiny postupujících vyžaduje nové potvrzení. Penalty blokují nevyřešený postup. U více samostatných skupin bez pavouka Dominik výslovně potvrdil povinné ruční konečné pořadí, protože původní jádro společné pořadí nemá.
+- **Zpětné opravy:** přepočet přes původní turnajový engine, audit kdo/kdy/původní a nové skóre, konkrétní seznam zneplatněných navazujících výsledků před potvrzením. Neovlivněné výsledky se zachovávají; pozdější nejisté dvojice se uchovají bez započtení a ověří při dalším postupu. Při neúplnosti zmizí neplatné body, po dokončení se přepočítají. Ruční konečné pořadí se při opravě neruší bez upozornění.
+- **Ochrana dat:** ETag/If-Match, kontrola aktuálního serverového stavu a ověření zápisu pouze konkrétního turnaje; konflikt se odmítne. Stabilní ID přípravy brání duplicitě při opakování po ztraceném potvrzení. Staré historické záznamy se nemigrují. Zachování identity hostů a propojení profilů zahrnuje i nový zdroj nasazení/výsledků. Bez změny Federal Cupu a bez testovacích zápisů do produkční Firebase.
+- **Pravidla Lounské série:** zachovány funkce seriesTournamentPlacementRecords, seriesRefineTournamentPlacements, seriesPointsForPlacement a seriesStandings; nová bodovací logika nevznikla. Skutečná kritéria, ruční alternativa a podrobnosti jsou v docs/historical-structured-entry.md. Aktualizované PROJECT_STATUS.md a PROJECT_CONTEXT.md.
+
+Ověření: nový izolovaný browser test současného main prošel pro všechny uvedené formáty, ruční UI, opravy, navazující výsledky, reload, shodu umístění/bodů, oprávnění, konflikt/403/412, opakování tvorby po ztraceném potvrzení a nedotčená data. Mockuje celou síť, 0 page errors, žádný zápis do matches/LIVE. Federal Cup browser test prošel. Smoke 12/12; celá Node sada 68/70 se dvěma stejnými dřívějšími chybami preview. Stav: **otestováno, připraveno k pushi a ověření nasazení**.
+
+Neověřeno: skutečné Firebase Auth/Rules, fyzické mobilní platformy/nativní aplikace, reálný souběh zařízení a velká startovní pole. Nová funkce podporuje struktury původních generátorů, nikoli libovolný cizí pavouk. Produkční commit je zaznamenán v místní záloze `production-backups/2026-10-19-before-v4.51.81` včetně archivu a postupu návratu; žádná databázová migrace se neprovádí.
+
 ## Dominik – provedené změny v revizi ve verzi v4.51.80 RC
 
 Datum: 19. 10. 2026. Výchozí main: `e70d9931ed6b836a8a5edba497190746b967efa6`. Práce přímo na main na výslovné zadání Dominika.

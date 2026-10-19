@@ -522,7 +522,7 @@
     }
   
 
-/* === v4.51.80 RC • mobilní herní obrazovka portrait / landscape === */
+/* === v4.51.81 RC • mobilní herní obrazovka portrait / landscape === */
 @media (max-width:700px) and (orientation:portrait){
   #screen-match{margin-top:8px}
   #screen-match>.card{padding:10px;border-radius:14px}
@@ -2513,7 +2513,7 @@ html[data-theme="light"] #leagueSchedule .history-item .muted{
           <span class="by">by</span>
           <span class="club">BC Rybárna</span>
         </div>
-        <small class="modern-brand-version">v4.51.80 RC</small>
+        <small class="modern-brand-version">v4.51.81 RC</small>
       </div>
     </div>
     <div class="nav">
@@ -3121,7 +3121,7 @@ html[data-theme="light"] #leagueSchedule .history-item .muted{
         </div>
         <div class="subpanel" style="min-width:210px;text-align:center;margin:0">
           <div class="muted" style="font-size:10px;font-weight:950;letter-spacing:1px">AKTUÁLNÍ VERZE</div>
-          <div style="font-size:22px;font-weight:950;color:var(--gold2);margin-top:5px">v4.51.80 RC</div>
+          <div style="font-size:22px;font-weight:950;color:var(--gold2);margin-top:5px">v4.51.81 RC</div>
         </div>
       </div>
     </div>
@@ -5483,6 +5483,14 @@ html[data-theme="light"] #leagueSchedule .history-item .muted{
     </div>
   </div>
 </div>
+<div id="historicalStructureModal" class="modal" role="dialog" aria-modal="true" aria-labelledby="historicalStructureTitle" style="z-index:12000">
+  <div class="modal-card" style="width:1100px;max-width:96vw">
+    <h2 id="historicalStructureTitle">HISTORICKÝ TURNAJ</h2>
+    <div id="historicalStructureBody"></div>
+    <div id="historicalStructureMessage" role="status" class="muted" style="margin-top:12px"></div>
+    <div class="modal-actions"><button class="btn" type="button" onclick="document.getElementById('historicalStructureModal').classList.remove('show')">ZAVŘÍT</button></div>
+  </div>
+</div>
 <div id="pdfReportHost" style="position:fixed;left:-10000px;top:0;width:794px;z-index:-1"></div>
 
   <div id="safetyResultModal" class="modal">
@@ -5818,7 +5826,7 @@ html[data-theme="light"] #leagueSchedule .history-item .muted{
       </div>
 
       <div id="groupPlayoffSeedStatus" class="muted" style="margin-top:12px;min-height:20px"></div>
-      <div class="muted" style="margin-top:4px;font-size:11px">RC v4.51.80</div>
+      <div class="muted" style="margin-top:4px;font-size:11px">RC v4.51.81</div>
       <div class="modal-actions">
         <button id="groupPlayoffSeedApplyBtn" class="btn primary big" type="button">NASADIT DO PLAY-OFF</button>
         <button id="groupPlayoffSeedCancelBtn" class="btn">ZRUŠIT</button>
@@ -7002,7 +7010,7 @@ html[data-theme="light"] #leagueSchedule .history-item .muted{
     const btn=$('submitReportBtn');if(btn)btn.disabled=true;
     try{
       const id=uid(),p=currentUserPlayerId?data.players?.[currentUserPlayerId]:null;
-      const report={id,createdByUid:cloudUid,createdByPlayerId:currentUserPlayerId||'',createdByName:p?playerSelectionLabel(p):(cloudUserEmail||'Uživatel'),email:cloudUserEmail||'',type,area,description,appVersion:'v4.51.80 RC',createdAt:new Date().toISOString(),updatedAt:new Date().toISOString(),status:'new',adminNote:''};
+      const report={id,createdByUid:cloudUid,createdByPlayerId:currentUserPlayerId||'',createdByName:p?playerSelectionLabel(p):(cloudUserEmail||'Uživatel'),email:cloudUserEmail||'',type,area,description,appVersion:'v4.51.81 RC',createdAt:new Date().toISOString(),updatedAt:new Date().toISOString(),status:'new',adminNote:''};
       await reportRequest(id,'PUT',report);
       try{
         await writeReportUserMirror(report);
@@ -16688,8 +16696,9 @@ $('liveScoreClose').onclick=()=>{
     const firstWave=(d.wave||0)===0;
     const unbeatenBase=active.filter(id=>(d.losses[id]||0)===0);
     const oneLossBase=active.filter(id=>(d.losses[id]||0)===1);
-    const unbeaten=(firstWave && d.seedingMode==='manual') ? [...unbeatenBase] : shuffleArray(unbeatenBase);
-    const oneLoss=(firstWave && d.seedingMode==='manual') ? [...oneLossBase] : shuffleArray(oneLossBase);
+    const preserveHistoricalOrder=!!t.historicalStructure;
+    const unbeaten=(preserveHistoricalOrder || firstWave && d.seedingMode==='manual') ? [...unbeatenBase] : shuffleArray(unbeatenBase);
+    const oneLoss=(preserveHistoricalOrder || firstWave && d.seedingMode==='manual') ? [...oneLossBase] : shuffleArray(oneLossBase);
     const matches=[],byes=[];
     d.wave=(d.wave||0)+1;
 
@@ -16962,7 +16971,7 @@ $('liveScoreClose').onclick=()=>{
 
   function tournamentCanHistoricalReseed(t){
     return !!(
-      t &&
+      t && !t.historicalStructure &&
       ['groups_sko','groups_dko'].includes(t.format) &&
       groupPhaseComplete(t) &&
       (t.status==='complete' || !!t.playoffStarted || !!t.ko || !!t.dko) &&
@@ -16973,6 +16982,7 @@ $('liveScoreClose').onclick=()=>{
   let activeEditTournamentId=null;
 
   window.openActiveTournamentEdit=function(tid){
+    if((data.tournaments||[]).some(t=>t.id===tid&&t.historicalStructure)){openHistoricalStructure(tid);return;}
     const t=(data.tournaments||[]).find(x=>x.id===tid);
     if(!t || !canManageTournament(t)){
       toast('Tento turnaj teď nelze upravit.');
@@ -17294,6 +17304,7 @@ $('liveScoreClose').onclick=()=>{
   }
 
   window.openHistoricalTournamentScore=function(tid,matchId){
+    if((data.tournaments||[]).some(t=>t.id===tid&&t.historicalStructure)){openHistoricalStructure(tid);return;}
     const t=(data.tournaments||[]).find(x=>x.id===tid);
     const m=t?findTournamentMatch(t,matchId):null;
     if(!t || !m || !canManageTournament(t))return;
@@ -17433,6 +17444,7 @@ $('liveScoreClose').onclick=()=>{
   let groupPlayoffSeedTournamentId=null;
 
   function repairHybridWaitingState(t){
+    if(t?.historicalStructure)return false;
     if(!t || !['groups_sko','groups_dko'].includes(t.format))return false;
     if(!groupPhaseComplete(t))return false;
 
@@ -18580,6 +18592,7 @@ function renderSKOTournament(t){
 
     (data.tournaments||[]).forEach(t=>{
       if(targetTournamentId && t.id!==targetTournamentId) return;
+      if(t.historicalStructure)return;
 
       completed
         .filter(sm=>sm.tournamentLink.tournamentId===t.id)
@@ -18674,7 +18687,7 @@ function renderSKOTournament(t){
 
   async function cleanupEmptyTournaments(){
     const empty=(data.tournaments||[]).filter(t=>
-      !(data.matches||[]).some(m=>m.tournamentLink && m.tournamentLink.tournamentId===t.id)
+      !t.historicalStructure && !(data.matches||[]).some(m=>m.tournamentLink && m.tournamentLink.tournamentId===t.id)
     );
 
     if(!empty.length){
@@ -18739,6 +18752,7 @@ function renderSKOTournament(t){
   }
 
 window.openTournamentDetail=async function(tid){
+  if((data.tournaments||[]).some(t=>t.id===tid&&t.historicalStructure)){openHistoricalStructure(tid);return;}
     if(preserveTournamentDetailReturn){
       preserveTournamentDetailReturn=false;
     }else{
@@ -19047,6 +19061,11 @@ function renderTournamentDetail(){
     if(!body || !title)return;
 
     const t=(data.tournaments||[]).find(x=>x.id===selectedTournamentId);
+    if(t?.historicalStructure){
+      title.textContent=t.name;
+      body.innerHTML=`<div class="subpanel">Historicky odehraný turnaj • ${t.status==='complete'?'dokončený':'rozpracovaný'}<p><button class="btn primary" onclick="openHistoricalStructure('${t.id}')">OTEVŘÍT HISTORICKÉ VÝSLEDKY</button></p></div>`;
+      return;
+    }
     if(t && forcedTournamentReturnId===selectedTournamentId){
       forcedTournamentReturnId=null;
     }
@@ -19619,6 +19638,7 @@ function renderTournamentDetail(){
   }
 
   function seriesTournamentPlacementRecords(s,t){
+    if(t?.historicalStructure?.manualPlaces && t.status==='complete')return t.historicalStructure.manualPlaces.map(r=>({playerId:r.playerId,value:r.place,label:r.place+'. místo',sharedPlace:t.historicalStructure.manualPlaces.filter(x=>x.place===r.place).length>1}));
     const rows=seriesRefineTournamentPlacements(s,t,baseTournamentPlacementRecords(t));
 
     // Poslední pojistka pro historicky opravované turnaje:
@@ -19644,6 +19664,276 @@ function renderTournamentDetail(){
     return rows;
   }
 
+  // Structured historical entry uses the SAME tournament generators, advancement
+  // and placement/scoring functions as ordinary tournaments. No scoreboard records.
+  const historicalClone=value=>JSON.parse(JSON.stringify(value));
+  function historicalStructureSlots(t){
+    const out=[];
+    (t.groups||[]).forEach((g,ri)=>(g.matches||[]).forEach((m,mi)=>out.push({key:'g_'+ri+'_'+mi,label:'Skupina '+g.id+' • '+m.roundLabel,m})));
+    for(const root of ['ko','dko'])(t[root]?.rounds||[]).forEach((r,ri)=>(r.matches||[]).forEach((m,mi)=>out.push({key:root+'_'+ri+'_'+mi,label:r.label+' • '+(mi+1),m})));
+    return out;
+  }
+  function historicalValidateOrder(order,players){
+    if(order.length!==players.length || order.some(id=>!id) || new Set(order).size!==players.length || order.some(id=>!players.includes(id)))throw Error('Nasazení musí obsahovat každého hráče právě jednou, bez prázdných míst.');
+  }
+  function historicalCreateStructure(config,order,series){
+    if(!series || !canManageSeries(series))throw Error('Nemáš oprávnění spravovat tuto sérii.');
+    historicalValidateOrder(order,config.playerIds);
+    if(order.length<2 || !config.name?.trim() || !/^\d{4}-\d{2}-\d{2}$/.test(config.date||''))throw Error('Vyplň název, historické datum a alespoň dva hráče.');
+    const count=Number(config.groupCount||1),advance=Number(config.advance||2);
+    const hasGroups=['groups','groups_sko','groups_dko'].includes(config.format);
+    if(hasGroups && (!Number.isInteger(count)||count<1||count>Math.floor(order.length/2)))throw Error('Každá skupina musí mít alespoň dva hráče.');
+    if(config.format.startsWith('groups_') && (!Number.isInteger(advance)||advance<1||advance>Math.floor(order.length/count)))throw Error('Neplatný počet postupujících.');
+    const guests=Object.fromEntries(Object.entries(config.guests||{}).map(([id,g])=>[id,{...g,preserveGuest:true}]));
+    const args=[config.name,order,config.discipline,Number(config.raceTo),'alternate'];
+    if(!['8-ball','9-ball','10-ball','14.1'].includes(config.discipline)||!Number.isInteger(args[3])||args[3]<1)throw Error('Neplatná disciplína nebo Race to.');
+    let t;
+    if(config.format==='groups')t=generateGroupTournament(...args,count,guests,1,'manual');
+    else if(config.format==='sko')t=generateSKOTournament(...args,guests,1,'manual',!!config.thirdPlace);
+    else if(config.format==='dko')t=generateDKOTournament(...args,guests,1,'manual',!!config.thirdPlace);
+    else if(config.format.startsWith('groups_'))t=generateHybridTournament(...args,count,advance,config.format==='groups_dko'?'dko':'sko',guests,1,'manual',!!config.thirdPlace);
+    else throw Error('Nepodporovaný formát.');
+    t.historicalEditMode=true;t.historicalDate=config.date;t.createdAt=config.date+'T12:00:00.000Z';
+    t.managerUids={...(series.managerUids||{})};if(series.createdByUid)t.managerUids[series.createdByUid]=true;
+    t.seriesPlacementTieBreak=seriesPlacementTieBreakMode(series);
+    t.groupAdvanceTieRule=config.tieRule||'points';t.groupPenaltyTieBreak=!!config.penalties;
+    const initial=historicalClone(t);
+    t.historicalStructure={version:1,creationKey:t.id,seriesId:series.id,initial,results:{},playoffOrder:[],audit:[],revision:0};
+    return t;
+  }
+  function historicalReplay(source){
+    const model=historicalClone(source.historicalStructure),t=historicalClone(model.initial);
+    model.results=model.results||{};model.audit=model.audit||[];
+    t.historicalStructure=model;t.updatedAt=source.updatedAt||t.createdAt;
+    const used=new Set();
+    const apply=slot=>{
+      const r=model.results?.[slot.key],m=slot.m;
+      if(!r || used.has(slot.key) || ![m.player1Id,m.player2Id].every(id=>[r.p1,r.p2].includes(id)))return false;
+      const scores=m.player1Id===r.p1?[r.s1,r.s2]:[r.s2,r.s1];
+      processTournamentResult({id:null,tournamentLink:{tournamentId:t.id,tournamentMatchId:m.id},playerIds:[m.player1Id,m.player2Id],scores,winner:scores[0]>scores[1]?0:1,endedAt:r.at},t);
+      m.scoreboardMatchId=null;m.manualResult=true;m.manualResultByUid=r.by;m.manualResultAt=r.at;
+      used.add(slot.key);return true;
+    };
+    historicalStructureSlots(t).filter(s=>s.key.startsWith('g_')).forEach(apply);
+    const hybrid=['groups_sko','groups_dko'].includes(t.format);
+    const unresolved=t.groupPenaltyTieBreak?unresolvedGroupPenaltyTie(t):null;
+    if(hybrid && groupPhaseComplete(t) && !unresolved && model.playoffOrder?.length){
+      const qualifiers=groupPlayoffSeeds(t),incoming=qualifiers.filter(id=>!model.playoffOrder.includes(id));
+      const previous=[...model.playoffOrder];
+      model.playoffOrder=previous.map(id=>qualifiers.includes(id)?id:incoming.shift());
+      if(model.playoffOrder.length!==qualifiers.length || model.playoffOrder.some(id=>!id))model.playoffOrder=qualifiers;
+      if(previous.some((id,i)=>id!==model.playoffOrder[i]))model.seedReview=true;
+      historicalValidateOrder(model.playoffOrder,qualifiers);
+      startHybridPlayoff(t,model.playoffOrder);
+    }
+    for(let pass=0;pass<=Object.keys(model.results||{}).length;pass++){
+      const ready=historicalStructureSlots(t).filter(s=>!s.key.startsWith('g_') && !used.has(s.key));
+      let applied=false;ready.forEach(s=>{if(apply(s))applied=true;});if(!applied)break;
+    }
+    // Do not discard later results before their participants can be derived.
+    // Keep them dormant while a prerequisite is missing; reuse if the same pair
+    // returns, otherwise explain and confirm the actual mismatch at that point.
+    const knownSlots=new Set(historicalStructureSlots(t).map(s=>s.key));
+    const invalid=Object.entries(model.results||{}).filter(([key])=>!used.has(key)&&knownSlots.has(key)).map(([key,result])=>({key,...result}));
+    invalid.forEach(r=>delete model.results[r.key]);
+    // Never count an unresolved historical tournament, even if a generic repair
+    // would otherwise mark its groups complete.
+    const needsManual=t.format==='groups' && (t.groups||[]).length>1 && !model.manualPlaces;
+    if(unresolved || model.seedReview || needsManual)t.status='active';
+    if(model.manualPlaces && t.status==='complete')historicalValidateOrder(model.manualPlaces.map(r=>r.playerId),t.playerIds);
+    return {t,invalid,unresolved};
+  }
+  function historicalPlanScore(t,key,s1,s2,by){
+    if(!Number.isInteger(s1)||!Number.isInteger(s2)||s1<0||s2<0||s1===s2)throw Error('Zadej celé nezáporné skóre bez remízy. Prázdné pole není výsledek.');
+    const slot=historicalStructureSlots(t).find(s=>s.key===key);if(!slot)throw Error('Zápas už není aktuální.');
+    if(!key.startsWith('g_')&&t.historicalStructure.seedReview)throw Error('Nejprve potvrď nasazení nových postupujících.');
+    const next=historicalClone(t),model=next.historicalStructure,previous=model.results?.[key]||null;
+    model.results=model.results||{};
+    const result={p1:slot.m.player1Id,p2:slot.m.player2Id,names:[tournamentPlayerName(slot.m.player1Id,t),tournamentPlayerName(slot.m.player2Id,t)],s1,s2,by,at:new Date().toISOString(),label:slot.label};
+    if(previous && previous.s1===s1 && previous.s2===s2)return {t:next,invalid:[],unchanged:true};
+    model.results[key]=result;model.manualPlaces=null;
+    // A changed group score invalidates only the affected group's recorded penalty order.
+    if(key.startsWith('g_')&&previous){const gi=Number(key.split('_')[1]);delete model.initial.groupPenaltyWinners?.[model.initial.groups[gi].id];}
+    const plan=historicalReplay(next);
+    plan.manualPlacesCleared=!!t.historicalStructure.manualPlaces;
+    plan.t.historicalStructure.audit.push({at:result.at,byUid:by,action:previous?'score-correction':'score',key,previous,next:result,invalidated:plan.invalid});
+    return plan;
+  }
+  function historicalSeriesTournamentIds(s){
+    // A tournament's self-declared seriesId alone must never authorize points
+    // in somebody else's series. Explicit legacy links remain authoritative;
+    // automatic draft links require a creator authorized by the series record.
+    return [...new Set([...(s.tournamentIds||[]),...(data.tournaments||[]).filter(t=>t.historicalStructure?.seriesId===s.id && t.createdByUid && (t.createdByUid===s.createdByUid||s.managerUids?.[t.createdByUid]===true)).map(t=>t.id)])];
+  }
+  function historicalCanManage(t){
+    const s=(data.tournamentSeries||[]).find(s=>s.id===t.historicalStructure?.seriesId);
+    return !!(s && canManageSeries(s) && canManageTournament(t));
+  }
+  function historicalFingerprint(value){
+    const normalize=v=>{
+      if(v==null)return null;
+      if(typeof v!=='object')return v;
+      const entries=Object.keys(v).sort().map(k=>[k,normalize(v[k])]).filter(([,x])=>x!==null);
+      return entries.length?Object.fromEntries(entries):null;
+    };
+    return JSON.stringify(normalize(value));
+  }
+  function historicalRemember(t){
+    const index=(data.tournaments||[]).findIndex(x=>x.id===t.id);
+    if(index<0)data.tournaments.push(t);else data.tournaments[index]=t;
+    try{localStorage.setItem(DB_KEY,JSON.stringify(data));}catch(e){toast('Turnaj je uložený v cloudu; místní záloha se nezdařila.');}
+    return t;
+  }
+  async function historicalPersist(next,previous=null){
+    if(!historicalCanManage(next) || !await ensureCloudToken())throw Error('Nemáš oprávnění k uložení turnaje.');
+    const url=cloudUrl('tournaments/'+next.id);
+    const read=await fetch(url,{cache:'no-store',headers:{'X-Firebase-ETag':'true'}});
+    if(!read.ok)throw Error('Turnaj se nepodařilo načíst; nic nebylo přepsáno.');
+    const remote=await read.json(),etag=read.headers.get('ETag');
+    if(!etag)throw Error('Server neposkytl ověření verze turnaje. Nic nebylo přepsáno.');
+    // Retry after a lost acknowledgement must reopen the already-created draft,
+    // never create another scored event or overwrite the saved one.
+    if(!previous && next.historicalStructure.creationKey && remote?.historicalStructure?.creationKey===next.historicalStructure.creationKey && historicalCanManage(remote))return historicalRemember(remote);
+    if(previous?historicalFingerprint(remote)!==historicalFingerprint(previous):remote!==null)throw Error('Turnaj byl změněn jinde. Obnov seznam turnajů a otevři jej znovu.');
+    if(remote&&!historicalCanManage(remote))throw Error('Oprávnění k turnaji se změnilo.');
+    next.historicalStructure.revision=Number(previous?.historicalStructure?.revision||0)+1;
+    next.updatedAt=new Date().toISOString();
+    const saved=await fetch(url,{method:'PUT',headers:{'Content-Type':'application/json','if-match':etag},body:JSON.stringify(next)});
+    if(!saved.ok)throw Error(saved.status===412?'Souběžná změna turnaje; načti aktuální stav.':'Uložení turnaje selhalo.');
+    const verified=await secureTournamentRequest(next.id,'GET');
+    if(historicalFingerprint(verified)!==historicalFingerprint(next))throw Error('Uložení nebylo potvrzeno. Obnov turnaj z cloudu před další změnou.');
+    return historicalRemember(verified);
+  }
+
+  let historicalActiveId=null,historicalBuildDraft=null,historicalUiBusy=false;
+  const historicalDraftKey=DB_KEY+'_historical_structure_setup';
+  const historicalOptions=(ids,t,selected='',blank=false)=>(blank?'<option value="">Vyber hráče</option>':'')+ids.map(id=>`<option value="${esc(id)}" ${id===selected?'selected':''}>${esc(tournamentPlayerName(id,t))}</option>`).join('');
+  function historicalSaveDraft(){localStorage.setItem(historicalDraftKey,JSON.stringify(historicalBuildDraft));}
+  window.openHistoricalStructureSetup=function(seriesId){
+    const s=(data.tournamentSeries||[]).find(x=>x.id===seriesId);if(!s||!canManageSeries(s))return;
+    historicalActiveId=null;
+    try{historicalBuildDraft=JSON.parse(localStorage.getItem(historicalDraftKey)||'null');}catch(e){historicalBuildDraft=null;}
+    if(historicalBuildDraft?.seriesId===seriesId && historicalBuildDraft.config){historicalRenderSeedSetup();}
+    else{
+      historicalBuildDraft={seriesId};
+      $('historicalStructureBody').innerHTML=`<div class="grid two">
+        <div><label>Název</label><input id="hsName" value="${esc($('seriesHistoricalName_'+seriesId)?.value||'')}"></div>
+        <div><label>Historické datum</label><input id="hsDate" type="date" value="${esc($('seriesHistoricalDate_'+seriesId)?.value||'')}"></div>
+        <div><label>Formát</label><select id="hsFormat"><option value="groups">Skupiny</option><option value="sko">SKO</option><option value="dko">DKO</option><option value="groups_sko">Skupiny → SKO</option><option value="groups_dko">Skupiny → DKO</option></select></div>
+        <div><label>Disciplína</label><select id="hsDiscipline"><option>9-ball</option><option>8-ball</option><option>10-ball</option><option>14.1</option></select></div>
+        <div><label>Race to / cílové skóre</label><input id="hsRace" type="number" min="1" value="5"></div>
+        <div><label>Počet skupin</label><input id="hsGroups" type="number" min="1" value="1"></div>
+        <div><label>Postupujících z každé skupiny</label><input id="hsAdvance" type="number" min="1" value="2"></div>
+        <div><label>Pořadí ve skupině</label><select id="hsTie"><option value="points">Výhry → rozdíl skóre → vstřelené skóre</option><option value="head_to_head">Výhry → vzájemné zápasy</option></select></div>
+      </div><label><input id="hsPenalties" type="checkbox" style="width:auto"> Při nerozhodnuté shodě rozhodují penalty</label>
+      <label><input id="hsThird" type="checkbox" style="width:auto"> Zápas o 3. místo</label>
+      <h3>Hráči</h3><div class="grid two">${Object.values(data.players||{}).filter(p=>!p.inactive).map(p=>`<label><input class="hsPlayer" type="checkbox" value="${esc(p.id)}" style="width:auto"> ${esc(playerSelectionLabel(p))}</label>`).join('')}</div>
+      <label>Další hosté – jedno jméno na řádek (bez vytváření účtu)</label><textarea id="hsGuests" rows="4"></textarea>
+      <button class="btn primary" data-historical-action onclick="historicalPrepareSeedSetup()">PŘIPRAVIT RUČNÍ NASAZENÍ</button>`;
+    }
+    $('historicalStructureMessage').textContent='';$('historicalStructureModal').classList.add('show');
+  };
+  window.historicalPrepareSeedSetup=function(){
+    try{
+      const playerIds=[...document.querySelectorAll('.hsPlayer:checked')].map(el=>el.value),guests={},seen=new Set(playerIds.map(id=>normalizeSeriesHistoricalName(tournamentPlayerName(id))));
+      $('hsGuests').value.split(/\r?\n/).map(s=>s.trim()).filter(Boolean).forEach(name=>{const key=normalizeSeriesHistoricalName(name);if(seen.has(key))throw Error('Duplicitní jméno hosta: '+name);seen.add(key);const id='guest_'+uid();guests[id]={id,name};playerIds.push(id);});
+      if(playerIds.length<2)throw Error('Vyber alespoň dva hráče.');
+      const config={name:$('hsName').value.trim(),date:$('hsDate').value,format:$('hsFormat').value,discipline:$('hsDiscipline').value,raceTo:Number($('hsRace').value),groupCount:Number($('hsGroups').value),advance:Number($('hsAdvance').value),tieRule:$('hsTie').value,penalties:$('hsPenalties').checked,thirdPlace:$('hsThird').checked,playerIds,guests};
+      if(!config.name||!config.date)throw Error('Vyplň název a historické datum.');
+      historicalBuildDraft.config=config;historicalBuildDraft.order=playerIds.map(()=> '');historicalSaveDraft();historicalRenderSeedSetup();
+    }catch(e){$('historicalStructureMessage').textContent=e.message;}
+  };
+  function historicalRenderSeedSetup(){
+    const d=historicalBuildDraft,c=d.config,t={guests:c.guests};
+    const grouped=c.format.startsWith('groups');
+    const layout=grouped?manualGroupSeedLayout(c.playerIds,c.groupCount):[{label:'Pavouk – sousední pozice tvoří první dvojice',ids:c.playerIds}];
+    let index=0;
+    $('historicalStructureBody').innerHTML=`<strong>${esc(c.name)} • ${esc(c.date)}</strong><p>Ručně vyber všechny pozice. Skupiny se plní po blocích, pavouk po dvojicích. Volné losy řeší původní turnajový generátor.</p>`+layout.map(g=>`<h3>${esc(grouped?'Skupina '+g.label:g.label)}</h3><div class="grid two">${g.ids.map(()=>{const i=index++;return `<label>Pozice ${i+1}<select class="hsSeed" data-index="${i}" onchange="historicalSeedChanged(this)">${historicalOptions(c.playerIds,t,d.order[i],true)}</select></label>`;}).join('')}</div>`).join('')+`<div style="margin-top:14px"><button class="btn primary" data-historical-action onclick="historicalCreateFromSetup()">VYTVOŘIT ZÁPASY A ULOŽIT ROZPRACOVANÝ TURNAJ</button><button class="btn" onclick="historicalResetSetup()">ZMĚNIT NASTAVENÍ</button></div>`;
+  }
+  window.historicalSeedChanged=function(el){historicalBuildDraft.order[Number(el.dataset.index)]=el.value;historicalSaveDraft();};
+  window.historicalResetSetup=function(){const sid=historicalBuildDraft.seriesId;localStorage.removeItem(historicalDraftKey);historicalBuildDraft=null;openHistoricalStructureSetup(sid);};
+  async function historicalUiAction(action){
+    if(historicalUiBusy)return;historicalUiBusy=true;$('historicalStructureMessage').textContent='Ukládám…';
+    document.querySelectorAll('[data-historical-action]').forEach(b=>b.disabled=true);
+    try{const result=await action();$('historicalStructureMessage').textContent=result===false?'Změna byla zrušena; uložené výsledky zůstaly zachované.':'Uloženo.';}
+    catch(e){$('historicalStructureMessage').textContent=e.message||String(e);}
+    finally{historicalUiBusy=false;document.querySelectorAll('[data-historical-action]').forEach(b=>b.disabled=false);}
+  }
+  window.historicalCreateFromSetup=function(){return historicalUiAction(async()=>{
+    const d=historicalBuildDraft,s=data.tournamentSeries.find(s=>s.id===d.seriesId),t=historicalCreateStructure(d.config,d.order,s);
+    d.tournamentId=d.tournamentId||uid();historicalSaveDraft();t.id=d.tournamentId;t.historicalStructure.initial.id=t.id;t.historicalStructure.creationKey=t.id;
+    await historicalPersist(t);
+    // A global administrator outside the series' organizer list uses the
+    // existing protected series-link workflow, rather than trusting a draft flag.
+    if(t.createdByUid!==s.createdByUid&&s.managerUids?.[t.createdByUid]!==true){s.tournamentIds=s.tournamentIds||[];addTournamentToSeries(s.id,t.id);}
+    try{localStorage.removeItem(historicalDraftKey);}catch(e){}historicalBuildDraft=null;openHistoricalStructure(t.id);renderSeriesModal();
+  });};
+  window.openHistoricalStructure=function(id){
+    const t=data.tournaments.find(t=>t.id===id);if(!t?.historicalStructure)return;
+    historicalActiveId=id;historicalRenderStructure(t);$('historicalStructureMessage').textContent='';$('historicalStructureModal').classList.add('show');
+  };
+  function historicalRenderStructure(t){
+    const model=t.historicalStructure,editable=historicalCanManage(t),slots=historicalStructureSlots(t),complete=t.status==='complete';
+    const dormant=Object.keys(model.results||{}).filter(key=>!slots.some(s=>s.key===key)).length;
+    const plan=historicalReplay(t),tie=plan.unresolved;
+    const canSeed=t.format.startsWith('groups_')&&groupPhaseComplete(t)&&!tie;
+    const qualifiers=canSeed?groupPlayoffSeeds(t):[],seeds=model.playoffOrder?.length?model.playoffOrder:qualifiers;
+    const seedEditable=editable&&(!slots.some(s=>!s.key.startsWith('g_')&&s.m.status==='done')||model.seedReview);
+    const finalRows=complete?tournamentPlacementRecords(t):[];
+    $('historicalStructureBody').innerHTML=`<h3>${esc(t.name)} • ${esc(t.historicalDate)}</h3><p>${complete?'DOKONČENO – započítává se do série':'ROZPRACOVÁNO – zatím bez bodů v sérii'}</p><button class="btn" data-historical-action onclick="historicalRefreshStructure()">OBNOVIT ULOŽENÝ STAV</button>${dormant?`<p class="muted">Uchované výsledky navazujících kol: ${dormant}. Použijí se pouze při shodných účastnících; mimo aktuální strukturu se nezapočítávají.</p>`:''}
+      ${(t.groups||[]).map(g=>`<h3>Skupina ${esc(g.id)}</h3><table class="stats-table"><thead><tr><th>Hráč</th><th>Výhry</th><th>Skóre</th></tr></thead><tbody>${groupStandings(g,t).map(r=>`<tr><td>${esc(tournamentPlayerName(r.id,t))}</td><td>${r.v}</td><td>${r.rf}:${r.ra}</td></tr>`).join('')}</tbody></table>`).join('')}
+      ${tie?`<div class="subpanel">Nerozhodnuté penalty ve skupině ${esc(tie.groupId)} – vyber dalšího hráče v pořadí:<select id="hsPenalty">${historicalOptions(tie.candidates,t)}</select>${editable?'<button class="btn primary" data-historical-action onclick="historicalResolvePenalty()">POTVRDIT PENALTY</button>':''}</div>`:''}
+      ${canSeed?`<details ${!t.playoffStarted||model.seedReview?'open':''}><summary>NASAZENÍ PLAY-OFF ${model.seedReview?'– POTVRĎ ZMĚNĚNÉ POSTUPUJÍCÍ':''}</summary><p>Návrh podle stávajících pravidel můžeš před výsledky ručně změnit. Musí obsahovat všechny postupující právě jednou.</p><div class="grid two">${seeds.map((id,i)=>`<label>Pozice ${i+1}<select class="hsPlayoffSeed" ${seedEditable?'':'disabled'}>${historicalOptions(qualifiers,t,id)}</select></label>`).join('')}</div><label>Napojení semifinále pro 8 postupujících<select id="hsRouting" ${seedEditable?'':'disabled'}>${[['cross13','QF1 × QF3'],['cross14','QF1 × QF4'],['adjacent','QF1 × QF2']].map(([v,label])=>`<option value="${v}" ${(model.initial.manualGroupPlayoffSemiRouting||'cross13')===v?'selected':''}>${label}</option>`).join('')}</select></label>${seedEditable?'<button class="btn primary" data-historical-action onclick="historicalApplySeeds()">POTVRDIT RUČNÍ NASAZENÍ</button>':''}</details>`:''}
+      <h3>Skupiny a pavouk – výsledky</h3><div style="overflow:auto">${slots.map(({key,label,m})=>`<div class="subpanel" data-historical-slot="${key}"><strong>${esc(label)}</strong> • ${esc(tournamentPlayerName(m.player1Id,t))} × ${esc(tournamentPlayerName(m.player2Id,t))}<div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:8px"><input id="hs1_${key}" aria-label="Skóre prvního hráče" type="number" min="0" style="width:90px" value="${m.status==='done'?m.score1:''}"><span>:</span><input id="hs2_${key}" aria-label="Skóre druhého hráče" type="number" min="0" style="width:90px" value="${m.status==='done'?m.score2:''}">${editable?`<button class="btn primary" data-historical-action onclick="historicalSaveScore('${key}')">${m.status==='done'?'OPRAVIT':'ULOŽIT VÝSLEDEK'}</button>${m.status==='done'?`<button class="btn" data-historical-action onclick="historicalClearScore('${key}')">VRÁTIT NA NEVYPLNĚNÝ</button>`:''}`:''}</div></div>`).join('')}</div>
+      ${complete||t.format==='groups'&&groupPhaseComplete(t)?`<details><summary>Ruční konečné pořadí (alternativa${(t.groups||[]).length>1&&t.format==='groups'?' – pro více samostatných skupin povinné':''})</summary>${t.playerIds.map(id=>`<label>${esc(tournamentPlayerName(id,t))}<input class="hsPlace" data-player="${esc(id)}" type="number" min="1" max="${t.playerIds.length}" value="${model.manualPlaces?.find(r=>r.playerId===id)?.place||finalRows.find(r=>r.playerId===id)?.value||''}"></label>`).join('')}${editable?'<button class="btn" data-historical-action onclick="historicalSavePlaces()">POTVRDIT KONEČNÉ POŘADÍ</button>':''}</details>`:''}
+      ${finalRows.length?'<h3>Konečné pořadí</h3>'+finalRows.map(r=>`<div>${esc(r.label)} • ${esc(tournamentPlayerName(r.playerId,t))}</div>`).join(''):''}
+      <details><summary>Historie zadání a oprav (${model.audit?.length||0})</summary>${(model.audit||[]).slice().reverse().map(a=>`<p>${esc(a.at)} • ${esc(a.byUid)} • ${esc(a.action)}${a.key?' • '+esc(a.key):''}${a.previous?.names?' • '+esc(a.previous.names.join(' × ')):''}${a.previous?` • ${a.previous.s1}:${a.previous.s2} → ${a.next?.s1??'–'}:${a.next?.s2??'–'}`:''}</p>`).join('')}</details>`;
+  }
+  async function historicalAcceptPlan(before,plan){
+    if(!historicalCanManage(before))throw Error('Nemáš oprávnění k opravě.');
+    if(plan.unchanged)return;
+    if(plan.invalid.length||plan.manualPlacesCleared){
+      const lines=plan.invalid.map(r=>`${r.label}: ${tournamentPlayerName(r.p1,before)} – ${tournamentPlayerName(r.p2,before)} ${r.s1}:${r.s2}`);
+      const manual=plan.manualPlacesCleared?'\nPůvodní ruční konečné pořadí se zruší. Použije se přepočet; u více samostatných skupin je nutné pořadí znovu zadat.\n':'';
+      if(!confirm('Změna ovlivní účastníky těchto vyplněných navazujících zápasů a zneplatní jejich výsledky:\n\n'+lines.join('\n')+manual+'\n\nOstatní výsledky zůstanou zachované. Potvrdit změnu?'))return false;
+    }
+    await historicalPersist(plan.t,before);historicalRenderStructure(data.tournaments.find(t=>t.id===before.id));renderSeriesModal();renderResultsSeries();
+  }
+  window.historicalRefreshStructure=function(){return historicalUiAction(async()=>{
+    const t=await secureTournamentRequest(historicalActiveId,'GET');
+    if(!t?.historicalStructure || t.id!==historicalActiveId)throw Error('Uložený historický turnaj nebyl nalezen.');
+    historicalRemember(t);historicalRenderStructure(t);
+  });};
+  window.historicalSaveScore=function(key){return historicalUiAction(async()=>{
+    const t=data.tournaments.find(t=>t.id===historicalActiveId),a=$('hs1_'+key).value,b=$('hs2_'+key).value;
+    if(a===''||b==='')throw Error('Vyplň obě skóre; prázdný zápas není výsledek.');
+    const s1=Number(a),s2=Number(b),m=historicalStructureSlots(t).find(s=>s.key===key)?.m;
+    if(Math.max(s1,s2)!==Number(tournamentRaceForMatch(t,m))&&!confirm('Výsledek neodpovídá cílovému skóre '+tournamentRaceForMatch(t,m)+'. Uložit skutečný historický výsledek?'))return false;
+    return historicalAcceptPlan(t,historicalPlanScore(t,key,s1,s2,cloudUid));
+  });};
+  window.historicalClearScore=function(key){return historicalUiAction(async()=>{
+    const t=data.tournaments.find(t=>t.id===historicalActiveId),next=historicalClone(t),previous=next.historicalStructure.results[key];
+    if(!confirm('Vrátit uložený výsledek na nevyplněný zápas?'))return false;
+    delete next.historicalStructure.results[key];next.historicalStructure.manualPlaces=null;
+    const plan=historicalReplay(next);plan.manualPlacesCleared=!!t.historicalStructure.manualPlaces;plan.t.historicalStructure.audit.push({at:new Date().toISOString(),byUid:cloudUid,action:'clear-score',key,previous,next:null,invalidated:plan.invalid});return historicalAcceptPlan(t,plan);
+  });};
+  window.historicalApplySeeds=function(){return historicalUiAction(async()=>{
+    const t=data.tournaments.find(t=>t.id===historicalActiveId),next=historicalClone(t),order=[...document.querySelectorAll('.hsPlayoffSeed')].map(el=>el.value);
+    historicalValidateOrder(order,groupPlayoffSeeds(t));next.historicalStructure.playoffOrder=order;next.historicalStructure.seedReview=false;next.historicalStructure.initial.manualGroupPlayoffSemiRouting=$('hsRouting').value;
+    const plan=historicalReplay(next);plan.t.historicalStructure.audit.push({at:new Date().toISOString(),byUid:cloudUid,action:'playoff-seeding',order});return historicalAcceptPlan(t,plan);
+  });};
+  window.historicalResolvePenalty=function(){return historicalUiAction(async()=>{
+    const t=data.tournaments.find(t=>t.id===historicalActiveId),next=historicalClone(t),tie=unresolvedGroupPenaltyTie(t),id=$('hsPenalty').value;
+    if(!tie?.candidates.includes(id))throw Error('Neplatná volba penalt.');
+    const winners=next.historicalStructure.initial.groupPenaltyWinners??={};(winners[tie.groupId]??=[]).push(id);
+    const plan=historicalReplay(next);plan.t.historicalStructure.audit.push({at:new Date().toISOString(),byUid:cloudUid,action:'penalty',group:tie.groupId,playerId:id});return historicalAcceptPlan(t,plan);
+  });};
+  window.historicalSavePlaces=function(){return historicalUiAction(async()=>{
+    const t=data.tournaments.find(t=>t.id===historicalActiveId),next=historicalClone(t),rows=[...document.querySelectorAll('.hsPlace')].map(el=>({playerId:el.dataset.player,place:Number(el.value)}));
+    historicalValidateOrder(rows.map(r=>r.playerId),t.playerIds);if(rows.some(r=>!Number.isInteger(r.place)||r.place<1||r.place>t.playerIds.length)||!rows.some(r=>r.place===1))throw Error('Vyplň celé konečné pořadí včetně 1. místa; shodné číslo znamená dělené místo.');
+    next.historicalStructure.manualPlaces=rows;const plan=historicalReplay(next);plan.t.historicalStructure.audit.push({at:new Date().toISOString(),byUid:cloudUid,action:'manual-placements',rows});return historicalAcceptPlan(t,plan);
+  });};
+
   function normalizeSeriesHistoricalName(value){
     return String(value||'')
       .normalize('NFD')
@@ -19666,7 +19956,7 @@ function renderTournamentDetail(){
 
   function seriesStandings(s){
     const byPlayer=new Map();
-    const tournaments=(s.tournamentIds||[])
+    const tournaments=historicalSeriesTournamentIds(s)
       .map(id=>(data.tournaments||[]).find(t=>t.id===id))
       .filter(t=>t&&t.status==='complete');
 
@@ -19822,7 +20112,7 @@ function renderTournamentDetail(){
       return;
     }
     wrap.innerHTML=list.map(s=>{
-      const included=(s.tournamentIds||[]).map(id=>(data.tournaments||[]).find(t=>t.id===id)).filter(Boolean);
+      const included=historicalSeriesTournamentIds(s).map(id=>(data.tournaments||[]).find(t=>t.id===id)).filter(Boolean);
       const historical=Array.isArray(s.historicalTournaments)?s.historicalTournaments:[];
       const completed=included.filter(t=>t.status==='complete').length+historical.length;
       const total=included.length+historical.length;
@@ -19901,8 +20191,8 @@ function renderTournamentDetail(){
     const body=$('seriesModalBody');
     if(!s||!body)return;
 
-    const included=(s.tournamentIds||[]).map(id=>(data.tournaments||[]).find(t=>t.id===id)).filter(Boolean);
-    const available=(data.tournaments||[]).filter(t=>t.status==='complete'&&!(s.tournamentIds||[]).includes(t.id));
+    const included=historicalSeriesTournamentIds(s).map(id=>(data.tournaments||[]).find(t=>t.id===id)).filter(Boolean);
+    const available=(data.tournaments||[]).filter(t=>t.status==='complete'&&!historicalSeriesTournamentIds(s).includes(t.id));
     const historical=Array.isArray(s.historicalTournaments)?s.historicalTournaments:[];
     const standings=seriesStandings(s);
 
@@ -19978,8 +20268,8 @@ function renderTournamentDetail(){
         <div style="display:flex;justify-content:space-between;gap:8px;align-items:center;flex-wrap:wrap">
           <div><strong>${esc(t.name)}</strong><div class="muted">${esc(tournamentFormatLabel(t))} • ${esc(tournamentDisciplineSummary(t))}</div></div>
           <div style="display:flex;gap:6px">
-            <button class="btn" onclick="openTournamentDetail('${t.id}');$('seriesModal').classList.remove('show')">VÝSLEDKY</button>
-            ${canManageSeries(s)?`<button class="btn danger" onclick="removeTournamentFromSeries('${s.id}','${t.id}')">ODEBRAT</button>`:''}
+            <button class="btn" onclick="${t.historicalStructure?`openHistoricalStructure('${t.id}')`:`openTournamentDetail('${t.id}');$('seriesModal').classList.remove('show')`}">${t.historicalStructure?'HISTORICKÉ VÝSLEDKY • '+(t.status==='complete'?'DOKONČENO':'ROZPRACOVÁNO'):'VÝSLEDKY'}</button>
+            ${canManageSeries(s)&&!t.historicalStructure?`<button class="btn danger" onclick="removeTournamentFromSeries('${s.id}','${t.id}')">ODEBRAT</button>`:''}
           </div>
         </div>
       </div>`).join(''):'<div class="muted">Zatím žádný běžný turnaj.</div>'}
@@ -20012,6 +20302,8 @@ function renderTournamentDetail(){
           </div>
 
           <div id="seriesHistoricalFull_${s.id}" style="margin-top:12px">
+            <button class="btn primary" type="button" onclick="openHistoricalStructureSetup('${s.id}')">PŘIPRAVIT STRUKTURU A RUČNÍ NASAZENÍ</button>
+            <div class="muted" style="margin:8px 0 16px">Skupiny, SKO/DKO nebo skupiny → pavouk. Původní ruční přidávání jednotlivých zápasů níže zůstává alternativou.</div>
             <div style="display:flex;justify-content:space-between;gap:10px;align-items:center;flex-wrap:wrap">
               <div>
                 <label style="margin-bottom:3px">Odehrané zápasy</label>
@@ -20629,7 +20921,7 @@ function renderTournamentDetail(){
     }
 
     wrap.innerHTML=list.map(s=>{
-      const tournaments=(s.tournamentIds||[])
+      const tournaments=historicalSeriesTournamentIds(s)
         .map(id=>(data.tournaments||[]).find(t=>t.id===id))
         .filter(Boolean);
       const historical=Array.isArray(s.historicalTournaments)?s.historicalTournaments:[];
@@ -22472,6 +22764,7 @@ $('createTournamentBtn').onclick=async()=>{
   };
 
   window.startTournamentMatch=async function(tid,tmid){
+    if((data.tournaments||[]).some(t=>t.id===tid&&t.historicalStructure)){toast('Historický turnaj přijímá pouze ruční výsledky.');return;}
     // Pokud na telefonu zůstal ukončený zápas, bezpečně ho zahodíme.
     if(match && match.endedAt){
       removeDeviceActiveMatch(match.id);
@@ -22814,11 +23107,11 @@ $('createTournamentBtn').onclick=async()=>{
   }
 
 
-  function applyFinishedMatchToTournament(scoreMatch){
+  function applyFinishedMatchToTournament(scoreMatch,tournamentOverride=null){
     const link=scoreMatch?.tournamentLink;
     if(!link)return null;
 
-    const t=(data.tournaments||[]).find(x=>x.id===link.tournamentId);
+    const t=tournamentOverride || (data.tournaments||[]).find(x=>x.id===link.tournamentId);
     if(!t)return null;
 
     const tm=findTournamentMatch(t,link.tournamentMatchId);
@@ -22867,8 +23160,9 @@ $('createTournamentBtn').onclick=async()=>{
     return false;
   }
 
-  function processTournamentResult(scoreMatch){
-    const applied=applyFinishedMatchToTournament(scoreMatch);
+  function processTournamentResult(scoreMatch,tournamentOverride=null){
+    const notify=tournamentOverride?()=>{}:showTournamentResultMessage;
+    const applied=applyFinishedMatchToTournament(scoreMatch,tournamentOverride);
     if(!applied)return null;
     const {t,tm}=applied;
 
@@ -22897,7 +23191,7 @@ $('createTournamentBtn').onclick=async()=>{
         assignTournamentTables(t);
       }
 
-      showTournamentResultMessage(
+      notify(
         t.name+' • '+(tm.roundLabel||'Skupina'),
         groupResultHtml(t,tm.winnerId,tm.loserId)+
         (t.format!=='groups' && groupPhaseComplete(t)
@@ -22925,7 +23219,7 @@ $('createTournamentBtn').onclick=async()=>{
       const st=swissStandings(t);
       const winnerRow=st.find(r=>r.id===tm.winnerId);
 
-      showTournamentResultMessage(
+      notify(
         t.name+' • '+(tm.roundLabel||'Švýcarský systém'),
         `<div><strong>${esc(tournamentPlayerName(tm.winnerId,t))}</strong> získává bod.</div>
          ${winnerRow?`<div class="muted" style="margin-top:8px">Průběžně: ${winnerRow.place}. místo • ${winnerRow.points} bodů.</div>`:''}
@@ -22948,7 +23242,7 @@ $('createTournamentBtn').onclick=async()=>{
         k.thirdPlaceLoserId=tm.loserId;
         if(k.championId)t.status='complete';
         assignTournamentTables(t);
-        showTournamentResultMessage(
+        notify(
           t.name+' • ZÁPAS O 3. MÍSTO',
           `<div><strong>${esc(tournamentPlayerName(tm.winnerId,t))}</strong> končí na <strong>3. místě</strong>.</div>
            <div style="margin-top:10px"><strong>${esc(tournamentPlayerName(tm.loserId,t))}</strong> končí na <strong>4. místě</strong>.</div>`
@@ -22965,7 +23259,7 @@ $('createTournamentBtn').onclick=async()=>{
         else t.status='active';
         forceFinalizeTournamentIfResolved(t,tm);
         assignTournamentTables(t);
-        showTournamentResultMessage(
+        notify(
           t.name+' • FINÁLE',
           `<div><strong>${esc(tournamentPlayerName(tm.winnerId,t))}</strong> je <strong>VÍTĚZEM TURNAJE</strong>.</div>
            <div style="margin-top:10px"><strong>${esc(tournamentPlayerName(tm.loserId,t))}</strong> končí na <strong>2. místě</strong>.</div>`
@@ -22981,7 +23275,7 @@ $('createTournamentBtn').onclick=async()=>{
       const resolvedAsFinal=finalizeSKOIfResolved(t,tm);
       if(resolvedAsFinal){
         forceFinalizeTournamentIfResolved(t,tm);
-        showTournamentResultMessage(
+        notify(
           t.name+' • FINÁLE',
           `<div><strong>${esc(tournamentPlayerName(tm.winnerId,t))}</strong> je <strong>VÍTĚZEM TURNAJE</strong>.</div>
            <div style="margin-top:10px"><strong>${esc(tournamentPlayerName(tm.loserId,t))}</strong> končí na <strong>2. místě</strong>.</div>`
@@ -22996,7 +23290,7 @@ $('createTournamentBtn').onclick=async()=>{
       // neuzavřel přes knockoutCreateWave.
       if(t.status==='complete' && k.championId){
         if(!k.runnerUpId)k.runnerUpId=tm.loserId||null;
-        showTournamentResultMessage(
+        notify(
           t.name+' • FINÁLE',
           `<div><strong>${esc(tournamentPlayerName(k.championId,t))}</strong> je <strong>VÍTĚZEM TURNAJE</strong>.</div>
            ${k.runnerUpId?`<div style="margin-top:10px"><strong>${esc(tournamentPlayerName(k.runnerUpId,t))}</strong> končí na <strong>2. místě</strong>.</div>`:''}`
@@ -23009,7 +23303,7 @@ $('createTournamentBtn').onclick=async()=>{
       let label=genericPlacementLabel(place);
       if(place<=4 && !k.thirdPlacePlayoff)label='3. místo';
 
-      showTournamentResultMessage(
+      notify(
         t.name+' • '+(tm.roundLabel||'SKO'),
         `<div><strong>${esc(tournamentPlayerName(tm.winnerId,t))}</strong> postupuje dál.</div>
          <div style="margin-top:10px"><strong>${esc(tournamentPlayerName(tm.loserId,t))}</strong> vypadává a má pořadí <strong>${esc(label)}</strong>.</div>`
@@ -23025,7 +23319,7 @@ $('createTournamentBtn').onclick=async()=>{
         d.thirdPlaceLoserId=tm.loserId;
         dkoUpdateCompletion(t);
         assignTournamentTables(t);
-        showTournamentResultMessage(
+        notify(
           t.name+' • ZÁPAS O 3. MÍSTO',
           dkoResultHtml(t,tm,tm.winnerId,tm.loserId,0,null)
         );
@@ -23047,7 +23341,7 @@ $('createTournamentBtn').onclick=async()=>{
         d.finalResetNeeded=false;
         dkoUpdateCompletion(t);
         forceFinalizeTournamentIfResolved(t,tm);
-        showTournamentResultMessage(
+        notify(
           t.name+' • GRAND FINAL',
           dkoResultHtml(t,tm,tm.winnerId,tm.loserId,loserLossesBefore,2)
         );
@@ -23059,7 +23353,7 @@ $('createTournamentBtn').onclick=async()=>{
       if(allScheduledFinished)dkoCreateWave(t);
       assignTournamentTables(t);
 
-      showTournamentResultMessage(
+      notify(
         t.name+' • '+(tm.roundLabel||'DKO'),
         dkoResultHtml(t,tm,tm.winnerId,tm.loserId,loserLossesBefore,eliminationPlace)
       );
@@ -23088,6 +23382,17 @@ $('createTournamentBtn').onclick=async()=>{
   };
 
   function replaceTournamentParticipantId(t,oldId,newId){
+    if(t.historicalStructure){
+      const remap=value=>{
+        if(value===oldId)return newId;
+        if(Array.isArray(value))return value.map(remap);
+        if(value&&typeof value==='object')return Object.fromEntries(Object.entries(value).map(([k,v])=>[k===oldId?newId:k,remap(v)]));
+        return value;
+      };
+      const h=t.historicalStructure;
+      for(const field of ['initial','results','playoffOrder','manualPlaces'])if(h[field])h[field]=remap(h[field]);
+      (h.audit??=[]).push({at:new Date().toISOString(),byUid:cloudUid||'',action:'participant-link',oldId,newId});
+    }
     t.playerIds=(t.playerIds||[]).map(id=>id===oldId?newId:id);
 
     if(tournamentHasGroups(t)){
@@ -26648,6 +26953,7 @@ function renderHistory(){
   
   function baseTournamentPlacementRecords(t){
     if(!t || t.status!=='complete') return [];
+    if(t.historicalStructure?.manualPlaces)return t.historicalStructure.manualPlaces.map(r=>({playerId:r.playerId,value:r.place,label:r.place+'. místo'}));
     const records=[];
 
     const addGroupEliminations=()=>{
@@ -26747,7 +27053,7 @@ function renderHistory(){
     if(!t?.id)return null;
 
     const candidates=(data.tournamentSeries||[])
-      .filter(s=>(s.tournamentIds||[]).includes(t.id))
+      .filter(s=>historicalSeriesTournamentIds(s).includes(t.id))
       .filter(s=>seriesPlacementTieBreakMode(s)!=='legacy');
     if(candidates[0])return candidates[0];
 
