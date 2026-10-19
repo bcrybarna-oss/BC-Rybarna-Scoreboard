@@ -522,7 +522,7 @@
     }
   
 
-/* === v4.51.79 RC • mobilní herní obrazovka portrait / landscape === */
+/* === v4.51.80 RC • mobilní herní obrazovka portrait / landscape === */
 @media (max-width:700px) and (orientation:portrait){
   #screen-match{margin-top:8px}
   #screen-match>.card{padding:10px;border-radius:14px}
@@ -2513,7 +2513,7 @@ html[data-theme="light"] #leagueSchedule .history-item .muted{
           <span class="by">by</span>
           <span class="club">BC Rybárna</span>
         </div>
-        <small class="modern-brand-version">v4.51.79 RC</small>
+        <small class="modern-brand-version">v4.51.80 RC</small>
       </div>
     </div>
     <div class="nav">
@@ -3121,7 +3121,7 @@ html[data-theme="light"] #leagueSchedule .history-item .muted{
         </div>
         <div class="subpanel" style="min-width:210px;text-align:center;margin:0">
           <div class="muted" style="font-size:10px;font-weight:950;letter-spacing:1px">AKTUÁLNÍ VERZE</div>
-          <div style="font-size:22px;font-weight:950;color:var(--gold2);margin-top:5px">v4.51.79 RC</div>
+          <div style="font-size:22px;font-weight:950;color:var(--gold2);margin-top:5px">v4.51.80 RC</div>
         </div>
       </div>
     </div>
@@ -3616,7 +3616,7 @@ html[data-theme="light"] #leagueSchedule .history-item .muted{
           <li>Pořadí série zahrnuje všechny hráče z turnajů. Neregistrovaný hráč nově dostane předpřipravený profil bez vlastníka, takže se jeho zápasy, ELO, turnaje a série ukládají pod stejným profilem. Po registraci může požádat o převzetí profilu a uvidí výsledky zpětně. Starší turnajoví hosté se při administrátorském načtení převádějí na tyto profily.</li>
           <li>Historické turnaje v sérii lze zadat bezpečně přes formulář. Varianta <strong>pouze pořadí</strong> přidá body do série bez falešných W/L; varianta <strong>kompletní turnaj</strong> může evidovat jednotlivé odehrané zápasy.</li>
           <li>U vlastního bodování série se vždy používá přesné individuální pořadí uložené u hráče. I když turnaj zobrazuje skupinu „5.–8. místo“, série rozliší 5., 6., 7. a 8. místo a přidělí body přesně podle vlastní bodovací tabulky.</li>
-          <li><strong>ULOŽIT PDF</strong> vytvoří report konkrétního zápasu.</li>
+          <li><strong>EXPORT PDF</strong> vytvoří report konkrétního zápasu.</li>
           <li>U nedohraného zápasu lze později pokračovat, pokud má uživatel potřebné oprávnění.</li>
           <li>Smazání zápasu odstraní jeho vliv z dlouhodobých statistik a ELO.</li>
           <li><strong>SMAZAT TURNAJ</strong> odstraní turnajovou strukturu, ale může ponechat historické zápasy.</li>
@@ -4804,7 +4804,7 @@ html[data-theme="light"] #leagueSchedule .history-item .muted{
     <div class="card">
       <div style="display:flex;justify-content:space-between;gap:12px;align-items:flex-start;flex-wrap:wrap">
         <h1 class="section-title">Statistický přehled hráčů</h1>
-        <button id="statsPdfBtn" class="btn primary">ULOŽIT PDF</button>
+        <button id="statsPdfBtn" class="btn primary">EXPORT PDF</button>
       </div>
       <div id="statsView"></div>
 
@@ -4852,7 +4852,7 @@ html[data-theme="light"] #leagueSchedule .history-item .muted{
         </div>
         <div style="display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end">
           <button id="myStatsDevelopmentBtn" class="btn hidden">VÝVOJ HRÁČE</button>
-          <button id="myStatsPdfBtn" class="btn primary">ULOŽIT PDF</button>
+          <button id="myStatsPdfBtn" class="btn primary">EXPORT PDF</button>
         </div>
       </div>
       <div id="myStatsView" style="margin-top:14px"></div>
@@ -4932,7 +4932,7 @@ html[data-theme="light"] #leagueSchedule .history-item .muted{
     <div class="modal-actions" style="display:flex;gap:8px;flex-wrap:wrap;margin-top:18px">
       <button id="matchStatsUndo" class="btn">↶ VRÁTIT POSLEDNÍ AKCI</button>
       <button id="matchStatsShare" class="btn">SDÍLET TEXT</button>
-      <button id="matchStatsPdf" class="btn primary">ULOŽIT PDF</button>
+      <button id="matchStatsPdf" class="btn primary">EXPORT PDF</button>
       <button id="matchStatsClose" class="btn primary big">ULOŽIT A ZAVŘÍT</button>
     </div>
   </div>
@@ -5468,6 +5468,21 @@ html[data-theme="light"] #leagueSchedule .history-item .muted{
     </div>
   </div>
 
+<style>#pdfExportModal button:disabled{opacity:0.45;cursor:not-allowed}</style>
+<div id="pdfExportModal" class="modal" role="dialog" aria-modal="true" aria-labelledby="pdfExportTitle" style="z-index:16000">
+  <div class="modal-card" style="max-width:540px">
+    <h2 id="pdfExportTitle">EXPORT PDF</h2>
+    <div class="muted">Název souboru</div>
+    <div id="pdfExportFilename" style="margin:8px 0 16px;font-weight:800;overflow-wrap:anywhere"></div>
+    <p id="pdfExportSupport" class="muted"></p>
+    <p id="pdfExportStatus" class="muted" role="status" aria-live="polite"></p>
+    <div class="modal-actions" style="display:flex;gap:8px;flex-wrap:wrap;margin-top:16px">
+      <button id="pdfExportShare" class="btn primary" type="button">Sdílet PDF</button>
+      <button id="pdfExportSave" class="btn primary" type="button">Uložit do zařízení</button>
+      <button id="pdfExportClose" class="btn" type="button">Zavřít</button>
+    </div>
+  </div>
+</div>
 <div id="pdfReportHost" style="position:fixed;left:-10000px;top:0;width:794px;z-index:-1"></div>
 
   <div id="safetyResultModal" class="modal">
@@ -5803,7 +5818,7 @@ html[data-theme="light"] #leagueSchedule .history-item .muted{
       </div>
 
       <div id="groupPlayoffSeedStatus" class="muted" style="margin-top:12px;min-height:20px"></div>
-      <div class="muted" style="margin-top:4px;font-size:11px">RC v4.51.79</div>
+      <div class="muted" style="margin-top:4px;font-size:11px">RC v4.51.80</div>
       <div class="modal-actions">
         <button id="groupPlayoffSeedApplyBtn" class="btn primary big" type="button">NASADIT DO PLAY-OFF</button>
         <button id="groupPlayoffSeedCancelBtn" class="btn">ZRUŠIT</button>
@@ -6987,7 +7002,7 @@ html[data-theme="light"] #leagueSchedule .history-item .muted{
     const btn=$('submitReportBtn');if(btn)btn.disabled=true;
     try{
       const id=uid(),p=currentUserPlayerId?data.players?.[currentUserPlayerId]:null;
-      const report={id,createdByUid:cloudUid,createdByPlayerId:currentUserPlayerId||'',createdByName:p?playerSelectionLabel(p):(cloudUserEmail||'Uživatel'),email:cloudUserEmail||'',type,area,description,appVersion:'v4.51.79 RC',createdAt:new Date().toISOString(),updatedAt:new Date().toISOString(),status:'new',adminNote:''};
+      const report={id,createdByUid:cloudUid,createdByPlayerId:currentUserPlayerId||'',createdByName:p?playerSelectionLabel(p):(cloudUserEmail||'Uživatel'),email:cloudUserEmail||'',type,area,description,appVersion:'v4.51.80 RC',createdAt:new Date().toISOString(),updatedAt:new Date().toISOString(),status:'new',adminNote:''};
       await reportRequest(id,'PUT',report);
       try{
         await writeReportUserMirror(report);
@@ -24054,7 +24069,7 @@ function openMatchStatsCard(m,isCurrent=false){
   };
 
   $('matchStatsPdf').onclick=()=>{
-    if(statsCardMatch) generateAndSaveMatchPdf(statsCardMatch);
+    if(statsCardMatch) generateMatchPdfExport(statsCardMatch);
   };
 
   $('matchStatsUndo').onclick=()=>{
@@ -24445,7 +24460,84 @@ function openMatchStatsCard(m,isCurrent=false){
     }
   }
 
-  async function generateAndSaveMatchPdf(m){
+  let pdfExportData=null;
+  let pdfExportReturnFocus=null;
+
+  function pdfFileSharingSupported(file){
+    try{
+      return !!(file && navigator.share && navigator.canShare && navigator.canShare({files:[file]}));
+    }catch(e){return false;}
+  }
+
+  function updatePdfExportActions(){
+    $('pdfExportShare').disabled=!pdfExportData || pdfExportData.busy || !pdfExportData.canShare;
+    $('pdfExportSave').disabled=!pdfExportData || pdfExportData.busy;
+  }
+
+  function openPdfExportDialog(blob,filename){
+    const file=typeof File==='function'?new File([blob],filename,{type:'application/pdf'}):null;
+    if(!$('pdfExportModal').classList.contains('show'))pdfExportReturnFocus=document.activeElement;
+    pdfExportData={blob,filename,file,canShare:pdfFileSharingSupported(file),busy:false};
+    $('pdfExportFilename').textContent=filename;
+    $('pdfExportSupport').textContent=pdfExportData.canShare
+      ? 'Vyber sdílení souboru nebo jeho uložení do zařízení.'
+      : 'Tento prohlížeč nepodporuje sdílení PDF souborů. PDF můžeš uložit do zařízení.';
+    $('pdfExportStatus').textContent='';
+    updatePdfExportActions();
+    $('pdfExportModal').classList.add('show');
+    (pdfExportData.canShare?$('pdfExportShare'):$('pdfExportSave')).focus();
+  }
+
+  function closePdfExportDialog(){
+    $('pdfExportModal').classList.remove('show');
+    pdfExportData=null;
+    if(pdfExportReturnFocus?.isConnected)pdfExportReturnFocus.focus();
+    pdfExportReturnFocus=null;
+  }
+
+  async function shareExportedPdf(){
+    const entry=pdfExportData;
+    if(!entry || entry.busy || !entry.canShare)return;
+    entry.busy=true;updatePdfExportActions();
+    try{
+      // The file is already prepared: invoke sharing directly from the user's click.
+      await navigator.share({title:'Poolčítadlo - PDF report',files:[entry.file]});
+      if(pdfExportData===entry)$('pdfExportStatus').textContent='Sdílení dokončeno. Můžeš PDF také uložit do zařízení.';
+    }catch(e){
+      if(pdfExportData===entry)$('pdfExportStatus').textContent=e?.name==='AbortError'
+        ? 'Sdílení bylo zrušeno. Můžeš ho opakovat nebo PDF uložit do zařízení.'
+        : 'Sdílení se nepodařilo. Zkus ho znovu nebo PDF ulož do zařízení.';
+    }finally{
+      entry.busy=false;
+      if(pdfExportData===entry)updatePdfExportActions();
+    }
+  }
+
+  function saveExportedPdf(){
+    const entry=pdfExportData;
+    if(!entry || entry.busy)return;
+    try{
+      savePdfBlob(entry.blob,entry.filename);
+      $('pdfExportStatus').textContent='Stažení PDF zahájeno. Okno můžeš ponechat otevřené pro další export.';
+    }catch(e){
+      $('pdfExportStatus').textContent='Stažení se nepodařilo zahájit. Zkus uložení znovu.';
+    }
+  }
+
+  $('pdfExportShare').addEventListener('click',shareExportedPdf);
+  $('pdfExportSave').addEventListener('click',saveExportedPdf);
+  $('pdfExportClose').addEventListener('click',closePdfExportDialog);
+  $('pdfExportModal').addEventListener('keydown',e=>{
+    if(e.key==='Escape'){e.preventDefault();e.stopPropagation();closePdfExportDialog();}
+    if(e.key==='Tab'){
+      const buttons=[$('pdfExportShare'),$('pdfExportSave'),$('pdfExportClose')].filter(b=>!b.disabled);
+      const first=buttons[0],last=buttons[buttons.length-1];
+      if(e.shiftKey && document.activeElement===first){e.preventDefault();last.focus();}
+      else if(!e.shiftKey && document.activeElement===last){e.preventDefault();first.focus();}
+    }
+  });
+
+  async function generateMatchPdfExport(m){
     if(!m) return;
     const btn=$('matchStatsPdf');
     const oldLabel=btn?btn.textContent:'';
@@ -24457,13 +24549,13 @@ function openMatchStatsCard(m,isCurrent=false){
       const p1=pdfSafeName(m.playerNames?.[0]||'hrac');
       const date=new Date(m.startedAt||Date.now()).toISOString().slice(0,10);
       const filename=`BC_Rybarna_${date}_${discipline}_${p1}.pdf`;
-      savePdfBlob(blob,filename);
+      openPdfExportDialog(blob,filename);
     }catch(e){
       if(e && e.name==='AbortError') return;
       console.warn('PDF report:',e);
       toast(String(e && e.message ? e.message : 'PDF se nepodařilo vytvořit.'));
     }finally{
-      if(btn){btn.disabled=false;btn.textContent=oldLabel||'ULOŽIT PDF';}
+      if(btn){btn.disabled=false;btn.textContent=oldLabel||'EXPORT PDF';}
     }
   }
 
@@ -24572,7 +24664,7 @@ function openMatchStatsCard(m,isCurrent=false){
   async function generateStatisticsSectionPdf(kind){
     const isClub=kind==='stats';
     const btn=$(isClub?'statsPdfBtn':'myStatsPdfBtn');
-    const oldLabel=btn?.textContent||'ULOŽIT PDF';
+    const oldLabel=btn?.textContent||'EXPORT PDF';
     if(btn){btn.disabled=true;btn.textContent='GENERUJI PDF…';}
     try{
       if(!isClub && (!cloudAuthenticated || !currentUserPlayerId)){
@@ -24585,7 +24677,7 @@ function openMatchStatsCard(m,isCurrent=false){
       const filename=isClub
         ? 'Poolcitadlo_statistiky_'+date+'.pdf'
         : 'Poolcitadlo_moje_statistiky_'+pdfSafeName(playerDisplayName(player||{})||'hrac')+'_'+date+'.pdf';
-      savePdfBlob(blob,filename);
+      openPdfExportDialog(blob,filename);
     }catch(e){
       if(e?.name==='AbortError')return;
       console.warn('Statistics PDF report:',e);
@@ -24601,7 +24693,7 @@ function openMatchStatsCard(m,isCurrent=false){
   window.generateSavedMatchPdf=function(id){
     const m=data.matches.find(x=>x.id===id);
     if(!m){toast('Zápas nebyl nalezen.');return;}
-    generateAndSaveMatchPdf(m);
+    generateMatchPdfExport(m);
   };
 
   function statVal(m,i,key){
@@ -24983,7 +25075,7 @@ function renderHistory(){
             : ''}
           <button class="btn primary" onclick="showSavedMatchStats('${m.id}')">STATISTIKY ZÁPASU</button>
           <button class="btn" onclick="shareSavedMatch('${m.id}')">SDÍLET VÝSLEDEK</button>
-          <button class="btn" onclick="generateSavedMatchPdf('${m.id}')">ULOŽIT PDF</button>
+          <button class="btn" onclick="generateSavedMatchPdf('${m.id}')">EXPORT PDF</button>
           ${currentUserIsSystemAdmin()?`<button class="btn" onclick="openMatchMetadataAdmin('${m.id}')">UPRAVIT INFO</button>`:''}
           ${currentUserIsSystemAdmin() && !m.tournamentLink && m.confirmationRequired && m.adminConfirmation?.confirmed!==true && (m.status==='pending_confirmation'||m.status==='needs_correction')
             ? `<button class="btn primary" onclick="adminConfirmMatchResult('${m.id}')">POTVRDIT JAKO ADMIN</button>`

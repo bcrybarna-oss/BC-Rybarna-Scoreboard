@@ -1,5 +1,18 @@
 # Revize aplikace Poolčítadlo
 
+## Dominik – provedené změny v revizi ve verzi v4.51.80 RC
+
+Datum: 19. 10. 2026. Výchozí main: `e70d9931ed6b836a8a5edba497190746b967efa6`. Práce přímo na main na výslovné zadání Dominika.
+
+- **EXPORT PDF:** jednotné tlačítko v historii, detailu zápasu, Statistikách a Moje statistiky otevírá vlastní exportní dialog s názvem souboru a akcemi **Sdílet PDF**, **Uložit do zařízení** a **Zavřít**.
+- **Dvě nezávislé možnosti:** systémové sdílení dostává připravený PDF soubor; uložení používá samostatné stažení bez sdílení. Pro jedno otevření dialogu se PDF připraví jednou, obě akce včetně opakování používají stejné bajty a stejný původní název. Generátory obsahu PDF zůstávají beze změny.
+- **Opakované použití a zrušení:** dialog zůstává otevřený po sdílení, zrušení či chybě systémového sdílení a po zahájení/zrušení stažení. Při nepodporovaném sdílení je uvedeno vysvětlení a uložení funguje dál. Během čekání na sdílení se brání duplicitním akcím; Zavřít a Escape okno zavřou a uvolní jeho data.
+- **Dokumentace:** aktualizované PROJECT_STATUS.md a PROJECT_CONTEXT.md popisují nové chování a ověřené/neověřené scénáře; historie REVIZE.md a pravidla AGENTS.md zůstávají zachované.
+
+Ověření: smoke 12/12 a PDF jednotkové testy 8/8 prošly. Izolovaný Chrome se skutečnými knihovnami ověřil všechna čtyři místa exportu, skutečné downloady, původní názvy a shodné bajty mezi sdíleným File a staženým blobem, opakované použití identického PDF, simulované sdílení úspěch/zrušení/chyba včetně přímé uživatelské aktivace, nepodporované sdílení, Zavřít a Escape. Řízené zrušení Chrome downloadu přes CDP nechalo okno otevřené a další pokus stáhl totožné PDF. Generátory obsahu byly porovnány s výchozím main a zůstaly beze změny. Celá Node sada 68/70 se dvěma dřívějšími chybami preview, 0 nových selhání, browser 0 chyb JavaScriptu. Veškerá síť testu zachycena, Firebase blokováno. Stav: otestováno, připraveno k pushi a ověření nasazení.
+
+Nedořešené/neověřené: skutečné systémové sdílení a fyzické Android/iOS prohlížeče, nativní Capacitor aplikace a ruční zrušení nativního ukládacího dialogu vyžadují ověření na zařízení. Automatické testy mohou modelovat výsledek Web Share API a zrušení browser downloadu; neprokazují funkčnost cílových systémových aplikací. Dvě dřívější chyby preview testů a souběh konfigurace Federal Cupu zůstávají. Produkční Firebase data se nemění.
+
 ## Dominik – provedené změny v revizi ve verzi v4.51.79 RC
 
 Datum: 19. 10. 2026. Výchozí main: `6d50db0655f193fa672ebd6277896336ee4d3fc8`.

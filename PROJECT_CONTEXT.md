@@ -88,7 +88,7 @@ Sekce Moje statistiky má filtry CELKEM / 8-ball / 9-ball / 10-ball / 14.1 a tak
 
 PDF používá `html2canvas` a `jsPDF`.
 
-Exportní tlačítka ULOŽIT PDF v historii, detailu zápasu, Statistikách a Moje statistiky mají stahovat vytvořený PDF soubor přes společný `savePdfBlob`. Systémové sdílení nesmí nahrazovat uložení. Textové sdílení jiných částí aplikace je samostatná funkce. Ověření konkrétních mobilních prohlížečů a nativních aplikací eviduje PROJECT_STATUS.md.
+Exportní tlačítka EXPORT PDF v historii, detailu zápasu, Statistikách a Moje statistiky otevírají společný `openPdfExportDialog`. PDF se pro otevřené okno připraví jednou. Sdílet PDF předává připravený File do systémového sdílení přímo z kliknutí uživatele; Uložit do zařízení samostatně stahuje stejný blob přes `savePdfBlob`. Sdílení nesmí nahradit uložení. Okno zůstává otevřené po obou akcích i jejich zrušení/chybě; zavírá se tlačítkem Zavřít nebo Escape. Pokud není dostupné sdílení souborů, dialog je vysvětlí a ponechá uložení. Textové sdílení jiných částí aplikace je samostatné. Ověření skutečných systémových dialogů, mobilních prohlížečů a nativních aplikací eviduje PROJECT_STATUS.md.
 
 ## Ghost
 
