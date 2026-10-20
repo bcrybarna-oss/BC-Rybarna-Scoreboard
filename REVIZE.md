@@ -2,7 +2,7 @@
 
 ## Dominik – provedené změny v revizi ve verzi v4.51.81 RC
 
-Datum: 19. 10. 2026. Výchozí main/produkce: `105c126401fced4ba6e672f150770a3da97bb398` (v4.51.80 RC). Práce přímo na main; žádná vývojová větev ani ruční izolovaný náhled, PR #6 nepoužito.
+Datum: 19.–20. 10. 2026. Výchozí main/produkce: `105c126401fced4ba6e672f150770a3da97bb398` (v4.51.80 RC). Práce přímo na main; žádná vývojová větev ani ruční izolovaný náhled, PR #6 nepoužito.
 
 - **Historické turnaje do série:** v kompletním zadání přibyla příprava struktury pro skupiny, SKO, DKO a skupiny → SKO/DKO, s datem, hráči/hosty a ručním nasazením bez losování. Používá stávající generátory a pořadí skupinových zápasů. Kontroluje neúplné a duplicitní nasazení; původní jednotlivé zápasy, textový import i ruční pořadí zůstávají.
 - **Výběr profilů:** shodná pravidla aktivních a skrytých profilů i české řazení jako ve stávajícím historickém zadávání; ověřeno skutečným formulářem.
@@ -13,7 +13,9 @@ Datum: 19. 10. 2026. Výchozí main/produkce: `105c126401fced4ba6e672f150770a3da
 - **Závěrečná kontrola:** přepočet obnovuje pouze sportovní stav a zachovává současná administrativní metadata včetně názvu a pořadatelů změněných od původního nasazení. Test samostatně ověřil i shodu se starým automatickým historickým importem u odpovídajícího SKO s děleným místem semifinalistů. Starý textový import má některá další pomocná kritéria oproti hlavnímu turnajovému výpočtu; tato revize oba existující výpočty nemění ani netvrdí jejich univerzální shodu. Rozdíl je popsaný v docs/historical-structured-entry.md.
 - **Pravidla Lounské série:** zachovány funkce seriesTournamentPlacementRecords, seriesRefineTournamentPlacements, seriesPointsForPlacement a seriesStandings; nová bodovací logika nevznikla. Skutečná kritéria, ruční alternativa a podrobnosti jsou v docs/historical-structured-entry.md. Aktualizované PROJECT_STATUS.md a PROJECT_CONTEXT.md.
 
-Ověření: nový izolovaný browser test současného main prošel pro všechny uvedené formáty, ruční UI, opravy, navazující výsledky, reload, shodu umístění/bodů, oprávnění, konflikt/403/412, opakování tvorby po ztraceném potvrzení a nedotčená data. Mockuje celou síť, 0 page errors, žádný zápis do matches/LIVE. Federal Cup browser test prošel. Smoke 12/12; celá Node sada 68/70 se dvěma stejnými dřívějšími chybami preview. Stav: **otestováno, připraveno k pushi a ověření nasazení**.
+Ověření: nový izolovaný browser test současného main prošel pro všechny uvedené formáty, ruční UI, opravy, navazující výsledky, reload, shodu umístění/bodů, oprávnění, konflikt/403/412, opakování tvorby po ztraceném potvrzení a nedotčená data. Mockuje celou síť, 0 page errors, žádný zápis do matches/LIVE. Federal Cup browser test prošel. Smoke 12/12; celá Node sada 68/70 se dvěma stejnými dřívějšími chybami preview.
+
+Nasazení: kódové commity c38bf2a, 999dd2e a `997a2968280170b29035b234a2f1df620f03a199` byly pushnuté přímo do main po opakované kontrole vzdáleného stavu, bez cizích nových commitů a bez force push. Pages poslední kód úspěšně nasadil. Dne 20. 10. 2026 v 05:33 UTC ověřeno HTTP 200, přesná shoda celého produkčního HTML s commitem 997a296, v4.51.81 RC a čistý Chrome bez JavaScriptových chyb, Firebase požadavků či vzdálených zápisů. Tento následný dokumentační záznam nemění HTML ani verzi aplikace.
 
 Neověřeno: skutečné Firebase Auth/Rules, fyzické mobilní platformy/nativní aplikace, reálný souběh zařízení a velká startovní pole. Nová funkce podporuje struktury původních generátorů, nikoli libovolný cizí pavouk. Produkční commit je zaznamenán v místní záloze `production-backups/2026-10-19-before-v4.51.81` včetně archivu a postupu návratu; žádná databázová migrace se neprovádí.
 

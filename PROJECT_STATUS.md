@@ -1,11 +1,12 @@
 # Aktuální stav Poolčítadla
 
-Aktualizace: 19. 10. 2026. Zadavatel aktuální revize: **Dominik**.
+Aktualizace: 20. 10. 2026. Zadavatel aktuální revize: **Dominik**.
 
 ## Verze a nasazení
 
-- Připravovaná verze: **v4.51.81 RC**, přímo na větvi `main` podle zadání Dominika. Stav: **otestováno, připraveno k pushi; dosud nenasazeno**.
-- Poslední ověřený produkční kód: commit **`8cf279e306ecfd794791dc9da39127a62a0ebbbf`**, v4.51.80 RC. GitHub Pages [nasazení](https://github.com/bcrybarna-oss/BC-Rybarna-Scoreboard/actions/runs/39315482694) úspěšně dokončeno. Dne 19. 10. 2026 ve 20:00 UTC ověřeno HTTP 200, bajtová shoda celého HTML, hlavička v4.51.80 RC a čistý desktop Chrome bez JavaScriptových chyb, bez přístupu k Firebase a bez vzdálených zápisů. SHA256 HTML: `bbfa07461c21a060eb23e3a9c42c131f18ff3f9f1e4f1687c3844661c4535463`.
+- Aktuální verze: **v4.51.81 RC**, přímo na větvi `main` podle zadání Dominika. Stav: **nasazeno a ověřeno**.
+- Poslední ověřený produkční kód: **`997a2968280170b29035b234a2f1df620f03a199`**, v4.51.81 RC (základ c38bf2a, doplnění ochrany metadat 999dd2e). GitHub Pages [nasazení](https://github.com/bcrybarna-oss/BC-Rybarna-Scoreboard/actions/runs/39374664789) úspěšně dokončeno. Dne 20. 10. 2026 v 05:33 UTC ověřeno HTTP 200, bajtová shoda celého veřejného HTML, správná verze a čistý Chrome bez JavaScriptových chyb, bez Firebase požadavků a vzdálených zápisů. SHA256 HTML: `07892c7636a0d1b8a8d7e809f8754540e02c796a8edafdaedfac0e701a73bb59`.
+- Původní produkční commit před touto revizí: `105c126401fced4ba6e672f150770a3da97bb398` (v4.51.80 RC). Archiv kódu, původní veřejné HTML a postup návratu jsou v místní složce `production-backups/2026-10-19-before-v4.51.81` vedle checkoutu; žádná databázová migrace.
 - Stav předchozí v4.51.79 RC: **nasazeno a ověřeno** dne 19. 10. 2026 v 19:45 UTC. HTTP 200, v čistém desktop Chrome správná hlavička v4.51.79 RC, 0 chyb JavaScriptu a 0 vzdálených zápisů; Firebase bylo zablokované. SHA256 HTML: `df5eb09c2c00c4955aa225f8458a35ea9e48d393a8cfe3e7c61bf5812e7611ac`.
 - Následný dokumentační záznam tohoto ověření nemění produkční HTML ani verzi. Pro případné novější commity vždy zkontrolovat skutečný běh Pages na GitHubu; nepovažovat starší ověření za důkaz novějšího kódu.
 - Produkce: https://bcrybarna-oss.github.io/BC-Rybarna-Scoreboard/
@@ -13,7 +14,7 @@ Aktualizace: 19. 10. 2026. Zadavatel aktuální revize: **Dominik**.
 
 ## Dokončené a rozpracované úpravy
 
-- Připravené a otestované pro v4.51.81 RC: historické turnaje do sérií se strukturou, ručním nasazením a zadáním skóre, automatickým postupem/dokončením, auditem a potvrzením dopadu zpětných oprav, obnovou po reloadu, bez duplicitních bodů a bez smyšlených statistik. Původní historické zadávání a pravidla Lounské série zůstávají. Více čistých skupin vyžaduje ruční konečné pořadí podle výslovného potvrzení Dominika. Podrobně docs/historical-structured-entry.md.
+- Dokončené a nasazené ve v4.51.81 RC: historické turnaje do sérií se strukturou, ručním nasazením a zadáním skóre, automatickým postupem/dokončením, auditem a potvrzením dopadu zpětných oprav, obnovou po reloadu, bez duplicitních bodů a bez smyšlených statistik. Původní historické zadávání a pravidla Lounské série zůstávají. Více čistých skupin vyžaduje ruční konečné pořadí podle výslovného potvrzení Dominika. Podrobně docs/historical-structured-entry.md.
 
 - Dokončené a nasazené ve v4.51.80 RC: EXPORT PDF otevírá společný dialog se jménem souboru, samostatným sdílením souboru, uložením a zavřením. Dialog drží jedno PDF pro obě i opakované akce a zůstává otevřený po jejich dokončení/zrušení/chybě. Nepodporované sdílení je vysvětlené a neblokuje stažení. Pravidla spolupráce zůstávají závazná.
 
@@ -24,7 +25,7 @@ Aktualizace: 19. 10. 2026. Zadavatel aktuální revize: **Dominik**.
 
 ## Ověření
 
-- V4.51.81 RC: `npm run test:historical` (Chrome/Playwright, veškerá síť zachycena, RTDB včetně ETag a serializace mockovaná) prošel: skutečné formuláře a ruční nasazení, všechny nové formáty, stejné i změněné vítěze, navazující výsledky/odmítnutí potvrzení, dokončení a zpětná neúplnost, reload přípravy i uložených výsledků, ruční postupující/penalty/konečné pořadí, shoda původního umístění a bodů Lounské série, oprávnění, 403/412/stará data, opakování tvorby po ztraceném potvrzení a hosté/profil. Žádné fake matches/statistiky/LIVE ani změny starých/nesouvisejících turnajů; 0 page errors. Federal Cup browser prošel včetně B&R a ostatních startů režimů. Smoke 12/12, celá Node sada 68/70 (dvě původní chyby preview). Ověření se týká aktuálního index.html, nikoli /test/ snapshotu. Nasazení zatím neověřeno.
+- V4.51.81 RC: `npm run test:historical` (Chrome/Playwright, veškerá síť zachycena, RTDB včetně ETag a serializace mockovaná) prošel: skutečné formuláře a ruční nasazení, všechny nové formáty, stejné i změněné vítěze, navazující výsledky/odmítnutí potvrzení, dokončení a zpětná neúplnost, reload přípravy i uložených výsledků, ruční postupující/penalty/konečné pořadí, shoda původního umístění a bodů Lounské série, oprávnění, 403/412/stará data, opakování tvorby po ztraceném potvrzení a hosté/profil. Ověřeno také zachování změněných administrativních metadat/pořadatelů, neaktivní a skryté profily a nezávislá parita původního automatického historického SKO včetně děleného místa. Žádné fake matches/statistiky/LIVE ani změny starých/nesouvisejících turnajů; 0 page errors. Federal Cup browser prošel včetně B&R a ostatních startů režimů. Smoke 12/12, celá Node sada 68/70 (dvě původní chyby preview). Ověření se týká aktuálního index.html, nikoli /test/ snapshotu. Nasazení ověřeno výše; skutečné backend Rules a mobilní platformy se za ověřené nevydávají.
 
 - V4.51.80 RC: smoke 12/12 a PDF jednotkové testy 8/8 prošly. Celá Node sada 68/70 lokálně i v GitHub CI, pouze dvě známé chyby preview. Izolovaný Chrome se skutečnými PDF knihovnami prošel pro všechna 4 exportní místa: skutečné downloady, simulované sdílení úspěch/zrušení/chyba, shoda bajtů sdíleného souboru a downloadu i původního názvu, přímá aktivace sdílení kliknutím, opakované použití, nepodporované sdílení a zavření/Escape. Řízeně zrušený browser download nechal export otevřený; opakování stáhlo totožná data. Browser 0 page errors a veškerá síť zachycena. Generátory obsahu beze změny. Nasazení ověřeno výše uvedeným read-only postupem; skutečné nativní sdílení zůstává neověřené.
 
