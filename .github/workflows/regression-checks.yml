@@ -9,6 +9,28 @@ permissions:
   contents: read
 
 jobs:
+  release-policy:
+    name: Release version and revision
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Check release policy tests
+        run: node --test tests/release-policy.test.cjs
+      - name: Compare release with current remote main
+        if: github.event_name == 'pull_request'
+        run: |
+          git fetch origin main
+          node scripts/check-release.cjs --base origin/main
+      - name: Check published release against previous main
+        if: github.event_name == 'push'
+        env:
+          RELEASE_BASE: ${{ github.event.before }}
+        run: node scripts/check-release.cjs --base "$RELEASE_BASE"
   smoke-tests:
     name: Node smoke tests
     runs-on: ubuntu-latest

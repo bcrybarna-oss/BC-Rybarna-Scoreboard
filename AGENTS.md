@@ -17,7 +17,28 @@ Tato pravidla platí pro každou AI pracující v tomto repozitáři.
 - Udržuj malé cílené změny. Produkční Firebase nepoužívej pro testovací zápisy, mazání ani testovací účty. Testuj současný změněný kód s mockem, emulátorem nebo samostatným testovacím projektem. Snapshoty `/test/` nejsou ověřením main.
 - `sources/`, pokud existuje, je pouze reference a nesmí se upravovat. Rozpracovanou modularizaci PR #6 nepřibírej bez zadání.
 
-## Povinně během dokončení a po nasazení
+## Povinné verzování každého vydání
+
+- Každá samostatně nasazovaná funkční nebo vizuální úprava aplikace MUSÍ zvýšit číslo verze. V současném schématu `v4.51.X RC` standardně zvyš poslední číslo o 1.
+- Novou verzi určuj podle aktuálního vzdáleného `main` po čerstvém fetchi, nikdy podle zastaralé lokální kopie. Před sloučením ověř, zda jiná změna mezitím nevydala stejnou verzi; při souběhu nejprve bezpečně aktualizuj větev, číslo a dokumentaci a zopakuj kontroly.
+- Více commitů tvořících jedno vydání nezvyšuje verzi opakovaně. Čistě dokumentační commit bez změny aplikace novou verzi nevyžaduje. Nikdy nenasazuj novou funkční ani vizuální změnu pod číslem předchozí verze.
+- Aktualizuj všechna aktivní zobrazení i použití verze: hlavičku, informace o aplikaci, dialog nasazení play-off a nově vytvářená hlášení chyb. Historické revize, uložená hlášení a snapshoty se zpětně nepřečíslovávají.
+
+## Povinná dokumentace každé nové verze
+
+- Každá nová verze MUSÍ mít vlastní záznam v `REVIZE.md`; celou předchozí historii zachovej. Záznam obsahuje zadavatele Dominik/Jaroslav, datum, číslo verze, konkrétní změny, výsledky testů, stav nasazení a známá omezení.
+- Pro automatickou kontrolu používej nadpis `## Dominik/Jaroslav – popis (v4.51.X RC)` a samostatná neprázdná pole `Zadavatel:`, `Datum:`, `Změny:`, `Testy:`, `Nasazení:`, `Omezení:`. Autor v poli Zadavatel musí být přesně Dominik nebo Jaroslav.
+- Aktualizuj `PROJECT_STATUS.md` na správnou aktuální verzi a skutečný stav vydání. Při dlouhodobé změně chování, architektury nebo procesu aktualizuj také `PROJECT_CONTEXT.md`.
+
+## Povinná kontrola před dokončením
+
+- Ověř konzistenci všech aktivních verzí, záznam nové verze v `REVIZE.md` a správnou aktuální verzi v `PROJECT_STATUS.md`. Pokud některý bod chybí, úkol není dokončený.
+- Před PR i sloučením spusť `node scripts/check-release.cjs --base origin/main` po čerstvém `git fetch origin main`. Tato kontrola porovnává celé vydání s aktuálním main, nikoli jednotlivé commity.
+- Samostatný CI job **Release version and revision** musí projít. Při změně produkčních souborů aplikace vyžaduje zvýšení posledního čísla přesně o 1, kontroluje aktivní verze a povinnou dokumentaci; dokumentační pokračování stejné verze povoluje. Po pushi porovnává vydání s předchozím main. Kontrolu nevypínej ani neobcházej kvůli neúspěchu.
+- Hlídají se `index.html`, `overlay.html`, `assets/`, kořenové ikony/loga, odkaz `download` a nativní zdroje/konfigurace. Při zavedení dalšího produkčního vstupu rozšiř `isApplicationPath` i testy. Snapshoty `/test/` a `/test-modular/` nejsou produkční vydání.
+- CI kontrola sama nenahrazuje GitHub branch protection. Bez nastavení povinného status checku technicky nebrání přímému pushi nebo ručnímu sloučení selhávajícího PR; všechny AI ji přesto musí povinně respektovat. Bezpečnostní nastavení repozitáře neměň bez zadání.
+
+## Evidence dokončení a ověřeného nasazení
 
 - Zachovej historii `REVIZE.md`; přidávej záznamy pod **Dominik** nebo **Jaroslav**, vždy s datem, verzí, konkrétními změnami, výsledkem ověření a nedořešenými body. Nezamlčuj změny dokumentace a pravidel spolupráce.
 - Aktualizuj `PROJECT_STATUS.md`: aktuální verze, commit nebo odkaz na vydání, stav nasazení, hotové a rozpracované úpravy, známé chyby/omezení a důležité testy. Rozlišuj **připraveno**, **otestováno**, **pushnuto / čeká na nasazení**, **nasazeno a ověřeno**. Úspěšný push sám není důkaz nasazení.

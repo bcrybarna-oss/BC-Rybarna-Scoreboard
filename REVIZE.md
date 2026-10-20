@@ -1,5 +1,14 @@
 # Revize aplikace Poolčítadlo
 
+## Dominik – náprava verzování po PR #17 (v4.51.82 RC)
+
+Zadavatel: Dominik
+Datum: 20. 10. 2026
+Změny: Povýšení z v4.51.81 RC podle aktuálního vzdáleného main `af43561ea6d36fd7adf07f4b3f464ccbb13653c9` na v4.51.82 RC ve všech aktivních místech: hlavička, informace o aplikaci, dialog nasazení play-off a nově vytvářená hlášení chyb. Další funkčnost aplikace beze změn. Původní PR #17 i celá historie zůstávají pod verzemi skutečného prvního nasazení. AGENTS.md nově povinně ukládá verzování, evidenci a kontroly všem AI. Přidána automatická kontrola scripts/check-release.cjs, její regresní testy a samostatný CI job Release version and revision. Aktualizovány PROJECT_STATUS.md a PROJECT_CONTEXT.md.
+Testy: Kontrola vydání proti čerstvému origin/main prošla; regresní testy pravidel 7/7, smoke 12/12. Celá Node sada 75/77, pouze dvě stejné známé chyby test-modular. Izolovaný Chrome ověřil hlavičku, informace o aplikaci, dialog nasazení play-off a skutečně vytvořený objekt nového hlášení chyby s v4.51.82 RC; 0 page errors a 0 vzdálených zápisů. Celé HTML po náhradě 4.51.82 zpět na 4.51.81 přesně odpovídá výchozímu main; celá starší historie REVIZE.md zachována.
+Nasazení: Připraveno ve větvi fix/release-version-policy; zatím nenasazeno.
+Omezení: Dvě známá selhání preview-match-reload-recovery v test-modular se posuzují odděleně. Fyzické mobilní platformy a skutečné Firebase Auth/Rules neověřeny. CI kontrola bez GitHub branch protection technicky neblokuje přímé zápisy; pravidla ji všem AI ukládají povinně respektovat. Nastavení ochrany větve se nemění.
+
 ## Dominik – sjednocení nabídky pořadí historických skupin (v4.51.81 RC)
 
 Datum: 20. 10. 2026. Výchozí main: `996fa40865828bdb29936816a610663a3a51e5c3`. Samostatná větev `fix/historical-group-criteria`, bez PR #6.
