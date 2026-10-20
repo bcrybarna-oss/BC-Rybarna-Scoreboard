@@ -4,6 +4,8 @@ Tento soubor je hlavní společný kontext pro vývoj aplikace Poolčítadlo. Sl
 
 Povinná pravidla spolupráce jsou v `AGENTS.md`. Před každou prací čti také `REVIZE.md` a `PROJECT_STATUS.md`; aktuální verze, ověřené nasazení, rozpracované body a výsledky testů se udržují v `PROJECT_STATUS.md`. Tento soubor popisuje dlouhodobý kontext a nenahrazuje aktuální stav.
 
+Každá samostatně nasazovaná funkční i vizuální změna povinně zvyšuje `v4.51.X RC` o 1 podle čerstvého vzdáleného main. Jedno vydání může mít více commitů; čistě dokumentační pokračování verzi nemění. Každé vydání má vlastní úplný záznam v REVIZE.md a aktuální PROJECT_STATUS.md. `node scripts/check-release.cjs --base origin/main` a samostatný CI job Release version and revision ověřují zvýšení verze při změně produkčních souborů, konzistenci všech čtyř aktivních míst a evidenci vydání. Podrobnosti a povinné kontroly jsou v AGENTS.md. Historické záznamy se nepřečíslovávají. CI není samo o sobě ochranou větve; nastavení GitHub branch protection se tímto nemění.
+
 ## Repozitář a produkce
 
 - GitHub: `bcrybarna-oss/BC-Rybarna-Scoreboard`

@@ -1,0 +1,13 @@
+'use strict';
+const test=require('node:test'),assert=require('node:assert/strict');
+const {validateRelease,isApplicationPath}=require('../scripts/check-release.cjs');
+const html=n=>`<small class="modern-brand-version">v4.51.${n} RC</small><div style="margin-top:5px">v4.51.${n} RC</div><div style="font-size:11px">RC v4.51.${n}</div>appVersion:'v4.51.${n} RC'`;
+const entry=n=>`## Dominik – vydání v4.51.${n} RC\nZadavatel: Dominik\nDatum: 20. 10. 2026\nZměny: Popis\nTesty: Prošly\nNasazení: Čeká\nOmezení: Mobily\n`;
+const fixture=(n=82)=>({html:html(n),revize:entry(n),status:`- Aktuální verze: **v4.51.${n} RC**`,baseHtml:html(81),changed:['index.html']});
+test('Release accepts one increment for an entire deployment, regardless of commit count',()=>assert.equal(validateRelease(fixture()),'v4.51.82 RC'));
+test('Release rejects unchanged, skipped and regressed application versions',()=>{for(const n of [80,81,83])assert.throws(()=>validateRelease(fixture(n)),/zvýšení/);});
+test('Release checks all active displays and new bug report version',()=>{const f=fixture();for(const old of ['modern-brand-version">v4.51.82','margin-top:5px">v4.51.82','font-size:11px">RC v4.51.82',"appVersion:'v4.51.82"]){assert.throws(()=>validateRelease({...f,html:f.html.replace(old,old.replace('82','81'))}),/konzistentní/);}});
+test('Release requires matching revision and current project status',()=>{assert.throws(()=>validateRelease({...fixture(),revize:entry(81)}),/nemá záznam/);assert.throws(()=>validateRelease({...fixture(),status:'Aktuální verze: **v4.51.81 RC**'}),/PROJECT_STATUS/);});
+test('Release requires author, date, changes, tests, deployment and limitations',()=>{for(const field of ['Zadavatel','Datum','Změny','Testy','Nasazení','Omezení'])assert.throws(()=>validateRelease({...fixture(),revize:entry(82).replace(new RegExp('^'+field+':.*$','m'),'')}),/chybí pole/);});
+test('Documentation-only followup keeps deployed version and old revision history',()=>{const f=fixture();assert.equal(validateRelease({...f,baseHtml:html(82),changed:['REVIZE.md','PROJECT_STATUS.md']}),'v4.51.82 RC');assert.equal(validateRelease({...f,revize:entry(82)+entry(81)}),'v4.51.82 RC');});
+test('Visual assets, overlay and native app changes require a release; snapshots do not',()=>{for(const p of ['index.html','overlay.html','assets/new.css','assets/photo.png','icon-1024.png','android/app/build.gradle','capacitor.config.json'])assert.ok(isApplicationPath(p),p);for(const p of ['REVIZE.md','tests/smoke.test.cjs','test/index.html','test-modular/assets/js/pool-core.js'])assert.equal(isApplicationPath(p),false,p);assert.throws(()=>validateRelease({...fixture(81),changed:['assets/new.css']}),/zvýšení/);});
