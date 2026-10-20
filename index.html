@@ -19829,8 +19829,8 @@ function renderTournamentDetail(){
         <div><label>Race to / cílové skóre</label><input id="hsRace" type="number" min="1" value="5"></div>
         <div><label>Počet skupin</label><input id="hsGroups" type="number" min="1" value="1"></div>
         <div><label>Postupujících z každé skupiny</label><input id="hsAdvance" type="number" min="1" value="2"></div>
-        <div><label>Pořadí ve skupině</label><select id="hsTie"><option value="points">Výhry → rozdíl skóre → vstřelené skóre</option><option value="head_to_head">Výhry → vzájemné zápasy</option></select></div>
-      </div><label><input id="hsPenalties" type="checkbox" style="width:auto"> Při nerozhodnuté shodě rozhodují penalty</label>
+        <div><label>Při shodě bodů rozhoduje</label><select id="hsTie">${$('tournamentGroupAdvanceTieRule').innerHTML}</select></div>
+      </div><label><input id="hsPenalties" type="checkbox" style="width:auto"> Pokud zvolené kritérium nerozhodne, rozhodují penalty</label>
       <label><input id="hsThird" type="checkbox" style="width:auto"> Zápas o 3. místo</label>
       <h3>Hráči</h3><div class="grid two">${Object.values(data.players||{}).filter(p=>p && p.active!==false && p.hiddenFromPlayers!==true).sort((a,b)=>playerSelectionLabel(a).localeCompare(playerSelectionLabel(b),'cs')).map(p=>`<label><input class="hsPlayer" type="checkbox" value="${esc(p.id)}" style="width:auto"> ${esc(playerSelectionLabel(p))}</label>`).join('')}</div>
       <label>Další hosté – jedno jméno na řádek (bez vytváření účtu)</label><textarea id="hsGuests" rows="4"></textarea>

@@ -14,6 +14,17 @@ Původní ruční přidávání jednotlivých historických zápasů, textový i
 
 ## Umístění a body Lounské série – skutečný stávající výpočet
 
+### Společná kritéria pořadí ve skupině
+
+Historická příprava používá stejnou nabídku, pořadí i default jako formulář nového běžného turnaje. Options se přebírají přímo z `tournamentGroupAdvanceTieRule`. Změna nabídky z 20. 10. 2026 nemění výpočet, uložená nastavení ani výsledky starších turnajů.
+
+1. **Body / skóre ve skupině** (`points`, výchozí): počet výher → celkový rozdíl skóre ve skupině → celkové nastřílené skóre. Úplnou shodu při vypnutých penaltách stabilně řadí původní nasazení.
+2. **Vzájemný zápas** (`head_to_head`): počet výher → počet výher v minitabulce vzájemných zápasů všech hráčů se stejným počtem výher. Pro dva jde o jejich přímý zápas; pro více hráčů o celou shodnou skupinu. Při dalším nerozhodnutí (např. kruh 1–1–1) nepřidává skóre ani rekurzivní přepočet podskupiny, zachovává nasazení, pokud nejsou zapnuté penalty.
+
+**Pokud zvolené kritérium nerozhodne, rozhodují penalty** – samostatná volba, výchozí vypnutá. Původní `unresolvedGroupPenaltyTie` požaduje rozhodnutí nevyřešených míst zasahujících do postupu/nasazení play-off; u skóre až po shodě rozdílu i nastříleného skóre, u vzájemných zápasů po shodě výher minitabulky. Počet nutných rozhodnutí závisí na počtu postupových míst. Zaznamenané pořadí penalt používá stejný `groupStandings` pro oba typy turnajů. Bez penalt je stabilní nasazení pouze původní technické rozlišení shody, nikoli nové sportovní kritérium.
+
+Izolovaný browser test porovnává nezávisle vytvořený běžný a historický turnaj se stejným ručním nasazením a skóre: obě volby, penalty zapnuté/vypnuté, dvojstranné a trojstranné shody, rozdíl skóre a nastřílené racky, nerozhodnuté penalty, pořadí, postup/pavouk, konečné umístění a body série. Ověřuje také obnovu rozpracované přípravy a částečně odehraného uloženého turnaje se zvoleným pravidlem po reloadu. Nejde o změnu odlišného starého textového importu popsaného níže.
+
 - `baseTournamentPlacementRecords` určuje vítěze, finalistu, případný zápas o třetí místo a vyřazené fáze. Jedna čistá skupina používá `roundRobinOverallStandings`. Více čistých skupin vrací prázdné absolutní pořadí, proto výše potvrzená ruční varianta.
 - `seriesPlacementTieBreakMode` respektuje explicitní nastavení série; pokud chybí, jméno obsahující normalizované „loun“ zapne `score_h2h_group`.
 - `seriesTournamentPlacementRecords` / `seriesRefineTournamentPlacements` třídí pouze v rámci stejné výsledkové fáze. V play-off: **celkový rozdíl racků ze všech play-off zápasů → výhry ve skupině → výhry ve skupinových vzájemných zápasech**. U nepostupujících: **umístění ve skupině → výhry ve skupině → skupinové vzájemné zápasy**. Nerozlišení hráči mají stejné kanonické místo; následující pozice přeskočí počet sdílejících hráčů (např. 5., 5., 7.). Jméno slouží pouze ke stabilnímu zobrazení, sportovní shodu nerozbíjí.

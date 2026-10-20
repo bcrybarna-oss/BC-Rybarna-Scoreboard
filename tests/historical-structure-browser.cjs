@@ -5,6 +5,33 @@ const fs=require('node:fs'),path=require('node:path'),assert=require('node:asser
 const original=fs.readFileSync(path.join(__dirname,'../index.html'),'utf8');
 const hook=`
 window.histTest={
+ parity(rule,penalties,results,decisions=[]){
+  const config={name:'Parity',date:'2024-05-11',format:'groups_sko',playerIds:['p1','p2','p3','p4'],discipline:'9-ball',raceTo:5,groupCount:1,advance:2,tieRule:rule,penalties};
+  let historical=historicalCreateStructure(config,config.playerIds,data.tournamentSeries[0]);
+  const ordinary=generateHybridTournament(config.name,config.playerIds,config.discipline,5,'alternate',1,2,'sko',{},1,'manual',false);
+  ordinary.groupAdvanceTieRule=rule;ordinary.groupPenaltyTieBreak=penalties;
+  const play=(t,m,a,b)=>processTournamentResult({id:null,tournamentLink:{tournamentId:t.id,tournamentMatchId:m.id},playerIds:[m.player1Id,m.player2Id],scores:[a,b],winner:a>b?0:1,endedAt:'2024-05-11T12:00:00.000Z'},t);
+  for(const [p1,p2,a,b] of results){
+   const slot=historicalStructureSlots(historical).find(s=>[s.m.player1Id,s.m.player2Id].includes(p1)&&[s.m.player1Id,s.m.player2Id].includes(p2));
+   const m=ordinary.groups[0].matches.find(m=>[m.player1Id,m.player2Id].includes(p1)&&[m.player1Id,m.player2Id].includes(p2));
+   play(ordinary,m,m.player1Id===p1?a:b,m.player1Id===p1?b:a);
+   historical=historicalPlanScore(historical,slot.key,slot.m.player1Id===p1?a:b,slot.m.player1Id===p1?b:a,'owner').t;
+  }
+  const blocked=[unresolvedGroupPenaltyTie(ordinary)?.candidates||[],unresolvedGroupPenaltyTie(historical)?.candidates||[]];
+  if(decisions.length){ordinary.groupPenaltyWinners={A:decisions};historical.historicalStructure.initial.groupPenaltyWinners={A:decisions};historical=historicalReplay(historical).t;}
+  const orders=[groupStandings(ordinary.groups[0],ordinary).map(r=>r.id),groupStandings(historical.groups[0],historical).map(r=>r.id)];
+  const seeds=[groupPlayoffSeeds(ordinary),groupPlayoffSeeds(historical)];
+  const unresolved=[!!unresolvedGroupPenaltyTie(ordinary),!!unresolvedGroupPenaltyTie(historical)];
+  if(unresolved.some(Boolean))return {orders,seeds,blocked,unresolved};
+  startHybridPlayoff(ordinary,seeds[0]);historical.historicalStructure.playoffOrder=seeds[1];historical=historicalReplay(historical).t;
+  for(let i=0;i<20;i++){
+   const hs=historicalStructureSlots(historical).find(s=>!s.key.startsWith('g_')&&s.m.status!=='done');if(!hs)break;
+   const m=allTournamentMatches(ordinary).find(m=>m.status!=='done'&&m.player1Id===hs.m.player1Id&&m.player2Id===hs.m.player2Id);if(!m)throw Error('Different playoff pairing');
+   play(ordinary,m,5,1);historical=historicalPlanScore(historical,hs.key,5,1,'owner').t;
+  }
+  const series=data.tournamentSeries[0],placements=[ordinary,historical].map(t=>seriesTournamentPlacementRecords(series,t));
+  return {orders,seeds,blocked,unresolved,status:[ordinary.status,historical.status],placements,points:placements.map((rows,i)=>rows.map(r=>({id:r.playerId,points:seriesPointsForPlacement(series,r,[ordinary,historical][i])})))};
+ },
  setup(){cloudAuthenticated=true;cloudUid='owner';cloudEmailVerified=true;cloudIdToken='mock';cloudTokenExpiresAt=Date.now()+3600000;currentUserRole='system_admin';data=defaultData();
  for(let i=1;i<=8;i++)data.players['p'+i]={id:'p'+i,name:'Hráč '+i,firstName:'Hráč',lastName:String(i)};
  data.players.hidden={id:'hidden',name:'Skrytý',hiddenFromPlayers:true};data.players.inactive={id:'inactive',name:'Neaktivní',active:false};
@@ -67,6 +94,10 @@ function firebase(x){if(x==null)return null;if(typeof x!=='object')return x;cons
  const legacyBefore=await run(()=>JSON.stringify(histTest.data.tournamentSeries[0].historicalTournaments));
  // Actual setup UI: no random draw; empty/duplicate positions rejected, draft survives reload.
  await run(()=>{histTest.series();openHistoricalStructureSetup('s');});
+ const choices=await page.evaluate(()=>{const read=id=>({options:[...document.getElementById(id).options].map(o=>({value:o.value,label:o.textContent.trim()})),value:document.getElementById(id).value});return [read('tournamentGroupAdvanceTieRule'),read('hsTie')];});
+ assert.deepEqual(choices[0],choices[1]);assert.equal(choices[1].value,'points');
+ assert.equal(await page.locator('#hsPenalties').isChecked(),await page.locator('#tournamentPenaltyTieBreak').isChecked());
+ await page.locator('#hsTie').selectOption('head_to_head');
  assert.equal(await page.locator('.hsPlayer[value="hidden"],.hsPlayer[value="inactive"]').count(),0);
  await page.locator('#hsName').fill('UI skupina');await page.locator('#hsDate').fill('2024-05-11');
  for(const id of ['p1','p2','p3'])await page.locator('.hsPlayer[value="'+id+'"]').check();
@@ -77,8 +108,11 @@ function firebase(x){if(x==null)return null;if(typeof x!=='object')return x;cons
  await page.reload();await page.waitForFunction(()=>!!histTest);await page.locator('#cloudLoginModal.show').waitFor();await run(()=>{histTest.restore();document.querySelector('#cloudLoginModal').classList.remove('show');openHistoricalStructureSetup('s');});assert.equal(await page.locator('.hsSeed').nth(0).inputValue(),'p1');
  await page.locator('.hsSeed').nth(1).selectOption('p2');await page.getByRole('button',{name:'VYTVOŘIT ZÁPASY A ULOŽIT ROZPRACOVANÝ TURNAJ'}).click();await page.waitForFunction(()=>document.querySelector('#historicalStructureMessage').textContent!=='Ukládám…');assert.equal(await run(()=>histTest.data.tournaments.length),1,await page.locator('#historicalStructureMessage').innerText());
  const group=await run(()=>histTest.data.tournaments[0].id);assert.equal((await slots(group)).length,3);assert.equal((await points()).find(r=>r.playerId==='p1'),undefined);
+ assert.equal((await get(group)).groupAdvanceTieRule,'head_to_head');assert.equal((await get(group)).groupPenaltyTieBreak,false);
  await page.locator('[data-historical-slot] button').first().click();await page.waitForFunction(()=>document.querySelector('#historicalStructureMessage').textContent.includes('Vyplň obě'));assert.equal(writes.length,1);
  await page.locator('#hs1_g_0_0').fill('5');await page.locator('#hs2_g_0_0').fill('1');await page.locator('[data-historical-slot="g_0_0"] button').first().click();await page.waitForFunction(()=>histTest.data.tournaments[0].historicalStructure.results?.g_0_0?.s1===5);
+ const unfinished=clone(await get(group));assert.equal(unfinished.status,'active');
+ await page.reload();await page.waitForFunction(()=>!!histTest);await page.locator('#cloudLoginModal.show').waitFor();await run(async()=>{histTest.restore();document.querySelector('#cloudLoginModal').classList.remove('show');await histTest.reload();});assert.deepEqual(await get(group),unfinished);
  await finish(group);assert.equal((await get(group)).status,'complete');assert.deepEqual(await run(id=>histTest.placements(id),group),await run(id=>histTest.baseline(id),group));
  const repeatedCount=writes.length;await score(group,'g_0_0',5,1);assert.equal(writes.length,repeatedCount);
  await score(group,'g_0_0',5,3);await score(group,'g_0_0',2,5);assert.equal((await get(group)).historicalStructure.audit.at(-1).previous.s1,5);
@@ -130,6 +164,19 @@ function firebase(x){if(x==null)return null;if(typeof x!=='object')return x;cons
  mode='lostAck';await assert.rejects(create(cfg('sko',2)),/503/);const createdId=writes.at(-1).id,n=writes.length;await run(({c,id})=>histTest.retryCreate(c,id),{c:cfg('sko',2),id:createdId});assert.equal(writes.length,n);assert.equal(await run(id=>histTest.data.tournaments.filter(t=>t.id===id).length,createdId),1);
  const guest=await create(cfg('sko',2,{playerIds:['p1','guest_demo'],guests:{guest_demo:{name:'Fiktivní host'}}}));await finish(guest);assert.equal((await get(guest)).guests.guest_demo.preserveGuest,true);const linked=await run(id=>histTest.alias(id,'guest_demo','p9'),guest);assert.deepEqual(linked.playerIds,['p1','p9']);assert.equal(linked.status,'complete');assert.equal(linked.historicalStructure.results.ko_0_0.p2,'p9');console.log('PASS stable guest identity and participant relink in saved seed/result source');
  const parity=await create(cfg('sko',4));await finish(parity);assert.deepEqual(await run(id=>histTest.newPoints(id),parity),await run(id=>histTest.oldAutoPoints(id),parity));assert.equal((await run(id=>histTest.placements(id),parity)).filter(r=>r.value===3&&r.sharedPlace).length,2);console.log('PASS independent old automatic historical placement + Lounská points parity, including shared semifinal place');
+ const fixtures=[
+  {name:'two tied players',results:[['p1','p2',5,4],['p1','p3',5,4],['p4','p1',5,0],['p2','p3',5,0],['p2','p4',5,0],['p3','p4',5,0]],points:['p2','p1','p3','p4'],head:['p1','p2','p3','p4']},
+  {name:'three-player circular tie',results:[['p1','p2',5,4],['p2','p3',5,1],['p3','p1',5,2],['p1','p4',5,0],['p2','p4',5,1],['p3','p4',5,3]],points:['p2','p1','p3','p4'],head:['p1','p2','p3','p4']},
+  {name:'equal difference resolved by scored racks',results:[['p1','p2',5,4],['p2','p3',5,3],['p3','p1',5,2],['p1','p4',5,0],['p2','p4',5,2],['p3','p4',5,3]],points:['p2','p3','p1','p4'],head:['p1','p2','p3','p4']}
+ ];
+ for(const f of fixtures)for(const rule of ['points','head_to_head'])for(const penalties of [false,true]){
+  const decisions=penalties&&rule==='head_to_head'&&f.name!=='two tied players'?['p3','p1']:[];
+  const result=await run(({rule,penalties,f,decisions})=>histTest.parity(rule,penalties,f.results,decisions),{rule,penalties,f,decisions});
+  assert.deepEqual(result.orders[0],decisions.length?['p3','p1','p2','p4']:rule==='points'?f.points:f.head,f.name+' '+rule);
+  assert.deepEqual(result.orders[0],result.orders[1]);assert.deepEqual(result.seeds[0],result.seeds[1]);assert.deepEqual(result.blocked[0],result.blocked[1]);assert.deepEqual(result.unresolved,[false,false]);assert.deepEqual(result.status,['complete','complete']);assert.deepEqual(result.placements[0],result.placements[1]);assert.deepEqual(result.points[0],result.points[1]);
+ }
+ const blocked=await run(f=>histTest.parity('head_to_head',true,f.results),fixtures[1]);assert.deepEqual(blocked.unresolved,[true,true]);assert.deepEqual(blocked.blocked,[['p1','p2','p3'],['p1','p2','p3']]);
+ console.log('PASS ordinary/historical parity: both criteria and penalty settings, two/three-player ties, scored-rack fallback, playoff pairing, final placements/series points; unfinished reload preserves saved rule/results');
  assert.equal(await run(()=>histTest.data.matches.length),0);assert.deepEqual(errors,[]);console.log('PASS manager/unauthorized checks, stale snapshot/403/ETag412 protection, no legacy/unrelated changes, no matches/statistics/live writes; 0 page errors');
  console.log('Mock tournament writes: '+writes.length+'; reads: '+readCount);
  }finally{await browser.close();}
