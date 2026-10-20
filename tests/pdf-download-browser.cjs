@@ -40,6 +40,7 @@ assert.ok(html.includes('window.pdfTest='));
   const create=URL.createObjectURL.bind(URL);URL.createObjectURL=blob=>{window.lastPdfBlob=blob;return create(blob);};
  });
  await page.goto('https://pdf-isolated.local/');await page.waitForFunction(()=>!!window.pdfTest);
+ await page.locator('#cloudLoginModal.show').waitFor(); // Finish boot before establishing the mocked session.
  await page.evaluate(m=>pdfTest.setup(m),fixture);
  async function download(selector,pattern,label){
   if(selector){await page.locator(selector).click();await page.locator('#pdfExportModal.show').waitFor();}

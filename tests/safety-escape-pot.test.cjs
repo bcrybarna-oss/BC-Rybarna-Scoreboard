@@ -6,14 +6,14 @@ const clone=x=>JSON.parse(JSON.stringify(x));
 function harness(discipline='9-ball'){
  const elements=new Map();const el=id=>{if(!elements.has(id))elements.set(id,{classList:{add(){},remove(){}},textContent:''});return elements.get(id)};
  const ctx={match:{discipline,counterMode:'full',turn:1,breaker:0,isBreakShot:false,playerNames:['SK','CZ'],stats:[{},{}],scores:[0,0],events:[],rackRemainingBalls:[1,2,3,4,5,6,7,8,9],safetyEscapeEligibleFor:1,breakAndRunEligible:false,runoutEligibleFor:null,consecutiveFouls:[0,1],warnedTwoFouls:[false,false],useClock:false},pendingSafetyEscapePlayer:1,lastManualEntrySnapshot:null,$:el,
-   cloneForUndo:clone,exactBallTrackingDiscipline:()=>discipline==='9-ball'||discipline==='10-ball',
+   detailedAction:null,uid:()=>String(Math.random()),cloneForUndo:clone,exactBallTrackingDiscipline:()=>discipline==='9-ball'||discipline==='10-ball',
    snapshot:()=>JSON.stringify(ctx.match),
    saveManualEntryUndoSnapshot:()=>{ctx.lastManualEntrySnapshot={match:clone(ctx.match)}},
    logEvent:(text,meta={})=>ctx.match.events.push({text,meta}),
    addActionEvent:text=>ctx.logEvent(text,{undoSnapshot:ctx.snapshot()}),
    openShotBallSelector:req=>{ctx.request=req},renderMatch(){ctx.rendered=true},resetClock(){},autosaveCurrent(){ctx.saved=true},
    finishGameBallFromTrackedPlay(i,ball){ctx.gameBall=ball;ctx.match.scores[i]++;ctx.addActionEvent('game ball');}};
- vm.createContext(ctx);vm.runInContext(['ensureSafetyEscapeStats','safetyEscapeSuccessful','finishSafetyEscapeSuccess'].map(fn).join('\n'),ctx);
+ vm.createContext(ctx);vm.runInContext(['detailedCounterActive','ensureDetailedPlay','detailedActor','recordDetailedShot','resolveDetailedEscape','recordDetailedSafety','ensureSafetyEscapeStats','safetyEscapeSuccessful','finishSafetyEscapeSuccess'].map(fn).join('\n'),ctx);
  ctx.confirm=balls=>{ctx.match.rackRemainingBalls=ctx.match.rackRemainingBalls.filter(n=>!balls.includes(n));ctx.request.onDone(balls)};
  return ctx;
 }

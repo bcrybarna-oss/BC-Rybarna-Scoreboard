@@ -14,7 +14,8 @@
     "test": "node --test tests/*.test.cjs",
     "test:federal-cup": "node tests/federal-cup-browser.cjs",
     "test:pdf": "node tests/pdf-download-browser.cjs",
-    "test:historical": "node tests/historical-structure-browser.cjs"
+    "test:historical": "node tests/historical-structure-browser.cjs",
+    "test:detailed": "node tests/detailed-counter-browser.cjs"
   },
   "dependencies": {
     "@capacitor/core": "^8.0.0",

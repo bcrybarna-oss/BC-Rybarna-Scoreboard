@@ -64,6 +64,8 @@ Klasické zápasy podporují Race to, střídavý/vítězův rozstřel, tempo, s
 
 ## Statistiky a PDF
 
+Od v4.51.83 RC používá společné detailní počítadlo 8/9/10-ball model detailedPlay se strukturovanými záznamy strany, racku, náběhu a známého aktéra. Běžné potopení, break a foul pots jsou oddělené; souhrnné doplnění neudává přesný počet strků. Jistota má vazbu na jednu reakci/únik včetně RESAFE. Jump/bank jsou přepínače jednoho strku s úspěchem/pokusy. MISS nemá důvod ani automatickou jistotu; 2-Way a nechtěná jistota zůstávají pouze v historických statistikách. Odhad nižších koulí používá pouze aktuální náběh v 9/10-ball a při nejistotě nabízí opravu stolu. Starší zápasy nemigruje a chybějící nová evidence je neznámá, nikoli ověřená nula. Team zaznamenává hráče racku, Doubles pouze známou dvojici. Jednoduché počítadlo, 14.1 a Ghost nový model nepoužívají. Podrobnosti, testy a limity jsou v docs/detailed-counter-evidence.md; skutečný stav vydání v PROJECT_STATUS.md.
+
 Po zápase se zobrazuje detailní statistický přehled a PDF REPORT.
 
 Sekce Statistiky obsahuje mimo jiné:

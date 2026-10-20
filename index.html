@@ -522,7 +522,7 @@
     }
   
 
-/* === v4.51.82 RC • mobilní herní obrazovka portrait / landscape === */
+/* === v4.51.83 RC • mobilní herní obrazovka portrait / landscape === */
 @media (max-width:700px) and (orientation:portrait){
   #screen-match{margin-top:8px}
   #screen-match>.card{padding:10px;border-radius:14px}
@@ -2513,7 +2513,7 @@ html[data-theme="light"] #leagueSchedule .history-item .muted{
           <span class="by">by</span>
           <span class="club">BC Rybárna</span>
         </div>
-        <small class="modern-brand-version">v4.51.82 RC</small>
+        <small class="modern-brand-version">v4.51.83 RC</small>
       </div>
     </div>
     <div class="nav">
@@ -3121,7 +3121,7 @@ html[data-theme="light"] #leagueSchedule .history-item .muted{
         </div>
         <div class="subpanel" style="min-width:210px;text-align:center;margin:0">
           <div class="muted" style="font-size:10px;font-weight:950;letter-spacing:1px">AKTUÁLNÍ VERZE</div>
-          <div style="font-size:22px;font-weight:950;color:var(--gold2);margin-top:5px">v4.51.82 RC</div>
+          <div style="font-size:22px;font-weight:950;color:var(--gold2);margin-top:5px">v4.51.83 RC</div>
         </div>
       </div>
     </div>
@@ -3361,11 +3361,11 @@ html[data-theme="light"] #leagueSchedule .history-item .muted{
           <li><strong>Únik z jistoty</strong> – nejprve se určí, zda byl únik úspěšný bez faulu, nebo neúspěšný s faulem. Při neúspěšném úniku se zapíše pokus o únik i faul a tah se předá soupeři.</li>
           <li>U úspěšného úniku se volí: potopená koule a pokračování, úspěšný únik bez potopení, nebo <strong>RESAFE</strong>.</li>
           <li><strong>RESAFE</strong> = hráč úspěšně utekl z jistoty a současně zahrál novou úspěšnou jistotu soupeři. Počítá se jako úspěšný únik i úspěšná jistota a soupeři se znovu zobrazí pouze ÚNIK Z JISTOTY.</li>
-          <li><strong>2-WAY SHOT</strong> eviduje strk, který má dvě současně zamýšlené úspěšné varianty (např. potopení nebo jistota, případně dvě potápěcí varianty).</li>
+          <li><strong>JUMP SHOT / BANK SHOT</strong> označí jeden následující strk. Opětovným stisknutím označení vypneš. Bank znamená potopení cílové koule přes mantinel.</li>
           <li>V 9-ball a 10-ball lze po breaku označit konkrétní potopené koule a u MISS vybrat kouli, na které chyba vznikla.</li>
-          <li><strong>NECHTĚNÁ JISTOTA</strong> = hráč minul, ale náhodně soupeře schoval. Počítá se jako MISS, ne jako klasická zahraná jistota; soupeři však aktivuje ÚNIK Z JISTOTY.</li>
+          <li>Únik navazuje jen na zaznamenanou úspěšnou jistotu. MISS sám novou jistotu nevytváří. Historické statistiky 2-Way a nechtěných jistot zůstávají čitelné.</li>
           <li>Úspěšnost úniků z jistot se dlouhodobě eviduje v procentech.</li>
-          <li><strong>MISS</strong> – po stisknutí se vybere důvod netrefení: <strong>obtížná pozice</strong> nebo <strong>špatně zahráno</strong>.</li>
+          <li><strong>MISS</strong> znamená neúspěšné potopení. V 9/10-ball vyber nepotopenou kouli; předchozí dosud nezapsané koule se doplní pouze v aktuálním náběhu. Nezasažení správné koule je FAUL.</li>
           <li>MISS se ukládá pouze do statistik konkrétního zápasu a nezapočítává se do dlouhodobé statistické tabulky hráče.</li>
           <li><strong>Faul</strong> – zapíše faul a předá tah podle pravidel hry.</li>
           <li><strong>Push out</strong> – v 9-ball/10-ball je dostupný jako první strk po BREAK OK, po dry breaku a po vráceném stole po soft breaku. Soupeř poté stůl přijme, nebo vrátí hráči, který push out zahrál.</li>
@@ -4256,6 +4256,7 @@ html[data-theme="light"] #leagueSchedule .history-item .muted{
       </div>
 <div id="rackBallStatePanel" class="subpanel hidden" style="margin:8px 0 12px;text-align:center;padding:8px 10px">
         <div class="muted" style="font-size:10px;font-weight:950;letter-spacing:.8px;margin-bottom:6px">KOULE NA STOLE</div>
+        <button class="btn ghost" onclick="openDetailedTableCorrection()" style="margin:5px">OPRAVIT EVIDENCI KOULÍ</button>
         <div id="rackBallStateBalls" class="exact-ball-grid" style="margin-top:0;gap:8px"></div>
         <button id="quickRunoutBtn" class="btn primary hidden" style="margin-top:9px;width:100%">
           DOHRÁNO POSTUPNĚ
@@ -4514,10 +4515,10 @@ html[data-theme="light"] #leagueSchedule .history-item .muted{
           <button id="actionLegalBtn" class="btn hidden" onclick="actionLegal()">ČISTÝ STRK</button>
           <button id="actionFoulBtn" class="btn danger hidden" onclick="actionFoul()">FAUL</button>
           <button id="actionSafeBtn" class="btn hidden" onclick="actionSafe()">JISTOTA</button>
-          <button id="actionTwoWayBtn" class="btn hidden" onclick="actionTwoWayShot()">2-WAY SHOT</button>
+          <button id="actionJumpBtn" class="btn hidden" aria-pressed="false" onclick="toggleDetailedShotTag('jump')">JUMP SHOT</button>
           <button id="actionCombo9Btn" class="btn primary hidden" onclick="actionComboGameBall()">KOMBINACE NA 9</button>
           <button id="actionCarom9Btn" class="btn primary hidden" onclick="actionCaromGameBall()">KARAMBOL NA 9</button>
-          <button id="actionAccidentalSafeBtn" class="btn hidden" onclick="actionAccidentalSafety()">NECHTĚNÁ JISTOTA</button>
+          <button id="actionBankBtn" class="btn hidden" aria-pressed="false" onclick="toggleDetailedShotTag('bank')" title="Potopení cílové koule přes mantinel">BANK SHOT</button>
           <button id="actionSafetyEscapeBtn" class="btn primary hidden" onclick="actionSafetyEscape()">ÚNIK Z JISTOTY</button>
           <button id="actionDirectBallBtn" class="btn hidden" onclick="actionDirectBallAvailable()">KOULE ŠLA ZASÁHNOUT PŘÍMO</button>
           <button id="actionMissBtn" class="btn hidden" onclick="actionMiss()">MISS</button>
@@ -5497,10 +5498,11 @@ html[data-theme="light"] #leagueSchedule .history-item .muted{
     <div class="modal-card">
       <h2>JISTOTA</h2>
       <div id="safetyResultText" style="font-size:20px;font-weight:900;margin-top:8px">Byla jistota úspěšná?</div>
-      <div class="muted" style="margin-top:8px">Vyhodnoť, zda soupeř po jistotě zůstal v nevýhodné pozici a jistota splnila svůj účel.</div>
+      <div class="muted" style="margin-top:8px">Úspěšná jistota znamená, že soupeř musí zahrát únik. Výsledek jeho úniku se vyhodnotí zvlášť.</div>
       <div class="modal-actions">
         <button id="safetySuccessBtn" class="btn primary big">ÚSPĚŠNÁ</button>
         <button id="safetyFailBtn" class="btn danger big">NEÚSPĚŠNÁ</button>
+        <button class="btn ghost" onclick="cancelSafetyEntry()">ZRUŠIT</button>
       </div>
     </div>
   </div>
@@ -5604,6 +5606,7 @@ html[data-theme="light"] #leagueSchedule .history-item .muted{
       <div class="modal-actions">
         <button id="safetyEscapeSuccessBtn" class="btn primary big">ÚSPĚŠNÝ • BEZ FAULU</button>
         <button id="safetyEscapeFailBtn" class="btn danger big">NEÚSPĚŠNÝ • FAUL</button>
+        <button id="safetyEscapeLegalFailBtn" class="btn big">NEÚSPĚŠNÝ • BEZ FAULU</button>
         <button id="safetyEscapeCancelBtn" class="btn ghost">ZRUŠIT</button>
       </div>
     </div>
@@ -5618,10 +5621,25 @@ html[data-theme="light"] #leagueSchedule .history-item .muted{
         <button id="safetyEscapeContinueBtn" class="btn primary big">POTOPENÁ KOULE • POKRAČUJE</button>
         <button id="safetyEscapeEndBtn" class="btn big">ÚNIK • TAH KONČÍ</button>
         <button id="safetyEscapeResafeBtn" class="btn primary big">RESAFE • NOVÁ JISTOTA</button>
+        <button class="btn ghost" onclick="cancelSafetyEntry()">ZRUŠIT</button>
       </div>
     </div>
   </div>
 
+
+  <div id="rotationFailureModal" class="modal"><div class="modal-card">
+    <h2 id="rotationFailureTitle"></h2>
+    <div id="rotationFailureBalls" class="exact-ball-grid"></div>
+    <p id="rotationInferenceText" class="muted"></p>
+    <div id="rotationFoulBalls"><p>Koule, které skutečně spadly při faulu (volitelné):</p><div id="rotationFoulBallChoices" class="exact-ball-grid"></div><p class="muted">Nezapočítají se jako úspěšné potopení. 9/10 se vrací na bod; soupeř má ball in hand.</p></div>
+    <div class="modal-actions"><button class="btn primary" onclick="confirmRotationFailure()">POTVRDIT</button><button class="btn" onclick="openDetailedTableCorrection()">OPRAVIT EVIDENCI</button><button class="btn ghost" onclick="cancelRotationFailure()">ZRUŠIT</button></div>
+  </div></div>
+  <div id="detailedTableCorrectionModal" class="modal"><div class="modal-card">
+    <h2>OPRAVA EVIDENCE STOLU</h2><p>Označ všechny koule, které nyní zůstávají na stole. Oprava nepřipisuje úspěšné potopení ani strk.</p>
+    <label id="tableCorrectionFoulLabel"><input type="checkbox" id="tableCorrectionFoul"> Odstraněné koule spadly při posledním faulu (9/10 se vrátí na bod).</label>
+    <div id="detailedTableCorrectionBalls" class="exact-ball-grid"></div>
+    <div class="modal-actions"><button class="btn primary" onclick="saveDetailedTableCorrection()">ULOŽIT EVIDENCI</button><button class="btn ghost" onclick="document.getElementById('detailedTableCorrectionModal').classList.remove('show')">ZRUŠIT</button></div>
+  </div></div>
   <div id="missReasonModal" class="modal">
     <div class="modal-card">
       <h2>MISS</h2>
@@ -5650,7 +5668,7 @@ html[data-theme="light"] #leagueSchedule .history-item .muted{
       <div class="modal-actions">
         <button id="directBallSafeBtn" class="btn primary big">SAFE</button>
         <button id="directBallPotBtn" class="btn big">POKUS O POTOPENÍ</button>
-        <button id="directBallTwoWayBtn" class="btn big">2-WAY SHOT</button>
+        <button id="directBallTwoWayBtn" class="btn big hidden" disabled>2-WAY SHOT</button>
         <button id="directBallFoulBtn" class="btn danger big">FAUL</button>
         <button id="directBallCancelBtn" class="btn ghost">ZRUŠIT</button>
       </div>
@@ -5676,7 +5694,7 @@ html[data-theme="light"] #leagueSchedule .history-item .muted{
       <div class="modal-actions">
         <button id="directPotSuccessBtn" class="btn primary big">ÚSPĚŠNÝ • POKRAČUJE</button>
         <button id="directPotMissBtn" class="btn big">NEÚSPĚŠNÝ • MISS</button>
-        <button id="directPotAccSafeBtn" class="btn big">NECHTĚNÁ JISTOTA</button>
+        <button id="directPotAccSafeBtn" class="btn big hidden" disabled>NECHTĚNÁ JISTOTA</button>
         <button id="directPotFoulBtn" class="btn danger big">FAUL</button>
       </div>
     </div>
@@ -5826,7 +5844,7 @@ html[data-theme="light"] #leagueSchedule .history-item .muted{
       </div>
 
       <div id="groupPlayoffSeedStatus" class="muted" style="margin-top:12px;min-height:20px"></div>
-      <div class="muted" style="margin-top:4px;font-size:11px">RC v4.51.82</div>
+      <div class="muted" style="margin-top:4px;font-size:11px">RC v4.51.83</div>
       <div class="modal-actions">
         <button id="groupPlayoffSeedApplyBtn" class="btn primary big" type="button">NASADIT DO PLAY-OFF</button>
         <button id="groupPlayoffSeedCancelBtn" class="btn">ZRUŠIT</button>
@@ -7010,7 +7028,7 @@ html[data-theme="light"] #leagueSchedule .history-item .muted{
     const btn=$('submitReportBtn');if(btn)btn.disabled=true;
     try{
       const id=uid(),p=currentUserPlayerId?data.players?.[currentUserPlayerId]:null;
-      const report={id,createdByUid:cloudUid,createdByPlayerId:currentUserPlayerId||'',createdByName:p?playerSelectionLabel(p):(cloudUserEmail||'Uživatel'),email:cloudUserEmail||'',type,area,description,appVersion:'v4.51.82 RC',createdAt:new Date().toISOString(),updatedAt:new Date().toISOString(),status:'new',adminNote:''};
+      const report={id,createdByUid:cloudUid,createdByPlayerId:currentUserPlayerId||'',createdByName:p?playerSelectionLabel(p):(cloudUserEmail||'Uživatel'),email:cloudUserEmail||'',type,area,description,appVersion:'v4.51.83 RC',createdAt:new Date().toISOString(),updatedAt:new Date().toISOString(),status:'new',adminNote:''};
       await reportRequest(id,'PUT',report);
       try{
         await writeReportUserMirror(report);
@@ -9604,6 +9622,241 @@ $('useClock').addEventListener('change',e=>$('clockSettings').classList.toggle('
     </div>`;
   }
 
+  // Structured evidence is deliberately independent of the human-readable event log.
+  function detailedCounterActive(){
+    return !!match && match.counterMode!=='simple' && !match.ghostMode && match.discipline!=='14.1';
+  }
+  function ensureDetailedPlay(freshRack=false){
+    if(!detailedCounterActive())return null;
+    if(!match.detailedPlay)match.detailedPlay={version:1,coverage:'partial',records:[],nextInning:0};
+    const d=match.detailedPlay;
+    if(!Array.isArray(d.records))d.records=Object.values(d.records||{});
+    d.nextInning=Number(d.nextInning||0);
+    if(freshRack){d.pendingSafety=null;d.tableKnown=true;}
+    if(!d.inning || d.inning.side!==match.turn || d.inning.rack!==match.rackNumber || freshRack){
+      d.inning={id:++d.nextInning,side:match.turn,rack:match.rackNumber,
+        startBalls:(match.rackRemainingBalls||[]).slice(),safeInference:(freshRack||!!d.inning)&&d.tableKnown!==false};
+      d.tag=null;
+    }
+    return d;
+  }
+  let detailedAction=null;
+  function beginDetailedAction(label){
+    if(!detailedCounterActive())return;
+    ensureDetailedPlay();
+    detailedAction={before:snapshot(),match:cloneForUndo(match),eventIndex:match.events.length,label,committed:false};
+  }
+  function finishDetailedAction(){
+    if(!detailedAction?.committed)return;
+    const a=detailedAction;detailedAction=null;
+    const events=match.events.slice(a.eventIndex);
+    if(!events.length)logEvent(a.label);
+    match.events.slice(a.eventIndex).forEach((e,j)=>{
+      e.meta=e.meta||{};
+      if(j===0)e.meta.undoSnapshot=a.before;else delete e.meta.undoSnapshot;
+    });
+    lastManualEntrySnapshot={match:a.match,label:a.label,createdAt:Date.now()};
+  }
+  function cancelDetailedAction(){
+    if(detailedAction && !detailedAction.committed){
+      match=cloneForUndo(detailedAction.match);detailedAction=null;
+      renderMatch();
+    }
+  }
+  function detailedActor(side){
+    if(match.federalTeam)return cloneForUndo(match.federalTeam.players[side]);
+    if(match.doublesMode)return null; // The counter knows the pair, not the actual shooter.
+    return {id:match.playerIds?.[side]||null,name:match.playerNames[side]};
+  }
+  function recordDetailedShot(kind,info={}){
+    const d=ensureDetailedPlay();if(!d)return null;
+    const side=Number(info.side??match.turn),tag=d.tag;
+    const r={id:uid(),kind,side,sideId:match.playerIds?.[side]||null,actor:detailedActor(side),
+      rack:match.rackNumber,inning:d.inning.id,balls:[],...info};
+    if(tag && tag.side===side && tag.rack===match.rackNumber && ['pot','miss','foul','escape'].includes(kind)){
+      r.tag={type:tag.type,success:kind==='escape'?!!info.success:kind==='pot'&&(r.balls.length>0||info.pottedCount>0)};
+      const st=match.stats[side],prefix=tag.type==='jump'?'jumpShot':'bankShot';
+      if(d.coverage==='partial')st[prefix+'Partial']=1;
+      st[prefix+'Attempts']=Number(st[prefix+'Attempts']||0)+1;
+      if(r.tag.success)st[prefix+'Successful']=Number(st[prefix+'Successful']||0)+1;
+    }
+    if(!['inferred_pots','table_correction'].includes(kind))d.tag=null;
+    d.records.push(r);
+    if(detailedAction)detailedAction.committed=true;
+    return r;
+  }
+  function detailedTagAllowed(kind){
+    const tag=ensureDetailedPlay()?.tag;
+    if(!tag)return true;
+    if(kind==='escape'&&tag.type==='jump')return true;
+    if(['pot','miss','foul'].includes(kind))return true;
+    toast('Nejprve vypni '+(tag.type==='jump'?'JUMP SHOT':'BANK SHOT')+'. Tato akce neurčuje výsledek jednoho označeného strku.');
+    return false;
+  }
+  window.toggleDetailedShotTag=function(type){
+    if(!detailedCounterActive() || match.isBreakShot || match.federalTeam?.pending)return;
+    if(!['jump','bank'].includes(type))return;
+    if(type==='bank' && match.safetyEscapeEligibleFor===match.turn){toast('BANK SHOT označuje potopení cílové koule přes mantinel, ne únik bílou přes mantinel.');return;}
+    const d=ensureDetailedPlay();
+    d.tag=d.tag?.type===type?null:{type,side:match.turn,rack:match.rackNumber};
+    renderMatch();
+  };
+  function renderDetailedControls(){
+    if(!detailedCounterActive())return;
+    const d=ensureDetailedPlay();
+    for(const type of ['jump','bank']){
+      const el=$('action'+(type==='jump'?'Jump':'Bank')+'Btn');
+      const on=d.tag?.type===type;
+      el.classList.toggle('primary',on);el.setAttribute('aria-pressed',String(on));
+      el.textContent=(on?'✓ ':'')+(type==='jump'?'JUMP SHOT':'BANK SHOT');
+    }
+  }
+  function recordDetailedSafety(success){
+    const d=ensureDetailedPlay();if(!d)return;
+    const r=recordDetailedShot('safety',{success});
+    d.pendingSafety=success?{id:r.id,side:r.side,respondingSide:1-r.side}:null;
+  }
+  function resolveDetailedEscape(success,foul=false,balls=[]){
+    const d=ensureDetailedPlay();if(!d)return;
+    const pending=d.pendingSafety;
+    // Resumed old matches may retain a pending safety. Its origin is explicitly unknown.
+    const linked=pending && pending.respondingSide===match.turn ? pending.id : null;
+    recordDetailedShot('escape',{success,foul,balls:balls.slice(),safetyId:linked,legacyOrigin:!linked});
+    d.pendingSafety=null;
+  }
+  function rotationInference(ball){
+    const d=ensureDetailedPlay(),rem=match.rackRemainingBalls||[],inning=d?.inning;
+    if(!inning?.safeInference || !Array.isArray(inning.startBalls) || !rem.includes(ball) || rem.some(n=>!inning.startBalls.includes(n)))return null;
+    return rem.filter(n=>n<ball && inning.startBalls.includes(n));
+  }
+  function invalidateDetailedInference(){
+    const d=ensureDetailedPlay();if(d)d.inning.safeInference=false;
+  }
+  function applyRotationInference(ball){
+    const balls=rotationInference(ball);
+    if(balls===null)return false;
+    match.rackRemainingBalls=match.rackRemainingBalls.filter(n=>!balls.includes(n));
+    if(balls.length){
+      recordDetailedShot('inferred_pots',{balls,strokeCount:null,source:'inning_end'});
+      const st=match.stats[match.turn];st.regularPottedBalls=Number(st.regularPottedBalls||0)+balls.length;
+      logEvent('Doplněné koule v náběhu • '+match.playerNames[match.turn]+' • '+balls.join(', '));
+    }
+    return true;
+  }
+  let rotationFailure=null;
+  function openRotationFailure(kind){
+    beginDetailedAction(kind==='miss'?'MISS':'Faul');
+    rotationFailure={kind,ball:null,foulBalls:[]};
+    $('rotationFailureTitle').textContent=kind==='miss'?'MISS • nepotopená koule':'FAUL • koule při faulu';
+    $('rotationFoulBalls').classList.toggle('hidden',kind!=='foul');
+    renderRotationFailure();$('rotationFailureModal').classList.add('show');
+    if(match.useClock)stopTimer();
+  }
+  function renderRotationFailure(){
+    if(!rotationFailure)return;
+    const f=rotationFailure,rem=match.rackRemainingBalls||[];
+    $('rotationFailureBalls').innerHTML=rem.map(n=>exactBallButtonHtml(n,{selected:f.ball===n,onclick:'selectRotationFailureBall('+n+')'})).join('');
+    $('rotationFoulBallChoices').innerHTML=rem.map(n=>exactBallButtonHtml(n,{selected:f.foulBalls.includes(n),onclick:'toggleFoulPocketedBall('+n+')'})).join('');
+    const inferred=f.ball===null?[]:rotationInference(f.ball);
+    $('rotationInferenceText').textContent=f.ball===null?'Vyber kouli evidovanou na stole.':inferred===null?
+      'Předchozí potopení nelze bezpečně odvodit. Uprav evidenci stolu; nic se automaticky nepřipíše.':
+      'Doplnění v tomto náběhu: '+(inferred.length?inferred.join(', '):'žádné')+'. Nejde o přesný počet strků.';
+  }
+  window.selectRotationFailureBall=function(n){if(rotationFailure && match.rackRemainingBalls.includes(n)){rotationFailure.ball=n;renderRotationFailure();}};
+  window.toggleFoulPocketedBall=function(n){
+    const f=rotationFailure;if(!f||!match.rackRemainingBalls.includes(n))return;
+    f.foulBalls=f.foulBalls.includes(n)?f.foulBalls.filter(b=>b!==n):[...f.foulBalls,n];renderRotationFailure();
+  };
+  window.confirmRotationFailure=function(){
+    const f=rotationFailure;if(!f||f.ball===null)return toast('Vyber kouli.');
+    const inferred=rotationInference(f.ball);
+    if(f.foulBalls.some(n=>inferred?.includes(n)))return toast('Koule nemůže být současně doplněná před faulem a potopená při faulu. Uprav výběr nebo evidenci stolu.');
+    applyRotationInference(f.ball);
+    rotationFailure=null;$('rotationFailureModal').classList.remove('show');
+    if(f.kind==='miss'){
+      pendingMissPlayer=match.turn;
+      const st=match.stats[match.turn],key='missBall'+f.ball;st[key]=Number(st[key]||0)+1;
+      registerMissReason('missed_ball',true,true,f.ball);
+    }else finishOrdinaryFoul(f.ball,f.foulBalls);
+  };
+  window.cancelRotationFailure=function(){rotationFailure=null;detailedAction=null;$('rotationFailureModal').classList.remove('show');if(match?.useClock)resetClock(false,true);};
+  let tableCorrectionBalls=[];
+  window.openDetailedTableCorrection=function(){
+    if(!detailedCounterActive()||!exactBallTrackingDiscipline()||match.federalTeam?.pending)return;
+    tableCorrectionBalls=(match.rackRemainingBalls||[]).slice();
+    const last=match.detailedPlay?.records?.at(-1);
+    $('tableCorrectionFoulLabel').classList.toggle('hidden',!(last?.rack===match.rackNumber&&(last?.kind==='foul'||last?.kind==='escape'&&last.foul)));
+    $('tableCorrectionFoul').checked=false;
+    renderDetailedTableCorrection();$('detailedTableCorrectionModal').classList.add('show');
+  };
+  function renderDetailedTableCorrection(){
+    $('detailedTableCorrectionBalls').innerHTML=fullRackBalls().map(n=>exactBallButtonHtml(n,{selected:tableCorrectionBalls.includes(n),onclick:'toggleDetailedTableBall('+n+')'})).join('');
+  }
+  window.toggleDetailedTableBall=function(n){tableCorrectionBalls=tableCorrectionBalls.includes(n)?tableCorrectionBalls.filter(b=>b!==n):[...tableCorrectionBalls,n];renderDetailedTableCorrection();};
+  window.saveDetailedTableCorrection=function(){
+    beginDetailedAction('Oprava evidence stolu');
+    const beforeBalls=(match.rackRemainingBalls||[]).slice(),last=match.detailedPlay?.records?.at(-1);
+    const foulCorrection=$('tableCorrectionFoul').checked&&last?.rack===match.rackNumber&&(last?.kind==='foul'||last?.kind==='escape'&&last.foul);
+    const removed=beforeBalls.filter(n=>!tableCorrectionBalls.includes(n));
+    match.rackRemainingBalls=tableCorrectionBalls.slice().sort((a,b)=>a-b);
+    if(foulCorrection){
+      applyFoulPocketedBalls(removed);
+      match.stats[last.side].foulPottedBalls=Number(match.stats[last.side].foulPottedBalls||0)+removed.length;
+    }
+    recordDetailedShot('table_correction',{remainingBalls:match.rackRemainingBalls.slice(),strokeCount:0,
+      foulBalls:foulCorrection?removed:[],foulId:foulCorrection?last.id:null,side:foulCorrection?last.side:match.turn,
+      inning:foulCorrection?last.inning:ensureDetailedPlay().inning.id});
+    ensureDetailedPlay().inning.safeInference=false;
+    ensureDetailedPlay().tableKnown=true;
+    logEvent('Ruční oprava evidence stolu • bez připsání potopení');
+    $('detailedTableCorrectionModal').classList.remove('show');
+    if(rotationFailure)renderRotationFailure();
+    renderMatch();
+    if(rotationFailure)beginDetailedAction(rotationFailure.kind==='miss'?'MISS':'Faul');
+  };
+  function applyFoulPocketedBalls(balls){
+    if(!exactBallTrackingDiscipline())return;
+    const game=match.discipline==='9-ball'?9:10;
+    match.rackRemainingBalls=match.rackRemainingBalls.filter(n=>!balls.includes(n)||n===game);
+    if(balls.includes(game)&&!match.rackRemainingBalls.includes(game))match.rackRemainingBalls.push(game);
+    match.rackRemainingBalls.sort((a,b)=>a-b);
+  }
+  function detailedRatio(stats,type,partial=false){
+    const key=type+'ShotAttempts';
+    return stats && Object.prototype.hasOwnProperty.call(stats,key)?Number(stats[type+'ShotSuccessful']||0)+'/'+Number(stats[key])+(partial||stats[type+'ShotPartial']?' (část)':''):'—';
+  }
+  function aggregateDetailedTags(facts,pid){
+    const result={};
+    for(const type of ['jump','bank']){
+      const prefix=type+'Shot';let known=0,unknown=0,attempts=0,successful=0;
+      for(const f of facts){
+        if(matchEvidenceMode(f)!=='full')continue;
+        const row=f.stats?.[f.playerIds.indexOf(pid)];
+        if(!row || !Object.prototype.hasOwnProperty.call(row,prefix+'Attempts')){unknown++;continue;}
+        known++;if(row[prefix+'Partial'])unknown++;
+        attempts+=Number(row[prefix+'Attempts']||0);successful+=Number(row[prefix+'Successful']||0);
+      }
+      if(known){result[prefix+'Attempts']=attempts;result[prefix+'Successful']=successful;result[prefix+'Partial']=unknown>0;}
+    }
+    return result;
+  }
+  function detailedShotSummary(m,side){
+    if(!m?.detailedPlay)return null;
+    const records=Object.values(m.detailedPlay.records||{}).filter(r=>r.side===side);
+    return {coverage:m.detailedPlay.coverage,
+      regularPots:records.filter(r=>['pot','inferred_pots','escape'].includes(r.kind)).reduce((n,r)=>n+Number(r.pottedCount??r.balls?.length??0),0),
+      breakPots:records.filter(r=>r.kind==='break').reduce((n,r)=>n+Number(r.ballCount??r.balls?.length??0),0),
+      foulPots:records.flatMap(r=>r.foulBalls||[]).length,
+      misses:records.filter(r=>r.kind==='miss').length,
+      escapes:records.filter(r=>r.kind==='escape').length,
+      successfulEscapes:records.filter(r=>r.kind==='escape'&&r.success).length,
+      failedEscapes:records.filter(r=>r.kind==='escape'&&!r.success).length,
+      jumpAttempts:records.filter(r=>r.tag?.type==='jump').length,
+      jumpSuccessful:records.filter(r=>r.tag?.type==='jump'&&r.tag.success).length,
+      bankAttempts:records.filter(r=>r.tag?.type==='bank').length,
+      bankSuccessful:records.filter(r=>r.tag?.type==='bank'&&r.tag.success).length};
+  }
+
   function blankMatchStats(){
     return {breaks:0,dryBreaks:0,softBreaks:0,softDryBreaks:0,breakFouls:0,breakPottedBalls:0,breakPottedTracked:0,aces:0,breakAndRun:0,runouts:0,pushOuts:0,pushOutsReturned:0,twoWayAttempts:0,twoWaySuccessful:0,twoWayPotSuccess:0,twoWaySafetySuccess:0,nineBallCombos:0,nineBallCaroms:0,tenBallCombos:0,tenBallCaroms:0,missBall1:0,missBall2:0,missBall3:0,missBall4:0,missBall5:0,missBall6:0,missBall7:0,missBall8:0,missBall9:0,missBall10:0,breakBall1:0,breakBall2:0,breakBall3:0,breakBall4:0,breakBall5:0,breakBall6:0,breakBall7:0,breakBall8:0,breakBall9:0,breakBall10:0,fouls:0,safeties:0,successfulSafeties:0,trackedSafeties:0,accidentalSafeties:0,safetyEscapes:0,successfulSafetyEscapes:0,resafes:0,misses:0,matchOnlyMisses:0,matchOnlyMissBadPosition:0,matchOnlyMissPot:0,threeFoulLosses:0,lagWins:0,openingBreakFouls14:0,threeFoulPenalties14:0,foulPenaltyPoints14:0,innings14:0,highRun14:0,ghostSessions:0,ghostDryBreaks:0,ghostSoftBreaks:0,ghostBreakFouls:0,ghostAces:0,ghostFailedRacks:0,ghostBIHRunouts:0,ghostCleanRunouts:0};
   }
@@ -9866,6 +10119,12 @@ $('useClock').addEventListener('change',e=>$('clockSettings').classList.toggle('
       match.playerRealNames=match.playerNames.slice();
     }
     if(match.winnerTableMode) syncWinnerTableSlots();
+    if(detailedCounterActive()){
+      match.detailedPlay={version:1,coverage:'complete',records:[],nextInning:0};
+      const rows=match.winnerTableMode?match.winnerTable.stats:match.stats;
+      rows.forEach(st=>{for(const k of ['jumpShotAttempts','jumpShotSuccessful','bankShotAttempts','bankShotSuccessful','regularPottedBalls','foulPottedBalls','failedSafetyEscapes'])st[k]=0;});
+    }
+    detailedAction=null;
     pendingTournamentLink=null;
     pendingLeagueLink=null;
     pendingFederalCupLink=null;
@@ -10017,6 +10276,7 @@ $('useClock').addEventListener('change',e=>$('clockSettings').classList.toggle('
     match.extensionsUsed=[0,0];
     match.turn=match.breaker;
     match.stats[match.breaker].breaks++;
+    ensureDetailedPlay(true);
     logEvent('Rack '+match.rackNumber+' • rozstřel '+match.playerNames[match.breaker]);
     if(match.useClock) resetClock(true,true);
   }
@@ -10461,6 +10721,7 @@ $('useClock').addEventListener('change',e=>$('clockSettings').classList.toggle('
   function finishEightBallRackQuick(player,type='win'){
     if(!match || match.discipline!=='8-ball' || match.counterMode==='simple' || match.ghostMode || match.solo14)return;
     if(match.endedAt || match.status==='complete')return;
+    if(!detailedTagAllowed('batch'))return;
 
     player=Number(player);
     if(player!==0 && player!==1)return;
@@ -10513,6 +10774,8 @@ $('useClock').addEventListener('change',e=>$('clockSettings').classList.toggle('
   if($('eightBallRunout1'))$('eightBallRunout1').onclick=()=>finishEightBallRackQuick(1,'runout');
 
   function renderMatch(){
+    finishDetailedAction();
+    renderDetailedControls();
     if(match && !editableMatchOwnedByCurrentUser(match)){
       discardForeignLocalActiveMatch();
       toast('Tento rozehraný zápas patří jinému uživateli. Můžeš ho sledovat pouze přes LIVESCORE.');
@@ -10776,13 +11039,14 @@ const isFourteen=match.discipline==='14.1' && !simpleCounter;
     showAction('returnPushOutBtn',pushOutDecision);
 
     showAction('actionSafetyEscapeBtn',escapeOnly);
-    showAction('actionDirectBallBtn',escapeOnly);
+    showAction('actionDirectBallBtn',false);
     // Bez shotclocku se ČISTÝ STRK běžně skrývá. Je-li ale ještě dostupný PUSH OUT,
     // zobrazíme ho jako explicitní potvrzení prvního normálního strku, po kterém PUSH OUT zaniká.
-    showAction('actionLegalBtn',regularPlay && (!compactNoClock || canPushOut || (match.counterMode!=='simple' && exactBallTrackingDiscipline())));
-    showAction('actionFoulBtn',regularPlay);
+    showAction('actionLegalBtn',regularPlay && (!compactNoClock || canPushOut || !!match.detailedPlay?.tag || (match.counterMode!=='simple' && exactBallTrackingDiscipline())));
+    $('actionLegalBtn').textContent=match.discipline==='8-ball'&&match.detailedPlay?.tag?'POTOPENÁ KOULE':'ČISTÝ STRK';
+    showAction('actionFoulBtn',regularPlay||escapeOnly);
     showAction('actionSafeBtn',regularPlay);
-    showAction('actionTwoWayBtn',regularPlay);
+    showAction('actionJumpBtn',regularPlay||escapeOnly);
     const comboRackBalls=Array.isArray(match.rackRemainingBalls)&&match.rackRemainingBalls.length
       ? match.rackRemainingBalls.slice().sort((a,b)=>a-b)
       : fullRackBalls();
@@ -10799,11 +11063,11 @@ const isFourteen=match.discipline==='14.1' && !simpleCounter;
       comboRackBalls.includes(10) &&
       lowestRotationBall!==10;
 
-    showAction('actionCombo9Btn',canSpecialGameBall);
-    showAction('actionCarom9Btn',canSpecialGameBall);
+    showAction('actionCombo9Btn',false);
+    showAction('actionCarom9Btn',false);
     if($('actionCombo9Btn'))$('actionCombo9Btn').textContent='KOMBINACE NA 10';
     if($('actionCarom9Btn'))$('actionCarom9Btn').textContent='KARAMBOL NA 10';
-    showAction('actionAccidentalSafeBtn',regularPlay);
+    showAction('actionBankBtn',regularPlay);
     showAction('actionMissBtn',regularPlay);
 
     const canBreakRun=regularPlay && match.turn===match.breaker && match.breakAndRunEligible!==false;
@@ -10960,6 +11224,8 @@ const isFourteen=match.discipline==='14.1' && !simpleCounter;
       extensionsUsed:match.extensionsUsed,
       stats:match.stats,
       winnerTable:match.winnerTable,
+      detailedPlay:match.detailedPlay,
+      endedAt:match.endedAt,status:match.status,
       federalTeam:match.federalTeam
     });
   }
@@ -10969,6 +11235,9 @@ const isFourteen=match.discipline==='14.1' && !simpleCounter;
   }
   function restoreSnapshot(s){
     const x=JSON.parse(s);
+    match.detailedPlay=x.detailedPlay;
+    match.endedAt=x.endedAt;match.status=x.status;
+    detailedAction=null;
     if(x.federalTeam)match.federalTeam=x.federalTeam;
     match.scores=x.scores; match.ballsOnTable=x.ballsOnTable; match.reracksInInning14=x.reracksInInning14||0; match.inningsHistory14=Array.isArray(x.inningsHistory14)?x.inningsHistory14:[]; match.pendingEndReason14=x.pendingEndReason14||null; match.openingBreakAvailable14=x.openingBreakAvailable14!==false; match.consecutiveFouls14=x.consecutiveFouls14||[0,0]; match.turn=x.turn; match.breaker=x.breaker; match.rackNumber=x.rackNumber; match.isBreakShot=!!x.isBreakShot;
     match.softBreakOriginalBreaker=x.softBreakOriginalBreaker??null;
@@ -11017,6 +11286,8 @@ const isFourteen=match.discipline==='14.1' && !simpleCounter;
 
   window.switchTurn = function(reason='Změna hráče'){
     if(!match) return;
+    beginDetailedAction('Ruční změna hráče');
+    recordDetailedShot('turn_correction',{strokeCount:0});
     match.isBreakShot=false;
     addActionEvent(reason+' • '+match.playerNames[match.turn]+' → '+match.playerNames[1-match.turn]);
     match.softBreakReturnEligibleFor=null;
@@ -11029,6 +11300,7 @@ const isFourteen=match.discipline==='14.1' && !simpleCounter;
     match.pushOutDecisionFor=null;
     match.safetyEscapeEligibleFor=null;
     match.turn=1-match.turn;
+    ensureDetailedPlay();if(match.detailedPlay)match.detailedPlay.inning.safeInference=false;
     if(match.useClock) resetClock(false,true);
     renderMatch();
   }
@@ -11151,6 +11423,7 @@ const isFourteen=match.discipline==='14.1' && !simpleCounter;
 
   function openBreakPotCount(action){
     if(!match)return;
+    beginDetailedAction('Rozstřel');
     pendingBreakPotAction=action;
     pendingBreakAceAction=null;
     pendingBreakBalls=[];
@@ -11175,6 +11448,7 @@ const isFourteen=match.discipline==='14.1' && !simpleCounter;
       saveManualEntryUndoSnapshot('Eso z breaku');
       addActionEvent('⭐ ESO • devítka z rozstřelu • '+match.playerNames[i]+' • spadly: '+selected.join(', '));
       match.stats[i]=match.stats[i]||blankMatchStats();
+      recordDetailedShot('break',{side:i,result:'ace',balls:selected.slice(),strokeCount:1});
       recordBreakPottedBalls(i,n);
       recordBreakBallIds(i,selected);
       match.stats[i].aces=Number(match.stats[i].aces||0)+1;
@@ -11217,6 +11491,9 @@ const isFourteen=match.discipline==='14.1' && !simpleCounter;
     const other=1-i;
     const n=Math.max(0,Math.min(breakPotCountMax(),Number(count||0)));
 
+    recordDetailedShot('break',{side:i,result:action,balls:resolvedBreakBalls||[],ballCount:n,strokeCount:1,foul:action==='break_foul',
+      ballNumbersKnown:!!resolvedBreakBalls||n===0,spottedBalls:resolvedBreakSpotGameBall?[match.discipline==='9-ball'?9:10]:[]});
+    if(n>0&&!resolvedBreakBalls && match.detailedPlay){match.detailedPlay.tableKnown=false;match.detailedPlay.inning.safeInference=false;}
     if(action==='break_ok'){
       addActionEvent('Break OK • '+match.playerNames[i]+' • '+(resolvedBreakBalls?'spadly: '+resolvedBreakBalls.join(', '):'potopeno z breaku: '+n));
       if(resolvedBreakBalls){
@@ -11321,6 +11598,7 @@ const isFourteen=match.discipline==='14.1' && !simpleCounter;
   };
 
   $('breakPotCountCancelBtn').onclick=()=>{
+    cancelDetailedAction();
     pendingBreakPotAction=null;
     $('breakPotCountModal').classList.remove('show');
     if(match?.useClock)resetClock(false,false);
@@ -11343,7 +11621,9 @@ const isFourteen=match.discipline==='14.1' && !simpleCounter;
       return;
     }
 
+    beginDetailedAction('Dry break');
     const i=match.breaker;
+    recordDetailedShot('break',{side:i,result:'dry_break',balls:[],ballCount:0,strokeCount:1});
     addActionEvent('Dry break • '+match.playerNames[i]+' • z rozstřelu nic nespadlo');
     recordBreakPottedBalls(i,0);
     if(exactBallTrackingDiscipline()){ match.breakPocketedBalls=[]; match.rackRemainingBalls=fullRackBalls(); }
@@ -11412,6 +11692,7 @@ const isFourteen=match.discipline==='14.1' && !simpleCounter;
   };
 
   window.actionPushOut = function(){
+    if(!detailedTagAllowed('batch'))return;
     if(!match || match.counterMode==='simple' || match.ghostMode || !['9-ball','10-ball'].includes(match.discipline))return;
     const i=Number(match.turn||0);
     const other=1-i;
@@ -11457,6 +11738,7 @@ const isFourteen=match.discipline==='14.1' && !simpleCounter;
     match.runoutEligibleReason=null;
     match.safetyEscapeEligibleFor=null;
     match.turn=receiver;
+    invalidateDetailedInference(); // Push-out pots were not recorded by this legacy flow.
     if(match.useClock)resetClock(false,true);
     renderMatch();
   };
@@ -11493,6 +11775,7 @@ const isFourteen=match.discipline==='14.1' && !simpleCounter;
     }
     match.safetyEscapeEligibleFor=null;
     match.turn=pusher;
+    invalidateDetailedInference();
     if(match.useClock)resetClock(false,true);
     renderMatch();
   };
@@ -11503,7 +11786,7 @@ const isFourteen=match.discipline==='14.1' && !simpleCounter;
   function renderShotBallSelector(){
     const host=$('shotBallSelectButtons');
     if(!host||!match)return;
-    const rem=Array.isArray(match.rackRemainingBalls)&&match.rackRemainingBalls.length?match.rackRemainingBalls:fullRackBalls();
+    const rem=Array.isArray(match.rackRemainingBalls)?match.rackRemainingBalls:fullRackBalls();
     host.innerHTML='<div class="exact-ball-grid">'+rem.map(n=>exactBallButtonHtml(n,{selected:pendingShotBallSelection.includes(n),onclick:`toggleShotBallSelection(${n})`})).join('')+'</div>';
   }
   window.toggleShotBallSelection=function(n){
@@ -11529,7 +11812,7 @@ const isFourteen=match.discipline==='14.1' && !simpleCounter;
   function applyShotBallSelection(selected){
     if(!match || !exactBallTrackingDiscipline())return;
     const gone=new Set((selected||[]).map(Number));
-    const rem=Array.isArray(match.rackRemainingBalls)&&match.rackRemainingBalls.length?match.rackRemainingBalls.slice():fullRackBalls();
+    const rem=Array.isArray(match.rackRemainingBalls)?match.rackRemainingBalls.slice():fullRackBalls();
     match.rackRemainingBalls=rem.filter(n=>!gone.has(Number(n)));
   }
   function finishShotBallSelection(useNone=false){
@@ -11545,6 +11828,7 @@ const isFourteen=match.discipline==='14.1' && !simpleCounter;
   $('shotBallNoneBtn').onclick=()=>finishShotBallSelection(true);
   $('shotBallConfirmBtn').onclick=()=>finishShotBallSelection(false);
   $('shotBallCancelBtn').onclick=()=>{
+    cancelDetailedAction();
     pendingShotBallRequest=null; pendingShotBallSelection=[]; $('shotBallSelectModal').classList.remove('show');
     if(match?.useClock)resetClock(false,true);
   };
@@ -11584,6 +11868,7 @@ const isFourteen=match.discipline==='14.1' && !simpleCounter;
     if(p && typeof p.onTogether==='function')p.onTogether();
   };
   $('shotSequenceCancelBtn').onclick=()=>{
+    cancelDetailedAction();
     pendingShotSequence=null;
     closeShotSequenceModal();
     if(match?.useClock)resetClock(false,true);
@@ -11631,6 +11916,8 @@ const isFourteen=match.discipline==='14.1' && !simpleCounter;
 
   function processSequentialCleanShots(i,selected,remainingBefore){
     if(!match || !selected?.length)return;
+    recordDetailedShot('pot',{balls:selected.slice(),strokeCount:null,entry:'sequential_batch'});
+    match.stats[i].regularPottedBalls=Number(match.stats[i].regularPottedBalls||0)+selected.length;
     const seq=selected.slice().sort((a,b)=>remainingBefore.indexOf(a)-remainingBefore.indexOf(b));
 
     if(Array.isArray(match.rackRemainingBalls)){
@@ -11738,6 +12025,7 @@ const isFourteen=match.discipline==='14.1' && !simpleCounter;
   $('higherBallCaromBtn').onclick=()=>finishHigherBallShotType('carom');
   $('higherBallAccidentalBtn').onclick=()=>finishHigherBallShotType('accidental');
   $('higherBallTypeCancelBtn').onclick=()=>{
+    cancelDetailedAction();
     pendingHigherBallShot=null;
     $('higherBallTypeModal').classList.remove('show');
     if(match?.useClock)resetClock(false,true);
@@ -11758,14 +12046,20 @@ const isFourteen=match.discipline==='14.1' && !simpleCounter;
 
   window.actionLegal = function(){
     if(!match)return;
+    if(match.safetyEscapeEligibleFor===match.turn){actionSafetyEscape();return;}
+    if(!detailedTagAllowed('pot'))return;
+    beginDetailedAction('Čistý strk');
     const i=Number(match.turn||0);
     const lowestBefore=lowestBallBeforeShot();
     const remainingBefore=Array.isArray(match.rackRemainingBalls)
       ? match.rackRemainingBalls.slice().sort((a,b)=>a-b)
       : fullRackBalls();
 
-    openShotBallSelector({player:i,label:'ČISTÝ STRK',onDone:(selected)=>{
+    openShotBallSelector({player:i,requirePot:!!ensureDetailedPlay()?.tag,label:'ČISTÝ STRK',onDone:(selected)=>{
       const finishLegalShot=(shotInfo={type:null,higher:[]})=>{
+        const pottedCount=!exactBallTrackingDiscipline()&&ensureDetailedPlay()?.tag?1:selected.length;
+        recordDetailedShot('pot',{balls:selected.slice(),pottedCount,strokeCount:1,shotType:shotInfo.type});
+        match.stats[i].regularPottedBalls=Number(match.stats[i].regularPottedBalls||0)+pottedCount;
         match.isBreakShot=false;
 
         // Každá potvrzená potopená koule musí okamžitě zmizet z evidence koulí na stole.
@@ -11860,7 +12154,7 @@ const isFourteen=match.discipline==='14.1' && !simpleCounter;
         }
       };
 
-      if(selectedAreSequentialPrefix(selected,remainingBefore)){
+      if(!ensureDetailedPlay()?.tag && selectedAreSequentialPrefix(selected,remainingBefore)){
         askShotSequence({
           player:i,
           selected,
@@ -11882,6 +12176,8 @@ const isFourteen=match.discipline==='14.1' && !simpleCounter;
         : fullRackBalls();
       if(!rem.length)return;
       const i=Number(match.turn||0);
+      if(!detailedTagAllowed('batch'))return;
+      beginDetailedAction('Dohráno postupně');
       saveManualEntryUndoSnapshot('Dohráno postupně');
       match.rackRemainingBalls=[];
       processSequentialCleanShots(i,rem,rem);
@@ -11890,15 +12186,7 @@ const isFourteen=match.discipline==='14.1' && !simpleCounter;
 
 
   function inferRemainingFromMissBall(ball){
-    if(!match || !exactBallTrackingDiscipline())return;
-    const n=Number(ball||0);
-    if(!n)return;
-    const alreadyGone=new Set(Array.isArray(match.breakPocketedBalls)?match.breakPocketedBalls:[]);
-    // V rotačních disciplínách chyba na kouli N znamená, že nižší koule už musely být dohrané.
-    match.rackRemainingBalls=fullRackBalls().filter(b=>b>=n && !alreadyGone.has(b));
-    if(!match.rackRemainingBalls.includes(n))match.rackRemainingBalls.unshift(n);
-    match.rackRemainingBalls=[...new Set(match.rackRemainingBalls)].sort((a,b)=>a-b);
-    match.lastMissBall=n;
+    return applyRotationInference(Number(ball));
   }
   function remainingRackBallCount(){
     return Array.isArray(match?.rackRemainingBalls)?match.rackRemainingBalls.length:0;
@@ -11917,7 +12205,7 @@ const isFourteen=match.discipline==='14.1' && !simpleCounter;
   let pendingTenBallSafePotPlayer=null;
 
   window.actionTwoWayShot=function(){
-    if(!match || match.counterMode==='simple' || match.discipline==='14.1' || match.ghostMode)return;
+    return; // Retired active action; historical statistics remain readable.
     pendingTwoWayPlayer=Number(match.turn||0);
     if(match.useClock)stopTimer();
     $('twoWayResultModal').classList.add('show');
@@ -11975,6 +12263,7 @@ const isFourteen=match.discipline==='14.1' && !simpleCounter;
   $('twoWayCancelBtn').onclick=()=>{ pendingTwoWayPlayer=null; $('twoWayResultModal').classList.remove('show'); if(match?.useClock)resetClock(false,true); };
 
   window.actionDirectBallAvailable=function(){
+    return; // A recorded successful safety must receive exactly one escape result.
     if(!match || match.safetyEscapeEligibleFor!==match.turn)return;
     pendingDirectPlayer=Number(match.turn||0);
     if(match.useClock)stopTimer();
@@ -12062,6 +12351,7 @@ const isFourteen=match.discipline==='14.1' && !simpleCounter;
   $('directPotFoulBtn').onclick=()=>{ $('directPotResultModal').classList.remove('show'); pendingDirectPlayer=null; match.safetyEscapeEligibleFor=null; actionFoul(); };
 
   window.actionBreakAndRun = function(){
+    if(!detailedTagAllowed('batch'))return;
     if(!match || match.discipline==='14.1' || match.ghostMode || match.counterMode==='simple')return;
     const i=Number(match.turn||0);
 
@@ -12070,7 +12360,9 @@ const isFourteen=match.discipline==='14.1' && !simpleCounter;
       return;
     }
 
+    beginDetailedAction('Čistá hra');
     saveManualEntryUndoSnapshot('Čistá hra');
+    recordDetailedShot('inferred_pots',{balls:(match.rackRemainingBalls||[]).slice(),strokeCount:null,source:'rack_completion'});
     const inferredLen=remainingRackBallCount();
     addActionEvent('Čistá hra • Break & Run • '+match.playerNames[i]+(inferredLen?' • dohráno '+inferredLen+' koulí':''));
     match.stats[i].breakAndRun=Number(match.stats[i].breakAndRun||0)+1;
@@ -12082,6 +12374,7 @@ const isFourteen=match.discipline==='14.1' && !simpleCounter;
   };
 
   window.actionRunout = function(){
+    if(!detailedTagAllowed('batch'))return;
     if(!match || match.discipline==='14.1' || match.ghostMode || match.counterMode==='simple')return;
     const i=Number(match.turn||0);
 
@@ -12090,7 +12383,9 @@ const isFourteen=match.discipline==='14.1' && !simpleCounter;
       return;
     }
 
+    beginDetailedAction('Dohrávka');
     saveManualEntryUndoSnapshot('Dohrávka');
+    recordDetailedShot('inferred_pots',{balls:(match.rackRemainingBalls||[]).slice(),strokeCount:null,source:'rack_completion'});
     const runoutReason=match.runoutEligibleReason==='push_out_return'?'vráceném push outu':(match.runoutEligibleReason==='break_foul'?'faulu z breaku soupeře':'dry breaku soupeře');
     const inferredLen=remainingRackBallCount();
     addActionEvent('Dohrávka po '+runoutReason+' • '+match.playerNames[i]+(inferredLen?' • '+inferredLen+' koulí':''));
@@ -12117,6 +12412,21 @@ const isFourteen=match.discipline==='14.1' && !simpleCounter;
 
   window.actionFoul = function(){
     if(!match || match.discipline==='14.1')return;
+    if(match.isBreakShot){actionBreakFoul();return;}
+    if(match.safetyEscapeEligibleFor===match.turn){
+      if(!detailedTagAllowed('escape'))return;
+      beginDetailedAction('Faul při úniku');
+      pendingSafetyEscapePlayer=match.turn;safetyEscapeFailed();return;
+    }
+    if(exactBallTrackingDiscipline() && match.counterMode!=='simple'){openRotationFailure('foul');return;}
+    beginDetailedAction('Faul');finishOrdinaryFoul();
+  };
+  function finishOrdinaryFoul(ball=null,foulBalls=[]){
+    if(!match)return;
+    recordDetailedShot('foul',{ball,foulBalls:foulBalls.slice(),strokeCount:1,ballInHand:true,
+      spottedBalls:foulBalls.filter(n=>n===(match.discipline==='9-ball'?9:10))});
+    applyFoulPocketedBalls(foulBalls);
+    match.stats[match.turn].foulPottedBalls=Number(match.stats[match.turn].foulPottedBalls||0)+foulBalls.length;
 
     saveManualEntryUndoSnapshot('Faul');
 
@@ -12134,7 +12444,7 @@ const isFourteen=match.discipline==='14.1' && !simpleCounter;
     match.stats[i].fouls=Number(match.stats[i].fouls||0)+1;
     match.consecutiveFouls[i]=Number(match.consecutiveFouls[i]||0)+1;
 
-    addActionEvent('Faul • '+match.playerNames[i]);
+    addActionEvent('Faul • '+match.playerNames[i]+(ball==null?'':' • na '+ball)+(foulBalls.length?' • při faulu spadly '+foulBalls.join(', '):'')+' • soupeř ball in hand');
 
     const threeFoulActive=!!match.useThreeFoul &&
       (match.discipline==='9-ball'||match.discipline==='10-ball');
@@ -12168,8 +12478,10 @@ const isFourteen=match.discipline==='14.1' && !simpleCounter;
   let pendingSafetyPlayer=null;
 
   window.actionSafe = function(){
-    saveManualEntryUndoSnapshot('Jistota');
     if(!match)return;
+    if(match.safetyEscapeEligibleFor===match.turn){actionSafetyEscape();return;}
+    if(!detailedTagAllowed('safety'))return;
+    beginDetailedAction('Jistota');
     const i=match.turn;
     pendingSafetyPlayer=i;
     if(match.useClock) stopTimer();
@@ -12181,7 +12493,7 @@ const isFourteen=match.discipline==='14.1' && !simpleCounter;
     if(!match || pendingSafetyPlayer===null)return;
     const i=pendingSafetyPlayer;
     pendingSafetyPlayer=null;
-
+    recordDetailedSafety(success);
     match.isBreakShot=false;
     addActionEvent((success?'Úspěšná jistota':'Neúspěšná jistota')+' • '+match.playerNames[i]);
     consumeSoftBreakReturnOnShot(i);
@@ -12205,15 +12517,22 @@ const isFourteen=match.discipline==='14.1' && !simpleCounter;
   $('safetySuccessBtn').onclick=()=>finishSafetyResult(true);
   $('safetyFailBtn').onclick=()=>finishSafetyResult(false);
 
+  window.cancelSafetyEntry=function(){
+    pendingSafetyPlayer=null;pendingSafetyEscapePlayer=null;cancelDetailedAction();
+    for(const id of ['safetyResultModal','safetyEscapeResultModal','safetyEscapeContinueModal'])$(id).classList.remove('show');
+    if(match?.useClock)resetClock(false,true);
+  };
   let pendingSafetyEscapePlayer=null;
 
   window.actionSafetyEscape = function(){
     if(!match || match.counterMode==='simple')return;
     const i=Number(match.turn||0);
     if(match.safetyEscapeEligibleFor!==i){
-      toast('ÚNIK Z JISTOTY je dostupný pouze po skutečné nebo nechtěné jistotě soupeře.');
+      toast('ÚNIK Z JISTOTY je dostupný pouze po zaznamenané úspěšné jistotě soupeře.');
       return;
     }
+    if(!detailedTagAllowed('escape'))return;
+    beginDetailedAction('Únik z jistoty');
     pendingSafetyEscapePlayer=i;
     if(match.useClock)stopTimer();
     $('safetyEscapeResultText').textContent='Byl únik z jistoty hráče '+match.playerNames[i]+' úspěšný?';
@@ -12233,8 +12552,19 @@ const isFourteen=match.discipline==='14.1' && !simpleCounter;
     $('safetyEscapeContinueModal').classList.add('show');
   }
 
-  function safetyEscapeFailed(){
-    if(!match || pendingSafetyEscapePlayer===null)return;
+  function safetyEscapeFailed(foul=true){
+    if(!match || pendingSafetyEscapePlayer===null || match.safetyEscapeEligibleFor!==pendingSafetyEscapePlayer)return;
+    if(!detailedAction)beginDetailedAction('Únik z jistoty');
+    resolveDetailedEscape(false,foul);
+    if(!foul){
+      const i=pendingSafetyEscapePlayer;ensureSafetyEscapeStats(i);match.stats[i].safetyEscapes++;
+      match.stats[i].failedSafetyEscapes=Number(match.stats[i].failedSafetyEscapes||0)+1;
+      addActionEvent('Neúspěšný únik z jistoty • bez faulu • '+match.playerNames[i]);
+      match.safetyEscapeEligibleFor=null;match.breakAndRunEligible=false;match.runoutEligibleFor=null;
+      match.consecutiveFouls[i]=0;match.warnedTwoFouls[i]=false;match.turn=1-i;pendingSafetyEscapePlayer=null;
+      $('safetyEscapeResultModal').classList.remove('show');
+      if(match.useClock)resetClock(false,true);renderMatch();return;
+    }
     saveManualEntryUndoSnapshot('Únik z jistoty');
     const i=pendingSafetyEscapePlayer;
     const other=1-i;
@@ -12242,6 +12572,7 @@ const isFourteen=match.discipline==='14.1' && !simpleCounter;
 
     addActionEvent('Neúspěšný únik z jistoty • faul • '+match.playerNames[i]);
     match.stats[i].safetyEscapes++;
+    match.stats[i].failedSafetyEscapes=Number(match.stats[i].failedSafetyEscapes||0)+1;
     match.stats[i].fouls=Number(match.stats[i].fouls||0)+1;
     match.isBreakShot=false;
     match.breakAndRunEligible=false;
@@ -12290,6 +12621,8 @@ const isFourteen=match.discipline==='14.1' && !simpleCounter;
       lastManualEntrySnapshot={match:undoState.match,label:'Únik z jistoty',createdAt:Date.now()};
     }else saveManualEntryUndoSnapshot('Únik z jistoty');
     const balls=Array.isArray(selectedBalls)?selectedBalls:[];
+    resolveDetailedEscape(true,false,balls);
+    match.stats[i].regularPottedBalls=Number(match.stats[i].regularPottedBalls||0)+balls.length;
     ensureSafetyEscapeStats(i);
 
     const label=outcome==='continue'
@@ -12312,6 +12645,7 @@ const isFourteen=match.discipline==='14.1' && !simpleCounter;
       match.safetyEscapeEligibleFor=null;
       match.turn=i;
     }else if(outcome==='resafe'){
+      recordDetailedSafety(true);
       match.stats[i].resafes=Number(match.stats[i].resafes||0)+1;
       match.stats[i].safeties=Number(match.stats[i].safeties||0)+1;
       match.stats[i].trackedSafeties=Number(match.stats[i].trackedSafeties||0)+1;
@@ -12344,17 +12678,20 @@ const isFourteen=match.discipline==='14.1' && !simpleCounter;
   }
 
   $('safetyEscapeSuccessBtn').onclick=safetyEscapeSuccessful;
-  $('safetyEscapeFailBtn').onclick=safetyEscapeFailed;
+  $('safetyEscapeFailBtn').onclick=()=>safetyEscapeFailed(true);
+  $('safetyEscapeLegalFailBtn').onclick=()=>safetyEscapeFailed(false);
   $('safetyEscapeContinueBtn').onclick=()=>finishSafetyEscapeSuccess('continue');
   $('safetyEscapeEndBtn').onclick=()=>finishSafetyEscapeSuccess('end');
   $('safetyEscapeResafeBtn').onclick=()=>finishSafetyEscapeSuccess('resafe');
   $('safetyEscapeCancelBtn').onclick=()=>{
+    cancelDetailedAction();
     $('safetyEscapeResultModal').classList.remove('show');
     pendingSafetyEscapePlayer=null;
     if(match?.useClock)resetClock(false,true);
   };
 
   window.actionAccidentalSafety=function(){
+    return; // Retired active action.
     if(!match || match.counterMode==='simple' || match.discipline==='14.1' || match.ghostMode)return;
     const i=Number(match.turn||0);
     const other=1-i;
@@ -12386,7 +12723,10 @@ const isFourteen=match.discipline==='14.1' && !simpleCounter;
     if(!match || match.counterMode==='simple')return;
     pendingMissPlayer=Number(match.turn||0);
     if(match.useClock)stopTimer();
-    $('missReasonModal').classList.add('show');
+    if(match.safetyEscapeEligibleFor===match.turn){actionSafetyEscape();return;}
+    if(!detailedTagAllowed('miss'))return;
+    if(exactBallTrackingDiscipline())openRotationFailure('miss');
+    else {beginDetailedAction('MISS');registerMissReason('missed_ball');}
   };
 
   let pendingMissReason=null;
@@ -12419,14 +12759,11 @@ const isFourteen=match.discipline==='14.1' && !simpleCounter;
     if(!skipUndoSave)saveManualEntryUndoSnapshot('MISS');
     const i=pendingMissPlayer;
     const s=match.stats[i];
-    const reasonLabel=reason==='bad_position' ? 'obtížná pozice' : 'špatně zahráno';
+    const reasonLabel='nepotopená koule';
 
+    recordDetailedShot('miss',{ball:missBall,strokeCount:1});
     s.matchOnlyMisses=Number(s.matchOnlyMisses||0)+1;
-    if(reason==='bad_position'){
-      s.matchOnlyMissBadPosition=Number(s.matchOnlyMissBadPosition||0)+1;
-    }else{
-      s.matchOnlyMissPot=Number(s.matchOnlyMissPot||0)+1;
-    }
+
     const ballPart=missBall!=null ? ' na '+Number(missBall) : '';
     addActionEvent(match.playerNames[i]+' • MISS'+ballPart+' • '+reasonLabel);
 
@@ -12743,7 +13080,7 @@ const isFourteen=match.discipline==='14.1' && !simpleCounter;
     const target=normalRaceTarget(match);
     match.target=target;
     if(match.federalTeam){
-      match.federalTeam.racks.push({rack:match.rackNumber,breaker:match.breaker,winner,players:JSON.parse(JSON.stringify(match.federalTeam.players)),stats:federalTeamRackStats(match)});
+      match.federalTeam.racks.push({rack:match.rackNumber,breaker:match.breaker,winner,players:JSON.parse(JSON.stringify(match.federalTeam.players)),stats:federalTeamRackStats(match),shots:cloneForUndo(match.detailedPlay?.records.filter(r=>r.rack===match.rackNumber)||[])});
     }
     match.scores[winner]=Math.min(target,Number(match.scores[winner]||0)+1);
     logEvent('Skóre '+match.scores[0]+':'+match.scores[1]);
@@ -13143,6 +13480,7 @@ const isFourteen=match.discipline==='14.1' && !simpleCounter;
     }
     match.breaker=next;
     match.turn=match.breaker;
+    if(!match.isBreakShot)invalidateDetailedInference();
     if(match.useClock) resetClock(true,true);
     renderMatch();
   }
@@ -23882,6 +24220,8 @@ $('createTournamentBtn').onclick=async()=>{
         ${statBox('MISS',Number(st.matchOnlyMisses||st.misses||0))}
         ${statBox('FAULY',Number(st.fouls||0))}
         ${statBox('PUSH OUT',Number(st.pushOuts||0))}
+        ${statBox('JUMP SHOT',detailedRatio(st,'jump',m.detailedPlay?.coverage==='partial'))}
+        ${statBox('BANK SHOT',detailedRatio(st,'bank',m.detailedPlay?.coverage==='partial'))}
         ${statBox('2-WAY SHOT',Number(st.twoWaySuccessful||0)+'/'+Number(st.twoWayAttempts||0))}
         ${statBox('NEJČASTĚJŠÍ MISS KOULE',mostMiss)}
       </div>
@@ -23915,6 +24255,8 @@ $('createTournamentBtn').onclick=async()=>{
         ${statBox('RUNOUT',statVal(m,i,'runouts'))}
         ${statBox('PUSH OUT',statVal(m,i,'pushOuts'))}
         ${statBox('PUSH OUT VRÁCEN',statVal(m,i,'pushOutsReturned'))}
+        ${statBox('JUMP SHOT',detailedRatio(m.stats?.[i],'jump',m.detailedPlay?.coverage==='partial'))}
+        ${statBox('BANK SHOT',detailedRatio(m.stats?.[i],'bank',m.detailedPlay?.coverage==='partial'))}
         ${statBox('2-WAY SHOT',statVal(m,i,'twoWaySuccessful')+'/'+statVal(m,i,'twoWayAttempts'))}
         ${statBox('NEJČASTĚJŠÍ MISS KOULE',mostMissedBall(m.stats?.[i]))}
         ${statBox('NEJČASTĚJI Z BREAKU',mostBreakBall(m.stats?.[i]))}
@@ -25895,7 +26237,8 @@ function renderHistory(){
       racksAgainst,
       soloSessions14,
       ghostSessions,
-      ...extras
+      ...extras,
+      ...aggregateDetailedTags(facts,pid)
     };
   }
 
@@ -27342,7 +27685,7 @@ function renderHistory(){
       if(!m || (m.status||'complete')!=='complete' || !Array.isArray(m.playerIds) || !m.playerIds.includes(pid) || m.discipline!==discipline)return;
       if(m.solo14)soloSessions14++; if(m.ghostMode)ghostSessions++;
     });
-    return {matches:facts.length,detailedMatches,wins,losses,racksFor,racksAgainst,soloSessions14,ghostSessions,...extras};
+    return {matches:facts.length,detailedMatches,wins,losses,racksFor,racksAgainst,soloSessions14,ghostSessions,...extras,...aggregateDetailedTags(facts,pid)};
   }
 
   function myStatsForm(pid,discipline='all',limit=10){
@@ -27390,6 +27733,7 @@ function renderHistory(){
         <div><span class="muted">Ø koulí / break</span><div style="font-size:21px;font-weight:900">${avgBreak}</div></div><div><span class="muted">Eso z breaku</span><div style="font-size:21px;font-weight:900">${a.aces||0}</div></div><div><span class="muted">Dohrávky</span><div style="font-size:21px;font-weight:900">${a.runouts||0}</div></div>
         <div><span class="muted">Jistoty</span><div style="font-size:21px;font-weight:900">${a.safeties||0}</div></div><div><span class="muted">Úspěšnost jistot</span><div style="font-size:21px;font-weight:900">${pctStat(a.successfulSafeties,a.trackedSafeties)}</div></div><div><span class="muted">Úspěšnost úniků</span><div style="font-size:21px;font-weight:900">${pctStat(a.successfulSafetyEscapes,a.safetyEscapes)}</div></div>
         <div><span class="muted">RESAFE</span><div style="font-size:21px;font-weight:900">${a.resafes||0}</div></div><div><span class="muted">2-WAY</span><div style="font-size:21px;font-weight:900">${a.twoWaySuccessful||0}/${a.twoWayAttempts||0}</div></div><div><span class="muted">PUSH OUT</span><div style="font-size:21px;font-weight:900">${a.pushOuts||0}</div></div><div><span class="muted">Vrácený PUSH OUT</span><div style="font-size:21px;font-weight:900">${a.pushOutsReturned||0}</div></div>
+        <div><span class="muted">JUMP SHOT</span><div style="font-size:21px;font-weight:900">${detailedRatio(a,'jump')}</div></div><div><span class="muted">BANK SHOT</span><div style="font-size:21px;font-weight:900">${detailedRatio(a,'bank')}</div></div>
         <div><span class="muted">Fauly</span><div style="font-size:21px;font-weight:900">${a.fouls||0}</div></div><div><span class="muted">3-foul prohry</span><div style="font-size:21px;font-weight:900">${a.threeFoulLosses||0}</div></div><div><span class="muted">Vyhraná tempa</span><div style="font-size:21px;font-weight:900">${a.lagWins||0}</div></div>
         ${(discipline==='14.1'||discipline==='all')?`<div><span class="muted">14.1 High Run</span><div style="font-size:21px;font-weight:900">${a.highRun14||0}</div></div><div><span class="muted">14.1 sólo session</span><div style="font-size:21px;font-weight:900">${a.soloSessions14||0}</div></div>`:''}
       </div><div class="muted" style="margin-top:10px">Detailní herní statistiky se počítají pouze ze zápasů vedených přes rozšířené počítadlo. Výsledky, W/L, ELO a racky zahrnují i základní evidenci.</div></div>
