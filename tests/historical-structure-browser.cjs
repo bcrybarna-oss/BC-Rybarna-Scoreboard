@@ -7,6 +7,7 @@ const hook=`
 window.histTest={
  setup(){cloudAuthenticated=true;cloudUid='owner';cloudEmailVerified=true;cloudIdToken='mock';cloudTokenExpiresAt=Date.now()+3600000;currentUserRole='system_admin';data=defaultData();
  for(let i=1;i<=8;i++)data.players['p'+i]={id:'p'+i,name:'Hráč '+i,firstName:'Hráč',lastName:String(i)};
+ data.players.hidden={id:'hidden',name:'Skrytý',hiddenFromPlayers:true};data.players.inactive={id:'inactive',name:'Neaktivní',active:false};
  data.tournamentSeries=[{id:'s',name:'Lounská test',createdByUid:'owner',managerUids:{manager:true},tournamentIds:[],placementTieBreak:'score_h2h_group',scoringMode:'custom',customPointsText:'1=10,2=8,3=6,4=5,5=4,6=3,7=2,8=1',historicalTournaments:[{id:'legacy',name:'Starý historický',results:[{playerId:'p8',place:1}],matches:[]}]}];
  document.querySelectorAll('.modal.show').forEach(e=>e.classList.remove('show'));localStorage.setItem(DB_KEY,JSON.stringify(data));},
  series(){selectedSeriesId='s';renderSeriesModal();$('seriesModal').classList.add('show');},
@@ -66,6 +67,7 @@ function firebase(x){if(x==null)return null;if(typeof x!=='object')return x;cons
  const legacyBefore=await run(()=>JSON.stringify(histTest.data.tournamentSeries[0].historicalTournaments));
  // Actual setup UI: no random draw; empty/duplicate positions rejected, draft survives reload.
  await run(()=>{histTest.series();openHistoricalStructureSetup('s');});
+ assert.equal(await page.locator('.hsPlayer[value="hidden"],.hsPlayer[value="inactive"]').count(),0);
  await page.locator('#hsName').fill('UI skupina');await page.locator('#hsDate').fill('2024-05-11');
  for(const id of ['p1','p2','p3'])await page.locator('.hsPlayer[value="'+id+'"]').check();
  await page.getByRole('button',{name:'PŘIPRAVIT RUČNÍ NASAZENÍ',exact:true}).click();
