@@ -1,5 +1,16 @@
 # Revize aplikace Poolčítadlo
 
+## Dominik – sjednocení nabídky pořadí historických skupin (v4.51.81 RC)
+
+Datum: 20. 10. 2026. Výchozí main: `996fa40865828bdb29936816a610663a3a51e5c3`. Samostatná větev `fix/historical-group-criteria`, bez PR #6.
+
+- Historická příprava přebírá options přímo z formuláře nového běžného turnaje: **Body / skóre ve skupině**, potom **Vzájemný zápas**; výchozí `points`, penalty vypnuté. Sjednoceny i popisky kritéria a penalt. Číslo verze zůstává v4.51.81 RC (úprava popisků).
+- Obě cesty již používaly `groupStandings`, `groupHeadToHeadMini`, původní postup a bodování. Algoritmus ani nastavení uložených turnajů se nemění; žádná migrace, změna dokončených výsledků či bodů.
+- Izolovaný Chrome test aktuálního index.html prošel: stejné nabídky/defaulty, obě pravidla s/bez penalt, dvě shodná vítězství i trojstranný kruh, rozhodnutí rozdílem a nastřílenými racky, identické pořadí/postup/pavouk/umístění/body a reload rozpracovaného turnaje se zvoleným pravidlem. Původní historická sada včetně konfliktů/ochrany dat prošla, 0 page errors; veškerá síť mockovaná, žádné produkční zápisy.
+- Node sada 68/70, pouze dvě známá selhání `preview-match-reload-recovery` v test-modular; smoke 12/12 zahrnuté. Bez úprav těchto testů.
+
+Stav: otestováno, připraveno k PR; zatím nenasazeno. Skutečné Firebase Rules/Auth, fyzické mobilní platformy a distribuovaný souběh nejsou tímto testem ověřeny. Přesná stávající kritéria jsou v docs/historical-structured-entry.md.
+
 ## Dominik – provedené změny v revizi ve verzi v4.51.81 RC
 
 Datum: 19.–20. 10. 2026. Výchozí main/produkce: `105c126401fced4ba6e672f150770a3da97bb398` (v4.51.80 RC). Práce přímo na main; žádná vývojová větev ani ruční izolovaný náhled, PR #6 nepoužito.

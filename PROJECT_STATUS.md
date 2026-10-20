@@ -14,6 +14,8 @@ Aktualizace: 20. 10. 2026. Zadavatel aktuální revize: **Dominik**.
 
 ## Dokončené a rozpracované úpravy
 
+- Dominik, 20. 10. 2026: `fix/historical-group-criteria` – otestované sjednocení názvů a nabídky kritérií historické přípravy s běžným turnajem, připravené k PR, zatím nenasazené. Verze zůstává v4.51.81 RC. Výpočet a uložená data beze změn. Chrome parita obou kritérií, dvou/více shodných hráčů, penalt, postupu, umístění/bodů a reloadu prošla (0 page errors, celá síť mockovaná). Node 68/70, pouze dvě známé chyby test-modular; smoke 12/12. Podrobnosti REVIZE.md a docs/historical-structured-entry.md.
+
 - Dokončené a nasazené ve v4.51.81 RC: historické turnaje do sérií se strukturou, ručním nasazením a zadáním skóre, automatickým postupem/dokončením, auditem a potvrzením dopadu zpětných oprav, obnovou po reloadu, bez duplicitních bodů a bez smyšlených statistik. Původní historické zadávání a pravidla Lounské série zůstávají. Více čistých skupin vyžaduje ruční konečné pořadí podle výslovného potvrzení Dominika. Podrobně docs/historical-structured-entry.md.
 
 - Dokončené a nasazené ve v4.51.80 RC: EXPORT PDF otevírá společný dialog se jménem souboru, samostatným sdílením souboru, uložením a zavřením. Dialog drží jedno PDF pro obě i opakované akce a zůstává otevřený po jejich dokončení/zrušení/chybě. Nepodporované sdílení je vysvětlené a neblokuje stažení. Pravidla spolupráce zůstávají závazná.
