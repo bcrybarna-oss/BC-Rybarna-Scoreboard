@@ -164,6 +164,7 @@ Aktivní zápas se publikuje jako veřejný LIVE stav. Veřejný payload nesmí 
 ## Stream
 
 Existuje overlay, livescore, obrazovka pauzy a QR kód odkazující na Poolčítadlo. Pauza funguje přímo v aplikaci.
+V připravované v4.51.85 RC má obrazovka probíhajícího zápasu společný panel OVLÁDÁNÍ STREAMU s volbami LIVE/PAUZA/BRZY ZAČÍNÁME/KONEC i při jednoduchém počítadle; panel je vidět pouze po zapnutí stream overlaye. Volba streamu není skrytá mezi rozšířenými herními pravidly. Režimy ovládají webový overlay, nikoli kameru/Streamlabs. Nasazení a limity viz PROJECT_STATUS.md.
 
 ## Administrace
 

@@ -1,5 +1,14 @@
 # Revize aplikace Poolčítadlo
 
+## Jaroslav – ovládání streamu v jednoduchém počítadle (v4.51.85 RC)
+
+Zadavatel: Jaroslav
+Datum: 21. 10. 2026
+Změny: Do obrazovky aktivního zápasu doplněn chybějící panel OVLÁDÁNÍ STREAMU s tlačítky LIVE, PAUZA, BRZY ZAČÍNÁME a KONEC pro jednoduché i rozšířené počítadlo. Napojení využívá stávající refreshStreamDirector / setStreamMode, uchování rozpracovaného zápasu a stávající cloudový overlay (beze změny datového modelu, skóre, statistik a historie). Panel se zobrazuje pouze při povoleném stream overlayi. Volba Stream overlay je v běžné přípravě zápasu dostupná i bez rozbalení dalších herních pravidel. Upraveno vysvětlení jednoduchého režimu.
+Testy: Přidán tests/simple-stream-controls.test.cjs (existence panelu, čtyři režimy v jednoduchém, stejné ovládání v rozšířeném režimu, skrytí po vypnutí streamu), 3/3 prošly v GitHub CI [run 39615611946](https://github.com/bcrybarna-oss/BC-Rybarna-Scoreboard/actions/runs/39615611946). Node 102/104, pouze dvě známá nezměněná selhání test-modular / preview-match-reload-recovery. Release version and revision prošel, včetně porovnání s main. Všechny 10 inline skripty prošly syntaktickou kontrolou a všechna ID ovládacího panelu existují právě jednou; skutečné prohlížeče, cloudový přenos a fyzické mobily neověřeny.
+Nasazení: Připraveno v samostatné větvi fix/simple-counter-stream-controls-20261021; dosud nesloučeno do main a nenasazeno. Produkce zůstává v4.51.84 RC.
+Omezení: Vyloučena testovací komunikace s produkční Firebase. Je nutné v izolovaném mocku a následně s oprávněným účtem ověřit skutečný přenos změn na overlay; fyzické mobily neověřeny. Panel neovládá kameru ani software Streamlabs, jen režim webového overlaye.
+
 ## Dominik – uzavření a ověřené nasazení etapy 1 Federal Cupu (v4.51.84 RC)
 
 Zadavatel: Dominik
