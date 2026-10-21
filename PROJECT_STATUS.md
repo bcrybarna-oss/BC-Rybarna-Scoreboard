@@ -4,7 +4,7 @@ Aktualizace: 21. 10. 2026. Zadavatel aktuální revize: **Jaroslav**.
 
 ## Verze a nasazení
 
-- Jaroslav, 21. 10. 2026: změna ovládání streamu v jednoduchém i rozšířeném počítadle připravena ve větvi `fix/simple-counter-stream-controls-20261021` jako v4.51.85 RC, bez zápisu do produkční databáze. Opraven chybějící streamový panel a viditelnost volby overlaye ve stručném formuláři. Přidané Node testy; CI a skutečný přenos streamového stavu ještě ověřit. Zatím **nenasazeno**.
+- Jaroslav, 21. 10. 2026: změna ovládání streamu v jednoduchém i rozšířeném počítadle připravena ve větvi `fix/simple-counter-stream-controls-20261021` jako v4.51.85 RC, bez zápisu do produkční databáze. Opraven chybějící streamový panel a viditelnost volby overlaye ve stručném formuláři. Regresní PR CI [39615611946](https://github.com/bcrybarna-oss/BC-Rybarna-Scoreboard/actions/runs/39615611946): nová streamová sada 3/3 prošla, Node 102/104 (pouze dva známé preview testy), release pravidla prošla. Browser/cloudový přenos zatím neověřen. Zatím **nenasazeno**.
 
 - Dominik, 21. 10. 2026: etapa 1 evidence Federal Cupu definitivně dokončena. Čtyři nálezy uzavřeny, před sloučením znovu prošly unit 14/14, dva izolovaní klienti 7/7 a browserové sady Federal Cup/evidence/detailní/historické/PDF/release. Lokálně i [CI main](https://github.com/bcrybarna-oss/BC-Rybarna-Scoreboard/actions/runs/39604934353) Node 99/101, pouze dvě známá nezměněná selhání preview-match-reload-recovery v test-modular; Release version and revision prošel. [PR #21](https://github.com/bcrybarna-oss/BC-Rybarna-Scoreboard/pull/21) sloučen jako 01a5fdf2885b18f68a4a161aa92f74591e0812ae. Etapa 2/report/nový PDF export ani rozdělení testů/CI nezahájeny.
 
