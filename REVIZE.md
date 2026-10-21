@@ -1,5 +1,14 @@
 # Revize aplikace Poolčítadlo
 
+## Dominik – Federal Cup: výpočet všech 11 statistik, etapa 2 (v4.51.85 RC)
+
+Zadavatel: Dominik
+Datum: 21. 10. 2026
+Změny: Z aktuálního main 090330ac6a4e86a78bffdd824cabb8fb12db0056 samostatná větev feature/federal-statistics-calculation. Čisté interní federalCalculateMatch/federalCalculateSeason a společný kontrakt 11 metrik s přesnými čitateli/jmenovateli, hodnotou pouze při complete, partial/unknown a strojovými důvody. Oddělené rozstřely, útok, obrana, fauly; všechny breaky v průměru, soft/dry překryv jednou, B&R bez změny definice a bez odečítání es. Kanonické strky bez rackových kopií, doložitelné Team příspěvky podle stabilních ID a rozdílových čítačů, Doubles pouze dvojici. Agregace dokončených fixture stejného ročníku, priorita detailu před ručním výsledkem, deduplikace a součet čitatelů/jmenovatelů místo průměru procent. Žádná změna herní logiky, obrazovky, reportu, PDF ani Firebase. Aktivní verze povýšeny na v4.51.85 RC. Nová technická dokumentace docs/federal-statistics-calculation.md a aktualizace STATUS/CONTEXT.
+Testy: Nové unit 37/37 s nezávislým osmirackovým příkladem všech 11 metrik obou stran, váženou agregací a neúplnými/rozpornými daty. Celá Node sada 136/138, pouze dvě původní nezměněné chyby preview-match-reload-recovery v test-modular. Rozšířený federal-evidence browser: skutečné akce esa/B&R/RESAFE/faulů, Team/Doubles, undo, reload, Auth, full PUT/GET a shoda výpočtu před/po obnovení; samotný výpočet se zakázaným fetch a bez změny dat. Browser konfigurace/servisních konfliktů 7/7; původní detailed/Federal Cup/historické/PDF/release regrese prošly, veškerá síť izolovaná a 0 page errors. Release gate proti čerstvému origin/main a diff check ověřeny před PR. Produkční Firebase nepoužita.
+Nasazení: Připraveno k novému PR, nesloučeno a nenasazeno; produkce zůstává v4.51.84 RC. CI bude ověřeno po pushi. Nezahájeno veřejné zobrazení, grafický report ani nový PDF export.
+Omezení: Historie bez průkazné evidence zůstává neúplná po jednotlivých metrikách, nikoli domnělé nuly. Team příspěvky mají rozsah dokončených racků; rozehraný Team zápas má neúplné osobní souhrny. Konfliktní/neznámý aktér se nepřiřazuje prvnímu hráči soupisky. Fyzické telefony, skutečné Auth/Rules/CORS a zátěž neověřeny. Dvě známé chyby test-modular zachovány; rozdělení CI se neimplementuje. Výpočty nejsou novým veřejným reportem.
+
 ## Dominik – uzavření a ověřené nasazení etapy 1 Federal Cupu (v4.51.84 RC)
 
 Zadavatel: Dominik

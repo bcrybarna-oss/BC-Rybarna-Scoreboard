@@ -2513,7 +2513,7 @@ html[data-theme="light"] #leagueSchedule .history-item .muted{
           <span class="by">by</span>
           <span class="club">BC Rybárna</span>
         </div>
-        <small class="modern-brand-version">v4.51.84 RC</small>
+        <small class="modern-brand-version">v4.51.85 RC</small>
       </div>
     </div>
     <div class="nav">
@@ -3121,7 +3121,7 @@ html[data-theme="light"] #leagueSchedule .history-item .muted{
         </div>
         <div class="subpanel" style="min-width:210px;text-align:center;margin:0">
           <div class="muted" style="font-size:10px;font-weight:950;letter-spacing:1px">AKTUÁLNÍ VERZE</div>
-          <div style="font-size:22px;font-weight:950;color:var(--gold2);margin-top:5px">v4.51.84 RC</div>
+          <div style="font-size:22px;font-weight:950;color:var(--gold2);margin-top:5px">v4.51.85 RC</div>
         </div>
       </div>
     </div>
@@ -5845,7 +5845,7 @@ html[data-theme="light"] #leagueSchedule .history-item .muted{
       </div>
 
       <div id="groupPlayoffSeedStatus" class="muted" style="margin-top:12px;min-height:20px"></div>
-      <div class="muted" style="margin-top:4px;font-size:11px">RC v4.51.84</div>
+      <div class="muted" style="margin-top:4px;font-size:11px">RC v4.51.85</div>
       <div class="modal-actions">
         <button id="groupPlayoffSeedApplyBtn" class="btn primary big" type="button">NASADIT DO PLAY-OFF</button>
         <button id="groupPlayoffSeedCancelBtn" class="btn">ZRUŠIT</button>
@@ -7029,7 +7029,7 @@ html[data-theme="light"] #leagueSchedule .history-item .muted{
     const btn=$('submitReportBtn');if(btn)btn.disabled=true;
     try{
       const id=uid(),p=currentUserPlayerId?data.players?.[currentUserPlayerId]:null;
-      const report={id,createdByUid:cloudUid,createdByPlayerId:currentUserPlayerId||'',createdByName:p?playerSelectionLabel(p):(cloudUserEmail||'Uživatel'),email:cloudUserEmail||'',type,area,description,appVersion:'v4.51.84 RC',createdAt:new Date().toISOString(),updatedAt:new Date().toISOString(),status:'new',adminNote:''};
+      const report={id,createdByUid:cloudUid,createdByPlayerId:currentUserPlayerId||'',createdByName:p?playerSelectionLabel(p):(cloudUserEmail||'Uživatel'),email:cloudUserEmail||'',type,area,description,appVersion:'v4.51.85 RC',createdAt:new Date().toISOString(),updatedAt:new Date().toISOString(),status:'new',adminNote:''};
       await reportRequest(id,'PUT',report);
       try{
         await writeReportUserMirror(report);
@@ -9762,6 +9762,225 @@ $('useClock').addEventListener('change',e=>$('clockSettings').classList.toggle('
     if(match.federalTeam)Object.assign(rack,{players,stats:federalTeamRackStats(match),shots:cloneForUndo(shots)});
     racks.push(rack);return true;
   }
+  // Federal Cup calculation contract v1. Pure readers; no UI, globals or persistence.
+  function federalMetric(kind,numerator,denominator,coverage='complete',reasons=[],components={}){
+    const valid=n=>Number.isFinite(n)&&Number.isInteger(n)&&n>=0;
+    if(numerator!==null&&!valid(numerator)||denominator!==null&&!valid(denominator)){
+      reasons=[...reasons,'invalid_number'];coverage='partial';
+    }
+    if(kind!=='count'&&denominator!==null&&numerator!==null&&kind!=='average'&&numerator>denominator){reasons=[...reasons,'inconsistent_ratio'];coverage='partial';}
+    let value=null;
+    if(coverage==='complete'&&numerator!==null){
+      if(kind==='count')value=numerator;
+      else if(denominator>0)value=numerator/denominator*(kind==='percent'?100:1);
+      else reasons=[...reasons,'zero_denominator'];
+    }
+    return {kind,numerator,denominator:kind==='count'?null:denominator,count:kind==='count'?numerator:null,value,coverage,reasons:[...new Set(reasons)].sort(),components};
+  }
+  function federalStatsRows(collection){return Object.values(collection||{}).filter(x=>x&&typeof x==='object');}
+  function federalStatsRackRows(m){
+    const ids=new Set(),numbers=new Set();
+    return federalStatsRows(m.federalTeam?.racks||m.federalEvidence?.racks).filter(r=>{
+      if(r.id&&ids.has(r.id)||r.rack!=null&&numbers.has(Number(r.rack)))return false;
+      if(r.id)ids.add(r.id);if(r.rack!=null)numbers.add(Number(r.rack));return true;
+    });
+  }
+  function federalStatsRacksComplete(m){
+    const racks=federalStatsRows(m.federalTeam?.racks||m.federalEvidence?.racks);
+    if(![0,1].every(i=>m.scores?.[i]!=null&&Number.isInteger(Number(m.scores[i]))&&Number(m.scores[i])>=0))return false;
+    const numbers=new Set();
+    if(racks.some(r=>{const n=Number(r.rack),duplicate=numbers.has(n);numbers.add(n);return !Number.isInteger(n)||n<1||duplicate||r.matchId&&r.matchId!==m.id||r.year!=null&&Number(r.year)!==Number(m.federalCupLink?.year);}))return false;
+    return federalRackScoresAgree({...m,federalTeam:null,federalEvidence:{racks}});
+  }
+  function federalStatsSide(m,side){
+    const st=m.stats?.[side]||{},fresh=m.federalEvidence?.fromStart===true;
+    const raw=federalStatsRows(m.detailedPlay?.records),seen=new Map(),all=[],duplicateSides=new Set(),duplicateBreakSides=new Set();
+    for(const r of raw){
+      const previous=r.id?seen.get(r.id):null;
+      if(!r.id||previous){for(const x of [r,previous].filter(Boolean)){duplicateSides.add(x.side);if(x.kind==='break')duplicateBreakSides.add(x.side);}}
+      if(previous)continue;if(r.id)seen.set(r.id,r);all.push(r);
+    }
+    const duplicate=duplicateSides.has(side),records=all.filter(r=>r.side===side);
+    const racks=federalStatsRackRows(m),services=federalStatsRows(m.federalEvidence?.serviceChanges);
+    const num=k=>Object.hasOwn(st,k)&&Number.isInteger(st[k])&&st[k]>=0?st[k]:null;
+    const metric=(kind,n,d,keys,extra=[],components={})=>{
+      const reasons=[...extra];
+      if(service('potting'))reasons.push('score_correction_missing_racks');
+      if(!fresh)reasons.push('legacy_coverage');
+      if(keys.some(k=>!Object.hasOwn(st,k)))reasons.push('missing_counter');
+      if(keys.some(k=>Object.hasOwn(st,k)&&num(k)===null))reasons.push('invalid_counter');
+      const coverage=reasons.length?(n===null?'unknown':'partial'):'complete';
+      return federalMetric(kind,n,d,coverage,reasons,components);
+    };
+    const service=domain=>services.some(s=>s.coverage?.[domain]==='partial');
+    // beginRack reserves one counter before the actual break is performed.
+    const pending=!!m.isBreakShot&&m.breaker===side&&!m.federalTeam?.pending?1:0;
+    const total=num('breaks')===null?null:num('breaks')-pending,dry=num('dryBreaks'),soft=num('softBreaks'),overlap=num('softDryBreaks'),bf=num('breakFouls');
+    const breakRecords=records.filter(r=>r.kind==='break');
+    const breakReasons=[];
+    if(fresh&&total!==null&&breakRecords.length!==total)breakReasons.push('break_record_gap');
+    if(duplicateBreakSides.has(side))breakReasons.push('duplicate_record');
+    if(total!==null&&[dry,soft,overlap,bf].every(v=>v!==null)&&
+      (dry>total||soft>total||bf>total||overlap>Math.min(dry,soft)))breakReasons.push('inconsistent_break_counters');
+    if(service('potting'))breakReasons.push('score_correction_missing_racks');
+    const successful=[total,dry,soft,overlap,bf].some(v=>v===null)?null:total-dry-soft+overlap-bf;
+    const metrics={};
+    metrics.breakSuccess=metric('percent',successful,total,['breaks','dryBreaks','softBreaks','softDryBreaks','breakFouls'],breakReasons);
+    const balls=num('breakPottedBalls'),tracked=num('breakPottedTracked'),ballReasons=[...breakReasons];
+    if(tracked!==null&&total!==null&&tracked!==total)ballReasons.push('untracked_break_balls');
+    if(tracked!==null&&total!==null&&tracked>total)ballReasons.push('inconsistent_break_tracking');
+    // Counted foul/soft break balls are real fallen balls, even when later spotted.
+    const recordedBallCounts=breakRecords.map(r=>Number.isInteger(r.ballCount)?r.ballCount:
+      (r.result==='ace'||r.result==='dry_break'||r.ballNumbersKnown===true)&&Array.isArray(r.balls)?r.balls.length:null);
+    if(fresh&&(recordedBallCounts.some(n=>n===null||n<0)||recordedBallCounts.every(n=>n!==null)&&balls!==null&&recordedBallCounts.reduce((a,b)=>a+b,0)!==balls))ballReasons.push('break_ball_record_gap');
+    metrics.breakBallAverage=metric('average',balls,total,['breaks','breakPottedBalls','breakPottedTracked'],ballReasons,{trackedBreaks:tracked});
+    const countMetric=(key,extra=[])=>metric('count',num(key),null,[key],extra);
+    const rackReasons=[];
+    if(!fresh)rackReasons.push('legacy_racks');
+    if(service('racks'))rackReasons.push('score_correction_racks');
+    if(!federalStatsRacksComplete(m))rackReasons.push('incomplete_rack_history');
+    const own=racks.filter(r=>r.breaker===side),ownWins=own.filter(r=>r.winner===side).length;
+    metrics.ownBreakWins=federalMetric('ratio',fresh||racks.length?ownWins:null,fresh||racks.length?own.length:null,
+      rackReasons.length?(racks.length?'partial':'unknown'):'complete',rackReasons);
+    for(const [name,key,flag]of [['aces','aces','ace'],['cleanRuns','breakAndRun','breakAndRun']]){
+      const reasons=[];
+      if(service('potting'))reasons.push('score_correction_missing_racks');
+      if(fresh&&!federalStatsRacksComplete(m))reasons.push('incomplete_rack_history');
+      if(fresh&&racks.some(r=>r[flag]==null))reasons.push('missing_rack_outcome');
+      if(fresh&&racks.filter(r=>r.winner===side&&r[flag]===true).length!==num(key))reasons.push('rack_counter_mismatch');
+      if(flag==='breakAndRun'&&racks.some(r=>r.ace===true&&r.breakAndRun===true))reasons.push('ace_run_conflict');
+      metrics[name]=countMetric(key,reasons);
+    }
+    const correction=all.some(r=>r.kind==='turn_correction'||r.kind==='table_correction'&&!r.foulId);
+    const potReasons=[],attackReasons=[];
+    if(!fresh){potReasons.push('legacy_coverage');attackReasons.push('legacy_coverage');}
+    if(m.detailedPlay?.coverage&&m.detailedPlay.coverage!=='complete'){potReasons.push('partial_detailed_history');attackReasons.push('partial_detailed_history');}
+    if(correction){potReasons.push('unassigned_correction');attackReasons.push('unassigned_correction');}
+    if(service('pots'))potReasons.push('score_correction_pots');
+    if(service('potting'))attackReasons.push('score_correction_potting');
+    if(duplicate){potReasons.push('duplicate_record');attackReasons.push('duplicate_record');}
+    if(all.some(r=>![0,1].includes(r.side))){potReasons.push('unknown_side');attackReasons.push('unknown_side');}
+    let explicit=0,derived=0,attempts=0,success=0;
+    for(const r of records){
+      if(r.evidenceVersion!==2){potReasons.push('legacy_record');attackReasons.push('legacy_record');continue;}
+      const valid=n=>Number.isInteger(n)&&n>=0;
+      if(!['pot','safety','escape','other','unknown'].includes(r.intent)||r.intent==='unknown'&&!(r.kind==='inferred_pots'&&(r.pottedCount??r.balls?.length)===0))attackReasons.push('unknown_intent');
+      if(['pot','escape','inferred_pots'].includes(r.kind)&&!['explicit','derived','unknown'].includes(r.potsEvidence))potReasons.push('missing_pot_evidence');
+      if(valid(r.pottingAttempts))attempts+=r.pottingAttempts;
+      if(valid(r.successfulPottingStrokes))success+=r.successfulPottingStrokes;
+      if(!valid(r.pottingAttempts)||!valid(r.successfulPottingStrokes))attackReasons.push('unknown_attempts');
+      else {
+        if(r.successfulPottingStrokes>r.pottingAttempts||r.intent!=='pot'&&r.pottingAttempts>0||
+          ['break','safety','push_out'].includes(r.kind)&&r.pottingAttempts>0||
+          (r.kind==='foul'||r.kind==='miss'||r.foul===true)&&r.successfulPottingStrokes>0)attackReasons.push('inconsistent_attack');
+      }
+      const count=r.pottedCount??(Array.isArray(r.balls)?r.balls.length:null);
+      if(r.pottedCount!=null&&r.balls?.length&&r.pottedCount!==r.balls.length)potReasons.push('inconsistent_pot_count');
+      if(r.kind==='foul'||r.kind==='break'||r.foul===true)continue;
+      if(r.kind==='push_out'||r.potsEvidence==='unknown')potReasons.push('unknown_pots');
+      if(r.potsEvidence==='explicit'||r.potsEvidence==='derived'){
+        if(!valid(count))potReasons.push('unknown_pots');
+        else if(r.potsEvidence==='derived'&&(r.kind!=='inferred_pots'||r.derivationSafe!==true))potReasons.push('unsafe_derivation');
+        else if(r.potsEvidence==='explicit'&&!['pot','escape'].includes(r.kind))potReasons.push('invalid_pot_source');
+        else if(r.potsEvidence==='explicit')explicit+=count;else derived+=count;
+      }
+    }
+    const recordCoverage=reasons=>reasons.length?(fresh||records.length?'partial':'unknown'):'complete';
+    metrics.pottedBalls=federalMetric('count',fresh||records.length?explicit+derived:null,null,recordCoverage(potReasons),potReasons,{explicit,derived});
+    metrics.pottingSuccess=federalMetric('percent',fresh||records.length?success:null,fresh||records.length?attempts:null,recordCoverage(attackReasons),attackReasons);
+    const safetyReasons=[];
+    if(num('trackedSafeties')!==null&&num('safeties')!==null&&num('trackedSafeties')!==num('safeties'))safetyReasons.push('unevaluated_safeties');
+    metrics.safetySuccess=metric('percent',num('successfulSafeties'),num('trackedSafeties'),['safeties','trackedSafeties','successfulSafeties'],safetyReasons);
+    metrics.escapeSuccess=metric('percent',num('successfulSafetyEscapes'),num('safetyEscapes'),['safetyEscapes','successfulSafetyEscapes']);
+    metrics.resafes=countMetric('resafes',num('resafes')!==null&&num('successfulSafetyEscapes')!==null&&num('resafes')>num('successfulSafetyEscapes')?['inconsistent_resafes']:[]);
+    metrics.fouls=countMetric('fouls',num('breakFouls')!==null&&num('fouls')!==null&&num('breakFouls')>num('fouls')?['inconsistent_fouls']:[]);
+    return metrics;
+  }
+  function federalStatsOwner(m,side){
+    const link=m.federalCupLink||{},type=link.type||(m.federalTeam?'team':m.doublesMode?'doubles':'singles');
+    if(type==='team')return {kind:'team',id:side===0?'a':'b',name:side===0?'Slovensko':'Česko'};
+    const people=federalStatsRows(link.lineupParticipants?.[side]);
+    const stable=p=>p.id&&p.identityStatus!=='legacy'&&!String(p.id).startsWith('__')&&(!p.year||Number(p.year)===Number(link.year));
+    const ids=people.map(p=>p.id);
+    if(people.length!==(type==='doubles'?2:1)||!people.every(stable)||new Set(ids).size!==ids.length)return {kind:'unknown',id:null,reason:'ambiguous_identity'};
+    if(type==='doubles')return {kind:'pair',id:JSON.stringify(ids.slice().sort()),participantIds:ids.slice().sort(),name:people.map(p=>p.name).join(' / ')};
+    return {kind:'participant',id:people[0].id,name:people[0].name};
+  }
+  function federalCalculateMatch(m){
+    const year=Number(m.federalCupLink?.year),fixtureNo=Number(m.federalCupLink?.fixtureNo);
+    const type=m.federalCupLink?.type||(m.federalTeam?'team':m.doublesMode?'doubles':'singles');
+    const result={version:1,year,fixtureNo,matchId:m.id||null,type,sides:[0,1].map(side=>({owner:federalStatsOwner(m,side),metrics:federalStatsSide(m,side)})),individuals:{},pairs:{},unattributed:[]};
+    for(const side of [0,1]){
+      const entry=result.sides[side],owner=entry.owner;
+      if(owner.kind==='participant'&&federalStatsRows(m.detailedPlay?.records).some(r=>r.side===side&&r.actor?.id&&r.actor.id!==owner.id)){
+        for(const [key,x]of Object.entries(entry.metrics))entry.metrics[key]=federalMetric(x.kind,x.numerator,x.denominator,x.numerator===null?'unknown':'partial',[...x.reasons,'actor_lineup_conflict'],x.components);
+        result.unattributed.push({side,reason:'actor_lineup_conflict'});
+      }
+      if(owner.kind==='participant'&&!Object.hasOwn(result.individuals,owner.id))Object.defineProperty(result.individuals,owner.id,{value:entry,enumerable:true,configurable:true});
+      else if(owner.kind==='participant'){delete result.individuals[owner.id];result.unattributed.push({side,reason:'identity_on_both_sides'});}
+      if(owner.kind==='pair'&&!Object.hasOwn(result.pairs,owner.id))Object.defineProperty(result.pairs,owner.id,{value:entry,enumerable:true,configurable:true});
+      else if(owner.kind==='pair'){delete result.pairs[owner.id];result.unattributed.push({side,reason:'identity_on_both_sides'});}
+      if(owner.kind==='unknown')result.unattributed.push({side,reason:owner.reason});
+    }
+    if(type!=='team')return result;
+    const racks=federalStatsRackRows(m),groups=new Map();
+    for(const r of federalStatsRows(m.detailedPlay?.records))if(![0,1].includes(r.side)||!racks.some(rack=>rack.rack===r.rack))result.unattributed.push({side:r.side??null,recordId:r.id||null,reason:'unassigned_shot_rack'});
+    for(const side of [0,1])for(const rack of racks){
+      const p=rack.players?.[side],ids=Object.values(rack.participantIds?.[side]||{});
+      if(!p?.id||String(p.id).startsWith('__')||p.identityStatus!=='stable'||p.year&&Number(p.year)!==year||ids.length!==1||ids[0]!==p.id){result.unattributed.push({side,rack:rack.rack,reason:'ambiguous_rack_actor'});continue;}
+      const key=side+':'+p.id,g=groups.get(key)||{side,person:p,racks:[]};g.racks.push(rack);groups.set(key,g);
+    }
+    const conflicted=new Set([...groups.values()].filter(g=>[...groups.values()].some(other=>other.person.id===g.person.id&&other.side!==g.side)).map(g=>g.person.id));
+    if(conflicted.size)result.unattributed.push({reason:'identity_on_both_sides',participantIds:[...conflicted].sort()});
+    for(const g of groups.values()){
+      if(conflicted.has(g.person.id))continue;
+      const stats={},keys=new Set(g.racks.flatMap(r=>Object.keys(r.stats?.[g.side]||{})));
+      for(const key of keys)if(g.racks.every(r=>Number.isInteger(r.stats?.[g.side]?.[key])&&r.stats[g.side][key]>=0))stats[key]=g.racks.reduce((n,r)=>n+r.stats[g.side][key],0);
+      const rackNos=new Set(g.racks.map(r=>r.rack)),all=federalStatsRows(m.detailedPlay?.records).filter(r=>rackNos.has(r.rack));
+      const badActor=all.some(r=>r.side===g.side&&r.actor?.id&&(r.actor.id!==g.person.id||r.actor.identityStatus==='legacy'));
+      const synthetic={...m,isBreakShot:false,scores:[0,1].map(side=>g.racks.filter(r=>r.winner===side).length),stats:[{},{}],federalTeam:{racks:g.racks},detailedPlay:{records:all.filter(r=>r.side!==g.side||!r.actor?.id||r.actor.id===g.person.id&&r.actor.identityStatus!=='legacy')}};
+      synthetic.stats[g.side]=stats;
+      const metrics=federalStatsSide(synthetic,g.side);
+      if(!federalStatsRacksComplete(m)||result.unattributed.length||badActor||!m.endedAt){
+        const reason=badActor?'actor_rack_conflict':!m.endedAt?'unfinished_team_match':'incomplete_attribution';
+        for(const [key,x]of Object.entries(metrics))metrics[key]=federalMetric(x.kind,x.numerator,x.denominator,x.numerator===null?'unknown':'partial',[...x.reasons,reason],x.components);
+      }
+      Object.defineProperty(result.individuals,g.person.id,{value:{owner:{kind:'participant',id:g.person.id,name:g.person.name},metrics,scope:'completed_racks',rackIds:g.racks.map(r=>r.id)},enumerable:true});
+    }
+    return result;
+  }
+  function federalMergeMetrics(entries){
+    const template=federalStatsSide({federalEvidence:{fromStart:true},stats:[{},{}]},0),out={};
+    for(const key of Object.keys(template)){
+      const list=entries.map(e=>e.metrics[key]),kind=template[key].kind;
+      const sum=field=>list.some(x=>x[field]!==null)?list.reduce((n,x)=>n+(x[field]??0),0):list.length?null:0;
+      const n=sum('numerator'),d=kind==='count'?null:sum('denominator');
+      const coverage=list.every(x=>x.coverage==='complete')?'complete':n===null?'unknown':'partial';
+      const components={};for(const x of list)for(const [k,v]of Object.entries(x.components))if(typeof v==='number')components[k]=(components[k]||0)+v;
+      out[key]=federalMetric(kind,n,d,coverage,list.flatMap(x=>x.reasons.filter(r=>r!=='zero_denominator')),components);
+    }
+    return out;
+  }
+  function federalCalculateSeason(matches,config={},year=2026){
+    year=Number(year);if(!Number.isInteger(year))throw Error('Invalid Federal Cup year');
+    const fixtures=new Map(),duplicates=[],matchIds=new Set();
+    const ordered=federalStatsRows(matches).filter(m=>Number(m.federalCupLink?.year)===year&&Number.isInteger(Number(m.federalCupLink?.fixtureNo))&&Number(m.federalCupLink.fixtureNo)>=1&&Number(m.federalCupLink.fixtureNo)<=21&&m.endedAt&&!['incomplete','playing','active'].includes(m.status))
+      .sort((a,b)=>(Date.parse(b.endedAt)||0)-(Date.parse(a.endedAt)||0)||String(a.id).localeCompare(String(b.id)));
+    for(const m of ordered){const n=Number(m.federalCupLink.fixtureNo);if(m.id&&matchIds.has(m.id)){duplicates.push({fixtureNo:n,ignoredMatchId:m.id,reason:'duplicate_match_id'});continue;}if(m.id)matchIds.add(m.id);if(fixtures.has(n)){duplicates.push({fixtureNo:n,ignoredMatchId:m.id||null});continue;}fixtures.set(n,{m,result:federalCalculateMatch(m),source:'detailed'});}
+    if(Number(config.year)===year)for(const n of [1,5,10]){
+      const r=config.teamResults?.[n];if(fixtures.has(n)||!r?.done||r.a==null||r.b==null||!Number.isFinite(Number(r.a))||!Number.isFinite(Number(r.b))||Number(r.a)===Number(r.b))continue;
+      const m={id:null,federalCupLink:{year,fixtureNo:n,type:'team'},endedAt:r.updatedAt||null};fixtures.set(n,{m,result:federalCalculateMatch(m),source:'manual'});
+    }
+    const selected=[...fixtures.values()].sort((a,b)=>a.result.fixtureNo-b.result.fixtureNo),teams=[[],[]],people=new Map(),pairs=new Map();
+    const add=(map,entry,source)=>{const list=map.get(entry.owner.id)||[];list.push({entry,source});map.set(entry.owner.id,list);};
+    for(const s of selected){for(const side of [0,1])teams[side].push(s.result.sides[side]);for(const e of Object.values(s.result.individuals))add(people,e,s);for(const e of Object.values(s.result.pairs))add(pairs,e,s);}
+    const combine=map=>Object.fromEntries([...map].sort(([a],[b])=>a.localeCompare(b)).map(([id,list])=>{
+      list.sort((a,b)=>(Date.parse(b.source.m.endedAt)||0)-(Date.parse(a.source.m.endedAt)||0)||a.source.result.fixtureNo-b.source.result.fixtureNo);
+      return [id,{owner:list[0].entry.owner,names:[...new Set(list.map(x=>x.entry.owner.name))].sort(),metrics:federalMergeMetrics(list.map(x=>x.entry)),sources:list.map(x=>({fixtureNo:x.source.result.fixtureNo,matchId:x.source.m.id||null}))}];
+    }));
+    return {version:1,year,teams:[0,1].map(side=>({owner:{kind:'team',id:side===0?'a':'b',name:side===0?'Slovensko':'Česko'},metrics:federalMergeMetrics(teams[side])})),individuals:combine(people),pairs:combine(pairs),fixtures:selected.map(s=>({fixtureNo:s.result.fixtureNo,matchId:s.m.id||null,source:s.source})),duplicates,unattributed:selected.flatMap(s=>s.result.unattributed.map(x=>({fixtureNo:s.result.fixtureNo,...x})))};
+  }
+
   function detailedCounterActive(){
     return !!match && match.counterMode!=='simple' && !match.ghostMode && match.discipline!=='14.1';
   }

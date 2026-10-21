@@ -17,7 +17,8 @@
     "test:historical": "node tests/historical-structure-browser.cjs",
     "test:detailed": "node tests/detailed-counter-browser.cjs",
     "test:federal-evidence": "node tests/federal-evidence-browser.cjs",
-    "test:federal-conflicts": "node tests/federal-evidence-conflicts-browser.cjs"
+    "test:federal-conflicts": "node tests/federal-evidence-conflicts-browser.cjs",
+    "test:federal-calculation": "node --test tests/federal-calculation.test.cjs"
   },
   "dependencies": {
     "@capacitor/core": "^8.0.0",
