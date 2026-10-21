@@ -24,11 +24,11 @@ window.fcTest={
 
   start:startMatch,undo,beginRack,snapshot,restoreSnapshot,
   save:autosaveCurrent,
-  admin(){cloudAuthenticated=true;cloudUid='isolated-admin';cloudEmailVerified=true;currentUserRole='system_admin';cloudIdToken='mock-token';cloudTokenExpiresAt=Date.now()+3600000;$('cloudLoginModal').classList.remove('show');},
+  admin(){cloudUserEmail='bcrybarna@gmail.com';cloudAuthenticated=true;cloudUid='isolated-admin';cloudEmailVerified=true;currentUserRole='system_admin';cloudIdToken='mock-token';cloudTokenExpiresAt=Date.now()+3600000;$('cloudLoginModal').classList.remove('show');},
   reset(){stopTimer();stopLiveHeartbeat();clearTimeout(activeMatchCloudSaveTimer);match=null;data=defaultData();pendingFederalCupLink=null;pendingTournamentLink=null;pendingLeagueLink=null;
     document.querySelectorAll('.modal.show').forEach(el=>el.classList.remove('show'));
     for(const key of [LOCAL_ACTIVE_MATCH_KEY,LOCAL_ACTIVE_MATCHES_KEY,LOCAL_ACTIVE_MATCH_RECOVERY_KEY])localStorage.removeItem(key);
-    data.federalCup2026.rosterMode='manual';data.federalCup2026.rosterA=['SK1','SK2','SK3','SK4','SK5'];data.federalCup2026.rosterB=['CZ1','CZ2','CZ3','CZ4','CZ5'];},
+    data.federalCup2026.rosterMode='manual';data.federalCup2026.rosterA=['SK1','SK2','SK3','SK4','SK5'];data.federalCup2026.rosterB=['CZ1','CZ2','CZ3','CZ4','CZ5'];ensureFederalParticipants(data.federalCup2026);},
   setMatch(m){match=m},
   finish(){finishMatch(0)},
   async resume(){const m=loadDeviceActiveMatch();if(m)await resumeLocalMatch(m.id);return m;},
@@ -43,7 +43,7 @@ assert.ok(html.includes('window.fcTest='));
 (async()=>{
  const browser=await chromium.launch({headless:true,channel:process.env.FC_BROWSER_CHANNEL||'chrome'});
  const context=await browser.newContext({serviceWorkers:'block'});
- let external=0;const mock={};const writes=[];
+ let external=0;const mock={};const writes=[];let etag=1;
  await context.route('**/*',async route=>{
    const request=route.request(),url=request.url();
    if(url==='http://fc-isolated.local/')return route.fulfill({contentType:'text/html',body:html});
@@ -55,9 +55,9 @@ assert.ok(html.includes('window.fcTest='));
      const parts=key.replace(/\.json$/,'').split('/').filter(Boolean);let parent=mock;
      for(const part of parts.slice(0,-1))parent=parent[part]??=( {} );
      const leaf=parts.at(-1);
-     if(['PUT','PATCH'].includes(request.method())){const value=request.postDataJSON();writes.push({key,value});parent[leaf]=request.method()==='PATCH'?{...parent[leaf],...value}:value;}
+     if(['PUT','PATCH'].includes(request.method())){if(leaf==='appData'){if(request.headers()['if-match']&&request.headers()['if-match']!=='"'+etag+'"')return route.fulfill({status:412,body:'null'});etag++;}const value=request.postDataJSON();writes.push({key,value});parent[leaf]=request.method()==='PATCH'?{...parent[leaf],...value}:value;}
      if(request.method()==='DELETE')delete parent[leaf];
-     return route.fulfill({contentType:'application/json',body:JSON.stringify(parent[leaf]??null)});
+     return route.fulfill({contentType:'application/json',headers:leaf==='appData'?{ETag:'"'+etag+'"','Access-Control-Expose-Headers':'ETag'}:{},body:JSON.stringify(parent[leaf]??null)});
    }
    return route.abort();
  });
@@ -70,9 +70,16 @@ assert.ok(html.includes('window.fcTest='));
  await page.waitForFunction(()=>!!window.fcTest);
  await page.waitForSelector('#cloudLoginModal.show');
  async function run(fn,arg){return page.evaluate(fn,arg)}
- async function setup(n=1){await run(n=>{fcTest.admin();fcTest.reset();
+ async function setup(n=1){await run(async n=>{fcTest.admin();fcTest.reset();
    if(n!==1)fcTest.data.federalCup2026.lineups[n]=n===2?{a:['SK1','SK2'],b:['CZ1','CZ2']}:{a:['SK3'],b:['CZ3']};
-   fc26StartFixture(n);document.getElementById('fc26LagWinner').value='0';document.getElementById('useLag').checked=false;fcTest.start();},n);}
+   await fc26StartFixture(n);document.getElementById('fc26LagWinner').value='0';document.getElementById('useLag').checked=false;fcTest.start();},n);}
+ async function saveRoster(){
+   // Explicit fixture seed: gameplay cases edit lineups directly; conflict cases use the two-client suite.
+   mock.appData={updatedAt:Date.now(),data:{federalCup2026:await run(()=>fcTest.data.federalCup2026)}};etag++;
+   const previous=await run(()=>fcTest.data.federalCup2026.updatedAt);
+   await page.locator('#fc26SaveSettings').click();
+   await page.waitForFunction(v=>fcTest.data.federalCup2026.updatedAt!==v,previous);
+ }
  async function state(){return run(()=>JSON.parse(JSON.stringify(fcTest.match)))}
  async function select(a='SK2',b='CZ4'){
    await page.locator('#fc26RackPlayers select').nth(0).selectOption(a);
@@ -87,19 +94,19 @@ assert.ok(html.includes('window.fcTest='));
   // Real roster editor: rename keeps ID, move buttons carry identity, replacement does not.
   await setup(3);const original=await state();const firstId=original.playerIds[0];
   await run(()=>{fcTest.screen('federal-cup-editor');});
-  await page.locator('#fc26APlayer2').fill('Přejmenovaný');await page.locator('#fc26SaveSettings').click();
-  await run(()=>{fcTest.data.federalCup2026.lineups[6]={a:[fcTest.data.federalCup2026.rosterParticipantIdsA[2]],b:['CZ1']};fc26StartFixture(6);document.getElementById('fc26LagWinner').value='0';fcTest.start();});
+  await page.locator('#fc26APlayer2').fill('Přejmenovaný');await saveRoster();
+  await run(async()=>{fcTest.data.federalCup2026.lineups[6]={a:[fcTest.data.federalCup2026.rosterParticipantIdsA[2]],b:['CZ1']};await fc26StartFixture(6);document.getElementById('fc26LagWinner').value='0';fcTest.start();});
   let m=await state();assert.equal(m.playerIds[0],firstId);assert.equal(m.playerNames[0],'Přejmenovaný');assert.equal(original.playerNames[0],'SK3');
   await run(()=>fcTest.screen('federal-cup-editor'));
-  await page.locator('#fc26APlayer2').locator('..').locator('[data-fc-move="-1"]').click();await page.locator('#fc26SaveSettings').click();
+  await page.locator('#fc26APlayer2').locator('..').locator('[data-fc-move="-1"]').click();await saveRoster();
   assert.equal(await run(()=>fcTest.data.federalCup2026.rosterParticipantIdsA[1]),firstId);
-  await page.locator('#fc26APlayer0').fill('Přejmenovaný');await page.locator('#fc26SaveSettings').click();
+  await page.locator('#fc26APlayer0').fill('Přejmenovaný');await saveRoster();
   const ids=await run(()=>fcTest.data.federalCup2026.rosterParticipantIdsA);assert.notEqual(ids[0],ids[1]);
-  await run(()=>{const c=fcTest.data.federalCup2026;c.lineups[8]={a:[c.rosterParticipantIdsA[0]],b:['CZ1']};fc26StartFixture(8);document.getElementById('fc26LagWinner').value='0';fcTest.start();});
+  await run(async()=>{const c=fcTest.data.federalCup2026;c.lineups[8]={a:[c.rosterParticipantIdsA[0]],b:['CZ1']};await fc26StartFixture(8);document.getElementById('fc26LagWinner').value='0';fcTest.start();});
   assert.equal((await state()).playerIds[0],ids[0]);
-  await run(()=>{const c=fcTest.data.federalCup2026;c.lineups[2]={a:[c.rosterParticipantIdsA[0],c.rosterParticipantIdsA[1]],b:['CZ1','CZ2']};fc26StartFixture(2);document.getElementById('fc26LagWinner').value='0';fcTest.start();});
+  await run(async()=>{const c=fcTest.data.federalCup2026;c.lineups[2]={a:[c.rosterParticipantIdsA[0],c.rosterParticipantIdsA[1]],b:['CZ1','CZ2']};await fc26StartFixture(2);document.getElementById('fc26LagWinner').value='0';fcTest.start();});
   assert.equal((await state()).doublesMode,true);assert.deepEqual((await state()).teamPlayerIds[0],[ids[0],ids[1]]);
-  await run(()=>fcTest.screen('federal-cup-editor'));await page.locator('#fc26APlayer0').locator('..').locator('[data-fc-new]').click();await page.locator('#fc26APlayer0').fill('Přejmenovaný');await page.locator('#fc26SaveSettings').click();assert.notEqual(await run(()=>fcTest.data.federalCup2026.rosterParticipantIdsA[0]),ids[0]);
+  await run(()=>fcTest.screen('federal-cup-editor'));await page.locator('#fc26APlayer0').locator('..').locator('[data-fc-new]').click();await page.locator('#fc26APlayer0').fill('Přejmenovaný');await saveRoster();assert.notEqual(await run(()=>fcTest.data.federalCup2026.rosterParticipantIdsA[0]),ids[0]);
   console.log('PASS stable identities: real rename, reorder, duplicate names, replacement, frozen historical name and lineup IDs');
   await base();await run(()=>{actionLegal();fcTest.chooseShot([2]);});m=await state();assert.equal(records(m,'pot')[0].pottingAttempts,1);assert.equal(records(m,'pot')[0].successfulPottingStrokes,1);
   await run(()=>fcTest.undo());assert.equal(records(await state(),'pot').length,0);

@@ -5990,7 +5990,7 @@ html[data-theme="light"] #leagueSchedule .history-item .muted{
     if(!Array.isArray(parsed.tournamentSeries)) parsed.tournamentSeries=[];
     if(!Array.isArray(parsed.leagues)) parsed.leagues=[];
     if(!parsed.federalCup2026 || typeof parsed.federalCup2026!=='object') parsed.federalCup2026=defaultFederalCup2026();
-    parsed.federalCup2026={...defaultFederalCup2026(),...parsed.federalCup2026};
+    parsed.federalCup2026=normalizeFederalConfig(parsed.federalCup2026,parsed.players);
     if(!Array.isArray(parsed.federalCup2026.rosterA))parsed.federalCup2026.rosterA=['','','','',''];
     if(!Array.isArray(parsed.federalCup2026.rosterB))parsed.federalCup2026.rosterB=['','','','',''];
     parsed.federalCup2026.rosterA=parsed.federalCup2026.rosterA.slice(0,5);while(parsed.federalCup2026.rosterA.length<5)parsed.federalCup2026.rosterA.push('');
@@ -8472,15 +8472,13 @@ html[data-theme="light"] #leagueSchedule .history-item .muted{
     try{
       // Nejdřív vždy přečteme cloud a sloučíme ho s lokálními daty.
       // Tím zařízení nemůže vymazat zápasy/hráče, které samo lokálně nezná.
-      let remote=null;
-      let remoteTs=0;
-      try{
-        const gr=await fetch(cloudUrl('appData')+'&t='+Date.now(),{cache:'no-store'});
-        if(gr.ok){
-          remote=await gr.json();
-          remoteTs=Number(remote&&remote.updatedAt||0);
-        }
-      }catch(e){}
+      const gr=await fetch(cloudUrl('appData')+'&t='+Date.now(),{cache:'no-store',headers:{'X-Firebase-ETag':'true'}});
+      if(!gr.ok)throw Error('CLOUD_READ_'+gr.status);
+      const remote=await gr.json(),etag=gr.headers.get('ETag');
+      if(!etag)throw Error('CLOUD_ETAG_MISSING');
+      const remoteTs=Number(remote?.updatedAt||0);
+      // FC writes have their own expected-config check. Generic sync never publishes a stale FC copy.
+      data.federalCup2026=normalizeFederalConfig(remote?.data?.federalCup2026,data.players);
 
       if(remote && remote.data){
         saveSafetyBackup('before cloud upload merge');
@@ -8504,6 +8502,7 @@ html[data-theme="light"] #leagueSchedule .history-item .muted{
 
       const updatedAt=Math.max(Date.now(),remoteTs+1);
       const cloudData=JSON.parse(JSON.stringify(data));
+      cloudData.federalCup2026=remote?.data?.federalCup2026||defaultFederalCup2026();
       delete cloudData.players;
       delete cloudData.matches;
       delete cloudData.deletedMatchIds;
@@ -8513,7 +8512,7 @@ html[data-theme="light"] #leagueSchedule .history-item .muted{
       const payload={updatedAt,data:cloudData};
       const r=await fetch(cloudUrl('appData'),{
         method:'PUT',
-        headers:{'Content-Type':'application/json'},
+        headers:{'Content-Type':'application/json','if-match':etag},
         body:JSON.stringify(payload),
         cache:'no-store'
       });
@@ -9625,10 +9624,55 @@ $('useClock').addEventListener('change',e=>$('clockSettings').classList.toggle('
 
   // Structured evidence is deliberately independent of the human-readable event log.
   // Federal Cup participant IDs belong to people, never to roster positions.
+  function federalSlots(value,length=5,empty=null){
+    return Array.from({length},(_,i)=>value?.[i]??empty);
+  }
+  function normalizeFederalConfig(raw,profiles={}){
+    const c=JSON.parse(JSON.stringify({...defaultFederalCup2026(),...(raw||{})}));
+    c.participants=c.participants||{};c.lineups=c.lineups||{};c.teamResults=c.teamResults||{};
+    for(const l of Object.values(c.lineups).filter(Boolean))for(const side of ['a','b'])l[side]=federalSlots(l[side],2,'');
+    for(const side of ['A','B']){
+      c['roster'+side]=federalSlots(c['roster'+side],5,'');
+      c['rosterParticipantIds'+side]=federalSlots(c['rosterParticipantIds'+side]);
+    }
+    if(c.rosterMode!=='manual'){
+      let changed=false;
+      for(const side of ['A','B']){
+        const old=c['roster'+side],names=old.map(v=>profiles[v]?.name||v);
+        if(old.some((v,i)=>v!==names[i])){
+          changed=true;
+          for(const l of Object.values(c.lineups))if(l?.[side.toLowerCase()])l[side.toLowerCase()]=federalSlots(l[side.toLowerCase()],2,'').map(v=>{const i=old.indexOf(v);return i>=0?names[i]:v;});
+        }
+        c['roster'+side]=names;
+      }
+      if(changed||![...c.rosterA,...c.rosterB].some(Boolean))c.rosterMode='manual';
+    }
+    c.teamAName='Slovensko';c.teamBName='Česko';return c;
+  }
+  function federalConfigFingerprint(c){return historicalFingerprint(normalizeFederalConfig(c,data.players));}
+  async function saveFederalConfig(next,expected){
+    if(!currentUserIsSystemAdmin()||!await ensureCloudToken())throw Error('Nemáš oprávnění uložit Federal Cup.');
+    if(federalConfigFingerprint(next)===federalConfigFingerprint(expected))return normalizeFederalConfig(expected,data.players);
+    if(federalConfigFingerprint(data.federalCup2026)!==federalConfigFingerprint(expected))throw Error('Konflikt Federal Cupu: konfigurace se změnila. Obnov soupisku a zadej úpravu znovu.');
+    const url=cloudUrl('appData'),read=await fetch(url,{cache:'no-store',headers:{'X-Firebase-ETag':'true'}});
+    if(!read.ok)throw Error('Konfiguraci nelze načíst; nic nebylo přepsáno.');
+    const remote=await read.json(),etag=read.headers.get('ETag');
+    if(!etag)throw Error('Chybí ETag konfigurace; nic nebylo přepsáno.');
+    if(federalConfigFingerprint(remote?.data?.federalCup2026)!==federalConfigFingerprint(expected))throw Error('Konflikt Federal Cupu: server obsahuje jinou konfiguraci. Obnov soupisku a zadej úpravu znovu.');
+    const saved=normalizeFederalConfig(next,data.players);saved.updatedAt=Date.now();
+    const payload={...(remote||{}),updatedAt:Math.max(Date.now(),Number(remote?.updatedAt||0)+1),data:{...(remote?.data||{}),federalCup2026:saved}};
+    const result=await fetch(url,{method:'PUT',cache:'no-store',headers:{'Content-Type':'application/json','if-match':etag},body:JSON.stringify(payload)});
+    if(!result.ok)throw Error(result.status===412?'Konflikt Federal Cupu: souběžná změna. Obnov konfiguraci.':'Uložení konfigurace selhalo; místní změna nebyla potvrzena.');
+    // A background poll can have advanced local state while the conditional write was in flight.
+    // Do not roll its newer snapshot back. No general saveData()/global upload here.
+    if(federalConfigFingerprint(data.federalCup2026)===federalConfigFingerprint(expected))data.federalCup2026=saved;
+    try{localStorage.setItem(DB_KEY,JSON.stringify(data));}catch(e){}
+    return saved;
+  }
   function ensureFederalParticipants(c){
     c.participants=c.participants||{};
     for(const side of ['A','B']){
-      const names=c['roster'+side]||[],old=c['rosterParticipantIds'+side]||[],used=new Set();
+      const names=federalSlots(c['roster'+side],5,''),old=federalSlots(c['rosterParticipantIds'+side]),used=new Set();
       c['rosterParticipantIds'+side]=names.map((name,i)=>{
         if(!name)return null;
         const previous=c.participants[old[i]];
@@ -9640,13 +9684,13 @@ $('useClock').addEventListener('change',e=>$('clockSettings').classList.toggle('
     return c;
   }
   function federalParticipantSnapshot(c,side,value){
-    const key=side==='a'?'A':'B',names=c['roster'+key]||[],ids=c['rosterParticipantIds'+key]||[];
+    const key=side==='a'?'A':'B',names=federalSlots(c['roster'+key],5,''),ids=federalSlots(c['rosterParticipantIds'+key]);
     const direct=ids.indexOf(value),matches=names.map((n,i)=>n===value?i:-1).filter(i=>i>=0);
     const i=direct>=0?direct:matches.length===1?matches[0]:-1;
     return i>=0&&c.participants?.[ids[i]]?cloneForUndo(c.participants[ids[i]]):null;
   }
   function federalRosterValue(c,side,i){
-    const key=side==='a'?'A':'B',names=c['roster'+key]||[],name=names[i];
+    const key=side==='a'?'A':'B',names=federalSlots(c['roster'+key],5,''),name=names[i];
     return name?(names.filter(n=>n===name).length===1?name:c['rosterParticipantIds'+key]?.[i]||''):'';
   }
   function federalShotEvidence(r){
@@ -9668,7 +9712,8 @@ $('useClock').addEventListener('change',e=>$('clockSettings').classList.toggle('
     const fresh=m?.federalEvidence?.fromStart===true;
     // Unassigned corrections cannot prove which player owns omitted pots/shots.
     const unassigned=allRecords.some(r=>r.kind==='table_correction'&&!r.foulId||r.kind==='turn_correction');
-    let attempts=0,successful=0,explicit=0,derived=0,unknownPots=unassigned,unknownAttempts=unassigned;
+    const services=Object.values(m?.federalEvidence?.serviceChanges||{});
+    let attempts=0,successful=0,explicit=0,derived=0,unknownPots=unassigned||services.some(s=>s.coverage?.pots==='partial'),unknownAttempts=unassigned||services.some(s=>s.coverage?.potting==='partial');
     for(const r of records){
       if(r.evidenceVersion!==2){unknownAttempts=true;unknownPots=true;continue;}
       if(r.pottingAttempts==null)unknownAttempts=true;else attempts+=r.pottingAttempts;
@@ -9681,7 +9726,20 @@ $('useClock').addEventListener('change',e=>$('clockSettings').classList.toggle('
     const state=unknown=>!fresh?(records.length?'partial':'unknown'):unknown?'partial':'complete';
     return {potting:{attempts,successful,coverage:state(unknownAttempts)},
       pots:{explicit,derived,total:unknownPots||!fresh?null:explicit+derived,coverage:state(unknownPots)},
-      racks:{coverage:!fresh?'partial':Object.values(m.federalTeam?.racks||m.federalEvidence?.racks||{}).length===(m.scores||[]).reduce((a,b)=>a+Number(b||0),0)?'complete':'partial'}};
+      racks:{coverage:!fresh?'partial':services.some(s=>s.coverage?.racks==='partial')?'partial':federalRackScoresAgree(m)?'complete':'partial'}};
+  }
+  function federalRackScoresAgree(m){
+    const racks=Object.values(m.federalTeam?.racks||m.federalEvidence?.racks||{}),wins=[0,0],ids=new Set();
+    for(const r of racks){if(!r.id||ids.has(r.id)||![0,1].includes(r.winner)||![0,1].includes(r.breaker))return false;ids.add(r.id);wins[r.winner]++;}
+    return wins.every((n,i)=>n===Number(m.scores?.[i]||0));
+  }
+  function markFederalServiceChange(before,after){
+    if(!match?.federalCupLink)return;
+    const e=match.federalEvidence||(match.federalEvidence={version:1,fromStart:false});
+    e.serviceChanges=Object.values(e.serviceChanges||{});
+    const changedRackCount=before[0]+before[1]!==after[0]+after[1];
+    e.serviceChanges.push({id:uid(),kind:'score_correction',before:before.slice(),after:after.slice(),rack:match.rackNumber,
+      coverage:{racks:'partial',potting:changedRackCount?'partial':'complete',pots:changedRackCount?'partial':'complete'}});
   }
   function recordFederalRack(winner,reason){
     if(!match.federalCupLink)return true;
@@ -10317,12 +10375,12 @@ $('useClock').addEventListener('change',e=>$('clockSettings').classList.toggle('
   window.fc26PickRackPlayer=function(side,value){
     const ft=match?.federalTeam;if(!ft?.pending)return;
     if(side!==0&&side!==1)return;
-    const names=side===0?match.federalCupLink.rosterA:match.federalCupLink.rosterB;
-    const participants=match.federalCupLink.rosterParticipants?.[side]||[];
-    const known=participants.find(p=>p.id===value)||(participants.filter(p=>p.name===value).length===1?participants.find(p=>p.name===value):null);
+    const names=federalSlots(side===0?match.federalCupLink.rosterA:match.federalCupLink.rosterB,5,'');
+    const participants=federalSlots(match.federalCupLink.rosterParticipants?.[side]);
+    const known=participants.find(p=>p?.id===value)||(participants.filter(p=>p?.name===value).length===1?participants.find(p=>p?.name===value):null);
     if(known){ft.players[side]={...cloneForUndo(known),team:side,identityStatus:'stable'};autosaveCurrent();return;}
     if(!value){ft.players[side]=null;autosaveCurrent();return;}
-    if(participants.length||names.filter(n=>n===value).length!==1)return;
+    if(participants.some(Boolean)||names.filter(n=>n===value).length!==1)return;
     ft.players[side]={identityStatus:'legacy',id:'__FC26_2026_'+(side===0?'a':'b')+'_'+(names.indexOf(value)+1)+'__',name:value,team:side};
     autosaveCurrent();
   };
@@ -10337,7 +10395,7 @@ $('useClock').addEventListener('change',e=>$('clockSettings').classList.toggle('
     host.classList.toggle('hidden',!ft||!!match.endedAt);
     if(!ft)return;
     host.innerHTML=ft.pending ? '<strong>Rack '+match.rackNumber+' • vyber hráče</strong>'+[0,1].map(side=>{
-      const names=side===0?match.federalCupLink.rosterA:match.federalCupLink.rosterB;
+      const names=federalSlots(side===0?match.federalCupLink.rosterA:match.federalCupLink.rosterB,5,'');
       return '<label>'+esc(match.playerNames[side])+'</label><select onchange="fc26PickRackPlayer('+side+',this.value)"><option value="">— vyber hráče —</option>'+names.map((name,i)=>{const participants=match.federalCupLink.rosterParticipants?.[side]||[],p=participants[i],value=names.filter(n=>n===name).length>1?p?.id||'':name;return '<option value="'+esc(value)+'" '+((p?ft.players[side]?.id===p.id:ft.players[side]?.name===name)?'selected':'')+'>'+esc(name)+(names.filter(n=>n===name).length>1?' ('+(i+1)+')':'')+'</option>';}).join('')+'</select>';
     }).join('')+'<button class="btn primary" onclick="fc26BeginSelectedRack()">ZAHÁJIT RACK</button>' : '<strong>Rack '+match.rackNumber+'</strong> • '+ft.players.map(p=>esc(p.name)).join(' × ');
     if(ft.pending)$('normalActions').classList.add('hidden');
@@ -13084,8 +13142,9 @@ const isFourteen=match.discipline==='14.1' && !simpleCounter;
     }
 
     saveManualEntryUndoSnapshot('Ruční oprava skóre');
-    match.scores=[n0,n1];
     addActionEvent('RUČNÍ OPRAVA SKÓRE • '+old0+':'+old1+' → '+n0+':'+n1);
+    markFederalServiceChange([old0,old1],[n0,n1]);
+    match.scores=[n0,n1];
     logEvent('Ruční oprava skóre '+old0+':'+old1+' → '+n0+':'+n1);
     $('manualScoreCorrectionModal').classList.remove('show');
     renderMatch();
@@ -28917,28 +28976,15 @@ function renderStats(){
     {n:21,b:4,t:'singles',label:'Singles',note:'výběr kapitána • může nastoupit jakýkoliv hráč ze soupisky'}
   ];
 
-  function cfg(){
-    const c=data.federalCup2026||(data.federalCup2026=defaultFederalCup2026());
-    // Migruj dřívější ID hráčských profilů na samostatná jména jen po jejich načtení.
-    if(c.rosterMode!=='manual'){
-      const a=(c.rosterA||[]).slice(),b=(c.rosterB||[]).slice();
-      const mappedA=a.map(v=>data.players?.[v]?.name||v);
-      const mappedB=b.map(v=>data.players?.[v]?.name||v);
-      const changed=a.some((v,i)=>v&&v!==mappedA[i])||b.some((v,i)=>v&&v!==mappedB[i]);
-      if(changed){
-        Object.values(c.lineups||{}).forEach(l=>{
-          if(!l||typeof l!=='object')return;
-          if(Array.isArray(l.a))l.a=l.a.map(v=>{const i=a.indexOf(v);return i>=0?mappedA[i]:v;});
-          if(Array.isArray(l.b))l.b=l.b.map(v=>{const i=b.indexOf(v);return i>=0?mappedB[i]:v;});
-        });
-        c.rosterA=mappedA;c.rosterB=mappedB;
-      }
-      if(changed||![...a,...b].some(Boolean))c.rosterMode='manual';
-    }
-    // Federal Cup 2026: pořadí zemí je pevné, domácí vlevo.
-    c.teamAName='Slovensko';
-    c.teamBName='Česko';
-    return c;
+  function cfg(){return normalizeFederalConfig(data.federalCup2026,data.players);}
+  let federalRosterDraftBase=null;
+  let federalConfigBusy=false;
+  async function commitConfig(next,base){
+    if(federalConfigBusy){toast('Probíhá ukládání Federal Cupu.');return false;}
+    federalConfigBusy=true;
+    try{await saveFederalConfig(next,base);render();return true;}
+    catch(e){toast(e.message);return false;}
+    finally{federalConfigBusy=false;}
   }
   function canEdit(){ return currentUserIsSystemAdmin(); }
   function normalizedName(s){return String(s||'').replace(/\s+/g,' ').trim();}
@@ -29059,16 +29105,15 @@ function renderStats(){
   window.fc26CanStartMatch=function(n){
     return !raceState().decided&&!completedMatch(Number(n))&&!cfg().teamResults?.[n]?.done;
   };
-  function saveLineupSelect(n,side,idx,value){
+  async function saveLineupSelect(n,side,idx,value){
     if(!canEdit())return toast('Sestavu Federal Cupu může měnit pouze systémový administrátor.');
     if(raceState().decided)return toast('Federal Cup již skončil. Nové sestavy není potřeba zadávat.');
-    const conf=cfg();
+    const base=cfg(),conf=cloneForUndo(base);
+    ensureFederalParticipants(conf);
     conf.lineups[n]=conf.lineups[n]||{a:[],b:[]};
     conf.lineups[n][side]=Array.isArray(conf.lineups[n][side])?conf.lineups[n][side]:[];
-    conf.lineups[n][side][idx]=value||'';
-    conf.updatedAt=Date.now();
-    saveData();
-    render();
+    conf.lineups[n][side][idx]=federalParticipantSnapshot(conf,side,value)?.id||'';
+    await commitConfig(conf,base);
   }
   window.fc26SetLineup=saveLineupSelect;
 
@@ -29094,32 +29139,31 @@ function renderStats(){
       '</div><div class="fc26-actions"><button class="btn primary" onclick="fc26SaveTeamResult('+f.n+')">ULOŽIT TEAM VÝSLEDEK</button></div>';
   }
 
-  window.fc26SaveTeamResult=function(n){
+  window.fc26SaveTeamResult=async function(n){
     if(!canEdit())return toast('Federal Cup může upravovat systémový administrátor.');
     if(raceState().decided&&!cfg().teamResults?.[n]?.done)
       return toast('Utkání už skončilo na 11 vítězných zápasů. Další výsledek nelze zapsat.');
     const a=Math.max(0,Number($('fc26TeamScoreA'+n)?.value||0));
     const b=Math.max(0,Number($('fc26TeamScoreB'+n)?.value||0));
     if(a===b)return toast('Team utkání musí mít vítěze.');
-    cfg().teamResults[n]={a,b,done:true,updatedAt:new Date().toISOString()};
-    cfg().updatedAt=Date.now();saveData();render();toast('Team výsledek uložen.');
+    const base=cfg(),next=cloneForUndo(base);next.teamResults[n]={a,b,done:true,updatedAt:new Date().toISOString()};
+    if(await commitConfig(next,base))toast('Team výsledek uložen.');
   };
-  window.fc26EditTeamResult=function(n){
+  window.fc26EditTeamResult=async function(n){
     if(!canEdit())return;
-    const r=cfg().teamResults?.[n];if(r)r.done=false;
-    cfg().updatedAt=Date.now();saveData();render();
+    const base=cfg(),next=cloneForUndo(base),r=next.teamResults?.[n];if(r)r.done=false;
+    await commitConfig(next,base);
   };
 
-  window.fc26StartFixture=function(n){
+  window.fc26StartFixture=async function(n){
     if(!canEdit())return toast('Zápas Federal Cup může připravit systémový administrátor.');
     if(raceState().decided)return toast('Federal Cup už má vítěze. Další zápasy se nehrají.');
     if(completedMatch(Number(n)))return toast('Tento zápas už má uložený výsledek.');
-    ensureFederalParticipants(cfg());
-    // Persist registry together with existing configuration before copying identities into a match.
-    saveData();
     const f=FIXTURES.find(x=>x.n===Number(n));if(!f||cfg().teamResults?.[n]?.done)return;
     const active=Object.values(loadDeviceActiveMatches()).find(m=>!m.endedAt&&m.federalCupLink?.year===2026&&Number(m.federalCupLink.fixtureNo)===f.n&&editableMatchOwnedByCurrentUser(m));
     if(active)return resumeLocalMatch(active.id);
+    const base=cfg(),prepared=cloneForUndo(base);ensureFederalParticipants(prepared);
+    if(federalConfigFingerprint(base)!==federalConfigFingerprint(prepared)){if(!await commitConfig(prepared,base))return;}
     const v=validateFixture(f);if(!v.ok)return toast(v.msg);
     const l=lineup(f.n),a=f.t==='team'?[roster('a')[0]]:l.a.slice(0,requiredSlots(f)),bb=f.t==='team'?[roster('b')[0]]:l.b.slice(0,requiredSlots(f));
     const pa=a.map(value=>({name:normalizedName(participantName('a',value))})).filter(x=>x.name);
@@ -29331,7 +29375,8 @@ function renderStats(){
   function render(){
     const root=$('screen-federal-cup-editor');if(!root)return;
     const editable=canEdit(),state=raceState();
-    if(editable)ensureFederalParticipants(cfg());
+    const rosterDirty=!!root.querySelector('.fc26-roster-player[data-dirty]');
+    if(!rosterDirty)federalRosterDraftBase=cloneForUndo(cfg());
     $('fc26EditorMatchStatus').classList.toggle('done',state.decided);
     $('fc26EditorMatchStatus').innerHTML=state.decided
       ? '<strong>🏆 Utkání skončilo: '+(state.winner==='a'?'Slovensko':'Česko')+' vítězí '+state.winsA+':'+state.winsB+'.</strong> Rozhodující zápas #'+state.clinchedAt+'. Další zápasy už se nehrají.'
@@ -29355,7 +29400,7 @@ function renderStats(){
       }
       Array.from(host.querySelectorAll('input.fc26-roster-player')).forEach((input,i)=>{
         input.disabled=!editable;
-        if(!input.dataset.dirty&&input!==document.activeElement){input.value=cfg()[key][i]||'';input.dataset.participantId=cfg()['rosterParticipantIds'+side]?.[i]||'';}
+        if(!rosterDirty){input.value=cfg()[key][i]||'';input.dataset.participantId=cfg()['rosterParticipantIds'+side]?.[i]||'';}
         if(!input.parentElement.querySelector('.fc26-identity-actions')){const actions=document.createElement('span');actions.className='fc26-identity-actions';actions.innerHTML='<button class="btn" type="button" data-fc-move="-1">↑</button><button class="btn" type="button" data-fc-move="1">↓</button><button class="btn" type="button" data-fc-new>Nový účastník</button>';input.parentElement.appendChild(actions);}
       });
     });
@@ -29380,9 +29425,11 @@ function renderStats(){
     renderFederalCupViewer();
   }
 
-  $('fc26SaveSettings')?.addEventListener('click',function(){
+  $('fc26SaveSettings')?.addEventListener('click',async function(){
     if(!canEdit())return;
-    const conf=cfg();
+    const base=federalRosterDraftBase||cfg();
+    if(federalConfigFingerprint(base)!==federalConfigFingerprint(cfg())){toast('Konflikt soupisky: konfigurace se změnila. Obnov soupisku a zadej úpravu znovu.');return;}
+    const conf=cloneForUndo(base);ensureFederalParticipants(conf);
     const rosterA=Array.from({length:5},(_,i)=>normalizedName($('fc26APlayer'+i)?.value));
     const rosterB=Array.from({length:5},(_,i)=>normalizedName($('fc26BPlayer'+i)?.value));
     // Convert existing lineups to immutable IDs before any rename or reorder.
@@ -29390,7 +29437,7 @@ function renderStats(){
     for(const [side,names] of [['A',rosterA],['B',rosterB]]){
       conf['rosterParticipantIds'+side]=names.map((name,i)=>{
         if(!name)return null;
-        const input=$('fc26'+side+'Player'+i),old=conf.participants?.[input.dataset.participantId];
+        const input=$('fc26'+side+'Player'+i),idBefore=input.dataset.newParticipant==='1'?null:(input.dataset.participantId||conf['rosterParticipantIds'+side]?.[i]),old=conf.participants?.[idBefore];
         const id=old?.team===side.toLowerCase()?old.id:'fc-'+uid();
         conf.participants[id]={...old,id,name,team:side.toLowerCase(),year:2026};return id;
       });
@@ -29398,8 +29445,9 @@ function renderStats(){
     conf.teamAName='Slovensko';conf.teamBName='Česko';
     conf.rosterA=rosterA;conf.rosterB=rosterB;conf.rosterMode='manual';
     for(const l of Object.values(conf.lineups||{}))for(const side of ['a','b'])if(Array.isArray(l?.[side]))l[side]=l[side].map(id=>conf['rosterParticipantIds'+side.toUpperCase()].includes(id)?id:'');
-    document.querySelectorAll('.fc26-roster-player').forEach(input=>{delete input.dataset.dirty;});
-    conf.updatedAt=Date.now();saveData();render();
+    if(!await commitConfig(conf,base))return;
+    document.querySelectorAll('.fc26-roster-player').forEach(input=>{delete input.dataset.dirty;delete input.dataset.newParticipant;});
+    federalRosterDraftBase=null;render();
     toast(rosterA.every(Boolean)&&rosterB.every(Boolean)
       ? 'Soupisky Slovenska a Česka uloženy.'
       : 'Rozpracované soupisky uloženy. Před zápasem doplň pět hráčů za každý tým.');
@@ -29407,18 +29455,19 @@ function renderStats(){
   document.getElementById('screen-federal-cup-editor')?.addEventListener('click',function(e){
     const button=e.target.closest('[data-fc-move],[data-fc-new]');if(!button||!canEdit())return;
     const input=button.closest('label').querySelector('input.fc26-roster-player');
-    if(button.hasAttribute('data-fc-new')){input.dataset.participantId='';input.dataset.dirty='1';input.value='';input.focus();return;}
+    if(button.hasAttribute('data-fc-new')){input.dataset.participantId='';input.dataset.newParticipant='1';input.dataset.dirty='1';input.value='';input.focus();return;}
     const inputs=[...input.parentElement.parentElement.querySelectorAll('input.fc26-roster-player')];
     const index=inputs.indexOf(input),other=inputs[index+Number(button.dataset.fcMove)];if(!other)return;
-    const old={name:input.value,id:input.dataset.participantId};input.value=other.value;input.dataset.participantId=other.dataset.participantId||'';other.value=old.name;other.dataset.participantId=old.id||'';input.dataset.dirty=other.dataset.dirty='1';
+    const old={name:input.value,id:input.dataset.participantId,isNew:input.dataset.newParticipant};input.value=other.value;input.dataset.participantId=other.dataset.participantId||'';input.dataset.newParticipant=other.dataset.newParticipant||'';other.value=old.name;other.dataset.participantId=old.id||'';other.dataset.newParticipant=old.isNew||'';input.dataset.dirty=other.dataset.dirty='1';
   });
   document.getElementById('screen-federal-cup-editor')?.addEventListener('input',function(e){
     if(e.target?.classList?.contains('fc26-roster-player'))e.target.dataset.dirty='1';
   });
   $('fc26Refresh')?.addEventListener('click',async function(){
-    try{if(cloudAuthenticated)await loadSecureMatches();}catch(e){}
-    render();
-    toast('Federal Cup výsledky obnoveny.');
+    try{
+      if(cloudAuthenticated){const r=await fetch(cloudUrl('appData'),{cache:'no-store'});if(!r.ok)throw Error('Obnovení konfigurace selhalo.');const remote=await r.json();data.federalCup2026=normalizeFederalConfig(remote?.data?.federalCup2026,data.players);await loadSecureMatches();}
+      document.querySelectorAll('.fc26-roster-player').forEach(input=>{delete input.dataset.dirty;delete input.dataset.newParticipant;});federalRosterDraftBase=null;render();toast('Federal Cup obnoven.');
+    }catch(e){toast(e.message);}
   });
 
   window.renderFederalCup2026=render;

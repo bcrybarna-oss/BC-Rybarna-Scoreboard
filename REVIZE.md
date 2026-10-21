@@ -1,5 +1,14 @@
 # Revize aplikace Poolčítadlo
 
+## Dominik – opravy čtyř nálezů revize PR #21 (v4.51.84 RC)
+
+Zadavatel: Dominik
+Datum: 21. 10. 2026
+Změny: Pokračování stejného nenasazeného vydání ve stávající větvi PR #21. Obnovení zápasu a zobrazení konfiguraci nezapisují ani negenerují identity. Skutečné úpravy a první vytvoření identit používají výchozí snapshot a atomický Firebase RTDB GET ETag / PUT If-Match. Obecný upload zachovává serverový Federal Cup a také vyžaduje ETag. Rozepsaná soupiska drží celý výchozí stav a ID řádků; konflikt vyžaduje obnovení a nové zadání. Přejmenování/přesuny zachovají ID, Nový účastník vytvoří jiné. Servisní opravy mají trvalé značky úplnosti po jednotlivých oblastech, undo vzniká před změnou skóre; racky kontrolují i rozdělení vítězů a jedinečnost. Řídká pole z RTDB zachovávají pozice. Dokumentace aktualizována, bez reportu a etapy 2.
+Testy: Unit 14/14. Nový browser se dvěma izolovanými klienty a společným RTDB mockem: 7/7 scénářů, včetně GET/PUT závodu s HTTP 412, 403/chybějícího ETag, migrace, všech čtyř reprodukcí, souběžného přejmenování/odebrání/výměny, reloadu a dokončení opraveného zápasu. Stejné první čtyři scénáře proti původnímu bd8bfa6 selhaly 4/4. Celá Node sada 99/101: jen dvě známá selhání preview-match-reload-recovery v test-modular, beze změny a bez vynechání. Browser současného index.html: Federal Cup, detailní počítadlo, evidence, historické turnaje, PDF download/share a release UI prošly. Veškerá síť zachycena, 0 page errors, bez produkčních zápisů. Release gate proti čerstvému origin/main a git diff --check prošly.
+Nasazení: Opravy připraveny k pushi do stejného [PR #21](https://github.com/bcrybarna-oss/BC-Rybarna-Scoreboard/pull/21); následné CI zatím neověřeno. Nesloučeno a nenasazeno, produkce zůstává v4.51.83 RC. Číslo zůstává v4.51.84 RC podle pravidla více commitů jednoho vydání.
+Omezení: Konflikt se bezpečně odmítá, formulář je nutné obnovit a úpravu zadat znovu. Distribuovaný zámek zahájení fixture a souběžná editace jednoho zápasu nejsou součástí opravy konfigurace. Starší klienti bez této ochrany musí před editací přejít na nové vydání. Skutečné Firebase Auth/Rules/CORS, fyzické mobilní aplikace a zátěž neověřeny. Staré identity se automaticky nespojují; chybějící strky se nevymýšlejí. Dvě známé chyby modularizace zůstávají viditelné.
+
 ## Dominik – Federal Cup: evidence statistik, etapa 1 (v4.51.84 RC)
 
 Zadavatel: Dominik
