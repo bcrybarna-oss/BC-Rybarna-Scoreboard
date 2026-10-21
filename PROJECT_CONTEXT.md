@@ -214,3 +214,7 @@ Při práci na tomto repozitáři:
 - netvrď, že je něco implementované, dokud změna není skutečně commitnutá,
 - při větších úpravách preferuj branch + Pull Request,
 - u bezpečnostních změn buď konzervativní.
+
+## Připravená etapa evidence Federal Cupu – v4.51.84 RC
+
+Ve vývojové větvi, dosud nenasazeno. Registr účastníků má náhodná neměnná ID, samostatné pořadí a historické snapshoty. Singles/Doubles používají federalEvidence.racks, Team nadále jediný federalTeam.racks. Kanonické strky jsou detailedPlay.records, rackové kopie se nesčítají. Nové FC strky mají evidenceVersion 2, účel a známé/neznámé útočné pokusy i původ potopení; coverage se posuzuje podle ukazatele. B&R zachovává současná pravidla. Staré identity a chybějící statistiky se automaticky nedoplňují. Viz docs/federal-statistics-evidence.md a aktuální stav v PROJECT_STATUS.md.
