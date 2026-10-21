@@ -1,5 +1,14 @@
 # Revize aplikace Poolčítadlo
 
+## Dominik – uzavření a ověřené nasazení etapy 1 Federal Cupu (v4.51.84 RC)
+
+Zadavatel: Dominik
+Datum: 21. 10. 2026
+Změny: Po čerstvém fetchi nezměněného main 6f05b1b a hlavy PR 3c6a286 znovu ověřeny čtyři opravy a relevantní regrese aktuálního index.html. [PR #21](https://github.com/bcrybarna-oss/BC-Rybarna-Scoreboard/pull/21) sloučen merge commitem 01a5fdf2885b18f68a4a161aa92f74591e0812ae se zachováním historie, bez force push. Pouze nezbytné doplnění dokumentace skutečného nasazení; žádná další funkční změna ani zvýšení verze, etapa 2/report/PDF export nezahájeny.
+Testy: Unit 14/14, dvouklientové konflikty 7/7; znovu prošly Federal Cup, federal-evidence, detailní počítadlo, historické turnaje, PDF download/share a release browser. Lokální Node 99/101. [CI sloučeného main](https://github.com/bcrybarna-oss/BC-Rybarna-Scoreboard/actions/runs/39604934353): Release version and revision uspěl, Node 99/101; log potvrzuje jen dvě známá nezměněná selhání preview-match-reload-recovery v test-modular. Žádná nová regrese; před sloučením release gate proti čerstvému origin/main prošel. Produkční kontrola čistého Chrome: viditelná v4.51.84 RC a konzistentní informace o verzi, otevření Federal Cupu, formáty Singles/Doubles/Team, read-only obnovení, desktop/mobilní viewport a reload; 0 page errors, 0 FC varování, 0 požadavků Firebase a 0 pokusů o vzdálený zápis, žádný testovací zápas.
+Nasazení: [Pages sloučeného commitu](https://github.com/bcrybarna-oss/BC-Rybarna-Scoreboard/actions/runs/39604934110) úspěšně dokončily build i deploy. Dne 21. 10. 2026 v 13:06:56 UTC (15:06:56 CEST) veřejný web HTTP 200, přesná bajtová shoda celého HTML s commitem 01a5fdf2885b18f68a4a161aa92f74591e0812ae, SHA256 2f8e1f34cec66438a857fafdfea90abd1b862a8c2c78c799a7dbf9a045475594. Nasazeno a ověřeno, etapa 1 uzavřena. Následující čistě dokumentační commit nemění toto otestované HTML; jeho vlastní Pages běh ověřit samostatně. Místní záloha předchozího main a veřejného HTML: work/production-backups/2026-10-21-before-v4.51.84.
+Omezení: Produkční kontrola použila čisté nepřihlášené/offline UI s blokovaným Firebase a všemi zápisy; nezaručuje aktuální cloudové výsledky ani skutečné přihlášení, Rules/CORS, cloudové uložení či obnovu na produkci. Tyto cesty ověřil pouze izolovaný mock. Fyzické Android/iOS, nativní aplikace a zátěž neověřeny. Zůstává riziko starých klientů bez If-Match, souběžné editace jednoho zápasu/startu stejné fixture, historicky neúplných dat a dvě známá selhání test-modular. Testy ani CI nebyly rozděleny či obcházeny.
+
 ## Dominik – opravy čtyř nálezů revize PR #21 (v4.51.84 RC)
 
 Zadavatel: Dominik

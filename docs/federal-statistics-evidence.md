@@ -1,6 +1,6 @@
 # Federal Cup – evidence pro budoucí report, v4.51.84 RC
 
-Zadavatel: Dominik. Etapa 1, 21. 10. 2026. Připraveno ve vlastní větvi k PR; nenasazeno. Report, jeho grafika ani PDF se zde nezavádějí.
+Zadavatel: Dominik. Etapa 1 uzavřena 21. 10. 2026: PR #21 sloučen jako 01a5fdf2885b18f68a4a161aa92f74591e0812ae, Pages nasazení v4.51.84 RC a shoda veřejného HTML ověřeny. Podrobný výsledek a hranice produkční kontroly v REVIZE.md a PROJECT_STATUS.md. Report, jeho grafika ani nový PDF export se zde nezavádějí.
 
 ## Účastníci
 
