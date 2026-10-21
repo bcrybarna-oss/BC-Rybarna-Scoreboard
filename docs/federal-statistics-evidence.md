@@ -37,7 +37,7 @@ Nové FC záznamy v původním `detailedPlay.version = 1` dostávají `evidenceV
 - Běžný faul: ve stávajícím dialogu je volba Pokus o potopení / Obranný strk / Jiný strk / Nevím. Výchozí je `unknown`, nikdy automatický útok. Útočný faul: jeden pokus, nula úspěchů; ostatní známé účely: nula útočných pokusů; neznámý účel: `pottingAttempts: null`.
 - Únik je `intent: escape`, i s potopenou koulí nepřidává útočný pokus bez známého záměru. Jistoty, rozstřely a push out jsou mimo útok.
 - `inferred_pots` zachovává `strokeCount: null` a neznámé útočné pokusy/úspěchy. `potsEvidence: derived` je pouze bezpečné odvození při známém stole/náběhu; jinak `unknown`. Při prázdné dávce se nevytvářejí neznámé strky.
-- Oprava stolu nepřidává úspěch. Odstranění bez vazby na konkrétní faul znamená neúplná data; `foulId` zachovává původ faulových koulí. Nezapsané koule při legacy push outu znamenají neúplný počet koulí.
+- Oprava stolu nepřidává úspěch. Odstranění bez vazby na konkrétní faul nebo servisní změna tahu znamená neúplná data obou stran (vlastníka chybějících strků nelze prokázat); `foulId` zachovává původ faulových koulí. Nezapsané koule při legacy push outu znamenají neúplný počet koulí.
 
 `federalEvidenceSummary` je interní podklad pro další etapu, nikoli veřejný report 11 ukazatelů. Čte pouze kanonické záznamy, odděluje explicitní/odvozené koule a sleduje úplnost útoku, potopení a racků. Bez úplné historie vrací pro celkový počet koulí `null`, ne nulu. Součet známých útoků při částečných datech není úplný jmenovatel. Nová prázdná evidence má prokazatelnou nulu, stará prázdná evidence `unknown`. Hromadné bezpečné dokončení sjednocuje i čítač `stats.regularPottedBalls`; pro budoucí přesné rozlišení použít kanonické záznamy a jejich úplnost, ne samotný čítač.
 

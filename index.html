@@ -9664,9 +9664,11 @@ $('useClock').addEventListener('change',e=>$('clockSettings').classList.toggle('
   // Read only: never infer zeros from absent legacy fields. Records are canonical;
   // rack.shotIds refer to them and rack.shots is only a compatibility copy.
   function federalEvidenceSummary(m,side){
-    const records=Object.values(m?.detailedPlay?.records||{}).filter(r=>r.side===side);
+    const allRecords=Object.values(m?.detailedPlay?.records||{}),records=allRecords.filter(r=>r.side===side);
     const fresh=m?.federalEvidence?.fromStart===true;
-    let attempts=0,successful=0,explicit=0,derived=0,unknownPots=false,unknownAttempts=false;
+    // Unassigned corrections cannot prove which player owns omitted pots/shots.
+    const unassigned=allRecords.some(r=>r.kind==='table_correction'&&!r.foulId||r.kind==='turn_correction');
+    let attempts=0,successful=0,explicit=0,derived=0,unknownPots=unassigned,unknownAttempts=unassigned;
     for(const r of records){
       if(r.evidenceVersion!==2){unknownAttempts=true;unknownPots=true;continue;}
       if(r.pottingAttempts==null)unknownAttempts=true;else attempts+=r.pottingAttempts;
