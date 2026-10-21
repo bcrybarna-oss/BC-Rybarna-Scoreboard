@@ -1,5 +1,14 @@
 # Revize aplikace Poolčítadlo
 
+## Jaroslav – sloučení a ověření nasazení streamového ovládání (v4.51.85 RC)
+
+Zadavatel: Jaroslav
+Datum: 21. 10. 2026
+Změny: Po výslovném schválení, čerstvém fetchi a kontrole nezměněného main 090330a / PR head 81c9b53 sloučen PR #24 merge commitem acc003904d900e1e7d72f0db64c63dac74d88d63. Zachována historie, bez force push, bez PR #22 a další funkční změny. Pouze nezbytný následný záznam skutečného nasazení v PROJECT_STATUS.md a REVIZE.md; verze se nemění.
+Testy: Release gate proti čerstvému origin/main před sloučením prošel, PR bez konfliktu a bez dalších změn. CI PR i [CI main](https://github.com/bcrybarna-oss/BC-Rybarna-Scoreboard/actions/runs/39620364747): release success, Node 99/101; logy potvrzují jen dvě známá selhání preview-match-reload-recovery na řádcích testu 50 a 106, žádnou novou regresi. Veřejné HTML se bajtově shoduje se sloučeným commitem. Na skutečné nezměněné Pages aplikaci ověřeny oba režimy počítadla a čtyři tlačítka se zapnutým overlayem, aktivní zvýraznění a lokální přepínání soon/live/pause/live/end, zachovaná jména/skóre, desktop 1280×900, mobil 390×844 a landscape 844×390. 0 JS chyb, 0 požadavků Firebase, 0 vzdálených zápisů; veškerá Firebase i všechny zápisy byly blokované. Předchozí mock test nad stejným HTML ověřil i skutečné zobrazení overlay.html, OFF varianty, skórování a reload/obnovu.
+Nasazení: [GitHub Pages](https://github.com/bcrybarna-oss/BC-Rybarna-Scoreboard/actions/runs/39620364751) completed/success pro acc003904d900e1e7d72f0db64c63dac74d88d63. Dne 21. 10. 2026 v 16:52:21 CEST (14:52:21 UTC) veřejný web HTTP 200, v4.51.85 RC ve všech aktivních místech, SHA256 HTML df822cc3e72ddbdd86ac6540640066d10b2de777048a213283f86fa266a4bc5e. Nasazeno a ověřeno. Tento následný dokumentační commit nemění HTML; jeho vlastní Pages běh se posuzuje samostatně.
+Omezení: Produkční kontrola použila pouze dočasné lokální zápasy v čistých offline browser kontextech a žádná produkční data/účty. Ovládání skutečného OBS, produkční Auth/Firebase/Rules, fyzické telefony a vzdálené přepnutí reálného streamu vyžadují ruční zkoušku. Veřejný test ověřuje lokální ovládání, vzdálený overlay byl ověřen pouze izolovaným mockem. Dvě známé chyby test-modular a dříve popsané omezení automatického lokálního výběru zápasu se nemění. PR #22 zachován beze změny a nesloučen.
+
 ## Jaroslav – společné ovládání streamu v obou počítadlech (v4.51.85 RC)
 
 Zadavatel: Jaroslav
