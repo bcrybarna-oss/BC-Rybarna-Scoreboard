@@ -18,7 +18,7 @@ window.fcTest={
   reset(){stopTimer();stopLiveHeartbeat();clearTimeout(activeMatchCloudSaveTimer);match=null;data=defaultData();pendingFederalCupLink=null;pendingTournamentLink=null;pendingLeagueLink=null;
     document.querySelectorAll('.modal.show').forEach(el=>el.classList.remove('show'));
     for(const key of [LOCAL_ACTIVE_MATCH_KEY,LOCAL_ACTIVE_MATCHES_KEY,LOCAL_ACTIVE_MATCH_RECOVERY_KEY])localStorage.removeItem(key);
-    data.federalCup2026.rosterMode='manual';data.federalCup2026.rosterA=['SK1','SK2','SK3','SK4','SK5'];data.federalCup2026.rosterB=['CZ1','CZ2','CZ3','CZ4','CZ5'];},
+    data.federalCup2026.rosterMode='manual';data.federalCup2026.rosterA=['SK1','SK2','SK3','SK4','SK5'];data.federalCup2026.rosterB=['CZ1','CZ2','CZ3','CZ4','CZ5'];ensureFederalParticipants(data.federalCup2026);},
   setMatch(m){match=m},
   finish(){finishMatch(0)},
   async resume(){const m=loadDeviceActiveMatch();if(m)await resumeLocalMatch(m.id);return m;},
@@ -58,9 +58,9 @@ assert.ok(html.includes('window.fcTest='));
  await page.waitForFunction(()=>!!window.fcTest);
  await page.waitForSelector('#cloudLoginModal.show');
  async function run(fn,arg){return page.evaluate(fn,arg)}
- async function setup(n=1){await run(n=>{fcTest.admin();fcTest.reset();
+ async function setup(n=1){await run(async n=>{fcTest.admin();fcTest.reset();
    if(n!==1)fcTest.data.federalCup2026.lineups[n]=n===2?{a:['SK1','SK2'],b:['CZ1','CZ2']}:{a:['SK3'],b:['CZ3']};
-   fc26StartFixture(n);document.getElementById('fc26LagWinner').value='0';document.getElementById('useLag').checked=false;fcTest.start();},n);}
+   await fc26StartFixture(n);document.getElementById('fc26LagWinner').value='0';document.getElementById('useLag').checked=false;fcTest.start();},n);}
  async function state(){return run(()=>JSON.parse(JSON.stringify(fcTest.match)))}
  async function select(a='SK2',b='CZ4'){
    await page.locator('#fc26RackPlayers select').nth(0).selectOption(a);
@@ -127,7 +127,7 @@ assert.ok(html.includes('window.fcTest='));
     await run(()=>fcTest.undo());await page.locator('#acceptPushOutBtn').click();assert.equal((await state()).turn,1);
   }
   console.log('PASS Team/Doubles/Singles through actual break/decision controls, spotted 9, push acceptance and return');
-  await run(()=>{fcTest.reset();const c=fcTest.data.federalCup2026;for(let n=1;n<=11;n++){
+  await run(async()=>{fcTest.reset();const c=fcTest.data.federalCup2026;for(let n=1;n<=11;n++){
     if([1,5,10].includes(n))c.teamResults[n]={a:5,b:2,done:true};
     else fcTest.data.matches.push({id:'fixture-'+n,federalCupLink:{year:2026,fixtureNo:n},endedAt:'2026-10-19T12:00:00Z',status:'complete',scores:[5,0]});
   }renderFederalCup2026()});
@@ -139,14 +139,14 @@ assert.ok(html.includes('window.fcTest='));
   await run(()=>{fcTest.data.matches=[{...fcTest.match,endedAt:'2026-10-19T12:00:00Z',status:'incomplete',scores:[1,0]}];renderFederalCup2026()});
   assert.equal(await run(()=>fc26CanStartMatch(3)),true);
   // Attempt to tamper with every hidden setting immediately before actual start.
-  await run(()=>{fcTest.reset();fcTest.data.federalCup2026.lineups[2]={a:['SK1','SK2'],b:['CZ1','CZ2']};fc26StartFixture(2);
+  await run(async()=>{fcTest.reset();fcTest.data.federalCup2026.lineups[2]={a:['SK1','SK2'],b:['CZ1','CZ2']};await fc26StartFixture(2);
     for(const [id,value] of Object.entries({discipline:'14.1',counterMode:'simple',raceTo:'99',breakMode:'winner',nineBallBreakRule:'none'}))document.getElementById(id).value=value;
     for(const id of ['ghostMode','solo14','winnerTableMode','useHandicap'])document.getElementById(id).checked=true;
     document.getElementById('doublesMode').checked=false;document.getElementById('useLag').checked=false;document.getElementById('fc26LagWinner').value='0';fcTest.start()});
   m=await state();assert.equal(m.discipline,'9-ball');assert.equal(m.counterMode,'full');assert.equal(m.target,5);assert.equal(m.breakMode,'alternate');assert.equal(m.nineBallBreakRule,'kitchen');assert.equal(m.doublesMode,true);assert.equal(m.ghostMode,false);assert.equal(m.winnerTableMode,false);
   console.log('PASS incomplete fixtures do not score and start enforces Federal Cup settings');
   for(const n of [1,2,3]){
-    await run(n=>{fcTest.reset();if(n!==1)fcTest.data.federalCup2026.lineups[n]=n===2?{a:['SK1','SK2'],b:['CZ1','CZ2']}:{a:['SK3'],b:['CZ3']};fc26StartFixture(n);document.getElementById('useLag').checked=false;document.getElementById('useClock').checked=true;},n);
+    await run(async n=>{fcTest.reset();if(n!==1)fcTest.data.federalCup2026.lineups[n]=n===2?{a:['SK1','SK2'],b:['CZ1','CZ2']}:{a:['SK3'],b:['CZ3']};await fc26StartFixture(n);document.getElementById('useLag').checked=false;document.getElementById('useClock').checked=true;},n);
     await page.locator('#fc26LagWinner').selectOption('1');
     await page.locator('#startMatch').click();
     assert.equal(await page.locator('#lagModal').isVisible(),false);

@@ -25,7 +25,7 @@ window.fcTest={
   reset(){stopTimer();stopLiveHeartbeat();clearTimeout(activeMatchCloudSaveTimer);match=null;data=defaultData();pendingFederalCupLink=null;pendingTournamentLink=null;pendingLeagueLink=null;
     document.querySelectorAll('.modal.show').forEach(el=>el.classList.remove('show'));
     for(const key of [LOCAL_ACTIVE_MATCH_KEY,LOCAL_ACTIVE_MATCHES_KEY,LOCAL_ACTIVE_MATCH_RECOVERY_KEY])localStorage.removeItem(key);
-    data.federalCup2026.rosterMode='manual';data.federalCup2026.rosterA=['SK1','SK2','SK3','SK4','SK5'];data.federalCup2026.rosterB=['CZ1','CZ2','CZ3','CZ4','CZ5'];},
+    data.federalCup2026.rosterMode='manual';data.federalCup2026.rosterA=['SK1','SK2','SK3','SK4','SK5'];data.federalCup2026.rosterB=['CZ1','CZ2','CZ3','CZ4','CZ5'];ensureFederalParticipants(data.federalCup2026);},
   setMatch(m){match=m},
   finish(){finishMatch(0)},
   async resume(){const m=loadDeviceActiveMatch();if(m)await resumeLocalMatch(m.id);return m;},
@@ -65,9 +65,9 @@ assert.ok(html.includes('window.fcTest='));
  await page.waitForFunction(()=>!!window.fcTest);
  await page.waitForSelector('#cloudLoginModal.show');
  async function run(fn,arg){return page.evaluate(fn,arg)}
- async function setup(n=1){await run(n=>{fcTest.admin();fcTest.reset();
+ async function setup(n=1){await run(async n=>{fcTest.admin();fcTest.reset();
    if(n!==1)fcTest.data.federalCup2026.lineups[n]=n===2?{a:['SK1','SK2'],b:['CZ1','CZ2']}:{a:['SK3'],b:['CZ3']};
-   fc26StartFixture(n);document.getElementById('fc26LagWinner').value='0';document.getElementById('useLag').checked=false;fcTest.start();},n);}
+   await fc26StartFixture(n);document.getElementById('fc26LagWinner').value='0';document.getElementById('useLag').checked=false;fcTest.start();},n);}
  async function state(){return run(()=>JSON.parse(JSON.stringify(fcTest.match)))}
  async function select(a='SK2',b='CZ4'){
    await page.locator('#fc26RackPlayers select').nth(0).selectOption(a);
