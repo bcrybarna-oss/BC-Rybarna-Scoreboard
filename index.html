@@ -2394,7 +2394,6 @@ html[data-theme="light"] #leagueSchedule .history-item .muted{
 #screen-setup.setup-compact:not(.setup-expanded) #threeFoulRow,
 #screen-setup.setup-compact:not(.setup-expanded) #shotClockRow,
 #screen-setup.setup-compact:not(.setup-expanded) #clockSettings,
-#screen-setup.setup-compact:not(.setup-expanded) #setupStreamOptionsPanel,
 #screen-setup.setup-compact:not(.setup-expanded) #doublesRow,
 #screen-setup.setup-compact:not(.setup-expanded) #solo14Row,
 #screen-setup.setup-compact:not(.setup-expanded) #solo14GhostRow,
@@ -2513,7 +2512,7 @@ html[data-theme="light"] #leagueSchedule .history-item .muted{
           <span class="by">by</span>
           <span class="club">BC Rybárna</span>
         </div>
-        <small class="modern-brand-version">v4.51.84 RC</small>
+        <small class="modern-brand-version">v4.51.85 RC</small>
       </div>
     </div>
     <div class="nav">
@@ -3020,7 +3019,7 @@ html[data-theme="light"] #leagueSchedule .history-item .muted{
       <div id="simpleSetupInfo" class="subpanel hidden" style="margin-top:16px">
         <strong>JEDNODUCHÉ POČÍTADLO</strong>
         <div class="muted" style="margin-top:5px">
-          Po spuštění se zobrazí pouze hráči, skóre a tlačítka +1. Disciplína, Race to, systém rozstřelu a případný handicap se zachovají pro zobrazení v zápasu, Livescore a historii. Detailní herní akce, shot clock a rozšířené statistiky se neevidují.
+          Po spuštění se zobrazí hráči, skóre a rychlá tlačítka +1. Při zapnutém streamu zůstává dostupné také ovládání LIVE, PAUZA, BRZY ZAČÍNÁME a KONEC. Disciplína, Race to, systém rozstřelu a případný handicap se zachovají pro zobrazení v zápasu, Livescore a historii. Detailní herní akce, shot clock a rozšířené statistiky se neevidují.
         </div>
       </div>
 
@@ -3121,7 +3120,7 @@ html[data-theme="light"] #leagueSchedule .history-item .muted{
         </div>
         <div class="subpanel" style="min-width:210px;text-align:center;margin:0">
           <div class="muted" style="font-size:10px;font-weight:950;letter-spacing:1px">AKTUÁLNÍ VERZE</div>
-          <div style="font-size:22px;font-weight:950;color:var(--gold2);margin-top:5px">v4.51.84 RC</div>
+          <div style="font-size:22px;font-weight:950;color:var(--gold2);margin-top:5px">v4.51.85 RC</div>
         </div>
       </div>
     </div>
@@ -4490,6 +4489,17 @@ html[data-theme="light"] #leagueSchedule .history-item .muted{
         </div>
       </div>
 
+      <div id="streamDirectorPanel" class="subpanel hidden" style="margin:12px 0;padding:12px" aria-label="Ovládání streamu">
+        <div style="font-size:12px;font-weight:950;letter-spacing:.5px;color:var(--gold2)">📺 OVLÁDÁNÍ STREAMU</div>
+        <div id="streamModeInfo" class="muted" role="status" aria-live="polite" style="margin:6px 0 10px">Aktuálně: LIVE</div>
+        <div class="grid two" style="gap:8px">
+          <button type="button" id="streamModeLiveBtn" class="btn primary">▶ LIVE</button>
+          <button type="button" id="streamModePauseBtn" class="btn">⏸ PAUZA</button>
+          <button type="button" id="streamModeSoonBtn" class="btn">⏳ BRZY ZAČÍNÁME</button>
+          <button type="button" id="streamModeEndBtn" class="btn">■ KONEC</button>
+        </div>
+      </div>
+
       <div id="fc26RackPlayers" class="subpanel hidden"></div>
       <div id="normalActions">
         <div class="action-grid">
@@ -5845,7 +5855,7 @@ html[data-theme="light"] #leagueSchedule .history-item .muted{
       </div>
 
       <div id="groupPlayoffSeedStatus" class="muted" style="margin-top:12px;min-height:20px"></div>
-      <div class="muted" style="margin-top:4px;font-size:11px">RC v4.51.84</div>
+      <div class="muted" style="margin-top:4px;font-size:11px">RC v4.51.85</div>
       <div class="modal-actions">
         <button id="groupPlayoffSeedApplyBtn" class="btn primary big" type="button">NASADIT DO PLAY-OFF</button>
         <button id="groupPlayoffSeedCancelBtn" class="btn">ZRUŠIT</button>
@@ -7029,7 +7039,7 @@ html[data-theme="light"] #leagueSchedule .history-item .muted{
     const btn=$('submitReportBtn');if(btn)btn.disabled=true;
     try{
       const id=uid(),p=currentUserPlayerId?data.players?.[currentUserPlayerId]:null;
-      const report={id,createdByUid:cloudUid,createdByPlayerId:currentUserPlayerId||'',createdByName:p?playerSelectionLabel(p):(cloudUserEmail||'Uživatel'),email:cloudUserEmail||'',type,area,description,appVersion:'v4.51.84 RC',createdAt:new Date().toISOString(),updatedAt:new Date().toISOString(),status:'new',adminNote:''};
+      const report={id,createdByUid:cloudUid,createdByPlayerId:currentUserPlayerId||'',createdByName:p?playerSelectionLabel(p):(cloudUserEmail||'Uživatel'),email:cloudUserEmail||'',type,area,description,appVersion:'v4.51.85 RC',createdAt:new Date().toISOString(),updatedAt:new Date().toISOString(),status:'new',adminNote:''};
       await reportRequest(id,'PUT',report);
       try{
         await writeReportUserMirror(report);
