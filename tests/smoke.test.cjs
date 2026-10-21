@@ -30,8 +30,9 @@ test('Všechny vložené JavaScriptové bloky mají platnou syntaxi',()=>{
   assert.ok(scripts.length>=8);
   scripts.forEach((m,i)=>assert.doesNotThrow(()=>new Function(m[1]),'script '+i));
 });
-test('Verze a základní struktura odpovídá první etapě',()=>{
-  assert.ok(html.includes('v4.51.84 RC'));
+test('Verze a základní struktura aplikace',()=>{
+  const {applicationVersion}=require('../scripts/check-release.cjs');
+  assert.match(applicationVersion(html),/^4\.51\.\d+$/);
   assert.equal(count(/id="streamMatchTitle"/g),1);
   assert.equal(count(/id="setupMoreBtn"/g),1);
   assert.equal(count(/id="poolPlayerPickerDialog"/g),1);
