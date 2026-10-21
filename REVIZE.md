@@ -1,5 +1,14 @@
 # Revize aplikace Poolčítadlo
 
+## Jaroslav – ovládání streamu v jednoduchém počítadle (v4.51.85 RC)
+
+Zadavatel: Jaroslav
+Datum: 21. 10. 2026
+Změny: Do obrazovky aktivního zápasu doplněn chybějící panel OVLÁDÁNÍ STREAMU s tlačítky LIVE, PAUZA, BRZY ZAČÍNÁME a KONEC pro jednoduché i rozšířené počítadlo. Napojení využívá stávající refreshStreamDirector / setStreamMode, uchování rozpracovaného zápasu a stávající cloudový overlay (beze změny datového modelu, skóre, statistik a historie). Panel se zobrazuje pouze při povoleném stream overlayi. Volba Stream overlay je v běžné přípravě zápasu dostupná i bez rozbalení dalších herních pravidel. Upraveno vysvětlení jednoduchého režimu.
+Testy: Přidán tests/simple-stream-controls.test.cjs (existence ovládacích prvků, čtyři režimy v jednoduchém, stejný ovladač v rozšířeném a skrytí bez streamu). Strukturní kontrola kódu a unikátních ID při přípravě změny prošla; kompletní Node/Playwright regresní testy a release gate musí proběhnout v PR CI.
+Nasazení: Připraveno v samostatné větvi fix/simple-counter-stream-controls-20261021; dosud nesloučeno do main a nenasazeno. Produkce zůstává v4.51.84 RC.
+Omezení: Vyloučena testovací komunikace s produkční Firebase. Je nutné v izolovaném mocku a následně s oprávněným účtem ověřit skutečný přenos změn na overlay; fyzické mobily neověřeny. Panel neovládá kameru ani software Streamlabs, jen režim webového overlaye.
+
 ## Dominik – uzavření a ověřené nasazení etapy 1 Federal Cupu (v4.51.84 RC)
 
 Zadavatel: Dominik
