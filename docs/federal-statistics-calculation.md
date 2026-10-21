@@ -1,6 +1,6 @@
 # Federal Cup – výpočet 11 statistik, etapa 2 (v4.51.85 RC)
 
-Zadavatel: Dominik, 21. 10. 2026. Samostatná větev `feature/federal-statistics-calculation` z aktuálního main `090330ac6a4e86a78bffdd824cabb8fb12db0056`. Připraveno k PR, nesloučeno a nenasazeno; produkce zůstává v4.51.84 RC. Bez nové obrazovky, veřejného zobrazení statistik, grafického reportu, PDF, migrace nebo změny Rules.
+Zadavatel: Dominik, 21. 10. 2026. Samostatná větev `feature/federal-statistics-calculation` z aktuálního main `090330ac6a4e86a78bffdd824cabb8fb12db0056`. Připraveno v [PR #22](https://github.com/bcrybarna-oss/BC-Rybarna-Scoreboard/pull/22), nesloučeno a nenasazeno; produkce zůstává v4.51.84 RC. Bez nové obrazovky, veřejného zobrazení statistik, grafického reportu, PDF, migrace nebo změny Rules.
 
 ## Interní API v produkčním index.html
 
@@ -77,5 +77,7 @@ Příklad agregace osoby `a1`: výše uvedený Singles (původní jméno Before)
 ## Ověření a omezení
 
 Nové unit testy 37/37 čtou skutečný index.html: všech 11 hodnot obou stran, vážená agregace, Singles/Doubles/Team, identity/jména, duplicitní fixture/racky/záznamy, ruční výsledky, legacy, sparse RTDB, neúplnost a rozpory bez clampu. Rozšířený federal-evidence browser ověřuje reálné eso, B&R po vráceném soft/push, RESAFE, fauly, osobu Team racku, undo, skutečný reload/Auth a full PUT/GET paritu výpočtu; fetch během samotného výpočtu zakázán. Konfliktní browser ověřuje novou kalkulaci po skutečné servisní opravě skóre. Celá Node sada 136/138, pouze dvě známá nezměněná selhání preview-match-reload-recovery v test-modular. Původní detailed/Federal Cup/historické/PDF/release browser regrese zopakovány; veškerá síť izolovaná, žádná produkční Firebase.
+
+Kódový commit 56269451d7cf0885565d779a300cda37fbd4698b: [CI kódového commitu](https://github.com/bcrybarna-oss/BC-Rybarna-Scoreboard/actions/runs/39610539922) ověřeno, release job uspěl, Node 136/138 jen se dvěma uvedenými známými chybami. Následná dokumentace výpočetní kód nemění.
 
 Legacy, částečná historie a ruční výsledky zůstávají neúplné podle jednotlivých metrik. Ani přesná kalkulace nevytvoří chybějící evidenci. Fyzické Android/iOS, skutečný backend/Auth/Rules/CORS a zátěž neověřeny. Výpočetní API je připravené jako podklad další etapy, nikoli jako hotový veřejný report. PR neslučovat a produkci v rámci tohoto zadání nenasazovat.
