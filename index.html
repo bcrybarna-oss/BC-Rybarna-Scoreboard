@@ -21,6 +21,10 @@
       --radius:18px;
     }
     *{box-sizing:border-box}
+    #streamDirectorPanel{margin:10px 0;min-width:0}
+    #streamDirectorPanel .stream-director-buttons{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin-top:8px}
+    #streamDirectorPanel .btn{min-width:0;min-height:44px;padding:10px 6px;white-space:normal;overflow-wrap:anywhere;font-size:13px}
+    @media(min-width:640px){#streamDirectorPanel .stream-director-buttons{grid-template-columns:repeat(4,minmax(0,1fr))}}
     html,body{margin:0;background:radial-gradient(circle at top,#18130a 0,#090909 34%,#050505 100%);color:var(--text);font-family:Inter,Segoe UI,Arial,sans-serif;min-height:100%;width:100%;max-width:100%;overflow-x:hidden}
     body{min-height:100vh}
     button,input,select{font:inherit}
@@ -2513,7 +2517,7 @@ html[data-theme="light"] #leagueSchedule .history-item .muted{
           <span class="by">by</span>
           <span class="club">BC Rybárna</span>
         </div>
-        <small class="modern-brand-version">v4.51.84 RC</small>
+        <small class="modern-brand-version">v4.51.85 RC</small>
       </div>
     </div>
     <div class="nav">
@@ -3121,7 +3125,7 @@ html[data-theme="light"] #leagueSchedule .history-item .muted{
         </div>
         <div class="subpanel" style="min-width:210px;text-align:center;margin:0">
           <div class="muted" style="font-size:10px;font-weight:950;letter-spacing:1px">AKTUÁLNÍ VERZE</div>
-          <div style="font-size:22px;font-weight:950;color:var(--gold2);margin-top:5px">v4.51.84 RC</div>
+          <div style="font-size:22px;font-weight:950;color:var(--gold2);margin-top:5px">v4.51.85 RC</div>
         </div>
       </div>
     </div>
@@ -4459,6 +4463,16 @@ html[data-theme="light"] #leagueSchedule .history-item .muted{
               <button id="eightBallRunout1" class="btn">DOHRÁVKA</button>
             </div>
           </div>
+        </div>
+      </div>
+
+      <div id="streamDirectorPanel" class="subpanel hidden" aria-label="Ovládání streamu">
+        <div id="streamModeInfo" class="muted" aria-live="polite">Aktuálně: LIVE</div>
+        <div class="stream-director-buttons">
+          <button id="streamModeLiveBtn" type="button" class="btn">LIVE</button>
+          <button id="streamModePauseBtn" type="button" class="btn">PAUZA</button>
+          <button id="streamModeSoonBtn" type="button" class="btn">BRZY ZAČÍNÁME</button>
+          <button id="streamModeEndBtn" type="button" class="btn">KONEC</button>
         </div>
       </div>
 
@@ -5845,7 +5859,7 @@ html[data-theme="light"] #leagueSchedule .history-item .muted{
       </div>
 
       <div id="groupPlayoffSeedStatus" class="muted" style="margin-top:12px;min-height:20px"></div>
-      <div class="muted" style="margin-top:4px;font-size:11px">RC v4.51.84</div>
+      <div class="muted" style="margin-top:4px;font-size:11px">RC v4.51.85</div>
       <div class="modal-actions">
         <button id="groupPlayoffSeedApplyBtn" class="btn primary big" type="button">NASADIT DO PLAY-OFF</button>
         <button id="groupPlayoffSeedCancelBtn" class="btn">ZRUŠIT</button>
@@ -7029,7 +7043,7 @@ html[data-theme="light"] #leagueSchedule .history-item .muted{
     const btn=$('submitReportBtn');if(btn)btn.disabled=true;
     try{
       const id=uid(),p=currentUserPlayerId?data.players?.[currentUserPlayerId]:null;
-      const report={id,createdByUid:cloudUid,createdByPlayerId:currentUserPlayerId||'',createdByName:p?playerSelectionLabel(p):(cloudUserEmail||'Uživatel'),email:cloudUserEmail||'',type,area,description,appVersion:'v4.51.84 RC',createdAt:new Date().toISOString(),updatedAt:new Date().toISOString(),status:'new',adminNote:''};
+      const report={id,createdByUid:cloudUid,createdByPlayerId:currentUserPlayerId||'',createdByName:p?playerSelectionLabel(p):(cloudUserEmail||'Uživatel'),email:cloudUserEmail||'',type,area,description,appVersion:'v4.51.85 RC',createdAt:new Date().toISOString(),updatedAt:new Date().toISOString(),status:'new',adminNote:''};
       await reportRequest(id,'PUT',report);
       try{
         await writeReportUserMirror(report);
@@ -10575,7 +10589,7 @@ $('useClock').addEventListener('change',e=>$('clockSettings').classList.toggle('
     const info=$('streamModeInfo');
     if(info)info.textContent='Aktuálně: '+(map[mode]||'LIVE');
     [['streamModeLiveBtn','live'],['streamModePauseBtn','pause'],['streamModeSoonBtn','soon'],['streamModeEndBtn','end']].forEach(([id,m])=>{
-      const b=$(id); if(!b)return; b.classList.toggle('primary',mode===m);
+      const b=$(id); if(!b)return; b.classList.toggle('primary',mode===m); b.setAttribute('aria-pressed',String(mode===m));
     });
   }
 

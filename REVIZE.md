@@ -1,5 +1,14 @@
 # Revize aplikace Poolčítadlo
 
+## Jaroslav – společné ovládání streamu v obou počítadlech (v4.51.85 RC)
+
+Zadavatel: Jaroslav
+Datum: 21. 10. 2026
+Změny: Z aktuálního origin/main 090330ac6a4e86a78bffdd824cabb8fb12db0056 doplněn chybějící streamDirectorPanel a všechna čtyři tlačítka s ID očekávanými existujícím JavaScriptem. Jediný společný panel mimo bloky skryté podle counterMode; viditelnost pouze při streamEnabled. Původní setStreamMode/sendStreamState, hodnoty live/pause/soon/end a overlay.html zachovány. Aktivní tlačítko má původní primary zvýraznění i aria-pressed, mobilní mřížka má minimální výšku tlačítka 44 px. Všechna čtyři aktivní místa verze povýšena. Beze změny skórování, statistik a ukládání zápasů. Aktualizovány PROJECT_STATUS.md a PROJECT_CONTEXT.md. PR #22 zachován odděleně a beze změny.
+Testy: Nový npm run test:stream propojuje skutečný index.html a nezměněný overlay.html společným izolovaným REST mockem. Prošly čtyři kombinace simple/full × overlay ON/OFF, posloupnost soon/live/pause/live/end na desktopu i mobilu v obou počítadlech, opakování, aktivní primary/aria-pressed, skutečné obrazovky overlaye i jeho jména/skóre, zápis skóre a explicitní obnova konkrétního uloženého zápasu po reloadu/přihlášení. Viewporty 1280×900, 390×844, 844×390 a 320×568, tlačítka minimálně 44 px bez přesahu panelu/překrytí skórování; screenshot mobilu vizuálně zkontrolován. Detailní počítadlo, Federal Cup i release browser prošly; 0 page errors, veškerá síť zachycena. Node 99/101, jen dvě známá selhání test-modular. Verze v existujících smoke/release testech aktualizována; známé selhávající testy beze změny. Release gate proti čerstvému origin/main a git diff --check prošly.
+Nasazení: Připraveno a otestováno v samostatné větvi fix/stream-controls-both-counter-modes ke schválení přes PR. Nesloučeno a nenasazeno, produkce zůstává v4.51.84 RC. Bez následného výslovného pokynu neslučovat ani nenasazovat.
+Omezení: Testy používají pouze mockovanou Firebase, žádné produkční zápisy. Skutečné Firebase/Auth/Rules, OBS a fyzická Android/iOS zařízení neověřeny. Dvě známá selhání preview-match-reload-recovery.test.cjs v test-modular se neodstraňují ani neskrývají; automatický lokální výběr běžného zápasu během čekání na identitu zůstává omezením, ověřena explicitní obnova uloženého zápasu po přihlášení. Širší historická/PDF a fyzická mobilní regrese nebyla v urgentní opravě opakována.
+
 ## Dominik – uzavření a ověřené nasazení etapy 1 Federal Cupu (v4.51.84 RC)
 
 Zadavatel: Dominik

@@ -1,8 +1,11 @@
 # Aktuální stav Poolčítadla
 
-Aktualizace: 21. 10. 2026. Zadavatel aktuální revize: **Dominik**.
+Aktualizace: 21. 10. 2026. Zadavatel aktuální revize: **Jaroslav**.
 
 ## Verze a nasazení
+
+- Aktuální verze: **v4.51.85 RC** (připravené vydání), urgentní společný panel streamu pro obě počítadla, větev fix/stream-controls-both-counter-modes z origin/main 090330ac6a4e86a78bffdd824cabb8fb12db0056. Nesloučeno a nenasazeno; produkce zůstává v4.51.84 RC. PR #22 a jeho statistiky nejsou součástí změny a zůstávají beze změny. Chyběl samotný HTML panel i čtyři tlačítka; původní JS již rozhodoval správně pouze podle streamEnabled. Doplněn jediný společný panel s mobilní mřížkou a aktivním stavem. Skórování, statistiky, cloudové ukládání a streamový protokol beze změny.
+- Ověření vydání v4.51.85 RC: stream-controls-browser prošel pro všechny čtyři kombinace režim/overlay, všechna tlačítka v obou počítadlech, skutečné zobrazení overlay.html přes společný REST mock, zachování jmen/skóre, desktop 1280 px, mobil 390/320 px a landscape 844 px, opakované přepínání a obnovení konkrétního uloženého zápasu po reloadu/přihlášení. Rozměry tlačítek minimálně 44 px, bez přesahu panelu a překrytí skórování; mobilní screenshot zkontrolován. Detailní počítadlo, Federal Cup a release browser prošly, 0 page errors. Node 99/101, pouze dvě známá selhání preview-match-reload-recovery v test-modular; zachována beze změny. Release gate proti čerstvému origin/main a diff check prošly. Automatický lokální výběr běžného zápasu při nedostupné identitě zůstává známým omezením; ověřena explicitní obnova uloženého zápasu. Skutečný Firebase/Auth/Rules, fyzické telefony a OBS neověřeny. Žádné produkční zápisy.
 
 - Dominik, 21. 10. 2026: etapa 1 evidence Federal Cupu definitivně dokončena. Čtyři nálezy uzavřeny, před sloučením znovu prošly unit 14/14, dva izolovaní klienti 7/7 a browserové sady Federal Cup/evidence/detailní/historické/PDF/release. Lokálně i [CI main](https://github.com/bcrybarna-oss/BC-Rybarna-Scoreboard/actions/runs/39604934353) Node 99/101, pouze dvě známá nezměněná selhání preview-match-reload-recovery v test-modular; Release version and revision prošel. [PR #21](https://github.com/bcrybarna-oss/BC-Rybarna-Scoreboard/pull/21) sloučen jako 01a5fdf2885b18f68a4a161aa92f74591e0812ae. Etapa 2/report/nový PDF export ani rozdělení testů/CI nezahájeny.
 

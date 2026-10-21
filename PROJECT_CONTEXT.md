@@ -163,6 +163,8 @@ Aktivní zápas se publikuje jako veřejný LIVE stav. Veřejný payload nesmí 
 
 ## Stream
 
+Od v4.51.85 RC mají jednoduché i rozšířené počítadlo jediný společný panel LIVE / PAUZA / BRZY ZAČÍNÁME / KONEC. Viditelnost určuje pouze streamEnabled, nikoli counterMode. Panel používá původní setStreamMode, publikaci do stream/users/{uid} a původní overlay.html, bez změny protokolu nebo skórování.
+
 Existuje overlay, livescore, obrazovka pauzy a QR kód odkazující na Poolčítadlo. Pauza funguje přímo v aplikaci.
 
 ## Administrace
