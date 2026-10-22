@@ -29847,6 +29847,11 @@ function renderStats(){
   function reportSources(){return '<details class="fc-report-sources"><summary>Zdroje jednotlivých ukazatelů a úplnost evidence</summary><p>Úplné údaje mají výsledek. Částečná evidence ukazuje jen doložené mezisoučty bez oficiálního procenta či sloupce. Neznámá evidence je —. Poměr 0/0 znamená žádné pokusy.</p><dl>'+REPORT_GROUPS.flatMap(([,rows])=>rows).map(([key,label])=>'<dt>'+esc(label)+'</dt><dd>'+esc(REPORT_SOURCES[key])+'</dd>').join('')+'</dl></details>';}
   const reportDialog=$('fcReportDialog');let reportReturnFocus=null;
   function reportFlag(side){const rep=REPORT_REPS[side];return '<svg class="fc-report-flag" role="img" aria-label="Vlajka '+rep.name+'" viewBox="0 0 600 400"><use href="#fc26Flag'+rep.id+'"></use></svg>';}
+  function reportMatchName(m,side){
+    if(m.federalCupLink?.type==='team')return REPORT_REPS[side].name;
+    const people=federalStatsRows(m.federalCupLink?.lineupParticipants?.[side]),need=m.federalCupLink?.type==='doubles'?2:1;
+    return people.length===need&&people.every(p=>typeof p.name==='string'&&p.name)?people.map(p=>p.name).join(' + '):savedMatchSideDisplayName(m,side);
+  }
   function reportButton(kind,label,attrs=''){return '<button type="button" class="btn" data-fc-report="'+kind+'" '+attrs+'>'+label+'</button>';}
   function reportFooter(text){return '<footer class="fc-report-footer"><div>'+esc(text)+'</div><strong>POOLČÍTADLO · BC RYBÁRNA<br>FEDERAL CUP · NÁHLED 3A</strong></footer>';}
   function reportValue(metric,side,width=null,left=false){
@@ -29886,7 +29891,7 @@ function renderStats(){
         const id=button.dataset.matchId,fixture=Number(button.dataset.fixture),source=report.selected.find(s=>s.fixtureNo===fixture&&s.matchId===id&&s.source==='detailed');
         const m=source?federalStatsRows(data.matches).filter(m=>m.id===id&&Number(m.federalCupLink?.year)===year&&Number(m.federalCupLink?.fixtureNo)===fixture&&m.endedAt&&!['incomplete','playing','active'].includes(m.status)).sort((a,b)=>(Date.parse(b.endedAt)||0)-(Date.parse(a.endedAt)||0))[0]:null;
         if(!m||!['singles','doubles','team'].includes(m.federalCupLink?.type)||federalReportWinner(m.scores)===null)content=unavailable('Zápas #'+fixture+' ještě nebyl dokončen, nemá doložený detail, typ či platný výsledek, byl nahrazen novějším záznamem nebo je mimo hodnocenou sérii. Rozehraný zápas není konečný report. Obnov přehled.');
-        else{const result=federalCalculateMatch(m),names=[0,1].map(side=>m.federalCupLink.type==='team'?REPORT_REPS[side].name:savedMatchSideDisplayName(m,side));content=reportComparison('FEDERAL CUP '+year+' · ZÁPAS #'+fixture+' · '+String(m.federalCupLink.type).toUpperCase(),names,m.scores||[],result.sides.map(x=>x.metrics),order,null,'Dokončený zápas · ID '+id+'. Neúplná nebo chybějící statistická evidence je označena v jednotlivých řádcích.');}
+        else{const result=federalCalculateMatch(m),names=[0,1].map(side=>reportMatchName(m,side));content=reportComparison('FEDERAL CUP '+year+' · ZÁPAS #'+fixture+' · '+String(m.federalCupLink.type).toUpperCase(),names,m.scores||[],result.sides.map(x=>x.metrics),order,null,'Dokončený zápas · ID '+id+'. Neúplná nebo chybějící statistická evidence je označena v jednotlivých řádcích.');}
       }else content=unavailable('Neznámý typ reportu.');
     }
     $('fcReportContent').innerHTML=content;reportReturnFocus=button;if(!reportDialog.open)reportDialog.showModal();reportDialog.scrollTop=0;

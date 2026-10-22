@@ -20,6 +20,7 @@ function config(ms){const c={year:2026,reportHost:'SK',teamAName:'Slovensko',tea
   await page.evaluate(()=>{window.reportFetchCalls=0;window.fetch=()=>{window.reportFetchCalls++;throw Error('Reports must not fetch');};});
   for(const [n,type]of [[3,'singles'],[2,'doubles'],[1,'team']]){
    const button=page.locator('[data-fc-report="match"][data-fixture="'+n+'"]');assert.equal(await button.getAttribute('data-match-id'),type);await button.click();assert.equal(await content.locator('[data-report-metric]').count(),13);assert.match(await content.innerText(),new RegExp('ZÁPAS #'+n));assert.match(await content.innerText(),new RegExp('ID '+type));assert.match(await content.innerText(),/3 : 5/);
+   if(type==='doubles'){assert.equal(await content.locator('.fc-report-head h2').first().innerText(),'Anna + Alena');assert.equal(await content.locator('.fc-report-head h2').last().innerText(),'Boris + Bedřich');}
    if(type==='singles'&&process.env.FC_ARTIFACT_DIR){fs.mkdirSync(process.env.FC_ARTIFACT_DIR,{recursive:true});await content.locator('article').screenshot({path:path.join(process.env.FC_ARTIFACT_DIR,'match.png')});}
    await close();assert.equal(await button.evaluate(e=>e===document.activeElement),true);
   }
