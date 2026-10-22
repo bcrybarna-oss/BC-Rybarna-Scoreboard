@@ -11,7 +11,7 @@ const hook=`window.reg={
  async pull(){const r=await fetch(cloudUrl('appData'));data.federalCup2026=this.normalized((await r.json()).data.federalCup2026);renderFederalCup2026();},
  save:typeof saveFederalConfig==='function'?saveFederalConfig:null,upload:uploadCloudData,
  render:renderFederalCup2026,screen:showScreen,start:startMatch,undo,autosave:autosaveCurrent,backup:saveActiveMatchCloudBackupNow,persist:persistFinishedMatch,
- summary:federalEvidenceSummary,participant:federalParticipantSnapshot,ensure:ensureFederalParticipants,
+ calculate:typeof federalCalculateMatch==='function'?federalCalculateMatch:null,summary:federalEvidenceSummary,participant:federalParticipantSnapshot,ensure:ensureFederalParticipants,
  clear(){document.querySelectorAll('.fc26-roster-player').forEach(e=>{delete e.dataset.dirty;delete e.dataset.newParticipant;});stopTimer();stopLiveHeartbeat();clearTimeout(activeMatchCloudSaveTimer);match=null;data=defaultData();pendingFederalCupLink=null;for(const k of [LOCAL_ACTIVE_MATCH_KEY,LOCAL_ACTIVE_MATCHES_KEY,LOCAL_ACTIVE_MATCH_RECOVERY_KEY])localStorage.removeItem(k);document.querySelectorAll('.modal.show').forEach(e=>e.classList.remove('show'));},
  async resume(){const m=loadDeviceActiveMatch();if(m)await resumeLocalMatch(m.id);},
  correct(a,b){$('manualScoreCorrectionP1').value=a;$('manualScoreCorrectionP2').value=b;$('manualScoreCorrectionConfirmBtn').click();},
@@ -58,10 +58,10 @@ function config(){const c={year:2026,teamAName:'Slovensko',teamBName:'Česko',ro
  });
  await scenario('P1 score correction: winner distribution, missing attacks, undo, reload and finished PUT/GET',async()=>{
   await reset();await start(a);await a.evaluate(()=>reg.pot());let m=await a.evaluate(()=>reg.match);assert.deepEqual(m.scores,[1,0]);assert.equal(await a.evaluate(()=>reg.summary(reg.match,0).potting.attempts),1);
-  await a.evaluate(()=>reg.correct(0,1));assert.equal(await a.evaluate(()=>reg.summary(reg.match,0).racks.coverage),'partial');
+  await a.evaluate(()=>reg.correct(0,1));assert.equal(await a.evaluate(()=>reg.calculate?reg.calculate(reg.match).sides[0].metrics.ownBreakWins.value:null),null);assert.equal(await a.evaluate(()=>reg.summary(reg.match,0).racks.coverage),'partial');
   assert.equal(await a.evaluate(()=>reg.summary(reg.match,0).potting.coverage),'complete','winner attribution does not erase observed strokes');
   await a.evaluate(()=>reg.undo());assert.deepEqual(await a.evaluate(()=>reg.match.scores),[1,0]);assert.equal(await a.evaluate(()=>reg.summary(reg.match,0).racks.coverage),'complete');
-  await a.evaluate(()=>reg.correct(4,0));assert.equal(await a.evaluate(()=>reg.summary(reg.match,0).potting.coverage),'partial');assert.equal(await a.evaluate(()=>reg.summary(reg.match,0).potting.attempts),1);assert.equal(await a.evaluate(()=>reg.summary(reg.match,0).pots.total),null);
+  await a.evaluate(()=>reg.correct(4,0));assert.equal(await a.evaluate(()=>reg.calculate?reg.calculate(reg.match).sides[0].metrics.pottingSuccess.value:null),null);assert.equal(await a.evaluate(()=>reg.summary(reg.match,0).potting.coverage),'partial');assert.equal(await a.evaluate(()=>reg.summary(reg.match,0).potting.attempts),1);assert.equal(await a.evaluate(()=>reg.summary(reg.match,0).pots.total),null);
   await a.evaluate(async()=>{reg.autosave();await reg.backup();});const markers=await a.evaluate(()=>reg.match.federalEvidence.serviceChanges);
   await a.reload();await a.waitForFunction(()=>!!window.reg);await a.waitForSelector('#cloudLoginModal.show');await a.evaluate(async()=>{reg.admin();await reg.resume();});assert.deepEqual(await a.evaluate(()=>reg.match.federalEvidence.serviceChanges),markers);assert.equal(await a.evaluate(()=>reg.summary(reg.match,0).potting.coverage),'partial');
   const id=await a.evaluate(()=>reg.match.id);await a.evaluate(()=>{winRack(0);if(reg.match)reg.persist();});await a.waitForTimeout(250);assert.ok(db.matches[id]);const restored=wire(db.matches[id]);assert.equal(await b.evaluate(m=>reg.summary(m,0).racks.coverage,restored),'partial');assert.equal(await b.evaluate(m=>reg.summary(m,0).potting.coverage,restored),'partial');

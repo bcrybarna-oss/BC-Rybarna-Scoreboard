@@ -62,3 +62,5 @@ Výhledový návrh (zatím neimplementovat): samostatné příkazy a CI kontroly
 ## Dostupnost 11 ukazatelů po této etapě
 
 Rozstřelová úspěšnost, počet break koulí, esa, jistoty, úniky, RESAFE a fauly zůstávají v existujících datech. Racková historie přidává podklady pro výhry při vlastním rozstřelu a vazbu B&R. Potopené koule a útočné pokusy mají nový rozlišený zdroj i stav úplnosti. Pro nové úplně zaznamenané zápasy jsou vstupy připravené; odhady, unknown fauly nebo historická neúplnost záměrně mohou zabránit přesnému procentu. Budoucí report musí použít „—“, nikoli neprokazatelnou nulu. Tato etapa report ani agregaci více zápasů neimplementuje.
+
+Navazující výpočetní etapa 2 (v4.51.85 RC, připravena v samostatné větvi, nenasazena): docs/federal-statistics-calculation.md. Popis etapy 1 výše zůstává historií jejího rozsahu; nový výpočet nepřidává veřejný report ani PDF.

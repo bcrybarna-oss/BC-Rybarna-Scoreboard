@@ -12,7 +12,7 @@ window.fcTest={
   get match(){return match},get data(){return data},
   get clockRunning(){return timerRunning},
   breakStats,
-  start:startMatch,undo,beginRack,snapshot,restoreSnapshot,
+  start:startMatch,undo,beginRack,snapshot,restoreSnapshot,calculate:federalCalculateMatch,
   save:autosaveCurrent,
   admin(){cloudAuthenticated=true;cloudUid='isolated-admin';cloudEmailVerified=true;currentUserRole='system_admin';cloudIdToken='mock-token';cloudTokenExpiresAt=Date.now()+3600000;$('cloudLoginModal').classList.remove('show');},
   reset(){stopTimer();stopLiveHeartbeat();clearTimeout(activeMatchCloudSaveTimer);match=null;data=defaultData();pendingFederalCupLink=null;pendingTournamentLink=null;pendingLeagueLink=null;
@@ -169,11 +169,16 @@ assert.ok(html.includes('window.fcTest='));
     await run(async n=>{fcTest.reset();if(n!==1)fcTest.data.federalCup2026.lineups[n]=n===2?{a:['SK1','SK2'],b:['CZ1','CZ2']}:{a:['SK3'],b:['CZ3']};await fc26StartFixture(n);document.getElementById('streamEnabled').checked=true;document.getElementById('fc26LagWinner').value='';fcTest.start()},n);
     m=await state();const streamId=m.id;assert.equal(m.breaker,null);assert.equal(m.turn,null);assert.deepEqual(m.stats.map(s=>s.breaks),[0,0]);assert.equal(m.detailedPlay.records.length,0);
     assert.equal(await page.locator('#streamDirectorPanel').isVisible(),true);
+    assert.deepEqual(await run(()=>fcTest.calculate(fcTest.match).sides.map(s=>s.metrics.breakSuccess.denominator)),[0,0]);
     await page.locator('#streamLagP2').click();m=await state();assert.equal(m.breaker,1);assert.equal(m.lagWinner,1);assert.deepEqual(m.stats.map(s=>s.lagWins),[0,1]);
     await page.locator('#streamLagP1').click();m=await state();assert.deepEqual(m.stats.map(s=>s.lagWins),[1,0]);assert.equal(m.id,streamId);
     await page.locator('#streamLagUndo').click();if(n===1)await select();m=await state();assert.equal(m.lagWinner,1);assert.deepEqual(m.stats.map(s=>s.breaks),[0,1]);
+    assert.deepEqual(await run(()=>fcTest.calculate(fcTest.match).sides.map(s=>s.metrics.breakSuccess.denominator)),[0,0]);
     await run(()=>actionDryBreak());assert.equal(await page.locator('#streamLagP1').isEnabled(),false);assert.equal((await state()).detailedPlay.records.length,1);
+    assert.deepEqual(await run(()=>fcTest.calculate(fcTest.match).sides.map(s=>s.metrics.breakSuccess.denominator)),[0,1]);
     await run(()=>fcTest.undo());assert.equal(await page.locator('#streamLagP1').isEnabled(),true);
+    assert.deepEqual(await run(()=>fcTest.calculate(fcTest.match).sides.map(s=>s.metrics.breakSuccess.denominator)),[0,0]);
+    const beforeReload=await run(()=>fcTest.calculate(fcTest.match));await page.reload();await page.waitForSelector('#cloudLoginModal.show');await run(async()=>{fcTest.admin();await fcTest.resume()});assert.deepEqual(await run(()=>fcTest.calculate(fcTest.match)),beforeReload);assert.equal((await state()).id,streamId);
   }
   await run(()=>{document.getElementById('streamEnabled').checked=false});
   console.log('PASS streamed Federal Cup Team/Doubles/Singles: pending lag without shot/stat, correction/undo, same matchId, first break lock');
