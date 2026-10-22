@@ -1,5 +1,17 @@
 # Detailní počítadlo od v4.51.83 RC
 
+## Oprava Jump/Bank – kandidát v4.51.89 RC (Dominik, 22. 10. 2026)
+
+Původní producent již ukládal `tag: {type, success}` a čítače správně. Chyba byla v prezentační cestě: `renderEvents()` četl jen volný text `events`, zatímco `detailedShotSummary()` neměl produkčního volajícího. Potopení/MISS tedy bylo vidět bez JUMP/BANK. Regrese `tests/jump-bank-browser.cjs` na původním main decc3db potvrzuje uložený úspěšný Jump a jeden pokus, ale selže na chybějícím označeném strku v historii.
+
+Historie nyní před textovými událostmi zobrazuje čtecí pohled **Odehrané strky • JUMP / BANK** přímo z `detailedPlay.records`: typ, výsledek, úspěšnost, známý aktér nebo strana, rack a náběh. Stabilní ID je klíčem řádku; shodné kopie se zobrazí jednou, konfliktní varianty téhož ID se nevydávají za potvrzený strk. Nevzniká druhá ukládaná historie ani odhad vazby na text starých událostí. Souhrn `detailedShotSummary` nadále čte atributy stejných skutečných strků, nikoli text.
+
+Tok: zapnout jednu značku → potvrdit konkrétní potopení/MISS/faul/legální Jump únik → jeden kanonický záznam se `strokeCount:1`, `tag.type` a `tag.success` → právě jeden přírůstek existujících čítačů → čtecí historie a interní metriky. Multipot/kombinace zůstává jeden označený strk; neurčitý hromadný dopočet jej nevytváří. Bank při úniku není přípustný. Jump únik bez koule může uspět a nepřidává útočné potopení. Faul vždy znamená neúspěšnou značku. Skórování a klasifikace útoku se nemění.
+
+**Zrušení navazujícího dialogu nyní zahodí i jednorázovou značku**, vrátí koule a nevytvoří pokus. Dokončená akce ji také spotřebuje. Undo naopak výslovně obnoví celý stav před strkem včetně jeho značky; reload samostatně čekající značku zachová. Rozdíl je záměrný a otestovaný. Staré uložené zápasy se nepřepisují.
+
+Zobrazení, všechny výsledky obou značek, zrušení vnořeného dialogu, multipot, undo, skutečný reload, Team aktér a Doubles ověřuje nový browser test. Stávající detailed-counter browser chrání sekvence i 8/10-ball/14.1 a mobil; federal-evidence browser navíc skutečný mock Auth, hotový Bank i čekající Jump v autosave/backup/reload a plný PUT/GET dokončeného zápasu. Všechny požadavky zachyceny, produkční Firebase se nepoužívá. Stav vydání a CI: PROJECT_STATUS.md.
+
 Zadavatel Dominik, 20. 10. 2026. Změna společného detailního počítadla v index.html, nikoli kopie pro Federal Cup. Jednoduché počítadlo, 14.1 a Ghost nepoužívají nový model. Export PDF a jeho dialog zůstávají.
 
 ## Obsluha
@@ -31,3 +43,14 @@ Undo snímek obsahuje nový model a celý stav před výběrem koulí. Potvrzen�
 - Fyzické Android/iOS, nativní Capacitor, skutečné cloudové Auth/Rules, souběh zařízení a velké dlouhé zápasy nebyly ověřeny. Mobilní viewport nenahrazuje fyzický telefon. Známé chyby starého test-modular a souběžné editace celé konfigurace Federal Cupu zůstávají podle PROJECT_STATUS.md.
 
 Aktuální commit, verze a skutečný výsledek nasazení: PROJECT_STATUS.md a REVIZE.md. Vrácení vydání je běžný revertní commit, nikoli reset/force push; databáze se při návratu nemění a nové uložené záznamy se nemažou.
+
+## Kanonické příklady z izolovaného browseru v4.51.89 RC
+
+Následující záznamy vytvořil skutečný producent index.html (Singles SK3, samostatné testovací zápasy; jedinečná ID se mezi běhy mění). Pot/MISS současně nese značku, není zde další Jump/Bank událost. Faul má tag.success=false, u úniku je intent=escape a pottingAttempts=0.
+
+```json
+{"id":"mvjcalnuyel1mbj260azq4fk15smje","kind":"pot","side":0,"sideId":"fc-mvjcaljn8f1yeu4b43rb4j0mq144u","actor":{"id":"fc-mvjcaljn8f1yeu4b43rb4j0mq144u","name":"SK3","identityStatus":"stable"},"rack":1,"inning":1,"balls":[2],"pottedCount":1,"strokeCount":1,"shotType":null,"tag":{"type":"jump","success":true},"evidenceVersion":2,"intent":"pot","pottingAttempts":1,"successfulPottingStrokes":1,"potsEvidence":"explicit"}
+{"id":"mvjcalq1fgt3bkiv8ivatyu4v90t4u","kind":"miss","side":0,"sideId":"fc-mvjcalokkxeqyobr4ier37cdfgw1s","actor":{"id":"fc-mvjcalokkxeqyobr4ier37cdfgw1s","name":"SK3","identityStatus":"stable"},"rack":1,"inning":1,"balls":[],"ball":2,"strokeCount":1,"tag":{"type":"jump","success":false},"evidenceVersion":2,"intent":"pot","pottingAttempts":1,"successfulPottingStrokes":0,"potsEvidence":"not_applicable"}
+{"id":"mvjcalutaq7w2ylxvikwam0y2bf6","kind":"pot","side":0,"sideId":"fc-mvjcalt31c6350zki6svtb3dwy9cg","actor":{"id":"fc-mvjcalt31c6350zki6svtb3dwy9cg","name":"SK3","identityStatus":"stable"},"rack":1,"inning":1,"balls":[2],"pottedCount":1,"strokeCount":1,"shotType":null,"tag":{"type":"bank","success":true},"evidenceVersion":2,"intent":"pot","pottingAttempts":1,"successfulPottingStrokes":1,"potsEvidence":"explicit"}
+{"id":"mvjcalx0whm5om1wayemzwtogx4w8m","kind":"miss","side":0,"sideId":"fc-mvjcalvilyutk4xovtls4awggbjyvd","actor":{"id":"fc-mvjcalvilyutk4xovtls4awggbjyvd","name":"SK3","identityStatus":"stable"},"rack":1,"inning":1,"balls":[],"ball":2,"strokeCount":1,"tag":{"type":"bank","success":false},"evidenceVersion":2,"intent":"pot","pottingAttempts":1,"successfulPottingStrokes":0,"potsEvidence":"not_applicable"}
+```

@@ -104,10 +104,10 @@ assert.ok(html.includes('window.fcTest='));
   await base();await safe();await run(()=>{actionSafetyEscape();document.getElementById('safetyEscapeSuccessBtn').click();cancelSafetyEntry();});assert.equal((await state()).stats[1].safetyEscapes,0);assert.ok((await state()).detailedPlay.pendingSafety);
   await run(()=>{actionFoul();openDetailedTableCorrection();toggleDetailedTableBall(3);document.getElementById('tableCorrectionFoul').checked=true;saveDetailedTableCorrection();});m=await state();assert.equal(m.stats[1].foulPottedBalls,1);assert.equal(m.rackRemainingBalls.includes(3),false);assert.equal(m.stats[1].regularPottedBalls,0);await run(()=>fcTest.undo());assert.equal((await state()).rackRemainingBalls.includes(3),true);
   console.log('PASS successful/failed/foul escape, one linked response, no ball prompt, RESAFE chain, pending/cancel, failed safety, explicit foul-table correction and undo');
-  // Tags apply to one explicit stroke and survive cancellation/reload, never batch inferred pots.
+  // Tags apply to one explicit stroke and clear on cancellation and survive pending reload, never batch inferred pots.
   for(const type of ['jump','bank']){
    await base();await run(type=>{toggleDetailedShotTag(type);toggleDetailedShotTag(type);},type);assert.equal((await state()).detailedPlay.tag,null);
-   await run(type=>toggleDetailedShotTag(type),type);await run(()=>{actionLegal();document.getElementById('shotBallCancelBtn').click();});assert.equal((await state()).stats[0][type+'ShotAttempts'],0);assert.equal((await state()).detailedPlay.tag.type,type);
+   await run(type=>toggleDetailedShotTag(type),type);await run(()=>{actionLegal();document.getElementById('shotBallCancelBtn').click();});assert.equal((await state()).stats[0][type+'ShotAttempts'],0);assert.equal((await state()).detailedPlay.tag,null);await run(type=>toggleDetailedShotTag(type),type);
    await page.reload();await page.waitForSelector('#cloudLoginModal.show');await run(async()=>{fcTest.admin();await fcTest.resume()});assert.equal((await state()).detailedPlay.tag.type,type);
    await run(()=>{actionLegal();fcTest.chooseShot([2]);});m=await state();assert.equal(m.stats[0][type+'ShotAttempts'],1);assert.equal(m.stats[0][type+'ShotSuccessful'],1);assert.equal(m.detailedPlay.tag,null);assert.equal(records(m,'pot')[0].tag.type,type);
    await run(()=>fcTest.undo());m=await state();assert.equal(m.stats[0][type+'ShotAttempts'],0);assert.equal(m.rackRemainingBalls.includes(2),true);assert.equal(m.detailedPlay.tag.type,type);
