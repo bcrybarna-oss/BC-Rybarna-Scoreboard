@@ -1,6 +1,8 @@
-# Federal Cup – výpočet 13 statistik (kandidát v4.51.89 RC)
+# Federal Cup – výpočet 13 statistik (v4.51.89 RC)
 
-## Jump/Bank: aktuální rozšíření (Dominik, 22. 10. 2026)
+Nasazeno a ověřeno 22. 10. 2026: PR #27 sloučen jako 3e83a2ee8c740be57e6b4ebc13d02607c281de6c, Pages success, veřejné HTML v4.51.89 RC bajtově shodné. Také přímo ze staženého veřejného indexu prošlo 59/59 výpočetních kontrol a nemutující přehled. CI release success, Node 169/171 jen se dvěma známými test-modular selháními; podrobnosti PROJECT_STATUS.md. Níže je zachována historie přípravy.
+
+## Jump/Bank: rozšíření a historie přípravy (Dominik, 22. 10. 2026)
 
 Samostatná větev `feature/jump-bank-federal-13` z origin/main decc3db24e8c714f18fbe88594e6276a3e2fce9f. [PR #27](https://github.com/bcrybarna-oss/BC-Rybarna-Scoreboard/pull/27), kódový commit 00eea33119993e414463d1d6ba4cd1e63e85ea27. **Nesloučeno, nenasazeno; produkce zůstává v4.51.88 RC.** Níže zachovaná evidence nasazení etapy 2 platí pro původních 11 ukazatelů. Výpočty zůstávají interní, bez grafického reportu či nového PNG/PDF.
 

@@ -1,6 +1,8 @@
 # Detailní počítadlo od v4.51.83 RC
 
-## Oprava Jump/Bank – kandidát v4.51.89 RC (Dominik, 22. 10. 2026)
+## Oprava Jump/Bank – v4.51.89 RC (Dominik, 22. 10. 2026)
+
+Nasazeno a ověřeno 22. 10. 2026 po sloučení PR #27, merge 3e83a2ee8c740be57e6b4ebc13d02607c281de6c. Veřejný index/overlay v4.51.89 RC shodný s vydáním. Veřejná tlačítka Jump/Bank pot i MISS vytvořila jediný strk/pokus, undo prošlo. Přehled je nemutující i po 50 vykresleních pro Singles/Doubles/Team. Podrobnosti ověření a omezení: PROJECT_STATUS.md.
 
 Původní producent již ukládal `tag: {type, success}` a čítače správně. Chyba byla v prezentační cestě: `renderEvents()` četl jen volný text `events`, zatímco `detailedShotSummary()` neměl produkčního volajícího. Potopení/MISS tedy bylo vidět bez JUMP/BANK. Regrese `tests/jump-bank-browser.cjs` na původním main decc3db potvrzuje uložený úspěšný Jump a jeden pokus, ale selže na chybějícím označeném strku v historii.
 
