@@ -2,7 +2,7 @@
 
 ## Jump/Bank: aktuální rozšíření (Dominik, 22. 10. 2026)
 
-Samostatná větev `feature/jump-bank-federal-13` z origin/main decc3db24e8c714f18fbe88594e6276a3e2fce9f. **Nesloučeno, nenasazeno; produkce zůstává v4.51.88 RC.** Níže zachovaná evidence nasazení etapy 2 platí pro původních 11 ukazatelů. Výpočty zůstávají interní, bez grafického reportu či nového PNG/PDF.
+Samostatná větev `feature/jump-bank-federal-13` z origin/main decc3db24e8c714f18fbe88594e6276a3e2fce9f. [PR #27](https://github.com/bcrybarna-oss/BC-Rybarna-Scoreboard/pull/27), kódový commit 00eea33119993e414463d1d6ba4cd1e63e85ea27. **Nesloučeno, nenasazeno; produkce zůstává v4.51.88 RC.** Níže zachovaná evidence nasazení etapy 2 platí pro původních 11 ukazatelů. Výpočty zůstávají interní, bez grafického reportu či nového PNG/PDF.
 
 `federalCalculateMatch` a `federalCalculateSeason` nyní vracejí společně **13 klíčů**. Původních 11 vzorců v tabulce níže zůstává beze změny; přibývá:
 
