@@ -1,5 +1,14 @@
 # Revize aplikace Poolčítadlo
 
+## Dominik – tempo v běžícím streamu a BREAK v jednoduchém overlayi (v4.51.87 RC)
+Zadavatel: Dominik
+Datum: 22. 10. 2026
+Změny: Stream lze spustit před výsledkem tempa, včetně Federal Cupu. Neznámý tah/rozstřel jsou null, bez herních strků a break statistik. Zadání a oprava tempa v počítadle přenášejí jediný lagWin a break; undo/uložení/reload zachovávají stav. Plné počítadlo uzavírá opravu po prvním strku, jednoduché před fyzickým breakem vyžaduje ZAHÁJIT HRU • UZAMKNOUT TEMPO. Simple overlay používá skutečný breaker a BREAK, full skutečný turn a U STOLU; chybějící strana nevybírá levého hráče. Payload doplněn o counterMode/lagPending/breakerKnown. Zachováno UID+matchId, publikační slot, čtyři režimy a legacy OBS URL; nové URL v=14. Verze změněna ve čtyřech aktivních místech indexu i titulku overlaye. PROJECT_STATUS/CONTEXT vysvětlují nový postup a omezení. PR #22, Firebase Rules a oprávnění nedotčeny.
+Testy: Node 110/112, pouze dvě známé chyby preview-match-reload-recovery.test.cjs v test-modular (50/106), soubor nezměněn. Stream-lag browser: simple/full, pre-lag SOON/LIVE bez strku/statistik/implicitního hráče, oprava/undo/zámek/reload, BREAK podle skutečného breaku při alternate/alternate2/winner/winner-table, 8-ball, 14.1 (včetně reloadu neuzavřené volby), ne-streamovaný legacy postup a mobil. Browser stream-controls, stream-isolation (>20 s výpadek a jiné UID/zápas), federal-cup (nově streamované tempo Team/Doubles/Singles), detailed-counter, federal-evidence a release-version prošly; izolované požadavky, 0 JS chyb. Release gate node scripts/check-release.cjs --base origin/main proti čerstvému main 610c9ce prošel; git diff --check také.
+Nasazení: Otestováno na větvi feature/stream-lag-and-break z main 610c9ce5fd40fb6241b1b2a699ce44bc2461eaa9. Bez merge a nasazení dle zadání. Produkce zůstává v4.51.86 RC. PR a CI budou doplněny po pushi.
+Omezení: Jednoduché počítadlo nepozoruje fyzické strky, zahájení a uzamčení musí obsluha potvrdit před breakem. Reálné OBS, produkční Auth/Firebase/Rules/CORS, fyzické telefony a nativní aplikace neověřeny. Žádný produkční testovací zápis. Stále jeden publikační slot na UID; jiný zápas stejného účtu může způsobit nedostupnost, nikoli převzetí obrazu. Oddělení produkčních a modularizačních testů/CI se zatím neimplementuje.
+
+
 ## Dominik – sloučení a ověřené nasazení izolace streamů (v4.51.86 RC)
 
 Zadavatel: Dominik

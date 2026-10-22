@@ -8,6 +8,11 @@ Každá samostatně nasazovaná funkční i vizuální změna povinně zvyšuje 
 
 ## Repozitář a produkce
 
+Kandidát v4.51.87 RC (Dominik): streamovaný zápas s tempem může běžet před jeho výsledkem. `deferredLag` zachovává tuto volbu při uložení; do zadání výsledku jsou `turn` a `breaker` null, nevzniká rack ani záznam strku a herní akce i hodiny jsou blokované. Tempo lze zadat/opravit v počítadle, s přenesením jediného lagWin a úvodního breaku a s undo snapshotem. V rozšířeném počítadle opravu uzavře první zaznamenaný rozstřel. Jednoduché počítadlo jednotlivé strky nezná: obsluha před fyzickým breakem potvrdí ZAHÁJIT HRU • UZAMKNOUT TEMPO; potvrzení se ukládá a lze je vrátit přes UNDO. Před potvrzením nelze přičítat body. Bez streamu zůstává původní postup, včetně povinného tempa před startem Federal Cupu.
+
+Payload přidává `counterMode`, `lagPending`, `breakerKnown` a nullable skutečné indexy `turn`/`breaker`. Jednoduchý overlay zvýrazňuje skutečného rozstřelujícího aktuálního racku s BREAK; plný zachovává U STOLU podle tahu. Chybějící/neplatná strana neznamená levého hráče. Starší payload bez counterMode zachovává plný režim, pokud obsahuje platný tah. Nové URL mají cache parametr v=14, UID+matchId ani jejich životnost se tempem nemění; staré explicitní a UID-only URL nadále používají izolaci PR #25. Slot stream/users/UID, Rules, oprávnění a čtyři režimy se nemění. Obsluha jednoduchého počítadla musí potvrdit zahájení před fyzickým breakem; bez jednotlivých strků tento okamžik aplikace nepozná. Kandidát není nasazen.
+
+
 - GitHub: `bcrybarna-oss/BC-Rybarna-Scoreboard`
 - Produkční větev: `main`
 - Hlavní produkční soubor: `index.html`

@@ -22,6 +22,18 @@ function load(query,store={state:state()},storage=new Map(),options={}){
  vm.createContext(sandbox);vm.runInContext(script+'\nglobalThis.api={poll,rerenderForViewport,get pinned(){return boundMatchId},get last(){return lastState}};',sandbox);
  return {ready:sandbox.initialPoll,api:sandbox.api,frame:overlay,urls,location,storage};
 }
+test('Overlay simple BREAK follows breaker independently of turn; full uses actual turn',async()=>{
+ for(const [counterMode,breaker,turn,expected] of [['simple',1,0,'player right turn breaker'],['full',1,0,'player turn']]){
+  const s=load('?uid=A&matchId=match-A',{state:{...state(),counterMode,breaker,turn,breakerKnown:true}});
+  await s.ready;assert.ok(s.frame.innerHTML.includes('class="'+expected+'"'));
+ }
+});
+test('Pending lag and absent/null/invalid side never default to left player, including legacy payloads',async()=>{
+ for(const fields of [{},{turn:null},{turn:'0'},{turn:2},{turn:0,lagPending:true},{counterMode:'simple',turn:0},{counterMode:'simple',breaker:null},{counterMode:'simple',breaker:0,breakerKnown:false}]){
+  const s=load('?uid=A&matchId=match-A',{state:{...state(),...fields}});await s.ready;
+  assert.doesNotMatch(s.frame.innerHTML,/class="player(?: right)? turn/,JSON.stringify(fields));
+ }
+});
 test('Explicit stream is pinned to both UID and match; another match is never rendered',async()=>{
  const store={state:state()},s=load('?uid=A&matchId=match-A',store);await s.ready;assert.match(s.frame.innerHTML,/Alpha/);
  store.state=state('match-B','Foreign');await s.api.poll();assert.doesNotMatch(s.frame.innerHTML,/Foreign/);assert.equal(s.api.last,null);
