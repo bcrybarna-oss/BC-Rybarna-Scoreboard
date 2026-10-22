@@ -1,5 +1,13 @@
 # Revize aplikace Poolčítadlo
 
+## Dominik – Federal Cup etapa 3A, funkční náhledy reportů (v4.51.90 RC)
+Zadavatel: Dominik
+Datum: 22. 10. 2026
+Změny: Výhradně uvnitř Federal Cupu přidány vstupy STATISTIKY ZÁPASU (ID + fixture), STATISTIKY HRÁČE (stabilní ID) a STATISTIKY TÝMU (SK/CZ). Společná šablona A pro zápas a porovnání reprezentací, B pro hráče: 13 údajů ze stávajícího nezměněného API, partial/unknown/0/0, explicitní zdroje, vlajky, barvy reprezentací, mobil, focus/Escape a nemutující přepínání. Oddělená čtecí agregace výsledků celých zápasů: Singles 1, Doubles 2, Team všech 5 nominovaných osob právě jednou podle historických snapshotů. Osobní herní výkon zůstává Singles + skutečné Team racky, bez přidělování Doubles strků. Návrh reportHost zdokumentován před implementací; 2026 explicitně SK, jiný ročník bez konfigurace hostitele nemá odhad pořadí. Aktualizovány čtyři aktivní verze, overlay titulek, dokumentace a testovací příkazy; přiloženy tři screenshoty 1920×1080 z mockovaných dat.
+Testy: Nové datové testy 10/10, všechny původní výpočty 59/59 zachovány. Node 179/181, pouze dvě známá nezměněná selhání preview-match-reload-recovery.test.cjs v test-modular (50/106), CI není plně zelené. Browser reportů: všechny tři vstupy, Singles/Doubles/Team, ID, přepínání, hostitel/barvy, čtyři karty, 13 metrik, zdroje, partial/unknown/0/0, dlouhá jména/escapování/mobil, focus/Escape; data a localStorage beze změny, 0 report fetchů, 0 zápisů a 0 JS chyb. Regrese federal-cup/evidence/full PUT/GET, detailed-counter, jump-bank, historical-structure a stream-controls/isolation/lag/release-version prošly. Release gate proti čerstvému origin/main f6c3e0f a git diff --check prošly. GitHub CI se doplní po vytvoření PR.
+Nasazení: Připraveno na nové větvi feature/federal-reports-stage-3a z origin/main f6c3e0f6ca61f6ad10ead50dc5a9b38e72f18601; nový PR následuje. Nesloučeno a nenasazeno, podle zadání. Produkce zůstává v4.51.89 RC.
+Omezení: Ruční Team výsledky bez historických nominací nedokládají osobní výsledky; neúplná data nevytvářejí oficiální procenta. Neznámý hostitel či neplatná identita/metadata mají vysvětlení místo domýšlení. Rozehrané zápasy zatím nemají živý report. Nezavádí se editor dalších ročníků. Výstupy jsou základní funkční náhledy 3A, nikoli finální grafika 3B či PNG/PDF export. Ostatní sekce ani Firebase Rules se nemění. Produkční Firebase nebyla použita; reálné Auth/Rules/CORS, OBS, fyzické telefony a zátěž neověřeny.
+
 ## Dominik – sloučení a ověřené nasazení Jump/Bank a 13 statistik (v4.51.89 RC)
 Zadavatel: Dominik
 Datum: 22. 10. 2026

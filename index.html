@@ -922,7 +922,47 @@
       .exact-ball-btn .ball-number{width:23px;height:23px;font-size:13px}
     }
 
-  </style>
+  /* Stage 3A: Federal Cup report previews only. */
+#fcReportDialog{padding:0;border:1px solid #a78743;border-radius:16px;width:min(1960px,96vw);max-width:96vw;max-height:94dvh;background:#101111;color:#f5f0df;overflow:auto}
+#fcReportDialog::backdrop{background:#000c}
+#fcReportDialog .fc-report-toolbar{position:sticky;top:0;z-index:2;display:flex;align-items:center;justify-content:space-between;gap:16px;background:#181916;padding:10px 20px;border-bottom:1px solid #6e5831}
+#fcReportDialog .fc-report-sheet{box-sizing:border-box;width:min(1920px,100%);margin:auto;aspect-ratio:16/9;min-height:900px;background:radial-gradient(ellipse at 50% 0%,#333020 0%,#151714 43%,#090b0a 100%);padding:2.1% 3%;font-family:Arial,sans-serif}
+#fcReportDialog .fc-report-kicker{color:#d8bc72;letter-spacing:.18em;font-size:13px;font-weight:800;text-transform:uppercase}
+#fcReportDialog .fc-report-head{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:24px;margin:18px 0 24px}
+#fcReportDialog .fc-report-person{text-align:center;min-width:0;overflow-wrap:anywhere}
+#fcReportDialog .fc-report-sheet>header.fc-report-person{display:block;padding:0;background:transparent;border:0}
+#fcReportDialog .fc-report-person h2{font-size:clamp(22px,2.2vw,42px);margin:8px 0;color:#fff;line-height:1.15}
+#fcReportDialog .fc-report-person.selected{outline:1px solid #ac8d4a;outline-offset:6px;border-radius:8px}
+#fcReportDialog .fc-report-score{font-size:clamp(30px,4vw,76px);font-weight:900;white-space:nowrap;color:#efda9d}
+#fcReportDialog .fc-report-flag{width:70px;height:46px;vertical-align:middle}
+#fcReportDialog .fc-report-subtitle{color:#c0bda9;font-size:13px;line-height:1.5}
+#fcReportDialog .fc-report-row{display:grid;grid-template-columns:1fr minmax(170px,1fr) 1fr;gap:18px;align-items:center;min-height:34px;padding:6px 0;border-bottom:1px solid #ffffff16;font-size:clamp(13px,1vw,19px)}
+#fcReportDialog .fc-report-label{text-align:center;color:#eee7d3;font-weight:700}
+#fcReportDialog .fc-report-value{font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
+#fcReportDialog .fc-report-value.left{text-align:right}
+#fcReportDialog .fc-report-track{height:7px;margin-top:7px;background:#ffffff10;border-radius:8px;overflow:hidden}
+#fcReportDialog .fc-report-track>span{display:block;height:100%;border-radius:8px;background:var(--rep-color)}
+#fcReportDialog .left .fc-report-track>span{margin-left:auto}
+#fcReportDialog .fc-report-sources{font-size:12px;line-height:1.5;color:#c7ba96;margin-top:12px}
+#fcReportDialog .fc-report-sources summary{cursor:pointer}
+#fcReportDialog .fc-report-sources dt{font-weight:bold;margin-top:8px}
+#fcReportDialog .fc-report-footer{display:flex;justify-content:space-between;gap:24px;align-items:center;color:#c7ba96;border-top:1px solid #8c7340;margin-top:24px;padding-top:16px;font-size:13px;line-height:1.5}
+#fcReportDialog .fc-report-cards{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:15px;margin:20px 0 24px}
+#fcReportDialog .fc-report-card{text-align:center;padding:16px 10px;border:1px solid #8c7340;border-radius:10px;background:#0004;overflow-wrap:anywhere}
+#fcReportDialog .fc-report-card strong{display:block;font-size:clamp(21px,2vw,38px);margin-top:8px;color:#f2d995}
+#fcReportDialog .fc-report-groups{display:grid;grid-template-columns:1fr 1fr;gap:20px 35px}
+#fcReportDialog .fc-report-group h3{margin:0;color:#e1c176;letter-spacing:.12em;font-size:14px;padding-bottom:8px;border-bottom:1px solid #a18446}
+#fcReportDialog .fc-report-personal-row{display:grid;grid-template-columns:1fr 1fr;align-items:center;gap:14px;min-height:51px;border-bottom:1px solid #ffffff16}
+#fcReportDialog .fc-report-personal-row .fc-report-value{text-align:right}
+#fcReportDialog .fc-report-notice{padding:40px;max-width:800px;line-height:1.7}
+#screen-federal-cup-2026 [data-fc-report]{font-size:12px;margin-top:8px;min-height:40px}
+#screen-federal-cup-2026 .fc26-view-roster-line{flex-wrap:wrap;overflow-wrap:anywhere;min-width:0}
+@media(max-width:720px){#fcReportDialog{width:96vw}#fcReportDialog .fc-report-sheet{aspect-ratio:auto;min-height:0;padding:20px 14px}#fcReportDialog .fc-report-head{gap:9px}#fcReportDialog .fc-report-sheet>header.fc-report-person{display:block;padding:0;background:transparent;border:0}
+#fcReportDialog .fc-report-person h2{font-size:19px}#fcReportDialog .fc-report-flag{width:44px;height:30px}#fcReportDialog .fc-report-row{grid-template-columns:1fr 1fr 1fr;gap:7px;min-height:64px;font-size:12px}#fcReportDialog .fc-report-label{font-size:12px}#fcReportDialog .fc-report-cards{gap:6px}#fcReportDialog .fc-report-card{padding:12px 3px;font-size:10px}#fcReportDialog .fc-report-card strong{font-size:clamp(14px,3.7vw,20px);line-height:1.3}#fcReportDialog .fc-report-groups{grid-template-columns:1fr}#fcReportDialog .fc-report-sources{font-size:12px;line-height:1.5;color:#c7ba96;margin-top:12px}
+#fcReportDialog .fc-report-sources summary{cursor:pointer}
+#fcReportDialog .fc-report-sources dt{font-weight:bold;margin-top:8px}
+#fcReportDialog .fc-report-footer{display:block;font-size:11px}#fcReportDialog .fc-report-personal-row{font-size:14px}}
+</style>
   <!-- PDF report generation -->
   
   <div id="liveScoreModal" class="modal">
@@ -2517,7 +2557,7 @@ html[data-theme="light"] #leagueSchedule .history-item .muted{
           <span class="by">by</span>
           <span class="club">BC Rybárna</span>
         </div>
-        <small class="modern-brand-version">v4.51.89 RC</small>
+        <small class="modern-brand-version">v4.51.90 RC</small>
       </div>
     </div>
     <div class="nav">
@@ -3058,6 +3098,10 @@ html[data-theme="light"] #leagueSchedule .history-item .muted{
       <div id="fc26ViewerStats"></div>
       <h2 class="fc26-view-title2">Soupisky týmů</h2>
       <div id="fc26ViewerRosters"></div>
+      <dialog id="fcReportDialog" aria-labelledby="fcReportDialogTitle">
+        <div class="fc-report-toolbar"><strong id="fcReportDialogTitle">Statistiky Federal Cupu</strong><button type="button" class="btn" id="fcReportClose" aria-label="Zavřít statistický report">ZAVŘÍT ×</button></div>
+        <div id="fcReportContent"></div>
+      </dialog>
     </div>
   </section>
 
@@ -3125,7 +3169,7 @@ html[data-theme="light"] #leagueSchedule .history-item .muted{
         </div>
         <div class="subpanel" style="min-width:210px;text-align:center;margin:0">
           <div class="muted" style="font-size:10px;font-weight:950;letter-spacing:1px">AKTUÁLNÍ VERZE</div>
-          <div style="font-size:22px;font-weight:950;color:var(--gold2);margin-top:5px">v4.51.89 RC</div>
+          <div style="font-size:22px;font-weight:950;color:var(--gold2);margin-top:5px">v4.51.90 RC</div>
         </div>
       </div>
     </div>
@@ -5875,7 +5919,7 @@ html[data-theme="light"] #leagueSchedule .history-item .muted{
       </div>
 
       <div id="groupPlayoffSeedStatus" class="muted" style="margin-top:12px;min-height:20px"></div>
-      <div class="muted" style="margin-top:4px;font-size:11px">RC v4.51.89</div>
+      <div class="muted" style="margin-top:4px;font-size:11px">RC v4.51.90</div>
       <div class="modal-actions">
         <button id="groupPlayoffSeedApplyBtn" class="btn primary big" type="button">NASADIT DO PLAY-OFF</button>
         <button id="groupPlayoffSeedCancelBtn" class="btn">ZRUŠIT</button>
@@ -6527,6 +6571,7 @@ html[data-theme="light"] #leagueSchedule .history-item .muted{
   function defaultFederalCup2026(){
     return {
       year:2026,
+      reportHost:'SK',
       teamAName:'Slovensko',
       teamBName:'Česko',
       rosterA:['','','','',''],
@@ -7059,7 +7104,7 @@ html[data-theme="light"] #leagueSchedule .history-item .muted{
     const btn=$('submitReportBtn');if(btn)btn.disabled=true;
     try{
       const id=uid(),p=currentUserPlayerId?data.players?.[currentUserPlayerId]:null;
-      const report={id,createdByUid:cloudUid,createdByPlayerId:currentUserPlayerId||'',createdByName:p?playerSelectionLabel(p):(cloudUserEmail||'Uživatel'),email:cloudUserEmail||'',type,area,description,appVersion:'v4.51.89 RC',createdAt:new Date().toISOString(),updatedAt:new Date().toISOString(),status:'new',adminNote:''};
+      const report={id,createdByUid:cloudUid,createdByPlayerId:currentUserPlayerId||'',createdByName:p?playerSelectionLabel(p):(cloudUserEmail||'Uživatel'),email:cloudUserEmail||'',type,area,description,appVersion:'v4.51.90 RC',createdAt:new Date().toISOString(),updatedAt:new Date().toISOString(),status:'new',adminNote:''};
       await reportRequest(id,'PUT',report);
       try{
         await writeReportUserMirror(report);
@@ -9659,6 +9704,7 @@ $('useClock').addEventListener('change',e=>$('clockSettings').classList.toggle('
   }
   function normalizeFederalConfig(raw,profiles={}){
     const c=JSON.parse(JSON.stringify({...defaultFederalCup2026(),...(raw||{})}));
+    if(Number(c.year)!==2026&&!Object.hasOwn(raw||{},'reportHost'))c.reportHost=null;
     c.participants=c.participants||{};c.lineups=c.lineups||{};c.teamResults=c.teamResults||{};
     for(const l of Object.values(c.lineups).filter(Boolean))for(const side of ['a','b'])l[side]=federalSlots(l[side],2,'');
     for(const side of ['A','B']){
@@ -10121,6 +10167,60 @@ $('useClock').addEventListener('change',e=>$('clockSettings').classList.toggle('
     return {version:1,year,teams:[0,1].map(side=>({owner:{kind:'team',id:side===0?'a':'b',name:side===0?'Slovensko':'Česko'},metrics:federalMergeMetrics(teams[side])})),individuals:combine(people),pairs:combine(pairs),fixtures:selected.map(s=>({fixtureNo:s.result.fixtureNo,matchId:s.m.id||null,source:s.source})),duplicates,unattributed:selected.flatMap(s=>s.result.unattributed.map(x=>({fixtureNo:s.result.fixtureNo,...x})))};
   }
 
+  // Federal Cup report readers. No persistence, DOM, or independent gameplay formulas.
+  function federalReportOrder(config){
+    const host=Object.hasOwn(config||{},'reportHost')?config.reportHost:Number(config?.year)===2026?'SK':null;
+    return host==='SK'?[0,1]:host==='CZ'?[1,0]:null;
+  }
+  function federalReportWinner(scores){
+    if(!Array.isArray(scores)||scores.length!==2||!scores.every(n=>(typeof n==='number'||typeof n==='string'&&n.trim()!=='')&&Number.isInteger(Number(n))&&Number(n)>=0)||Number(scores[0])===Number(scores[1]))return null;
+    return Number(scores[0])>Number(scores[1])?0:1;
+  }
+  function federalReportData(matches,config,year=Number(config?.year)){
+    const all=federalCalculateSeason(matches,config,year),rows=federalStatsRows(matches).slice().sort((a,b)=>(Date.parse(b.endedAt)||0)-(Date.parse(a.endedAt)||0)||String(a.id).localeCompare(String(b.id))),selected=[],excluded=[],series=[0,0],people=Object.create(null),issues=[[],[]],resultIssues=[];
+    let decided=false;
+    const candidates=all.fixtures.map(f=>({f,m:f.source==='detailed'?rows.find(m=>m.id===f.matchId&&Number(m.federalCupLink?.fixtureNo)===f.fixtureNo&&Number(m.federalCupLink?.year)===year&&m.endedAt&&!['incomplete','playing','active'].includes(m.status)):null}));
+    for(const source of candidates){
+      const {f,m}=source,manual=config?.teamResults?.[f.fixtureNo],scores=m?.scores||[manual?.a,manual?.b];
+      const winner=federalReportWinner(scores);
+      if(decided){excluded.push(f);continue;}
+      selected.push(source);
+      if(winner===null){resultIssues.push(f.fixtureNo);issues[0].push('Neúplný výsledek zápasu #'+f.fixtureNo);issues[1].push('Neúplný výsledek zápasu #'+f.fixtureNo);continue;}
+      series[winner]++;
+      if(series[winner]>=11&&!resultIssues.length)decided=true;
+      const type=m?.federalCupLink?.type||'team',link=m?.federalCupLink||manual||{},snap=type==='team'?link.rosterParticipants:link.lineupParticipants,need=type==='team'?5:type==='doubles'?2:type==='singles'?1:0;
+      const sides=[0,1].map(side=>federalStatsRows(snap?.[side]));
+      const cross=sides[0].some(p=>sides[1].some(q=>q.id===p.id));
+      for(const side of [0,1]){
+        const list=sides[side],validPeople=need>0&&list.length===need&&new Set(list.map(p=>p.id)).size===need&&!cross&&list.every(p=>typeof p.id==='string'&&p.id&&!p.id.startsWith('__')&&p.identityStatus!=='legacy'&&(p.year==null||Number(p.year)===year)&&(p.team==null||p.team===(side===0?'a':'b')));
+        if(!validPeople){issues[side].push('Chybí jednoznačná historická nominace zápasu #'+f.fixtureNo);continue;}
+        for(const p of list){
+          const existing=people[p.id];
+          if(existing&&existing.side!==side){existing.conflict=true;issues[side].push('Konflikt reprezentace účastníka');continue;}
+          const x=people[p.id]||{id:p.id,name:p.name,side,wins:0,losses:0,sources:[]};
+          if(winner===side)x.wins++;else x.losses++;
+          x.sources.push({fixtureNo:f.fixtureNo,matchId:f.matchId,type});people[p.id]=x;
+        }
+      }
+    }
+    const keys=new Set(selected.map(s=>s.f.fixtureNo)),filteredConfig={...config,teamResults:Object.fromEntries(Object.entries(config?.teamResults||{}).filter(([n])=>keys.has(Number(n))))};
+    const season=federalCalculateSeason(rows.filter(m=>selected.some(s=>s.m===m)),filteredConfig,year);
+    return {year,season,series,decided,resultIssues,selected:selected.map(s=>s.f),excluded,people,issues,duplicates:all.duplicates};
+  }
+  function federalReportResults(report,id,side){
+    const p=report.people[id],reasons=[...(report.issues[side]||[])];
+    if(p?.conflict||p&&p.side!==side)reasons.push('Konflikt identity nebo reprezentace');
+    const known=!!p&&p.side===side&&!p.conflict,wins=known?p.wins:0,losses=known?p.losses:0;
+    return {wins,losses,value:!reasons.length&&wins+losses?wins/(wins+losses)*100:null,coverage:reasons.length?(known?'partial':'unknown'):'complete',reasons,sources:known?p.sources:[]};
+  }
+  function federalReportMetric(metric){
+    if(!metric||metric.coverage==='unknown')return {text:'—',bar:null,note:'Neznámá evidence'};
+    const number=n=>Number.isFinite(n)?n.toLocaleString('cs-CZ',{maximumFractionDigits:2}):'—';
+    const fraction=number(metric.numerator)+'/'+number(metric.denominator);
+    if(metric.coverage==='partial')return {text:'Doloženo '+(metric.kind==='count'?number(metric.count):fraction)+' (část)',bar:null,note:'Neúplná evidence'};
+    if(metric.kind!=='count'&&metric.denominator===0)return {text:fraction+' · bez pokusů',bar:null,note:'Žádné evidované pokusy'};
+    return {text:metric.kind==='percent'?number(metric.value)+' %':metric.kind==='ratio'?fraction:number(metric.value),bar:metric.value===null?null:['percent','ratio'].includes(metric.kind)?Math.max(0,Math.min(100,metric.value*(metric.kind==='ratio'?100:1))):null,note:'Úplná evidence'};
+  }
   function detailedCounterActive(){
     return !!match && match.counterMode!=='simple' && !match.ghostMode && match.discipline!=='14.1';
   }
@@ -29741,10 +29841,66 @@ function renderStats(){
   }
 
 
+  const REPORT_GROUPS=[['ROZSTŘEL',[['breakSuccess','Úspěšnost rozstřelu'],['breakBallAverage','Průměr koulí při rozstřelu'],['aces','Esa'],['ownBreakWins','Výhry při vlastním breaku']]],['ÚTOK',[['pottingSuccess','Úspěšnost potopení'],['cleanRuns','Čisté hry'],['pottedBalls','Potopené koule'],['jumpShots','Jump shoty'],['bankShots','Bank shoty']]],['OBRANA',[['safetySuccess','Úspěšnost jistot'],['escapeSuccess','Úspěšnost úniků'],['resafes','RESAFE']]],['FAULY',[['fouls','Fauly celkem']]]];
+  const REPORT_REPS=[{id:'SK',name:'Slovensko',color:'#d34b56'},{id:'CZ',name:'Česko',color:'#488edf'}];
+  const REPORT_SOURCES={breakSuccess:'Čítače skutečně provedených rozstřelů a jejich kanonické výsledky; eso je úspěšný break.',breakBallAverage:'Spadlé break koule dělené všemi provedenými breaky, včetně soft a faulových.',aces:'Samostatná evidence es; k čistým hrám se znovu nepřičítají.',ownBreakWins:'Dokončené racky se skutečným rozstřelujícím a vítězem; žádný odhad střídání.',pottingSuccess:'Úspěšné útočné strky / doložené útočné pokusy. Multipot je jeden strk; neurčité doplnění počet strků nevytváří.',cleanRuns:'Existující osobní metrika cleanRuns z doložených B&R, oddělená od es.',pottedBalls:'Řádné koule z kanonických strků, explicitní nebo bezpečně odvozené. Bez break a faulových koulí.',jumpShots:'Úspěšné označené Jump strky / pokusy, včetně legálního úniku bez potopení; čítače kontrolují hlavní records.',bankShots:'Úspěšné označené Bank strky / pokusy. Bank není únik; rackové kopie se znovu nesčítají.',safetySuccess:'Úspěšné / vyhodnocené jistoty podle evidence obsluhy.',escapeSuccess:'Úspěšné / evidované úniky, včetně neúspěchů s faulem i bez něj.',resafes:'Doložené RESAFE, každý právě jednou.',fouls:'Celkové fauly včetně break a únikových faulů, bez jejich opětovného přičtení.'};
+  function reportSources(){return '<details class="fc-report-sources"><summary>Zdroje jednotlivých ukazatelů a úplnost evidence</summary><p>Úplné údaje mají výsledek. Částečná evidence ukazuje jen doložené mezisoučty bez oficiálního procenta či sloupce. Neznámá evidence je —. Poměr 0/0 znamená žádné pokusy.</p><dl>'+REPORT_GROUPS.flatMap(([,rows])=>rows).map(([key,label])=>'<dt>'+esc(label)+'</dt><dd>'+esc(REPORT_SOURCES[key])+'</dd>').join('')+'</dl></details>';}
+  const reportDialog=$('fcReportDialog');let reportReturnFocus=null;
+  function reportFlag(side){const rep=REPORT_REPS[side];return '<svg class="fc-report-flag" role="img" aria-label="Vlajka '+rep.name+'" viewBox="0 0 600 400"><use href="#fc26Flag'+rep.id+'"></use></svg>';}
+  function reportButton(kind,label,attrs=''){return '<button type="button" class="btn" data-fc-report="'+kind+'" '+attrs+'>'+label+'</button>';}
+  function reportFooter(text){return '<footer class="fc-report-footer"><div>'+esc(text)+'</div><strong>POOLČÍTADLO · BC RYBÁRNA<br>FEDERAL CUP · NÁHLED 3A</strong></footer>';}
+  function reportValue(metric,side,width=null,left=false){
+    const x=federalReportMetric(metric),bar=width===null?x.bar:width;
+    return '<div class="fc-report-value '+(left?'left':'')+'" style="--rep-color:'+REPORT_REPS[side].color+'" data-coverage="'+esc(metric?.coverage||'unknown')+'" title="'+esc([x.note,...(metric?.reasons||[])].join(' · '))+'">'+esc(x.text)+(bar===null?'':'<div class="fc-report-track" aria-hidden="true"><span style="width:'+bar+'%"></span></div>')+'</div>';
+  }
+  function reportComparison(title,names,scores,metrics,order,selected=null,notice=''){
+    const person=side=>'<div class="fc-report-person '+(side===selected?'selected':'')+'">'+reportFlag(side)+'<h2>'+esc(names[side])+'</h2><div class="fc-report-subtitle">'+(side===order[0]?'DOMÁCÍ':'HOSTÉ')+(side===selected?' · VYBRANÁ REPREZENTACE':'')+'</div></div>';
+    const rows=REPORT_GROUPS.flatMap(([,rows])=>rows).map(([key,label])=>{
+      const values=[0,1].map(side=>metrics[side]?.[key]),maximum=Math.max(0,...values.filter(x=>x?.coverage==='complete'&&x.value!==null).map(x=>x.value));
+      const value=side=>{const x=values[side],absolute=x&&['count','average'].includes(x.kind);return reportValue(x,side,absolute&&x.coverage==='complete'&&x.value!==null&&maximum>0?x.value/maximum*100:null,side===order[0]);};
+      return '<div class="fc-report-row" data-report-metric="'+key+'">'+value(order[0])+'<div class="fc-report-label">'+esc(label)+'</div>'+value(order[1])+'</div>';
+    }).join('');
+    return '<article class="fc-report-sheet" data-report-template="A"><div class="fc-report-kicker">'+esc(title)+'</div><div class="fc-report-head">'+person(order[0])+'<div class="fc-report-score">'+esc(String(scores[order[0]]??'—'))+' : '+esc(String(scores[order[1]]??'—'))+'</div>'+person(order[1])+'</div>'+(notice?'<p class="fc-report-subtitle">'+esc(notice)+'</p>':'')+rows+reportSources()+reportFooter('Herní údaje: kanonická evidence a společné API 13 metrik. Část = doložený mezisoučet, — = neznámá evidence. Bez pokusů není 0% úspěšnost.')+'</article>';
+  }
+  function reportPlayer(report,person,side){
+    const result=federalReportResults(report,person.id,side),entry=report.people[person.id]?.conflict?null:report.season.individuals[person.id],metrics=entry?.metrics||federalCalculateMatch({}).sides[side].metrics;
+    const count=n=>result.coverage==='unknown'?'—':result.coverage==='partial'?'Doloženo '+n+' (část)':String(n);
+    const cards=[['VÝHRY',count(result.wins)],['PROHRY',count(result.losses)],['ÚSPĚŠNOST',result.value===null?'—':result.value.toLocaleString('cs-CZ',{maximumFractionDigits:2})+' %'],['ČISTÉ HRY',federalReportMetric(metrics.cleanRuns).text]];
+    return '<article class="fc-report-sheet" data-report-template="B" data-report-person="'+esc(person.id)+'"><div class="fc-report-kicker">FEDERAL CUP '+report.year+' · STATISTIKY HRÁČE</div><header class="fc-report-person">'+reportFlag(side)+'<h2>'+esc(person.name||'Neznámé jméno')+'</h2></header><div class="fc-report-cards">'+cards.map(([label,value])=>'<div class="fc-report-card">'+label+'<strong>'+esc(value)+'</strong></div>').join('')+'</div><div class="fc-report-groups">'+REPORT_GROUPS.map(([group,rows])=>'<section class="fc-report-group"><h3>'+group+'</h3>'+rows.map(([key,label])=>'<div class="fc-report-personal-row" data-report-metric="'+key+'"><span>'+esc(label)+'</span>'+reportValue(metrics[key],side)+'</div>').join('')+'</section>').join('')+'</div><p class="fc-report-subtitle">'+esc('Doložené výsledky: '+result.sources.map(s=>'#'+s.fixtureNo+' '+s.type).join(', ')+(result.reasons.length?'. '+result.reasons.join('; '):result.sources.length?'': 'Žádné doložené dokončené zápasy.'))+'</p>'+reportSources()+reportFooter('Výhry/prohry: celé dokončené Singles, oba členové Doubles a všech pět nominovaných Team hráčů. Herní statistiky včetně čistých her: pouze Singles a skutečně doložené vlastní Team racky; Doubles strky se osobám nepřipisují. Zdroje výkonu: '+(entry?.sources?.map(s=>'#'+s.fixtureNo).join(', ')||'bez doložené osobní evidence')+'.')+'</article>';
+  }
+  function openFederalReport(button){
+    if(!$('screen-federal-cup-2026')?.classList.contains('active'))return;
+    const conf=cfg(),year=Number(conf.year),order=federalReportOrder(conf);let content='';
+    const unavailable=text=>'<div class="fc-report-notice"><h2>Report není dostupný</h2><p>'+esc(text)+'</p></div>';
+    if(!Number.isInteger(year))content=unavailable('Konfigurace neobsahuje platný ročník. Data jiného ročníku se nepoužijí.');
+    else if(!order)content=unavailable('Konfigurace ročníku neobsahuje platnou hostitelskou reprezentaci. Pořadí týmů neodhadujeme.');
+    else{
+      const report=federalReportData(data.matches,conf,year),kind=button.dataset.fcReport;
+      if(kind==='team'){
+        const side=REPORT_REPS.findIndex(r=>r.id===button.dataset.rep);
+        content=side<0?unavailable('Neznámá reprezentace.'):reportComparison('FEDERAL CUP '+year+' · STATISTIKY REPREZENTACÍ',REPORT_REPS.map(r=>r.name),report.series,report.season.teams.map((x,i)=>report.selected.length?x.metrics:federalCalculateMatch({}).sides[i].metrics),order,side,'Souhrn série · '+(report.resultIssues.length?'pouze doložený mezisoučet, některé výsledky chybí':report.decided?'ukončeno':'průběžný stav')+'. '+(report.selected.length?'':'Dosud žádné dokončené zápasy. ')+'Herní statistiky zahrnují dokončené hodnocené zápasy; ruční výsledky nedokládají herní výkon.');
+      }else if(kind==='player'){
+        const id=button.dataset.person,person=conf.participants?.[id],side=person?.team==='a'?0:person?.team==='b'?1:-1;
+        content=!person||person.id!==id||Number(person.year)!==year||side<0?unavailable('Chybí stabilní identita hráče v tomto ročníku. Jméno ani pozice na soupisce ji nenahrazují.'):reportPlayer(report,person,side);
+      }else if(kind==='match'){
+        const id=button.dataset.matchId,fixture=Number(button.dataset.fixture),source=report.selected.find(s=>s.fixtureNo===fixture&&s.matchId===id&&s.source==='detailed');
+        const m=source?federalStatsRows(data.matches).filter(m=>m.id===id&&Number(m.federalCupLink?.year)===year&&Number(m.federalCupLink?.fixtureNo)===fixture&&m.endedAt&&!['incomplete','playing','active'].includes(m.status)).sort((a,b)=>(Date.parse(b.endedAt)||0)-(Date.parse(a.endedAt)||0))[0]:null;
+        if(!m||!['singles','doubles','team'].includes(m.federalCupLink?.type)||federalReportWinner(m.scores)===null)content=unavailable('Zápas #'+fixture+' ještě nebyl dokončen, nemá doložený detail, typ či platný výsledek, byl nahrazen novějším záznamem nebo je mimo hodnocenou sérii. Rozehraný zápas není konečný report. Obnov přehled.');
+        else{const result=federalCalculateMatch(m),names=[0,1].map(side=>m.federalCupLink.type==='team'?REPORT_REPS[side].name:savedMatchSideDisplayName(m,side));content=reportComparison('FEDERAL CUP '+year+' · ZÁPAS #'+fixture+' · '+String(m.federalCupLink.type).toUpperCase(),names,m.scores||[],result.sides.map(x=>x.metrics),order,null,'Dokončený zápas · ID '+id+'. Neúplná nebo chybějící statistická evidence je označena v jednotlivých řádcích.');}
+      }else content=unavailable('Neznámý typ reportu.');
+    }
+    $('fcReportContent').innerHTML=content;reportReturnFocus=button;if(!reportDialog.open)reportDialog.showModal();reportDialog.scrollTop=0;
+  }
+  $('screen-federal-cup-2026')?.addEventListener('click',e=>{const button=e.target.closest('[data-fc-report]');if(button)openFederalReport(button);});
+  $('fcReportClose')?.addEventListener('click',()=>reportDialog.close());
+  reportDialog?.addEventListener('close',()=>{if(reportReturnFocus?.isConnected)reportReturnFocus.focus({preventScroll:true});$('fcReportContent').replaceChildren();});
+  new MutationObserver(()=>{if(reportDialog.open&&!$('screen-federal-cup-2026').classList.contains('active'))reportDialog.close();}).observe($('screen-federal-cup-2026'),{attributes:true,attributeFilter:['class']});
+
   // Výhradně čtecí obrazovka; žádný druhý zápis dat ani editace utkání.
   function renderFederalCupViewer(){
     if(!$('fc26ViewerScoreboard'))return;
     const conf=cfg();
+    const reportYear=Number(conf.year),reportSources=Number.isInteger(reportYear)?federalCalculateSeason(data.matches,conf,reportYear).fixtures:[];
     const admin=canEdit();
     $('fc26ViewerEditor').classList.toggle('hidden',!admin);
     $('fc26ViewerNotice').textContent=cloudAuthenticated
@@ -29757,12 +29913,11 @@ function renderStats(){
         '<div class="fc26-scoreboard-name">'+name+'</div>'+
         '<div class="fc26-scoreboard-meta">'+place+'</div>'+
         '<div class="fc26-scoreboard-wins">'+results.matchWins+'</div>'+
-        '<div class="fc26-scoreboard-meta">VYHRANÉ ZÁPASY · SKÓRE '+results.racksFor+':'+results.racksAgainst+'</div></div>';
+        '<div class="fc26-scoreboard-meta">VYHRANÉ ZÁPASY · SKÓRE '+results.racksFor+':'+results.racksAgainst+'</div>'+reportButton('team','STATISTIKY TÝMU','data-rep="'+flag.toUpperCase()+'"')+'</div>';
     }
+    const presentation=federalReportOrder(conf);
     $('fc26ViewerScoreboard').innerHTML='<div class="fc26-scoreboard">'+
-      teamBox('Slovensko','sk','DOMÁCÍ',a,'home')+
-      '<div class="fc26-scoreboard-vs">:</div>'+
-      teamBox('Česko','cz','HOSTÉ',b,'away')+'</div>'+
+      (presentation||[0,1]).map((side,i)=>teamBox(REPORT_REPS[side].name,REPORT_REPS[side].id.toLowerCase(),presentation?(i===0?'DOMÁCÍ':'HOSTÉ'):'HOSTITEL NEURČEN',side===0?a:b,side===0?'home':'away')).join('<div class="fc26-scoreboard-vs">:</div>')+'</div>'+
       (state.decided
         ? '<div class="fc26-winner-banner"><strong>🏆 '+(state.winner==='a'?'Slovensko':'Česko')+' vítězí '+state.winsA+':'+state.winsB+'</strong><span>Utkání rozhodnuto v zápase #'+state.clinchedAt+' · hraje se na 11 vítězných</span></div>'
         : '<div class="fc26-match-status" style="margin-top:12px">Hraje se na 11 vítězných zápasů · Slovensku chybí '+(11-state.winsA)+' výher, Česku '+(11-state.winsB)+'.</div>');
@@ -29774,7 +29929,8 @@ function renderStats(){
       (state.decided?'100':(100*done/FIXTURES.length).toFixed(1))+'%"></span></div>';
 
     function fixture(f){
-      const m=completedMatch(f.n);
+      const reportSource=reportSources.find(s=>s.fixtureNo===f.n&&s.source==='detailed');
+      const m=reportSource?federalStatsRows(data.matches).filter(m=>m.id===reportSource.matchId&&Number(m.federalCupLink?.year)===reportYear&&Number(m.federalCupLink?.fixtureNo)===f.n&&m.endedAt&&!['incomplete','playing','active'].includes(m.status)).sort((a,b)=>(Date.parse(b.endedAt)||0)-(Date.parse(a.endedAt)||0))[0]:null;
       const r=f.t==='team'?conf.teamResults?.[f.n]:null;
       const l=lineup(f.n);
       const finished=!!m||r?.done===true;
@@ -29793,8 +29949,8 @@ function renderStats(){
         '<div><div class="fc26-view-match-score">'+score+'</div>'+
         '<div class="fc26-view-match-status">'+(outsideResult?'MIMO HODNOCENÍ':cancelled?'NEHRAJE SE':finished?'DOHRÁNO':'ČEKÁ SE')+'</div></div>'+
         '<div class="fc26-view-match-side right">'+esc(String(sideName('b',1)))+'</div>'+
-        (m?'<div class="fc26-view-match-detail"><button type="button" class="btn" data-fc26-view-match="'+
-          esc(String(m.id||''))+'">DETAILNÍ STATISTIKY ZÁPASU</button></div>':'')+'</div>';
+        '<div class="fc26-view-match-detail">'+reportButton('match','STATISTIKY ZÁPASU','data-fixture="'+f.n+'" data-match-id="'+esc(String(m?.id||''))+'"')+
+        (m?'<button type="button" class="btn" data-fc26-view-match="'+esc(String(m.id||''))+'">DETAILNÍ STATISTIKY ZÁPASU</button>':'')+'</div></div>';
     }
     $('fc26ViewerSchedule').innerHTML=[1,2,3,4].map(block=>
       '<div class="fc26-block"><div class="fc26-block-head"><h3>Blok '+block+'</h3>'+
@@ -29815,7 +29971,7 @@ function renderStats(){
       '<div class="muted" style="font-size:11px;margin-top:9px">Herní statistiky zahrnují zápasy hrané přes počítadlo. Ruční Team výsledky obsahují pouze skóre.</div>';
     const rosterHtml=(side,title)=>'<div class="fc26-view-roster"><h3>'+title+'</h3>'+
       roster(side).map((name,i)=>'<div class="fc26-view-roster-line"><span class="muted">'+(i+1)+'.</span> '+
-        esc(String(participantName(side,name)||'Bude doplněno'))+'</div>').join('')+'</div>';
+        esc(String(participantName(side,name)||'Bude doplněno'))+(name?reportButton('player','STATISTIKY HRÁČE','data-person="'+esc(String(conf['rosterParticipantIds'+(side==='a'?'A':'B')]?.[i]||''))+'"'):'')+'</div>').join('')+'</div>';
     $('fc26ViewerRosters').innerHTML='<div class="fc26-view-rosters">'+
       rosterHtml('a','<svg class="fc26-flag-svg fc26-flag-roster" aria-hidden="true" viewBox="0 0 600 400"><use href="#fc26FlagSK"></use></svg>Slovensko · domácí')+
       rosterHtml('b','<svg class="fc26-flag-svg fc26-flag-roster" aria-hidden="true" viewBox="0 0 600 400"><use href="#fc26FlagCZ"></use></svg>Česko · hosté')+'</div>';
