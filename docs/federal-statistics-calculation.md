@@ -1,6 +1,8 @@
-# Federal Cup – výpočet 11 statistik, etapa 2 (v4.51.85 RC)
+# Federal Cup – výpočet 11 statistik, etapa 2 (v4.51.88 RC)
 
-Zadavatel: Dominik, 21. 10. 2026. Samostatná větev `feature/federal-statistics-calculation` z aktuálního main `090330ac6a4e86a78bffdd824cabb8fb12db0056`. Připraveno v [PR #22](https://github.com/bcrybarna-oss/BC-Rybarna-Scoreboard/pull/22), nesloučeno a nenasazeno; produkce zůstává v4.51.84 RC. Bez nové obrazovky, veřejného zobrazení statistik, grafického reportu, PDF, migrace nebo změny Rules.
+Historie původní přípravy (21. 10. 2026), zadavatel Dominik: samostatná větev `feature/federal-statistics-calculation` z aktuálního main `090330ac6a4e86a78bffdd824cabb8fb12db0056`. Připraveno v [PR #22](https://github.com/bcrybarna-oss/BC-Rybarna-Scoreboard/pull/22), nesloučeno a nenasazeno; produkce zůstává v4.51.84 RC. Bez nové obrazovky, veřejného zobrazení statistik, grafického reportu, PDF, migrace nebo změny Rules.
+
+Aktualizace Dominik, 22. 10. 2026: původní větev PR #22 aktualizována merge z origin/main ed45d3794aff0e403bdd77dc720462c3f1fa8c89 (produkce v4.51.87 RC); historie i všechny streamovací změny PR #24–26 zachovány. Kandidát v4.51.88 RC zůstává ve stejném PR, nesloučen a nenasazen. Opraveny všechny tři reprodukce revize work/review22/REPORT.md. Původní výchozí stav a ověření níže jsou historické; aktuální stav viz PROJECT_STATUS.md.
 
 ## Interní API v produkčním index.html
 
@@ -81,3 +83,37 @@ Nové unit testy 37/37 čtou skutečný index.html: všech 11 hodnot obou stran,
 Kódový commit 56269451d7cf0885565d779a300cda37fbd4698b: [CI kódového commitu](https://github.com/bcrybarna-oss/BC-Rybarna-Scoreboard/actions/runs/39610539922) ověřeno, release job uspěl, Node 136/138 jen se dvěma uvedenými známými chybami. Následná dokumentace výpočetní kód nemění.
 
 Legacy, částečná historie a ruční výsledky zůstávají neúplné podle jednotlivých metrik. Ani přesná kalkulace nevytvoří chybějící evidenci. Fyzické Android/iOS, skutečný backend/Auth/Rules/CORS a zátěž neověřeny. Výpočetní API je připravené jako podklad další etapy, nikoli jako hotový veřejný report. PR neslučovat a produkci v rámci tohoto zadání nenasazovat.
+
+## Uzavření revize a integrita (v4.51.88 RC)
+
+Osobní Team vstup zachovává původní metadata detailedPlay včetně coverage a servisních příznaků. Neúplná historie útoku/koulí se proto neztratí při omezení records na relevantní racky hráče. Nezávislé čítače faulů, jistot a úniků se tím automaticky nezneplatní. Nejasný aktér opačné strany nezneplatní doložený příspěvek vlastní strany. U chybějícího kanonického strku bez prokazatelné strany jsou útok a koule obou účastníků dotčeného racku partial; hráči jiných racků zůstanou oddělení. Neúplnost se stejným kontraktem pokračuje do roční agregace.
+
+`federalStatsShotIssues` validuje shotIds proti výhradně kanonickým detailedPlay.records: existenci, opakovaný odkaz/ID, konfliktní varianty stejného ID, vazbu na rack, případný matchId/year a doloženého aktéra. Rackové kopie shots se nepoužívají ani k dopočítání chybějících pokusů. Strojové důvody: missing_shot_reference, invalid_shot_reference, duplicate_shot_reference, duplicate_shot_record, conflicting_shot_record, invalid_shot_record, shot_rack_reference_conflict, shot_match_reference_conflict, shot_actor_reference_conflict. Známé n/d zůstávají, value=null, coverage=partial. Identické kopie ID se počítají jednou; konfliktní obsah téhož ID se do doložených mezisoučtů vůbec nezapočítá (výsledek nezávisí na pořadí variant). Pro osobní výstup se reference validují stále proti původní kanonické kolekci, aby konflikt mezi dvěma aktéry nezmizel filtrováním. Ztrátu bez jakéhokoli odkazu či příznaku nelze spolehlivě detekovat; staré racky bez shotIds zůstávají podle původní evidence, nevytvářejí se automaticky nové odkazy ani evidence complete.
+
+Přímé Team čítače sčítají validní doložené rackové části; chybějící část přidá missing_rack_counter (neplatná invalid_rack_counter) pouze dotčeným metrikám. Fauly 0 + 3 + chybějící proto znamenají count=3, partial, value=null; ne všechny unknown a ne úplné 3. Bez jediného známého counteru zůstává count=null/unknown. Úspěšné breaky jsou odvozené: nejprve se určí pro jednotlivé racky a až pak agregují, takže chybějící dryBreaks nikdy nevytvoří domnělý úspěch odečtením pouze známých neúspěchů od všech breaků. Útok 2/3 + 1/1 + neznámý zachovává numerator=3, denominator=4, partial, value=null; není to oficiálních 75 %. Stejný součet platí mezi zápasy, procenta se nikdy neprůměrují.
+
+Odložené tempo main v4.51.87 RC zachovává null turn/breaker. Výpočet používá striktní porovnání stran, ne Number(null). Před tempem se nic neodečítá od nulových breaků; po volbě tempa se případná rezervace beginRack odečte, dokud není break skutečně zapsán. Team před výběrem hráčů rezervaci nemá. Browser nyní ověřuje jmenovatele 0:0 před tempem, po volbě/opravě i rezervaci, 0:1 po skutečném dry breaku, zpět 0:0 po undo a shodu po reloadu pro Team/Doubles/Singles. Výpočet, nikoli sportovní pravidla nebo streamový protokol, řeší nejistotu.
+
+### Další nezávislý referenční zápas z revize
+
+Trvalá fixture tests/fixtures/federal-review-reference.cjs zachovává pět racků z nezávislé revize. Vítězové A/A/A/A/A, breaky A/B/A/B/A; eso, soft+dry, break faul se dvěma koulemi, legální escape s koulí, multipot, sekvence, RESAFE a fauly. Ručně stanovené výsledky pro obě strany:
+
+| Ukazatel | A | B |
+|---|---:|---:|
+| Úspěšnost breaku | 2/3 = 66,6667 % | 1/2 = 50 % |
+| Průměr break koulí | 5/3 | 1/2 |
+| Esa | 1 | 0 |
+| Výhry při vlastním breaku | 3/3 | 0/2 |
+| B&R | 1 | 0 |
+| Řádné koule | 19 | 1 |
+| Úspěšnost útoku | 5/7 = 71,4286 % | 1/2 = 50 % |
+| Úspěšnost jistot | 2/3 | 1/1 |
+| Úspěšnost úniků | 2/3 | 1/1 |
+| RESAFE | 1 | 0 |
+| Fauly | 4 | 4 |
+
+Roční příklad stabilního hráče red: úplný Singles + jeho skutečné Team racky 1, 2, 5. Breaky 4/5=80 %, break koule 8/5=1,6; esa 2; výhry při vlastním breaku 5/5; B&R 2; řádné koule 31; útok 9/13≈69,2308 %; jistoty 4/6; úniky 4/6; RESAFE 2; fauly 7. Jestliže má Team neúplnou detailed historii, stejné známé 9/13 zůstanou partial/value=null, zatímco doložené fauly mohou zůstat kompletní. Při chybějícím foul counteru Team racku 1 zůstává roční známý součet 7, ale je partial/value=null. Tyto hodnoty kontrolují nové trvalé testy vedle původního osmirackového příkladu.
+
+### Trvalé testy revize
+
+`npm run test:federal-calculation` spouští původní i nové výpočetní testy nad produkčním index.html. `FC_SOURCE_REF=89b339c node --test tests/federal-calculation-integrity.test.cjs` použije původní zdroj: všechny tři negativní reprodukce tehdy selhávají. Testovací proces nemá Firebase ani úložiště; výpočty jsou deterministické a bez mutací. Výsledky všech aktuálních unit/browser regresí a CI jsou v PROJECT_STATUS.md/REVIZE.md. Rozdělení test-modular do jiné CI sady, report ani PDF se neimplementuje.

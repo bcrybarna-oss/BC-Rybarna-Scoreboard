@@ -21,6 +21,10 @@
       --radius:18px;
     }
     *{box-sizing:border-box}
+    #streamDirectorPanel{margin:10px 0;min-width:0}
+    #streamDirectorPanel .stream-director-buttons{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin-top:8px}
+    #streamDirectorPanel .btn{min-width:0;min-height:44px;padding:10px 6px;white-space:normal;overflow-wrap:anywhere;font-size:13px}
+    @media(min-width:640px){#streamDirectorPanel .stream-director-buttons{grid-template-columns:repeat(4,minmax(0,1fr))}}
     html,body{margin:0;background:radial-gradient(circle at top,#18130a 0,#090909 34%,#050505 100%);color:var(--text);font-family:Inter,Segoe UI,Arial,sans-serif;min-height:100%;width:100%;max-width:100%;overflow-x:hidden}
     body{min-height:100vh}
     button,input,select{font:inherit}
@@ -2513,7 +2517,7 @@ html[data-theme="light"] #leagueSchedule .history-item .muted{
           <span class="by">by</span>
           <span class="club">BC Rybárna</span>
         </div>
-        <small class="modern-brand-version">v4.51.85 RC</small>
+        <small class="modern-brand-version">v4.51.88 RC</small>
       </div>
     </div>
     <div class="nav">
@@ -2785,7 +2789,7 @@ html[data-theme="light"] #leagueSchedule .history-item .muted{
           <option value="0">Slovensko</option>
           <option value="1">Česko</option>
         </select>
-        <div class="muted" style="margin-top:7px">Vítěz tempa provede první rozstřel. Potom se týmy střídají po jednom racku.</div>
+        <div class="muted" style="margin-top:7px">Vítěz tempa provede první rozstřel. Potom se týmy střídají po jednom racku. Se zapnutým Stream overlayem můžeš výsledek zadat až v běžícím počítadle.</div>
       </div>
 
       <div class="grid two">
@@ -3001,13 +3005,13 @@ html[data-theme="light"] #leagueSchedule .history-item .muted{
           <label class="switch"><input id="streamEnabled" type="checkbox" checked><span class="slider"></span></label>
         </div>
         <div style="margin-top:12px">
-          <label>Moje stálá adresa overlaye</label>
+          <label>Adresa overlaye</label>
           <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
             <input id="streamOverlayUrl" type="text" readonly placeholder="Po přihlášení se zobrazí tvoje vlastní adresa overlaye" style="flex:1;min-width:260px">
             <button id="copyStreamOverlayUrl" type="button" class="btn">KOPÍROVAT</button>
           </div>
           <div class="muted" style="margin-top:6px">
-            Tato adresa patří jen tvému účtu. Jednou ji vlož do Streamlabs a další zápasy už nemusíš nic měnit.
+            Po zahájení zápasu zkopíruj jeho pevnou adresu z panelu streamu do OBS. Pro jiný zápas použij jeho novou adresu.
           </div>
         </div>
         <div class="muted" style="margin-top:10px">
@@ -3121,7 +3125,7 @@ html[data-theme="light"] #leagueSchedule .history-item .muted{
         </div>
         <div class="subpanel" style="min-width:210px;text-align:center;margin:0">
           <div class="muted" style="font-size:10px;font-weight:950;letter-spacing:1px">AKTUÁLNÍ VERZE</div>
-          <div style="font-size:22px;font-weight:950;color:var(--gold2);margin-top:5px">v4.51.85 RC</div>
+          <div style="font-size:22px;font-weight:950;color:var(--gold2);margin-top:5px">v4.51.88 RC</div>
         </div>
       </div>
     </div>
@@ -4462,6 +4466,32 @@ html[data-theme="light"] #leagueSchedule .history-item .muted{
         </div>
       </div>
 
+      <div id="streamDirectorPanel" class="subpanel hidden" aria-label="Ovládání streamu">
+        <div id="streamModeInfo" class="muted" aria-live="polite">Aktuálně: LIVE</div>
+        <div class="stream-director-buttons">
+          <button id="streamModeLiveBtn" type="button" class="btn">LIVE</button>
+          <button id="streamModePauseBtn" type="button" class="btn">PAUZA</button>
+          <button id="streamModeSoonBtn" type="button" class="btn">BRZY ZAČÍNÁME</button>
+          <button id="streamModeEndBtn" type="button" class="btn">KONEC</button>
+        </div>
+        <div style="margin-top:10px">
+          <label for="matchStreamOverlayUrl">Adresa overlaye tohoto zápasu</label>
+          <input id="matchStreamOverlayUrl" type="text" readonly style="width:100%;min-width:0" aria-label="Pevná OBS adresa tohoto zápasu">
+          <button id="copyMatchStreamOverlayUrl" type="button" class="btn" style="margin-top:6px">KOPÍROVAT ADRESU ZÁPASU</button>
+        </div>
+      </div>
+
+      <div id="streamLagControls" class="subpanel hidden">
+        <strong id="streamLagStatus">Čeká se na výsledek tempa</strong>
+        <p class="muted">Výsledek lze opravit pouze před prvním odehraným rozstřelem.</p>
+        <div class="grid two">
+          <button id="streamLagP1" class="btn">TEMPO • HRÁČ 1</button>
+          <button id="streamLagP2" class="btn">TEMPO • HRÁČ 2</button>
+        </div>
+        <button id="streamLagLock" class="btn primary hidden" style="margin-top:8px">ZAHÁJIT HRU • UZAMKNOUT TEMPO</button>
+        <button id="streamLagUndo" class="btn ghost" style="margin-top:8px">↶ UNDO</button>
+      </div>
+      <button id="simpleStreamBreaker" class="btn ghost hidden">Změnit rozstřel</button>
 <div id="simpleCounterActions" class="hidden">
         <div class="subpanel" style="text-align:center">
           <div class="muted" style="font-weight:900;margin-bottom:10px">JEDNODUCHÉ POČÍTADLO • PŘIČTI BOD</div>
@@ -5845,7 +5875,7 @@ html[data-theme="light"] #leagueSchedule .history-item .muted{
       </div>
 
       <div id="groupPlayoffSeedStatus" class="muted" style="margin-top:12px;min-height:20px"></div>
-      <div class="muted" style="margin-top:4px;font-size:11px">RC v4.51.85</div>
+      <div class="muted" style="margin-top:4px;font-size:11px">RC v4.51.88</div>
       <div class="modal-actions">
         <button id="groupPlayoffSeedApplyBtn" class="btn primary big" type="button">NASADIT DO PLAY-OFF</button>
         <button id="groupPlayoffSeedCancelBtn" class="btn">ZRUŠIT</button>
@@ -7029,7 +7059,7 @@ html[data-theme="light"] #leagueSchedule .history-item .muted{
     const btn=$('submitReportBtn');if(btn)btn.disabled=true;
     try{
       const id=uid(),p=currentUserPlayerId?data.players?.[currentUserPlayerId]:null;
-      const report={id,createdByUid:cloudUid,createdByPlayerId:currentUserPlayerId||'',createdByName:p?playerSelectionLabel(p):(cloudUserEmail||'Uživatel'),email:cloudUserEmail||'',type,area,description,appVersion:'v4.51.85 RC',createdAt:new Date().toISOString(),updatedAt:new Date().toISOString(),status:'new',adminNote:''};
+      const report={id,createdByUid:cloudUid,createdByPlayerId:currentUserPlayerId||'',createdByName:p?playerSelectionLabel(p):(cloudUserEmail||'Uživatel'),email:cloudUserEmail||'',type,area,description,appVersion:'v4.51.88 RC',createdAt:new Date().toISOString(),updatedAt:new Date().toISOString(),status:'new',adminNote:''};
       await reportRequest(id,'PUT',report);
       try{
         await writeReportUserMirror(report);
@@ -9792,7 +9822,54 @@ $('useClock').addEventListener('change',e=>$('clockSettings').classList.toggle('
     if(racks.some(r=>{const n=Number(r.rack),duplicate=numbers.has(n);numbers.add(n);return !Number.isInteger(n)||n<1||duplicate||r.matchId&&r.matchId!==m.id||r.year!=null&&Number(r.year)!==Number(m.federalCupLink?.year);}))return false;
     return federalRackScoresAgree({...m,federalTeam:null,federalEvidence:{racks}});
   }
-  function federalStatsSide(m,side){
+  function federalStatsRecordSignature(value){
+    return Array.isArray(value)?JSON.stringify(value.map(federalStatsRecordSignature)):
+      value&&typeof value==='object'?JSON.stringify(Object.keys(value).sort().map(k=>[k,federalStatsRecordSignature(value[k])])):JSON.stringify(value);
+  }
+  function federalStatsRecordIndex(collection){
+    const byId=new Map();
+    for(const r of federalStatsRows(collection))if(typeof r.id==='string'&&r.id){const group=byId.get(r.id)||[];group.push(r);byId.set(r.id,group);}
+    const conflicts=new Set([...byId].filter(([,group])=>new Set(group.map(federalStatsRecordSignature)).size>1).map(([id])=>id));
+    return {byId,conflicts};
+  }
+  function federalStatsShotIssues(m,side,referenceRecords=null){
+    const records=federalStatsRows(referenceRecords||m.detailedPlay?.records),racks=federalStatsRackRows(m),{byId,conflicts}=federalStatsRecordIndex(records),refs=new Map(),issues=new Set();
+    const affects=r=>!r || ![0,1].includes(r.side) || r.side===side;
+    const actorConflict=(r,rack)=>{
+      if(!r.actor?.id)return false; // Older records may be attributable through a stable rack snapshot.
+      const people=m.federalTeam?[rack?.players?.[r.side]]:federalStatsRows(m.federalCupLink?.lineupParticipants?.[r.side]);
+      return people.some(Boolean) && (!people.some(p=>p?.id===r.actor.id) || r.actor.identityStatus==='legacy' ||
+        r.actor.year!=null && Number(r.actor.year)!==Number(m.federalCupLink?.year));
+    };
+    for(const r of records){
+      if(referenceRecords&&!racks.some(x=>x.rack===r.rack))continue;
+      if((typeof r.id!=='string'||!r.id)&&affects(r))issues.add('invalid_shot_record');
+      if(affects(r)){
+        if(r.matchId!=null&&r.matchId!==m.id || r.year!=null&&Number(r.year)!==Number(m.federalCupLink?.year))issues.add('shot_match_reference_conflict');
+        const rack=racks.find(x=>x.rack===r.rack);
+        if(actorConflict(r,rack))issues.add('shot_actor_reference_conflict');
+      }
+    }
+    for(const [id,group]of byId)if(group.length>1&&group.some(affects)&&(!referenceRecords||group.some(r=>racks.some(x=>x.rack===r.rack)))){
+      issues.add('duplicate_shot_record');
+      if(conflicts.has(id))issues.add('conflicting_shot_record');
+    }
+    for(const rack of racks)for(const id of Object.values(rack.shotIds||{})){
+      if(typeof id!=='string'||!id){issues.add('invalid_shot_reference');continue;}
+      const matches=byId.get(id)||[],previous=refs.get(id);
+      if(!matches.length){issues.add('missing_shot_reference');continue;}
+      if(matches.some(affects)){
+        if(previous)issues.add('duplicate_shot_reference');
+        if(matches.length>1)issues.add('duplicate_shot_record');
+        if(matches.some(r=>r.rack!==rack.rack))issues.add('shot_rack_reference_conflict');
+        if(matches.some(r=>r.matchId!=null&&r.matchId!==m.id))issues.add('shot_match_reference_conflict');
+        if(matches.some(r=>actorConflict(r,rack)))issues.add('shot_actor_reference_conflict');
+      }
+      refs.set(id,rack);
+    }
+    return [...issues].sort();
+  }
+  function federalStatsSide(m,side,referenceRecords=null){
     const st=m.stats?.[side]||{},fresh=m.federalEvidence?.fromStart===true;
     const raw=federalStatsRows(m.detailedPlay?.records),seen=new Map(),all=[],duplicateSides=new Set(),duplicateBreakSides=new Set();
     for(const r of raw){
@@ -9800,11 +9877,11 @@ $('useClock').addEventListener('change',e=>$('clockSettings').classList.toggle('
       if(!r.id||previous){for(const x of [r,previous].filter(Boolean)){duplicateSides.add(x.side);if(x.kind==='break')duplicateBreakSides.add(x.side);}}
       if(previous)continue;if(r.id)seen.set(r.id,r);all.push(r);
     }
-    const duplicate=duplicateSides.has(side),records=all.filter(r=>r.side===side);
+    const duplicate=duplicateSides.has(side),{conflicts}=federalStatsRecordIndex(referenceRecords||raw),records=all.filter(r=>r.side===side&&!conflicts.has(r.id));
     const racks=federalStatsRackRows(m),services=federalStatsRows(m.federalEvidence?.serviceChanges);
     const num=k=>Object.hasOwn(st,k)&&Number.isInteger(st[k])&&st[k]>=0?st[k]:null;
     const metric=(kind,n,d,keys,extra=[],components={})=>{
-      const reasons=[...extra];
+      const reasons=[...extra,...keys.flatMap(k=>m.federalCounterIssues?.[side]?.[k]||[])];
       if(service('potting'))reasons.push('score_correction_missing_racks');
       if(!fresh)reasons.push('legacy_coverage');
       if(keys.some(k=>!Object.hasOwn(st,k)))reasons.push('missing_counter');
@@ -9852,7 +9929,8 @@ $('useClock').addEventListener('change',e=>$('clockSettings').classList.toggle('
       metrics[name]=countMetric(key,reasons);
     }
     const correction=all.some(r=>r.kind==='turn_correction'||r.kind==='table_correction'&&!r.foulId);
-    const potReasons=[],attackReasons=[];
+    const referenceIssues=federalStatsShotIssues(m,side,referenceRecords);
+    const potReasons=[...referenceIssues],attackReasons=[...referenceIssues];
     if(!fresh){potReasons.push('legacy_coverage');attackReasons.push('legacy_coverage');}
     if(m.detailedPlay?.coverage&&m.detailedPlay.coverage!=='complete'){potReasons.push('partial_detailed_history');attackReasons.push('partial_detailed_history');}
     if(correction){potReasons.push('unassigned_correction');attackReasons.push('unassigned_correction');}
@@ -9934,16 +10012,28 @@ $('useClock').addEventListener('change',e=>$('clockSettings').classList.toggle('
     if(conflicted.size)result.unattributed.push({reason:'identity_on_both_sides',participantIds:[...conflicted].sort()});
     for(const g of groups.values()){
       if(conflicted.has(g.person.id))continue;
-      const stats={},keys=new Set(g.racks.flatMap(r=>Object.keys(r.stats?.[g.side]||{})));
-      for(const key of keys)if(g.racks.every(r=>Number.isInteger(r.stats?.[g.side]?.[key])&&r.stats[g.side][key]>=0))stats[key]=g.racks.reduce((n,r)=>n+r.stats[g.side][key],0);
+      const stats={},counterIssues={},keys=new Set(g.racks.flatMap(r=>Object.keys(r.stats?.[g.side]||{})));
+      for(const key of keys){
+        const values=g.racks.map(r=>r.stats?.[g.side]?.[key]),known=values.filter(n=>Number.isInteger(n)&&n>=0);
+        if(known.length)stats[key]=known.reduce((a,b)=>a+b,0);
+        if(known.length!==values.length)counterIssues[key]=[values.some(n=>n===undefined||n===null)?'missing_rack_counter':'invalid_rack_counter'];
+      }
       const rackNos=new Set(g.racks.map(r=>r.rack)),all=federalStatsRows(m.detailedPlay?.records).filter(r=>rackNos.has(r.rack));
       const badActor=all.some(r=>r.side===g.side&&r.actor?.id&&(r.actor.id!==g.person.id||r.actor.identityStatus==='legacy'));
-      const synthetic={...m,isBreakShot:false,scores:[0,1].map(side=>g.racks.filter(r=>r.winner===side).length),stats:[{},{}],federalTeam:{racks:g.racks},detailedPlay:{records:all.filter(r=>r.side!==g.side||!r.actor?.id||r.actor.id===g.person.id&&r.actor.identityStatus!=='legacy')}};
+      const synthetic={...m,isBreakShot:false,scores:[0,1].map(side=>g.racks.filter(r=>r.winner===side).length),stats:[{},{}],federalCounterIssues:{[g.side]:counterIssues},federalTeam:{racks:g.racks},detailedPlay:{...m.detailedPlay,records:all.filter(r=>r.side!==g.side||!r.actor?.id||r.actor.id===g.person.id&&r.actor.identityStatus!=='legacy')}};
       synthetic.stats[g.side]=stats;
-      const metrics=federalStatsSide(synthetic,g.side);
-      if(!federalStatsRacksComplete(m)||result.unattributed.length||badActor||!m.endedAt){
+      const metrics=federalStatsSide(synthetic,g.side,m.detailedPlay?.records||[]);
+      // Successful breaks are derived, unlike direct counters: an absent failure
+      // counter cannot turn an unproven break into a known success by subtraction.
+      metrics.breakSuccess=federalMergeMetrics(g.racks.map(rack=>({metrics:federalStatsSide({...synthetic,
+        scores:[0,1].map(side=>rack.winner===side?1:0),stats:rack.stats||[],federalTeam:{racks:[rack]},
+        detailedPlay:{...synthetic.detailedPlay,records:synthetic.detailedPlay.records.filter(r=>r.rack===rack.rack)}},g.side,m.detailedPlay?.records||[])}))).breakSuccess;
+      if(!federalStatsRacksComplete(m)||result.unattributed.some(x=>x.reason==='ambiguous_rack_actor'&&x.side===g.side)||!m.endedAt){
         const reason=badActor?'actor_rack_conflict':!m.endedAt?'unfinished_team_match':'incomplete_attribution';
         for(const [key,x]of Object.entries(metrics))metrics[key]=federalMetric(x.kind,x.numerator,x.denominator,x.numerator===null?'unknown':'partial',[...x.reasons,reason],x.components);
+      }
+      if(badActor||result.unattributed.some(x=>x.reason==='unassigned_shot_rack'&&(x.side==null||x.side===g.side))){
+        for(const key of ['pottedBalls','pottingSuccess']){const x=metrics[key];metrics[key]=federalMetric(x.kind,x.numerator,x.denominator,x.numerator===null?'unknown':'partial',[...x.reasons,badActor?'actor_rack_conflict':'unassigned_shot_rack'],x.components);}
       }
       Object.defineProperty(result.individuals,g.person.id,{value:{owner:{kind:'participant',id:g.person.id,name:g.person.name},metrics,scope:'completed_racks',rackIds:g.racks.map(r=>r.id)},enumerable:true});
     }
@@ -10061,6 +10151,7 @@ $('useClock').addEventListener('change',e=>$('clockSettings').classList.toggle('
     renderMatch();
   };
   function renderDetailedControls(){
+    if(streamLagPending())return;
     if(!detailedCounterActive())return;
     const d=ensureDetailedPlay();
     for(const type of ['jump','bank']){
@@ -10247,7 +10338,7 @@ $('useClock').addEventListener('change',e=>$('clockSettings').classList.toggle('
     }
     if(federalCupLink)applyFederalCupSetup();
     const federalCupLagWinner=federalCupLink ? $('fc26LagWinner').value : null;
-    if(federalCupLink && !['0','1'].includes(federalCupLagWinner)){
+    if(federalCupLink && !$('streamEnabled').checked && !['0','1'].includes(federalCupLagWinner)){
       toast('Před zahájením Federal Cup zápasu vyber výsledek tempa.');
       return;
     }
@@ -10488,6 +10579,12 @@ $('useClock').addEventListener('change',e=>$('clockSettings').classList.toggle('
       rows.forEach(st=>{for(const k of ['jumpShotAttempts','jumpShotSuccessful','bankShotAttempts','bankShotSuccessful','regularPottedBalls','foulPottedBalls','failedSafetyEscapes'])st[k]=0;});
     }
     if(federalCupLink)match.federalEvidence={version:1,fromStart:true,...(match.federalTeam?{}:{racks:[]})};
+    // Streaming may start before the lag. No side or opening rack exists yet.
+    if(match.streamEnabled && match.useLag){
+      match.deferredLag=true;
+      match.lagRackStarted=false;
+      match.turn=null;match.breaker=null;
+    }
     detailedAction=null;
     pendingTournamentLink=null;
     pendingLeagueLink=null;
@@ -10503,8 +10600,10 @@ $('useClock').addEventListener('change',e=>$('clockSettings').classList.toggle('
     // nepokračujeme s přístupem na null objekt.
     if(!match)return;
 
-    if(federalCupLink){
+    if(federalCupLink && ['0','1'].includes(federalCupLagWinner)){
       chooseLagWinner(Number(federalCupLagWinner));
+    }else if(match.deferredLag){
+      renderMatch();
     }else if(match.useLag){
       $('lagP1').textContent=match.playerNames[0];
       $('lagP2').textContent=match.playerNames[1];
@@ -10536,7 +10635,36 @@ $('useClock').addEventListener('change',e=>$('clockSettings').classList.toggle('
 
   $('lagP1').onclick=()=>chooseLagWinner(0);
   $('lagP2').onclick=()=>chooseLagWinner(1);
+  $('streamLagP1').onclick=()=>chooseLagWinner(0);
+  $('streamLagP2').onclick=()=>chooseLagWinner(1);
+  $('streamLagUndo').onclick=undo;
+  $('streamLagLock').onclick=()=>{
+    if(!canEditStreamLag() || streamLagPending() || !editableMatchOwnedByCurrentUser(match))return;
+    saveManualEntryUndoSnapshot('Uzamčení tempa');
+    addActionEvent('Tempo potvrzeno • zahájení hry');
+    match.streamLagLocked=true;
+    renderMatch();
+  };
+  function streamLagPending(){
+    return !!match?.deferredLag && (match.lagWinner==null || match.breaker==null);
+  }
+  function canEditStreamLag(){
+    return !!match?.deferredLag && !match.streamLagLocked && !match.endedAt && match.rackNumber===1 && match.isBreakShot &&
+      (match.discipline!=='14.1' || match.openingBreakAvailable14) &&
+      !(match.detailedPlay?.records||[]).length;
+  }
   function chooseLagWinner(i){
+    if(!match || ![0,1].includes(i) || !editableMatchOwnedByCurrentUser(match))return;
+    if(match.deferredLag){
+      if(!canEditStreamLag())return toast('Tempo již nelze změnit. Nejdřív vrať odehrané akce přes UNDO.');
+      if(match.lagWinner===i && match.breaker!=null)return;
+      saveManualEntryUndoSnapshot('Výsledek tempa');
+      addActionEvent(match.lagWinner==null?'Zadání tempa':'Oprava tempa');
+      if(match.lagWinner!=null)match.stats[match.lagWinner].lagWins--;
+      if(match.lagRackStarted)match.stats[match.breaker].breaks--;
+      match.lagRackStarted=false;
+      match.breaker=null;match.turn=null;
+    }
     match.lagWinner=i;
     match.stats[i].lagWins++;
     logEvent('Tempo vyhrál '+match.playerNames[i]);
@@ -10545,6 +10673,7 @@ $('useClock').addEventListener('change',e=>$('clockSettings').classList.toggle('
     if(match.discipline==='14.1'){
       $('lagChoice14Text').textContent=match.playerNames[i]+' vyhrál tempo. Kdo bude provádět úvodní rozstřel?';
       $('lagChoice14Modal').classList.add('show');
+      renderMatch();
       return;
     }
 
@@ -10556,6 +10685,7 @@ $('useClock').addEventListener('change',e=>$('clockSettings').classList.toggle('
 
   function finishLagChoice14(breaker){
     if(!match || match.discipline!=='14.1') return;
+    if(match.deferredLag && (!canEditStreamLag() || match.breaker!=null))return;
     match.breaker=breaker;
     match.turn=breaker;
     const winner=match.lagWinner;
@@ -10620,7 +10750,9 @@ $('useClock').addEventListener('change',e=>$('clockSettings').classList.toggle('
     if(ft.pending)$('normalActions').classList.add('hidden');
   }
   function beginRack(){
+    if(streamLagPending())return;
     if(match.federalTeam?.pending){if(match.useClock)stopTimer();return;}
+    if(match.deferredLag)match.lagRackStarted=true;
     if(match.federalTeam)match.federalTeam.baseline=JSON.parse(JSON.stringify(match.stats));
     if(match.federalCupLink&&!match.federalTeam){const e=match.federalEvidence||(match.federalEvidence={version:1,fromStart:false,racks:[]});e.rackBaseline=JSON.parse(JSON.stringify(match.stats));}
     if(match.winnerTableMode) syncWinnerTableSlots();
@@ -10650,27 +10782,29 @@ $('useClock').addEventListener('change',e=>$('clockSettings').classList.toggle('
   }
 
 
-  const STREAM_OVERLAY_BASE_URL = 'https://bcrybarna-oss.github.io/BC-Rybarna-Scoreboard/overlay.html?v=12';
+  const STREAM_OVERLAY_BASE_URL = 'https://bcrybarna-oss.github.io/BC-Rybarna-Scoreboard/overlay.html?v=14';
   let streamSendTimer=null;
   let lastStreamPayload='';
 
-  function currentStreamDbPath(){
-    return cloudUid ? 'stream/users/'+cloudUid : null;
+  function currentStreamDbPath(ownerUid=cloudUid){
+    return ownerUid ? 'stream/users/'+ownerUid : null;
   }
 
   function currentStreamOverlayUrl(){
     if(!cloudUid) return '';
     const sep = STREAM_OVERLAY_BASE_URL.includes('?') ? '&' : '?';
-    const enc = encodeURIComponent(cloudUid);
-    // UID je schválně v query i hash části. Některé mobilní WebView při otočení
-    // zahodí query parametry, ale hash zachovají.
-    return STREAM_OVERLAY_BASE_URL + sep + 'uid=' + enc + '#uid=' + enc;
+    const binding=new URLSearchParams({uid:cloudUid});
+    if(match?.id&&match.streamEnabled)binding.set('matchId',match.id);
+    // Keep the same explicit binding in query and hash for mobile WebViews.
+    return STREAM_OVERLAY_BASE_URL + sep + binding.toString() + '#' + binding.toString();
   }
 
   function refreshStreamOverlayUrl(){
     const url=currentStreamOverlayUrl();
     const input=$('streamOverlayUrl');
     if(input)input.value=url;
+    const matchInput=$('matchStreamOverlayUrl');
+    if(matchInput)matchInput.value=match?.streamEnabled?url:'';
     const help=$('helpStreamOverlayUrl');
     if(help)help.textContent=url || 'Po přihlášení se zde zobrazí tvoje vlastní adresa overlaye.';
   }
@@ -10707,6 +10841,9 @@ $('useClock').addEventListener('change',e=>$('clockSettings').classList.toggle('
       matchId:match.id,
       matchTitle:match.streamMatchTitle||'',
       streamMode:match.streamMode||'live',
+      counterMode:match.counterMode||'full',
+      lagPending:streamLagPending(),
+      breakerKnown:!streamLagPending() && [0,1].includes(match.breaker),
       discipline:match.discipline,
       target:match.target,
       breakMode:match.breakMode||'',
@@ -10716,8 +10853,8 @@ $('useClock').addEventListener('change',e=>$('clockSettings').classList.toggle('
         ? [doublesSideNames(0).join(' + '),doublesSideNames(1).join(' + ')]
         : [match.playerNames[0]||'',match.playerNames[1]||''],
       playerSubs:[streamPlayerSub(0),match.ghostMode||match.solo14?'':streamPlayerSub(1)],
-      turn:Number(match.turn||0),
-      breaker:Number(match.breaker||0),
+      turn:!streamLagPending() && [0,1].includes(match.turn)?match.turn:null,
+      breaker:!streamLagPending() && [0,1].includes(match.breaker)?match.breaker:null,
       isBreakShot:!!match.isBreakShot,
       useClock:!!match.useClock,
       clockRemaining:match.useClock ? Number(timeLeft||0) : 0,
@@ -10737,18 +10874,20 @@ $('useClock').addEventListener('change',e=>$('clockSettings').classList.toggle('
 
   async function sendStreamState(force=false){
     if(!match || !match.streamEnabled) return false;
-    if(!cloudUid || !currentStreamDbPath())return false;
+    const sendingMatch=match,ownerUid=cloudUid,path=currentStreamDbPath(ownerUid);
+    if(!ownerUid || !path)return false;
     if(!await ensureCloudToken()){
       setCloudStatus('PŘIHLÁSIT',false);
       lastStreamPayload='';
       return false;
     }
+    if(match!==sendingMatch||cloudUid!==ownerUid||!sendingMatch.streamEnabled)return false;
     const payload=buildStreamState();
     if(!payload) return false;
     const key=JSON.stringify(payload);
     if(!force && key===lastStreamPayload) return true;
     try{
-      const res=await fetch(cloudUrl(currentStreamDbPath()),{
+      const res=await fetch(cloudUrl(path),{
         method:'PUT',
         headers:{'Content-Type':'application/json'},
         body:key,
@@ -10760,7 +10899,7 @@ $('useClock').addEventListener('change',e=>$('clockSettings').classList.toggle('
         setCloudStatus('CHYBA',false);
         return false;
       }
-      lastStreamPayload=key;
+      if(match===sendingMatch&&cloudUid===ownerUid)lastStreamPayload=key;
       return true;
     }catch(err){
       lastStreamPayload='';
@@ -10789,12 +10928,13 @@ $('useClock').addEventListener('change',e=>$('clockSettings').classList.toggle('
     const visible=!!(match && match.streamEnabled);
     panel.classList.toggle('hidden',!visible);
     if(!visible)return;
+    refreshStreamOverlayUrl();
     const mode=match.streamMode||'live';
     const map={live:'LIVE',pause:'PAUZA',soon:'BRZY ZAČÍNÁME',end:'KONEC'};
     const info=$('streamModeInfo');
     if(info)info.textContent='Aktuálně: '+(map[mode]||'LIVE');
     [['streamModeLiveBtn','live'],['streamModePauseBtn','pause'],['streamModeSoonBtn','soon'],['streamModeEndBtn','end']].forEach(([id,m])=>{
-      const b=$(id); if(!b)return; b.classList.toggle('primary',mode===m);
+      const b=$(id); if(!b)return; b.classList.toggle('primary',mode===m); b.setAttribute('aria-pressed',String(mode===m));
     });
   }
 
@@ -10811,24 +10951,33 @@ $('useClock').addEventListener('change',e=>$('clockSettings').classList.toggle('
   if($('streamModeSoonBtn'))$('streamModeSoonBtn').onclick=()=>setStreamMode('soon');
   if($('streamModeEndBtn'))$('streamModeEndBtn').onclick=()=>setStreamMode('end');
 
-  async function clearStreamState(){
+  async function clearStreamState(matchId=match?.id){
     lastStreamPayload='';
     try{
-      if(!cloudUid || !currentStreamDbPath())return;
+      const ownerUid=cloudUid,path=currentStreamDbPath(ownerUid);
+      if(!ownerUid || !path || !matchId)return false;
       if(!await ensureCloudToken())return;
-      await fetch(cloudUrl(currentStreamDbPath()),{
+      if(cloudUid!==ownerUid)return false;
+      // An older tab must not clear a different match of the same account.
+      const url=cloudUrl(path),current=await fetch(url,{headers:{'X-Firebase-ETag':'true'},cache:'no-store'});
+      if(!current.ok)return false;
+      const state=await current.json(),etag=current.headers.get('ETag');
+      if(state?.matchId!==matchId||!etag||cloudUid!==ownerUid)return false;
+      const cleared=await fetch(url,{
         method:'PUT',
-        headers:{'Content-Type':'application/json'},
-        body:JSON.stringify({active:false,updatedAt:Date.now()}),
+        headers:{'Content-Type':'application/json','If-Match':etag},
+        body:JSON.stringify({active:false,matchId,updatedAt:Date.now()}),
         cache:'no-store'
       });
+      return cleared.ok;
     }catch(e){
       console.warn('Stream clear:',e);
     }
   }
 
-  const copyStreamOverlayBtn=$('copyStreamOverlayUrl');
-  if(copyStreamOverlayBtn){
+  for(const buttonId of ['copyStreamOverlayUrl','copyMatchStreamOverlayUrl']){
+    const copyStreamOverlayBtn=$(buttonId);
+    if(!copyStreamOverlayBtn)continue;
     copyStreamOverlayBtn.onclick=async()=>{
       const url=currentStreamOverlayUrl();
       if(!url){
@@ -10839,7 +10988,7 @@ $('useClock').addEventListener('change',e=>$('clockSettings').classList.toggle('
         await navigator.clipboard.writeText(url);
         toast('Adresa overlaye zkopírována.');
       }catch(e){
-        const input=$('streamOverlayUrl');
+        const input=$(buttonId==='copyMatchStreamOverlayUrl'?'matchStreamOverlayUrl':'streamOverlayUrl');
         if(input){input.focus();input.select();}
         toast('Adresa je označená – zkopíruj ji ručně.');
       }
@@ -11087,6 +11236,7 @@ $('useClock').addEventListener('change',e=>$('clockSettings').classList.toggle('
   }
 
   function finishEightBallRackQuick(player,type='win'){
+    if(streamLagPending())return;
     if(!match || match.discipline!=='8-ball' || match.counterMode==='simple' || match.ghostMode || match.solo14)return;
     if(match.endedAt || match.status==='complete')return;
     if(!detailedTagAllowed('batch'))return;
@@ -11216,7 +11366,7 @@ $('useClock').addEventListener('change',e=>$('clockSettings').classList.toggle('
       $('classic14P1Score').textContent=match.scores?.[0]||0;
       $('classic14P2Score').textContent=match.scores?.[1]||0;
       $('classic14Balls').textContent=match.ballsOnTable==null?15:match.ballsOnTable;
-      $('classic14Turn').textContent=match.playerNames?.[Number(match.turn||0)]||'—';
+      $('classic14Turn').textContent=[0,1].includes(match.turn)?match.playerNames[match.turn]:'—';
       $('classic14P1Innings').textContent=statVal(match,0,'innings14');
       $('classic14P2Innings').textContent=statVal(match,1,'innings14');
       $('classic14P1High').textContent=statVal(match,0,'highRun14');
@@ -11260,7 +11410,7 @@ $('useClock').addEventListener('change',e=>$('clockSettings').classList.toggle('
     }
     $('player1Card').classList.toggle('on-turn',match.turn===0);
     $('player2Card').classList.toggle('on-turn',match.turn===1);
-    const waitingForLag=!!match.useLag && match.lagWinner==null && match.rackNumber===1 && !(match.events||[]).some(e=>/Rack 1 • rozstřel/.test(String(e.text||'')));
+    const waitingForLag=streamLagPending() || (!!match.useLag && match.lagWinner==null && match.rackNumber===1 && !(match.events||[]).some(e=>/Rack 1 • rozstřel/.test(String(e.text||''))));
     $('p1BreakBadge').classList.toggle('hidden',waitingForLag || match.breaker!==0);
     $('p2BreakBadge').classList.toggle('hidden',waitingForLag || match.breaker!==1);
     $('turnText').textContent=waitingForLag
@@ -11507,7 +11657,7 @@ const isFourteen=match.discipline==='14.1' && !simpleCounter;
         $('classic14P1Score').textContent=match.scores?.[0]||0;
         $('classic14P2Score').textContent=match.scores?.[1]||0;
         $('classic14Balls').textContent=match.ballsOnTable;
-        $('classic14Turn').textContent=match.playerNames?.[Number(match.turn||0)]||'—';
+        $('classic14Turn').textContent=[0,1].includes(match.turn)?match.playerNames[match.turn]:'—';
         $('classic14P1Innings').textContent=statVal(match,0,'innings14');
         $('classic14P2Innings').textContent=statVal(match,1,'innings14');
         $('classic14P1High').textContent=statVal(match,0,'highRun14');
@@ -11531,7 +11681,7 @@ const isFourteen=match.discipline==='14.1' && !simpleCounter;
       if($('simpleAddP2'))$('simpleAddP2').textContent='+1 • '+match.playerNames[1];
       if($('simpleRunoutP1'))$('simpleRunoutP1').textContent='DOHRÁVKA • '+match.playerNames[0];
       if($('simpleRunoutP2'))$('simpleRunoutP2').textContent='DOHRÁVKA • '+match.playerNames[1];
-      if($('simpleBreakRunWho'))$('simpleBreakRunWho').textContent='ROZSTŘELUJE • '+match.playerNames[Number(match.breaker||0)];
+      if($('simpleBreakRunWho'))$('simpleBreakRunWho').textContent=waitingForLag?'ČEKÁ SE NA TEMPO':'ROZSTŘELUJE • '+match.playerNames[match.breaker];
       $('p1FoulBadge').classList.add('hidden');
       $('p2FoulBadge').classList.add('hidden');
       $('p1ExtBadge').classList.add('hidden');
@@ -11544,6 +11694,17 @@ const isFourteen=match.discipline==='14.1' && !simpleCounter;
         ? 'UKONČIT A ULOŽIT GHOST SESSION'
         : (match.winnerTableMode ? 'UKONČIT A ULOŽIT SESSION' : 'Ukončit a uložit jako nedohraný'));
     renderFederalTeamRack();
+    $('streamLagControls').classList.toggle('hidden',!match.deferredLag);
+    $('streamLagStatus').textContent=streamLagPending()?'Čeká se na výsledek tempa':'Tempo vyhrál '+match.playerNames[match.lagWinner];
+    const waitingForLagLock=simpleCounter && match.deferredLag && match.rackNumber===1 && !match.streamLagLocked;
+    $('streamLagLock').classList.toggle('hidden',!waitingForLagLock || streamLagPending());
+    [0,1].forEach(i=>{const button=$('streamLagP'+(i+1));button.textContent='TEMPO • '+match.playerNames[i];button.disabled=!canEditStreamLag();});
+    $('simpleStreamBreaker').classList.toggle('hidden',!simpleCounter || !match.streamEnabled || waitingForLag || !!match.endedAt || (match.rackNumber===1 && !!match.streamLagLocked));
+    if(waitingForLagLock)$('simpleCounterActions').classList.add('hidden');
+    if(streamLagPending()){
+      for(const id of ['simpleCounterActions','normalActions','fourteenActions','eightBallResultPanel','fc26RackPlayers','clockWrap'])$(id)?.classList.add('hidden');
+      $('turnText').textContent='Čeká se na výsledek tempa';
+    }
     renderRackBallState();
     renderEvents();
     renderClock();
@@ -11572,6 +11733,9 @@ const isFourteen=match.discipline==='14.1' && !simpleCounter;
       consecutiveFouls14:match.consecutiveFouls14||[0,0],
       turn:match.turn,
       breaker:match.breaker,
+      lagWinner:match.lagWinner,
+      lagRackStarted:match.lagRackStarted,
+      streamLagLocked:!!match.streamLagLocked,
       rackNumber:match.rackNumber,
       isBreakShot:!!match.isBreakShot,
       softBreakOriginalBreaker:match.softBreakOriginalBreaker,
@@ -11604,6 +11768,9 @@ const isFourteen=match.discipline==='14.1' && !simpleCounter;
   }
   function restoreSnapshot(s){
     const x=JSON.parse(s);
+    if(Object.hasOwn(x,'lagWinner'))match.lagWinner=x.lagWinner;
+    if(Object.hasOwn(x,'lagRackStarted'))match.lagRackStarted=x.lagRackStarted;
+    match.streamLagLocked=!!x.streamLagLocked;
     match.detailedPlay=x.detailedPlay;
     match.federalEvidence=x.federalEvidence;
     match.endedAt=x.endedAt;match.status=x.status;
@@ -11740,7 +11907,7 @@ const isFourteen=match.discipline==='14.1' && !simpleCounter;
     const panel=$('rackBallStatePanel');
     const host=$('rackBallStateBalls');
     if(!panel||!host)return;
-    const show=!!(match && match.counterMode!=='simple' && !match.ghostMode && exactBallTrackingDiscipline());
+    const show=!!(match && !streamLagPending() && match.counterMode!=='simple' && !match.ghostMode && exactBallTrackingDiscipline());
     panel.classList.toggle('hidden',!show);
     if(!show)return;
     const rem=Array.isArray(match.rackRemainingBalls)?match.rackRemainingBalls:fullRackBalls();
@@ -11975,6 +12142,7 @@ const isFourteen=match.discipline==='14.1' && !simpleCounter;
   };
 
   window.actionBreakOk=function(){
+    if(streamLagPending())return;
     if(!match || match.discipline==='14.1' || match.ghostMode || match.counterMode==='simple')return;
     if(!match.isBreakShot || match.turn!==match.breaker){
       toast('BREAK OK lze zadat pouze bezprostředně po rozstřelu.');
@@ -11985,6 +12153,7 @@ const isFourteen=match.discipline==='14.1' && !simpleCounter;
   };
 
   window.actionDryBreak = function(){
+    if(streamLagPending())return;
     if(!match || match.discipline==='14.1' || match.ghostMode)return;
     if(!match.isBreakShot || match.turn!==match.breaker){
       toast('DRY BREAK lze zadat pouze bezprostředně po rozstřelu.');
@@ -12017,6 +12186,7 @@ const isFourteen=match.discipline==='14.1' && !simpleCounter;
   };
 
   window.actionSoftBreak = function(){
+    if(streamLagPending())return;
     if(!match || match.discipline!=='9-ball' || !['kitchen','kitchen_box'].includes(match.nineBallBreakRule))return;
     if(!match.isBreakShot || match.turn!==match.breaker){
       toast('KITCHEN NESPLNĚN lze zadat pouze bezprostředně po rozstřelu.');
@@ -12062,6 +12232,7 @@ const isFourteen=match.discipline==='14.1' && !simpleCounter;
   };
 
   window.actionPushOut = function(){
+    if(streamLagPending())return;
     if(!detailedTagAllowed('batch'))return;
     if(!match || match.counterMode==='simple' || match.ghostMode || !['9-ball','10-ball'].includes(match.discipline))return;
     const i=Number(match.turn||0);
@@ -12416,6 +12587,7 @@ const isFourteen=match.discipline==='14.1' && !simpleCounter;
   }
 
   window.actionLegal = function(){
+    if(streamLagPending())return;
     if(!match)return;
     if(match.safetyEscapeEligibleFor===match.turn){actionSafetyEscape();return;}
     if(!detailedTagAllowed('pot'))return;
@@ -12576,6 +12748,7 @@ const isFourteen=match.discipline==='14.1' && !simpleCounter;
   let pendingTenBallSafePotPlayer=null;
 
   window.actionTwoWayShot=function(){
+    if(streamLagPending())return;
     return; // Retired active action; historical statistics remain readable.
     pendingTwoWayPlayer=Number(match.turn||0);
     if(match.useClock)stopTimer();
@@ -12634,6 +12807,7 @@ const isFourteen=match.discipline==='14.1' && !simpleCounter;
   $('twoWayCancelBtn').onclick=()=>{ pendingTwoWayPlayer=null; $('twoWayResultModal').classList.remove('show'); if(match?.useClock)resetClock(false,true); };
 
   window.actionDirectBallAvailable=function(){
+    if(streamLagPending())return;
     return; // A recorded successful safety must receive exactly one escape result.
     if(!match || match.safetyEscapeEligibleFor!==match.turn)return;
     pendingDirectPlayer=Number(match.turn||0);
@@ -12722,6 +12896,7 @@ const isFourteen=match.discipline==='14.1' && !simpleCounter;
   $('directPotFoulBtn').onclick=()=>{ $('directPotResultModal').classList.remove('show'); pendingDirectPlayer=null; match.safetyEscapeEligibleFor=null; actionFoul(); };
 
   window.actionBreakAndRun = function(){
+    if(streamLagPending())return;
     if(!detailedTagAllowed('batch'))return;
     if(!match || match.discipline==='14.1' || match.ghostMode || match.counterMode==='simple')return;
     const i=Number(match.turn||0);
@@ -12746,6 +12921,7 @@ const isFourteen=match.discipline==='14.1' && !simpleCounter;
   };
 
   window.actionRunout = function(){
+    if(streamLagPending())return;
     if(!detailedTagAllowed('batch'))return;
     if(!match || match.discipline==='14.1' || match.ghostMode || match.counterMode==='simple')return;
     const i=Number(match.turn||0);
@@ -12773,6 +12949,7 @@ const isFourteen=match.discipline==='14.1' && !simpleCounter;
   };
 
   window.actionBreakFoul = function(){
+    if(streamLagPending())return;
     if(!match || match.discipline==='14.1' || match.ghostMode || match.counterMode==='simple')return;
     const i=Number(match.turn||0);
     if(!match.isBreakShot || i!==match.breaker){
@@ -12784,6 +12961,7 @@ const isFourteen=match.discipline==='14.1' && !simpleCounter;
   };
 
   window.actionFoul = function(){
+    if(streamLagPending())return;
     if(!match || match.discipline==='14.1')return;
     if(match.isBreakShot){actionBreakFoul();return;}
     if(match.safetyEscapeEligibleFor===match.turn){
@@ -12851,6 +13029,7 @@ const isFourteen=match.discipline==='14.1' && !simpleCounter;
   let pendingSafetyPlayer=null;
 
   window.actionSafe = function(){
+    if(streamLagPending())return;
     if(!match)return;
     if(match.safetyEscapeEligibleFor===match.turn){actionSafetyEscape();return;}
     if(!detailedTagAllowed('safety'))return;
@@ -12898,6 +13077,7 @@ const isFourteen=match.discipline==='14.1' && !simpleCounter;
   let pendingSafetyEscapePlayer=null;
 
   window.actionSafetyEscape = function(){
+    if(streamLagPending())return;
     if(!match || match.counterMode==='simple')return;
     const i=Number(match.turn||0);
     if(match.safetyEscapeEligibleFor!==i){
@@ -13064,6 +13244,7 @@ const isFourteen=match.discipline==='14.1' && !simpleCounter;
   };
 
   window.actionAccidentalSafety=function(){
+    if(streamLagPending())return;
     return; // Retired active action.
     if(!match || match.counterMode==='simple' || match.discipline==='14.1' || match.ghostMode)return;
     const i=Number(match.turn||0);
@@ -13093,6 +13274,7 @@ const isFourteen=match.discipline==='14.1' && !simpleCounter;
   let pendingMissPlayer=null;
 
   window.actionMiss = function(){
+    if(streamLagPending())return;
     if(!match || match.counterMode==='simple')return;
     pendingMissPlayer=Number(match.turn||0);
     if(match.useClock)stopTimer();
@@ -13216,6 +13398,8 @@ const isFourteen=match.discipline==='14.1' && !simpleCounter;
   window.restoreManualEntryUndoSnapshot=restoreManualEntryUndoSnapshot;
 
   function simpleFinishRack(player,{statType=null,label='+1'}={}){
+    if(streamLagPending())return;
+    if(match?.deferredLag && match.rackNumber===1 && !match.streamLagLocked)return toast('Před prvním rozstřelem potvrď tempo tlačítkem ZAHÁJIT HRU.');
     if(!match || match.counterMode!=='simple' || !editableMatchOwnedByCurrentUser(match))return;
     if(match.endedAt || match.status==='complete'){
       toast('Zápas už je ukončený.');
@@ -13404,6 +13588,7 @@ const isFourteen=match.discipline==='14.1' && !simpleCounter;
   }
 
   window.winRack = function(winner, fromAction=false, reason='Rack'){
+    if(streamLagPending())return;
     if(!match) return;
     if(match.federalTeam?.pending)return toast('Nejprve vyber hráče a zahaj rack.');
     if(match.endedAt || match.status==='complete'){
@@ -13835,6 +14020,8 @@ const isFourteen=match.discipline==='14.1' && !simpleCounter;
 
   function changeRackBreaker(){
     if(!match) return;
+    if(streamLagPending())return toast('Nejdřív zadej výsledek tempa.');
+    if(match.deferredLag && match.rackNumber===1 && match.streamLagLocked)return toast('Tempo je uzamčené. Nejdřív vrať zahájení hry přes UNDO.');
     // Rozstřel lze ve Federal Cupu opravit před jeho odehráním. Po něm
     // by změna vlastníka oddělila statistiky breaku a B&R od skutečného hráče.
     if(match.federalCupLink && !match.isBreakShot && !match.federalTeam?.pending){
@@ -13857,6 +14044,7 @@ const isFourteen=match.discipline==='14.1' && !simpleCounter;
     renderMatch();
   }
   $('manualBreaker').onclick=changeRackBreaker;
+  $('simpleStreamBreaker').onclick=changeRackBreaker;
 
   $('resultConfirmationAccept').onclick=async()=>{
     if(pendingOwnResultConfirmationResolve){
@@ -13911,7 +14099,7 @@ const isFourteen=match.discipline==='14.1' && !simpleCounter;
     await removeLiveMatch(cancelledLiveId);
     await removeActiveMatchCloudBackup(cancelledLiveId);
     removeDeviceActiveMatch(cancelledLiveId);
-    if(hadStream)await clearStreamState();
+    if(hadStream)await clearStreamState(cancelledLiveId);
     match=null;
     saveDeviceActiveMatch(null);
     data.currentMatch=null;
@@ -14278,7 +14466,7 @@ $('winnerText').textContent = match.solo14
     stopLiveHeartbeat();
 
     // Po opuštění počítadla musí být streamový overlay prázdný.
-    if(finished.streamEnabled)await clearStreamState();
+    if(finished.streamEnabled)await clearStreamState(finished.id);
 
     // Z obrazovky LIVE ho po ručním odchodu odstraníme; pokračovat lze z Výsledků.
     await removeLiveMatch(finished.id);
@@ -14809,7 +14997,7 @@ $('winnerText').textContent = match.solo14
       if(deletingCurrent){
         try{if(match.useClock)stopTimer();}catch(e){}
         try{stopLiveHeartbeat();}catch(e){}
-        try{if(match.streamEnabled)await clearStreamState();}catch(e){}
+        try{if(match.streamEnabled)await clearStreamState(matchId);}catch(e){}
       }
 
       try{
@@ -14915,7 +15103,7 @@ $('winnerText').textContent = match.solo14
     await removeActiveMatchCloudBackup(matchId);
 
     if(deletingCurrent){
-      if(hadStream)try{await clearStreamState();}catch(e){}
+      if(hadStream)try{await clearStreamState(matchId);}catch(e){}
       match=null;
       data.currentMatch=null;
       saveDeviceActiveMatch(null);
@@ -24238,6 +24426,7 @@ $('createTournamentBtn').onclick=async()=>{
     if(autoStart) startTimer();
   }
   function startTimer(){
+    if(streamLagPending())return;
     if(!match || !match.useClock || timerRunning || match.federalTeam?.pending) return;
     timerRunning=true;
     timer=setInterval(()=>{

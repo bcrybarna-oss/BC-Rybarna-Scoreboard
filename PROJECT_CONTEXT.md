@@ -8,6 +8,11 @@ Každá samostatně nasazovaná funkční i vizuální změna povinně zvyšuje 
 
 ## Repozitář a produkce
 
+Od v4.51.87 RC (Dominik, PR #26 sloučen a produkčně ověřen 22. 10. 2026): streamovaný zápas s tempem může běžet před jeho výsledkem. `deferredLag` zachovává tuto volbu při uložení; do zadání výsledku jsou `turn` a `breaker` null, nevzniká rack ani záznam strku a herní akce i hodiny jsou blokované. Tempo lze zadat/opravit v počítadle, s přenesením jediného lagWin a úvodního breaku a s undo snapshotem. V rozšířeném počítadle opravu uzavře první zaznamenaný rozstřel. Jednoduché počítadlo jednotlivé strky nezná: obsluha před fyzickým breakem potvrdí ZAHÁJIT HRU • UZAMKNOUT TEMPO; potvrzení se ukládá a lze je vrátit přes UNDO. Před potvrzením nelze přičítat body. Bez streamu zůstává původní postup, včetně povinného tempa před startem Federal Cupu.
+
+Payload přidává `counterMode`, `lagPending`, `breakerKnown` a nullable skutečné indexy `turn`/`breaker`. Jednoduchý overlay zvýrazňuje skutečného rozstřelujícího aktuálního racku s BREAK; plný zachovává U STOLU podle tahu. Chybějící/neplatná strana neznamená levého hráče. Starší payload bez counterMode zachovává plný režim, pokud obsahuje platný tah. Nové URL mají cache parametr v=14, UID+matchId ani jejich životnost se tempem nemění; staré explicitní a UID-only URL nadále používají izolaci PR #25. Slot stream/users/UID, Rules, oprávnění a čtyři režimy se nemění. Obsluha jednoduchého počítadla musí potvrdit zahájení před fyzickým breakem; bez jednotlivých strků tento okamžik aplikace nepozná. Verze je nasazena; podrobnosti ověření a zbylá omezení jsou v PROJECT_STATUS.md.
+
+
 - GitHub: `bcrybarna-oss/BC-Rybarna-Scoreboard`
 - Produkční větev: `main`
 - Hlavní produkční soubor: `index.html`
@@ -163,6 +168,10 @@ Aktivní zápas se publikuje jako veřejný LIVE stav. Veřejný payload nesmí 
 
 ## Stream
 
+Od v4.51.86 RC je OBS adresa vázána na UID + matchId (query i hash), bez automatického hledání cizího streamu. UID-only staré URL se po prvním platném zápase připnou a vazbu uchovají; pro další zápas se používá jeho nová konkrétní URL. Výpadek, jiné matchId nebo stáří 20 sekund znamená nedostupnost. Publikace zůstává na původním stream/users/{uid}, tedy souběh dvou zápasů stejného účtu může snížit dostupnost, ale nesmí převzít obraz. Vymazání streamu kontroluje matchId a ETag/If-Match. Oprávnění se nemění; návrh serverového canStream čeká na schválení. Omezení kompatibility, přesný test a postup pro OBS: docs/stream-isolation.md. PR #25 sloučen a nasazení ověřeno 22. 10. 2026 po Dominikově potvrzení, že přenos neběží; starý otevřený OBS zdroj vyžaduje obnovení.
+
+Od v4.51.85 RC mají jednoduché i rozšířené počítadlo jediný společný panel LIVE / PAUZA / BRZY ZAČÍNÁME / KONEC. Viditelnost určuje pouze streamEnabled, nikoli counterMode. Panel používá původní setStreamMode, publikaci do stream/users/{uid} a původní overlay.html, bez změny protokolu nebo skórování.
+
 Existuje overlay, livescore, obrazovka pauzy a QR kód odkazující na Poolčítadlo. Pauza funguje přímo v aplikaci.
 
 ## Administrace
@@ -221,6 +230,8 @@ PR #21 sloučen 21. 10. 2026, nasazení v4.51.84 RC ověřeno; etapa 1 uzavřena
 
 Doplnění revize PR #21 (21. 10. 2026, Dominik): Konfigurace FC používá výchozí snapshot + atomický ETag/If-Match zápis; obecný appData upload zachová serverový Federal Cup. Obnovení zápasu a render nic neukládají ani nevytvářejí ID. Draft soupisky drží všechny řádky a identity, konflikt vyžaduje obnovení. Řídké RTDB objekty zachovávají indexy. Servisní opravy skóre mají trvalé serviceChanges s oddělenou úplností racků/útoku/koulí a snapshotem undo před opravou. Dvouklientové testy v docs/federal-statistics-evidence.md. Nejde o distribuovaný zámek fixture či editace jednoho zápasu. Produkce, Firebase Rules, report ani rozdělení CI se nemění.
 
-## Výpočetní etapa 2 Federal Cupu – v4.51.85 RC (připravena, nenasazena)
+## Výpočetní etapa 2 Federal Cupu – v4.51.88 RC (připravena, nenasazena)
 
 Interní čisté funkce federalCalculateMatch a federalCalculateSeason v nynějším index.html počítají 11 metrik ve společném kontraktu numerator/denominator/count/value/coverage/reasons/components. Zdroje jsou kanonické strky, skutečné racky a průkazné souhrnné nebo rozdílové čítače. Příspěvky Team hráčů se nevydávají za další samostatný týmový výkon; Doubles se jednotlivcům nepřipisuje. Roční agregace vybere jeden dokončený detail na fixture před ručním výsledkem a sčítá zlomky před dělením, respektuje ročník a stabilní ID. Neprovádí zápisy, migraci, čtení globálního stavu ani nový veřejný report/PDF. Přesný kontrakt, 11 vzorců, neúplnost a referenční příklady v docs/federal-statistics-calculation.md. Staré prezentační statistiky a herní pravidla se v této etapě nepřepojují.
+
+Opravy revize PR #22 (Dominik, 22. 10. 2026): osobní Team výpočet přenáší původní detailed coverage; validuje shotIds proti původním kanonickým records i po omezení na racky hráče. Kompatibilní rack.shots není náhradním zdrojem. Neúplnost má rozsah metriky/strany/hráče a pokračuje do ročníku. Známé rackové countery se sčítají i při chybějícím jiném racku, partial má value=null; úspěšné breaky odvozené ze subtraction se nejdřív posuzují po racku. Identické duplicity se nezapočítají dvakrát, konfliktní ID se nevydává za známý strk. Integrace aktuálního main zachovává odložené tempo a streamovou izolaci; rezervovaný break se do provedených nepočítá. Viz docs/federal-statistics-calculation.md a trvalé integrity testy. Žádná nová prezentační nebo exportní etapa.

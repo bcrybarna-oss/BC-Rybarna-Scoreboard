@@ -15,7 +15,7 @@ function harness(m){
    toast(text){ctx.toasts.push(text)},renderMatch(){ctx.renders++},resetClock(){},syncWinnerTableSlots(){},stopTimer(){},
    saveManualEntryUndoSnapshot(){ctx.manualSnapshot=copy(ctx.match)}};
  vm.createContext(ctx);
- vm.runInContext(['detailedCounterActive','ensureDetailedPlay','snapshot','restoreSnapshot','addActionEvent','changeRackBreaker','beginRack','breakStats'].map(fn).join('\n'),ctx);
+ vm.runInContext(['streamLagPending','detailedCounterActive','ensureDetailedPlay','snapshot','restoreSnapshot','addActionEvent','changeRackBreaker','beginRack','breakStats'].map(fn).join('\n'),ctx);
  return ctx;
 }
 function before(){return {...copy(fixture.saved),...copy(fixture.beforeManualBreaker),events:[],endedAt:null,status:'playing'};}
