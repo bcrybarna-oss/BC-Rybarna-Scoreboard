@@ -1,5 +1,14 @@
 # Revize aplikace Poolčítadlo
 
+## Dominik – sloučení a ověřené nasazení tempa a BREAK (v4.51.87 RC)
+Zadavatel: Dominik
+Datum: 22. 10. 2026
+Změny: Po výslovném aktuálním potvrzení, že neběží živý přenos, sloučen PR #26 merge commitem d0ecdd88cf1e79dd4d711c71c48e47bff6c08e39, bez force push a se zachováním historie. Aplikační kód proti ověřené hlavě PR 9477bee nezměněn. PROJECT_STATUS a PROJECT_CONTEXT uvedeny do skutečného produkčního stavu. PR #22 zůstává otevřený na 89b339c, jeho změny nepřibrány.
+Testy: Čerstvý fetch, čistý pracovní adresář, main 610c9ce a hlava PR 9477bee beze změny, bez konfliktu, release gate prošel. CI main https://github.com/bcrybarna-oss/BC-Rybarna-Scoreboard/actions/runs/39742160411: Release version and revision success; Node 110/112, log potvrzuje výhradně dvě známá selhání test-modular preview-match-reload-recovery.test.cjs (50/106). Předchozí browser regrese platí pro totožný kód. Skutečné nezměněné veřejné HTML ověřilo simple/full × overlay ON/OFF, pre-lag bez implicitního hráče, zadání výsledku, simple uzamčení, čtyři režimy a desktop/mobil. Veřejný overlay se syntetickými GET ověřil BREAK/U STOLU/pending, pevnou vazbu UID+matchId, >20 s výpadek při aktivním B, jiný zápas stejného UID, původní legacy URL po reloadu a návrat A. 0 page errors, 0 vzdálených zápisů, 0 globálních discovery GET, skutečná Firebase nekontaktována.
+Nasazení: GitHub Pages https://github.com/bcrybarna-oss/BC-Rybarna-Scoreboard/actions/runs/39742160145 completed/success. Dne 22. 10. 2026 v 09:49:39 CEST (07:49:39 UTC) veřejné index.html i overlay.html HTTP 200, skutečná v4.51.87 RC a přesná bajtová shoda s d0ecdd88cf1e79dd4d711c71c48e47bff6c08e39. SHA256 index.html 5cde6501b4fc9138e16e359b101ca69925b6cf0a6b989cb1a85af8e0b6980046; overlay.html ac9d34cd20c695db2a56532148a55d30c8ae4af423548979c147067eeafe62fb. Nasazeno a ověřeno. Tento následný dokumentační commit nemění ověřené HTML; jeho nasazení se kontroluje zvlášť.
+Omezení: Skutečné OBS, produkční Auth/Firebase/Rules/CORS, fyzické telefony a nativní aplikace neověřeny. Pouze dočasné lokální zápasy v čistých offline kontextech a syntetické GET odpovědi pro veřejný OBS kód. Jednoduché počítadlo vyžaduje potvrzení zahájení před fyzickým breakem. Dva zápasy stejného UID nadále sdílejí slot a mohou snížit dostupnost bez převzetí obrazu. Žádné změny oprávnění, statistického PR #22 ani rozdělení CI sad.
+
+
 ## Dominik – tempo v běžícím streamu a BREAK v jednoduchém overlayi (v4.51.87 RC)
 Zadavatel: Dominik
 Datum: 22. 10. 2026
