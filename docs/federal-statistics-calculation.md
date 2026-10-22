@@ -1,4 +1,34 @@
-# Federal Cup – výpočet 11 statistik, etapa 2 (v4.51.88 RC)
+# Federal Cup – výpočet 13 statistik (kandidát v4.51.89 RC)
+
+## Jump/Bank: aktuální rozšíření (Dominik, 22. 10. 2026)
+
+Samostatná větev `feature/jump-bank-federal-13` z origin/main decc3db24e8c714f18fbe88594e6276a3e2fce9f. [PR #27](https://github.com/bcrybarna-oss/BC-Rybarna-Scoreboard/pull/27), kódový commit 00eea33119993e414463d1d6ba4cd1e63e85ea27. **Nesloučeno, nenasazeno; produkce zůstává v4.51.88 RC.** Níže zachovaná evidence nasazení etapy 2 platí pro původních 11 ukazatelů. Výpočty zůstávají interní, bez grafického reportu či nového PNG/PDF.
+
+`federalCalculateMatch` a `federalCalculateSeason` nyní vracejí společně **13 klíčů**. Původních 11 vzorců v tabulce níže zůstává beze změny; přibývá:
+
+| Klíč | Ukazatel | Výpočet a autorita |
+|---|---|---|
+| jumpShots | Úspěšné Jump shoty / Jump pokusy | `kind:ratio`; jeden kanonický pot/MISS/faul/Jump escape s `tag.type:jump` = jeden pokus; úspěch podle skutečného výsledku, včetně legálního úniku bez koule. |
+| bankShots | Úspěšné Bank shoty / Bank pokusy | `kind:ratio`; jeden kanonický útočný pot/MISS/faul s `tag.type:bank` = jeden pokus. Bank escape je neplatný, nikoli úspěšný Bank. |
+
+Původní metrický kontrakt je zachován: `kind`, `numerator`, `denominator`, `count`, `value`, `coverage`, `reasons`, `components`. Pro Jump/Bank je `count:null`, poměr `value=n/d` pouze při complete a d>0. Complete 0/0 má `value:null`, důvod zero_denominator. Chybějící podklady nejsou nula. Součet roku je součet n a d, nikoli součet procent.
+
+Autoritou jsou hlavní `detailedPlay.records`, shodné ID se čte jednou, konfliktní varianty se vyloučí. `stats.jumpShotAttempts/Successful` a `bankShotAttempts/Successful` kontrolují konzistenci; nikdy se nepřičítají k records a neobnovují je z `rack.shots`. Při rozporu zůstane kanonický známý mezisoučet, `value:null`. Chybějící výsledek nebo rozporný success nevytvoří potvrzený úspěch; neplatné typy akcí či vícestrková značka znamenají neúplnost. `components` odděluje recordAttempts/recordSuccessful a counterAttempts/counterSuccessful.
+
+Úplnost: vyžaduje sledování od začátku, kompletní detailní historii, platné souhlasné čítače a integritu ID/odkazů/aktérů. Metadata partial, servisní ztráty, chybějící counter, duplicitní či konfliktní záznamy se transparentně promítnou. Důvody zahrnují partial_tag_history, missing_tag_counter, invalid_tag_counter, partial_tag_counter, tag_counter_mismatch, unknown_tag_result, tag_result_conflict, invalid_tag_action a již existující kódy integrity. Neprokazatelná osobní historie zůstane unknown; známé části partial se přenášejí i do roku.
+
+Historické samotné souhrnné čítače jsou na straně zápasu partial/summary_only_tags, nikoli důkaz strků konkrétní osoby. Singles je proto automaticky nepřipíše účastníkovi; Team je nerozdělí podle domněnky. Nové doložené Singles používají stabilní snapshot osoby; Doubles jen kanonickou dvojici, nikdy fiktivního jednotlivce. Team osobní výkon používá skutečné dokončené racky/aktéry a hlavní records; nepřiřazený rack či rozpor identity zneplatní úplnost také těchto dvou metrik. Roční reprezentace čte sides jednou, osoby individuals a dvojice pairs.
+
+Nezávislý příklad `tests/fixtures/federal-tags.cjs` přidává značky existujícím strkům osmirackového příkladu níže a **nemění žádnou z původních 11 hodnot**:
+
+| Výkon | Jump | Bank |
+|---|---:|---:|
+| Zápas 1, osoba a1 / strana A | 2/3 | 1/3 |
+| Zápas 1, strana B | 0/1 | 1/2 |
+| Zápas 2, stejná osoba a1 | 1/2 | 2/4 |
+| Roční součet a1 | **3/5** | **3/7** |
+
+Jump v zápase 1 tvoří úspěšný pot, MISS a legální úspěšný únik. Bank úspěšný pot a dva fauly. Team varianta přiřadí strky racku 3 osobě a2 a Doubles pouze dvojici. Následující původní dokumentace zachovává historii přípravy/ověření etapy 2; aktuální výsledky kandidáta v PROJECT_STATUS.md a REVIZE.md.
 
 Nasazeno a ověřeno 22. 10. 2026: PR #22 sloučen jako cc3c78959779c02a21fea222524ce7a187145cad. Pages success, veřejné index.html i overlay.html přesně odpovídají vydání v4.51.88 RC; výpočty veřejného zdroje ověřeny podle všech 11 metrik obou stran, roční agregace a tří P1/P2 regresí. API je nadále interní, bez nového reportu nebo exportu. Níže zachována historie přípravy; aktuální nasazení, CI a omezení viz PROJECT_STATUS.md/REVIZE.md.
 
@@ -8,7 +38,7 @@ Aktualizace Dominik, 22. 10. 2026: původní větev PR #22 aktualizována merge 
 
 ## Interní API v produkčním index.html
 
-- `federalCalculateMatch(match)` vrací `{version:1, year, fixtureNo, matchId, type, sides, individuals, pairs, unattributed}`. `sides[0]` je Slovensko, `sides[1]` Česko. Každá položka má `owner` a `metrics` se stejnými 11 klíči. Výsledek Singles patří stabilnímu účastníkovi, Doubles dvojici, Team reprezentaci.
+- `federalCalculateMatch(match)` vrací `{version:1, year, fixtureNo, matchId, type, sides, individuals, pairs, unattributed}`. `sides[0]` je Slovensko, `sides[1]` Česko. Každá položka má `owner` a `metrics` se stejnými 13 klíči (původních 11 + jumpShots/bankShots). Výsledek Singles patří stabilnímu účastníkovi, Doubles dvojici, Team reprezentaci.
 - `federalCalculateSeason(matches, config, year=2026)` vrací `{version:1, year, teams, individuals, pairs, fixtures, duplicates, unattributed}`. Vstup může být pole i objekt vrácený RTDB. `config` je konfigurace konkrétního ročníku včetně `year` a `teamResults`.
 - `federalStatsSide`, `federalStatsOwner`, `federalMergeMetrics` a validační pomocné funkce tvoří společný výpočetní systém. Nevolají původní zaokrouhlující prezentační `breakStats` ani neupravují jeho stávající zobrazení. `federalEvidenceSummary` z etapy 1 zůstává kompatibilní.
 
@@ -28,7 +58,7 @@ Funkce jsou interní deklarace ve stávajícím index.html, nikoli nová modular
 
 `reasons` obsahuje seřazené strojové kódy, např. `legacy_coverage`, `missing_counter`, `invalid_counter`, `break_record_gap`, `untracked_break_balls`, `incomplete_rack_history`, `unknown_attempts`, `unknown_intent`, `unsafe_derivation`, `unassigned_correction`, `duplicate_record`, `actor_rack_conflict`. `components` u koulí odděluje známé `explicit`/`derived`, u break průměru `trackedBreaks`; jejich 0 znamená nulový známý příspěvek, nikoli důkaz úplné chybějící historie.
 
-## Vzorce a zdroje všech 11 ukazatelů
+## Vzorce a zdroje původních 11 ukazatelů (beze změny)
 
 | Klíč | Ukazatel a vzorec | Autoritativní zdroj / kontrola |
 |---|---|---|
