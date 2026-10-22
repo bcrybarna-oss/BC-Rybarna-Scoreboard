@@ -2,11 +2,11 @@
 
 Tento adresář obsahuje originální grafické předlohy od zadavatele Dominika pro etapu 3B statistických reportů Poolčítadla. Předlohy jsou **vizuální reference**, nikoli hotové šablony s daty; texty, vlajky, skóre a všech 13 statistik musí v aplikaci zůstat dynamické.
 
-Plánované soubory (nahrajte původní PNG beze změn):
+Dodané originální PNG (commit 5c6ce04, ponechány beze změn):
 
-- `A1_report_zapasu.png` – srovnávací report konkrétního zápasu (Singles / Doubles / Team).
-- `A2_souhrn_reprezentaci.png` – celoroční srovnání reprezentací.
-- `B_statistiky_hrace.png` – individuální report jednoho hráče.
+- `A1_match_report.png` – srovnávací report konkrétního zápasu (Singles / Doubles / Team).
+- `A2_national_teams.png` – celoroční srovnání reprezentací.
+- `B_individual_player.png` – individuální report jednoho hráče.
 
 ## Schválené úpravy původních návrhů
 
@@ -17,4 +17,4 @@ Plánované soubory (nahrajte původní PNG beze změn):
 - Samostatný čistý grafický podklad kulečníkového stolu s koulí č. 9 nebyl dodán; je součástí původních kompozitních obrázků. Pokud bude potřeba, musí vzniknout oddělený podklad, ne náhodně nahrazený obrázek.
 - Reportovací systém a související tlačítka jsou zatím **výhradně ve Federal Cupu**.
 
-Reference je nutné posuzovat spolu s dokumentací `docs/federal-reports-stage-3a.md`. Samotné PNG budou vloženy samostatným nahráním přes GitHub do tohoto adresáře.
+Reference je nutné posuzovat spolu s dokumentací `docs/federal-reports-stage-3a.md`. Realizaci 3B, oddělený podklad, porovnání a exportní ukázky popisuje `docs/federal-reports-stage-3b.md`.

@@ -24,6 +24,7 @@
     "test:federal-calculation": "node --test tests/federal-calculation.test.cjs tests/federal-calculation-integrity.test.cjs tests/federal-tags.test.cjs",
     "test:jump-bank": "node tests/jump-bank-browser.cjs",
     "test:federal-reports": "node tests/federal-reports-browser.cjs",
+    "test:federal-report-exports": "node tests/federal-report-exports-browser.cjs",
     "test:federal-report-data": "node --test tests/federal-reports.test.cjs"
   },
   "dependencies": {

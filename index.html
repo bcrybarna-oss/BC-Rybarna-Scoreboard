@@ -922,46 +922,57 @@
       .exact-ball-btn .ball-number{width:23px;height:23px;font-size:13px}
     }
 
-  /* Stage 3A: Federal Cup report previews only. */
-#fcReportDialog{padding:0;border:1px solid #a78743;border-radius:16px;width:min(1960px,96vw);max-width:96vw;max-height:94dvh;background:#101111;color:#f5f0df;overflow:auto}
-#fcReportDialog::backdrop{background:#000c}
-#fcReportDialog .fc-report-toolbar{position:sticky;top:0;z-index:2;display:flex;align-items:center;justify-content:space-between;gap:16px;background:#181916;padding:10px 20px;border-bottom:1px solid #6e5831}
-#fcReportDialog .fc-report-sheet{box-sizing:border-box;width:min(1920px,100%);margin:auto;aspect-ratio:16/9;min-height:900px;background:radial-gradient(ellipse at 50% 0%,#333020 0%,#151714 43%,#090b0a 100%);padding:2.1% 3%;font-family:Arial,sans-serif}
-#fcReportDialog .fc-report-kicker{color:#d8bc72;letter-spacing:.18em;font-size:13px;font-weight:800;text-transform:uppercase}
-#fcReportDialog .fc-report-head{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:24px;margin:18px 0 24px}
-#fcReportDialog .fc-report-person{text-align:center;min-width:0;overflow-wrap:anywhere}
-#fcReportDialog .fc-report-sheet>header.fc-report-person{display:block;padding:0;background:transparent;border:0}
-#fcReportDialog .fc-report-person h2{font-size:clamp(22px,2.2vw,42px);margin:8px 0;color:#fff;line-height:1.15}
-#fcReportDialog .fc-report-person.selected{outline:1px solid #ac8d4a;outline-offset:6px;border-radius:8px}
-#fcReportDialog .fc-report-score{font-size:clamp(30px,4vw,76px);font-weight:900;white-space:nowrap;color:#efda9d}
-#fcReportDialog .fc-report-flag{width:70px;height:46px;vertical-align:middle}
-#fcReportDialog .fc-report-subtitle{color:#c0bda9;font-size:13px;line-height:1.5}
-#fcReportDialog .fc-report-row{display:grid;grid-template-columns:1fr minmax(170px,1fr) 1fr;gap:18px;align-items:center;min-height:34px;padding:6px 0;border-bottom:1px solid #ffffff16;font-size:clamp(13px,1vw,19px)}
-#fcReportDialog .fc-report-label{text-align:center;color:#eee7d3;font-weight:700}
-#fcReportDialog .fc-report-value{font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
-#fcReportDialog .fc-report-value.left{text-align:right}
-#fcReportDialog .fc-report-track{height:7px;margin-top:7px;background:#ffffff10;border-radius:8px;overflow:hidden}
-#fcReportDialog .fc-report-track>span{display:block;height:100%;border-radius:8px;background:var(--rep-color)}
-#fcReportDialog .left .fc-report-track>span{margin-left:auto}
-#fcReportDialog .fc-report-sources{font-size:12px;line-height:1.5;color:#c7ba96;margin-top:12px}
+  /* Federal Cup publication canvas: reference-based templates A1/A2/B. */
+#fcReportDialog{padding:0;border:1px solid #aa8840;border-radius:14px;width:min(1960px,96vw);max-width:96vw;max-height:94dvh;background:#101111;color:#f5f0df;overflow:auto}
+#fcReportDialog::backdrop{background:#000d}
+#fcReportDialog .fc-report-toolbar{position:sticky;top:0;z-index:2;display:flex;align-items:center;justify-content:space-between;gap:16px;background:#181916;padding:10px 18px;border-bottom:1px solid #6e5831}
+#fcReportDialog .fc-report-actions{display:flex;gap:8px;flex-wrap:wrap}
+#fcReportDialog .fc-report-work-note,#fcReportExportStatus{margin:8px 14px;color:#d6c38e;font-size:13px;line-height:1.5}
+#fcReportDialog .fc-report-preview-frame{position:relative;overflow:hidden;margin:12px auto}
+.fc-report-sheet{--gold:#f7d67b}
+:is(#fcReportDialog,#fcReportExportSurface) .fc-report-sheet{position:relative;isolation:isolate;box-sizing:border-box;width:1920px;height:1080px;min-width:1920px;min-height:1080px;padding:136px 62px 26px;display:flex;flex-direction:column;background:#020c15;color:#f7f7f7;font-family:Arial,sans-serif;overflow:visible}
+:is(#fcReportDialog,#fcReportExportSurface) .fc-report-backdrop{position:absolute;inset:0;width:1920px;height:1080px;z-index:-1;object-fit:cover}
+:is(#fcReportDialog,#fcReportExportSurface) .fc-report-pool-logo{position:absolute;top:27px;left:48px;width:500px;height:106px;object-fit:contain;object-position:left center}
+:is(#fcReportDialog,#fcReportExportSurface) .fc-report-title{text-align:center;color:#ffe49a;font-size:76px;line-height:86px;font-weight:900;letter-spacing:-2px;text-shadow:0 3px 1px #6a4716,0 6px 9px #000;flex-shrink:0}
+:is(#fcReportDialog,#fcReportExportSurface) .fc-report-kicker{color:#ffe49a;text-align:center;letter-spacing:.06em;font-size:29px;line-height:38px;font-weight:800;text-transform:uppercase;flex-shrink:0}
+:is(#fcReportDialog,#fcReportExportSurface) .fc-report-head{display:grid;grid-template-columns:1fr 320px 1fr;align-items:stretch;gap:4px;margin:10px 0 4px;height:116px;flex-shrink:0}
+:is(#fcReportDialog,#fcReportExportSurface) .fc-report-person{position:relative;display:flex;align-items:center;gap:22px;min-width:0;border:2px solid #d8b459;border-radius:9px;padding:10px 18px;box-sizing:border-box;background:linear-gradient(110deg,var(--rep-color),#020910 78%);box-shadow:inset 0 0 0 4px #080e17,0 0 14px #000}
+:is(#fcReportDialog,#fcReportExportSurface) .fc-report-person h2{box-sizing:border-box;font-size:38px;line-height:1.1;margin:0;min-width:0;flex:1;height:82px;display:flex;align-items:center;justify-content:center;font-weight:900;color:#fff;overflow-wrap:anywhere;text-shadow:0 3px 3px #000;text-transform:uppercase}
+:is(#fcReportDialog,#fcReportExportSurface) .fc-report-head .fc-report-person:last-child{flex-direction:row-reverse}
+:is(#fcReportDialog,#fcReportExportSurface) .fc-report-person .fc-report-subtitle{position:absolute;bottom:1px;left:0;right:0;text-align:center;font-size:11px;line-height:13px;margin:0;color:#ead9a7}
+:is(#fcReportDialog,#fcReportExportSurface) .fc-report-person.selected{box-shadow:inset 0 0 0 4px #080e17,0 0 18px #edc96566}
+:is(#fcReportDialog,#fcReportExportSurface) .fc-report-score{display:flex;align-items:center;justify-content:center;font-size:76px;line-height:1;font-weight:900;white-space:nowrap;text-align:center;color:#ffe49a;border:2px solid #dfbd63;border-radius:7px;background:linear-gradient(160deg,#55431b,#080a0a 55%,#342b18);text-shadow:0 3px 2px #8a5c1e;box-shadow:0 0 16px #ffdb6555}
+:is(#fcReportDialog,#fcReportExportSurface) .fc-report-flag{width:112px;height:75px;flex-shrink:0;filter:drop-shadow(0 2px 3px #000)}
+:is(#fcReportDialog,#fcReportExportSurface) .fc-report-subtitle{color:#c5c7cb;font-size:13px;line-height:17px;margin:5px 0;flex-shrink:0}
+:is(#fcReportDialog,#fcReportExportSurface) .fc-report-statistics,:is(#fcReportDialog,#fcReportExportSurface) .fc-report-groups{display:flex;flex-direction:column;justify-content:space-evenly;flex:1;min-height:0}
+:is(#fcReportDialog,#fcReportExportSurface) .fc-report-comparison-group h3,:is(#fcReportDialog,#fcReportExportSurface) .fc-report-group h3{display:flex;align-items:center;gap:24px;margin:3px 0;font-size:25px;line-height:29px;color:#ffe49a;letter-spacing:.07em;text-align:center;white-space:nowrap}
+:is(#fcReportDialog,#fcReportExportSurface) .fc-report-comparison-group h3:before,:is(#fcReportDialog,#fcReportExportSurface) .fc-report-comparison-group h3:after,:is(#fcReportDialog,#fcReportExportSurface) .fc-report-group h3:before,:is(#fcReportDialog,#fcReportExportSurface) .fc-report-group h3:after{content:'';height:2px;flex:1;background:linear-gradient(90deg,#a86b1b00,#e8bb50,#fff3b7);box-shadow:0 0 8px #f6c65e55}
+:is(#fcReportDialog,#fcReportExportSurface) .fc-report-row{display:grid;grid-template-columns:180px 1fr 410px 1fr 180px;gap:18px;align-items:center;min-height:32px;padding:1px 0;border-bottom:1px solid #35607b26;font-size:24px}
+:is(#fcReportDialog,#fcReportExportSurface) .fc-report-label{text-align:center;color:#f1f3f5;font-weight:400;font-size:22px}
+:is(#fcReportDialog,#fcReportExportSurface) .fc-report-value{font-variant-numeric:tabular-nums;overflow-wrap:anywhere;line-height:1.12;font-weight:700}
+:is(#fcReportDialog,#fcReportExportSurface) .fc-report-value[data-coverage="partial"]{font-size:14px}
+:is(#fcReportDialog,#fcReportExportSurface) .fc-report-value.left{text-align:right}
+:is(#fcReportDialog,#fcReportExportSurface) .fc-report-track{height:19px;background:linear-gradient(90deg,#0d263b,#13283e);border:1px solid #17415c55;border-radius:8px;overflow:hidden;box-sizing:border-box}
+:is(#fcReportDialog,#fcReportExportSurface) .fc-report-track>span{display:block;height:100%;border-radius:5px;background:linear-gradient(90deg,var(--rep-color),#ffffff55),var(--rep-color);box-shadow:0 0 8px var(--rep-color)}
+:is(#fcReportDialog,#fcReportExportSurface) .fc-report-footer{position:relative;display:flex;justify-content:space-between;gap:18px;align-items:center;color:#acb6bf;border-top:2px solid #b98c3a;margin-top:7px;padding:8px 0 0;font-size:12px;line-height:16px;min-height:70px;flex-shrink:0}
+:is(#fcReportDialog,#fcReportExportSurface) .fc-report-footer>div:first-child{flex:1;min-width:0;max-width:1320px}
+:is(#fcReportDialog,#fcReportExportSurface) .fc-report-brands{width:400px;justify-content:flex-end;display:flex;align-items:flex-end;gap:14px;flex-shrink:0;color:#e4c36e;font-size:19px;letter-spacing:.06em}
+:is(#fcReportDialog,#fcReportExportSurface) .fc-report-club-logo{width:96px;height:110px;object-fit:contain;margin-top:-45px}
+:is(#fcReportDialog,#fcReportExportSurface) .fc-report-player-head{align-items:stretch;display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:10px 0 4px;height:116px;flex-shrink:0}
+:is(#fcReportDialog,#fcReportExportSurface) .fc-report-cards{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;min-width:0}
+:is(#fcReportDialog,#fcReportExportSurface) .fc-report-card{text-align:center;padding:12px 5px;border:2px solid #c6a24e;border-radius:8px;background:linear-gradient(150deg,#12170e,#020b13);box-shadow:inset 0 0 0 3px #070c13;overflow-wrap:anywhere;font-size:20px;color:#ffe49a;font-weight:700}
+:is(#fcReportDialog,#fcReportExportSurface) .fc-report-card strong{display:block;font-size:44px;line-height:50px;margin-top:6px;color:#ffe49a}
+:is(#fcReportDialog,#fcReportExportSurface) .fc-report-personal-row{display:grid;grid-template-columns:490px 1fr 260px;align-items:center;gap:28px;min-height:32px;padding:1px 0;margin:0 170px;border-bottom:1px solid #35607b26;font-size:23px}
+:is(#fcReportDialog,#fcReportExportSurface) .fc-report-personal-row .fc-report-value{text-align:left}
+:is(#fcReportDialog,#fcReportExportSurface) .fc-report-player-head>header{margin:0;height:116px;top:auto;left:auto;right:auto}
+:is(#fcReportDialog,#fcReportExportSurface) [data-report-template="B"] .fc-report-title{font-size:64px}
+#fcReportDialog .fc-report-sources{font-size:13px;line-height:1.5;color:#c7ba96;margin:14px}
 #fcReportDialog .fc-report-sources summary{cursor:pointer}
 #fcReportDialog .fc-report-sources dt{font-weight:bold;margin-top:8px}
-#fcReportDialog .fc-report-footer{display:flex;justify-content:space-between;gap:24px;align-items:center;color:#c7ba96;border-top:1px solid #8c7340;margin-top:24px;padding-top:16px;font-size:13px;line-height:1.5}
-#fcReportDialog .fc-report-cards{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:15px;margin:20px 0 24px}
-#fcReportDialog .fc-report-card{text-align:center;padding:16px 10px;border:1px solid #8c7340;border-radius:10px;background:#0004;overflow-wrap:anywhere}
-#fcReportDialog .fc-report-card strong{display:block;font-size:clamp(21px,2vw,38px);margin-top:8px;color:#f2d995}
-#fcReportDialog .fc-report-groups{display:grid;grid-template-columns:1fr 1fr;gap:20px 35px}
-#fcReportDialog .fc-report-group h3{margin:0;color:#e1c176;letter-spacing:.12em;font-size:14px;padding-bottom:8px;border-bottom:1px solid #a18446}
-#fcReportDialog .fc-report-personal-row{display:grid;grid-template-columns:1fr 1fr;align-items:center;gap:14px;min-height:51px;border-bottom:1px solid #ffffff16}
-#fcReportDialog .fc-report-personal-row .fc-report-value{text-align:right}
-#fcReportDialog .fc-report-notice{padding:40px;max-width:800px;line-height:1.7}
+#fcReportDialog .fc-report-notice{padding:32px;max-width:800px;line-height:1.7}
 #screen-federal-cup-2026 [data-fc-report]{font-size:12px;margin-top:8px;min-height:40px}
 #screen-federal-cup-2026 .fc26-view-roster-line{flex-wrap:wrap;overflow-wrap:anywhere;min-width:0}
-@media(max-width:720px){#fcReportDialog{width:96vw}#fcReportDialog .fc-report-sheet{aspect-ratio:auto;min-height:0;padding:20px 14px}#fcReportDialog .fc-report-head{gap:9px}#fcReportDialog .fc-report-sheet>header.fc-report-person{display:block;padding:0;background:transparent;border:0}
-#fcReportDialog .fc-report-person h2{font-size:19px}#fcReportDialog .fc-report-flag{width:44px;height:30px}#fcReportDialog .fc-report-row{grid-template-columns:1fr 1fr 1fr;gap:7px;min-height:64px;font-size:12px}#fcReportDialog .fc-report-label{font-size:12px}#fcReportDialog .fc-report-cards{gap:6px}#fcReportDialog .fc-report-card{padding:12px 3px;font-size:10px}#fcReportDialog .fc-report-card strong{font-size:clamp(14px,3.7vw,20px);line-height:1.3}#fcReportDialog .fc-report-groups{grid-template-columns:1fr}#fcReportDialog .fc-report-sources{font-size:12px;line-height:1.5;color:#c7ba96;margin-top:12px}
-#fcReportDialog .fc-report-sources summary{cursor:pointer}
-#fcReportDialog .fc-report-sources dt{font-weight:bold;margin-top:8px}
-#fcReportDialog .fc-report-footer{display:block;font-size:11px}#fcReportDialog .fc-report-personal-row{font-size:14px}}
+@media(max-width:720px){#fcReportDialog .fc-report-toolbar{align-items:flex-start;flex-direction:column;padding:9px}#fcReportDialog .fc-report-actions{gap:6px}#fcReportDialog .fc-report-actions button{font-size:11px;min-height:44px;padding:8px}#fcReportDialog .fc-report-work-note{font-size:11px}}
 </style>
   <!-- PDF report generation -->
   
@@ -3099,7 +3110,9 @@ html[data-theme="light"] #leagueSchedule .history-item .muted{
       <h2 class="fc26-view-title2">Soupisky týmů</h2>
       <div id="fc26ViewerRosters"></div>
       <dialog id="fcReportDialog" aria-labelledby="fcReportDialogTitle">
-        <div class="fc-report-toolbar"><strong id="fcReportDialogTitle">Statistiky Federal Cupu</strong><button type="button" class="btn" id="fcReportClose" aria-label="Zavřít statistický report">ZAVŘÍT ×</button></div>
+        <div class="fc-report-toolbar"><strong id="fcReportDialogTitle">Statistiky Federal Cupu</strong><div class="fc-report-actions"><button type="button" class="btn" id="fcReportPng">STÁHNOUT PNG</button><button type="button" class="btn" id="fcReportPdf">STÁHNOUT PDF</button><button type="button" class="btn" id="fcReportZoom" aria-pressed="false">ZVĚTŠIT NÁHLED</button><button type="button" class="btn" id="fcReportClose" aria-label="Zavřít statistický report">ZAVŘÍT ×</button></div></div>
+        <p class="fc-report-work-note">Náhled publikace 1920 × 1080. Na mobilu lze náhled zvětšit; export zůstává ve Full HD.</p>
+        <div id="fcReportExportStatus" role="status" aria-live="polite"></div>
         <div id="fcReportContent"></div>
       </dialog>
     </div>
@@ -10215,11 +10228,11 @@ $('useClock').addEventListener('change',e=>$('clockSettings').classList.toggle('
   }
   function federalReportMetric(metric){
     if(!metric||metric.coverage==='unknown')return {text:'—',bar:null,note:'Neznámá evidence'};
-    const number=n=>Number.isFinite(n)?n.toLocaleString('cs-CZ',{maximumFractionDigits:2}):'—';
-    const fraction=number(metric.numerator)+'/'+number(metric.denominator);
+    const number=(n,average=false)=>Number.isFinite(n)?n.toLocaleString('cs-CZ',{minimumFractionDigits:average?1:0,maximumFractionDigits:average?1:0}):'—';
+    const fraction=number(metric.numerator)+' / '+number(metric.denominator);
     if(metric.coverage==='partial')return {text:'Doloženo '+(metric.kind==='count'?number(metric.count):fraction)+' (část)',bar:null,note:'Neúplná evidence'};
     if(metric.kind!=='count'&&metric.denominator===0)return {text:fraction+' · bez pokusů',bar:null,note:'Žádné evidované pokusy'};
-    return {text:metric.kind==='percent'?number(metric.value)+' %':metric.kind==='ratio'?fraction:number(metric.value),bar:metric.value===null?null:['percent','ratio'].includes(metric.kind)?Math.max(0,Math.min(100,metric.value*(metric.kind==='ratio'?100:1))):null,note:'Úplná evidence'};
+    return {text:metric.kind==='percent'?number(metric.value)+' %':metric.kind==='ratio'?fraction:number(metric.value,metric.kind==='average'),bar:metric.value===null?null:['percent','ratio'].includes(metric.kind)?Math.max(0,Math.min(100,metric.value*(metric.kind==='ratio'?100:1))):null,note:'Úplná evidence'};
   }
   function detailedCounterActive(){
     return !!match && match.counterMode!=='simple' && !match.ghostMode && match.discipline!=='14.1';
@@ -29845,33 +29858,34 @@ function renderStats(){
   const REPORT_REPS=[{id:'SK',name:'Slovensko',color:'#d34b56'},{id:'CZ',name:'Česko',color:'#488edf'}];
   const REPORT_SOURCES={breakSuccess:'Čítače skutečně provedených rozstřelů a jejich kanonické výsledky; eso je úspěšný break.',breakBallAverage:'Spadlé break koule dělené všemi provedenými breaky, včetně soft a faulových.',aces:'Samostatná evidence es; k čistým hrám se znovu nepřičítají.',ownBreakWins:'Dokončené racky se skutečným rozstřelujícím a vítězem; žádný odhad střídání.',pottingSuccess:'Úspěšné útočné strky / doložené útočné pokusy. Multipot je jeden strk; neurčité doplnění počet strků nevytváří.',cleanRuns:'Existující osobní metrika cleanRuns z doložených B&R, oddělená od es.',pottedBalls:'Řádné koule z kanonických strků, explicitní nebo bezpečně odvozené. Bez break a faulových koulí.',jumpShots:'Úspěšné označené Jump strky / pokusy, včetně legálního úniku bez potopení; čítače kontrolují hlavní records.',bankShots:'Úspěšné označené Bank strky / pokusy. Bank není únik; rackové kopie se znovu nesčítají.',safetySuccess:'Úspěšné / vyhodnocené jistoty podle evidence obsluhy.',escapeSuccess:'Úspěšné / evidované úniky, včetně neúspěchů s faulem i bez něj.',resafes:'Doložené RESAFE, každý právě jednou.',fouls:'Celkové fauly včetně break a únikových faulů, bez jejich opětovného přičtení.'};
   function reportSources(){return '<details class="fc-report-sources"><summary>Zdroje jednotlivých ukazatelů a úplnost evidence</summary><p>Úplné údaje mají výsledek. Částečná evidence ukazuje jen doložené mezisoučty bez oficiálního procenta či sloupce. Neznámá evidence je —. Poměr 0/0 znamená žádné pokusy.</p><dl>'+REPORT_GROUPS.flatMap(([,rows])=>rows).map(([key,label])=>'<dt>'+esc(label)+'</dt><dd>'+esc(REPORT_SOURCES[key])+'</dd>').join('')+'</dl></details>';}
-  const reportDialog=$('fcReportDialog');let reportReturnFocus=null;
-  function reportFlag(side){const rep=REPORT_REPS[side];return '<svg class="fc-report-flag" role="img" aria-label="Vlajka '+rep.name+'" viewBox="0 0 600 400"><use href="#fc26Flag'+rep.id+'"></use></svg>';}
+  const reportDialog=$('fcReportDialog');let reportReturnFocus=null,reportExportBusy=false,reportExportGeneration=0,reportZoomed=false;
+  function reportFlag(side){const rep=REPORT_REPS[side];return '<svg xmlns="http://www.w3.org/2000/svg" width="84" height="56" class="fc-report-flag" role="img" aria-label="Vlajka '+rep.name+'" viewBox="0 0 600 400">'+$('fc26Flag'+rep.id).innerHTML+'</svg>';}
   function reportMatchName(m,side){
     if(m.federalCupLink?.type==='team')return REPORT_REPS[side].name;
     const people=federalStatsRows(m.federalCupLink?.lineupParticipants?.[side]),need=m.federalCupLink?.type==='doubles'?2:1;
     return people.length===need&&people.every(p=>typeof p.name==='string'&&p.name)?people.map(p=>p.name).join(' + '):savedMatchSideDisplayName(m,side);
   }
   function reportButton(kind,label,attrs=''){return '<button type="button" class="btn" data-fc-report="'+kind+'" '+attrs+'>'+label+'</button>';}
-  function reportFooter(text){return '<footer class="fc-report-footer"><div>'+esc(text)+'</div><strong>POOLČÍTADLO · BC RYBÁRNA<br>FEDERAL CUP · NÁHLED 3A</strong></footer>';}
-  function reportValue(metric,side,width=null,left=false){
+  function reportBrand(){return '<img class="fc-report-pool-logo" src="assets/federal-report-pool-logo.png" alt="Poolčítadlo">';}
+  function reportFooter(text){return '<footer class="fc-report-footer"><div>'+esc(text)+'</div><div class="fc-report-brands"><span>Made by BC Rybárna</span><img class="fc-report-club-logo" src="bc-rybarna-logo.png" alt="BC Rybárna"></div></footer>';}
+  function reportValue(metric,side,width=null,left=false,withBar=true){
     const x=federalReportMetric(metric),bar=width===null?x.bar:width;
-    return '<div class="fc-report-value '+(left?'left':'')+'" style="--rep-color:'+REPORT_REPS[side].color+'" data-coverage="'+esc(metric?.coverage||'unknown')+'" title="'+esc([x.note,...(metric?.reasons||[])].join(' · '))+'">'+esc(x.text)+(bar===null?'':'<div class="fc-report-track" aria-hidden="true"><span style="width:'+bar+'%"></span></div>')+'</div>';
+    return '<div class="fc-report-value '+(left?'left':'')+'" style="--rep-color:'+REPORT_REPS[side].color+'" data-coverage="'+esc(metric?.coverage||'unknown')+'" title="'+esc([x.note,...(metric?.reasons||[])].join(' · '))+'">'+esc(x.text)+(!withBar||bar===null?'':'<div class="fc-report-track" aria-hidden="true"><span style="width:'+bar+'%"></span></div>')+'</div>';
   }
   function reportComparison(title,names,scores,metrics,order,selected=null,notice=''){
-    const person=side=>'<div class="fc-report-person '+(side===selected?'selected':'')+'">'+reportFlag(side)+'<h2>'+esc(names[side])+'</h2><div class="fc-report-subtitle">'+(side===order[0]?'DOMÁCÍ':'HOSTÉ')+(side===selected?' · VYBRANÁ REPREZENTACE':'')+'</div></div>';
-    const rows=REPORT_GROUPS.flatMap(([,rows])=>rows).map(([key,label])=>{
+    const person=side=>'<div class="fc-report-person '+(side===selected?'selected':'')+'" style="--rep-color:'+REPORT_REPS[side].color+'">'+reportFlag(side)+'<h2>'+esc(names[side])+'</h2><div class="fc-report-subtitle">'+(side===order[0]?'DOMÁCÍ':'HOSTÉ')+(side===selected?' · VYBRANÁ REPREZENTACE':'')+'</div></div>';
+    const rows=REPORT_GROUPS.map(([group,rows])=>'<section class="fc-report-comparison-group"><h3>'+group+'</h3>'+rows.map(([key,label])=>{
       const values=[0,1].map(side=>metrics[side]?.[key]),maximum=Math.max(0,...values.filter(x=>x?.coverage==='complete'&&x.value!==null).map(x=>x.value));
-      const value=side=>{const x=values[side],absolute=x&&['count','average'].includes(x.kind);return reportValue(x,side,absolute&&x.coverage==='complete'&&x.value!==null&&maximum>0?x.value/maximum*100:null,side===order[0]);};
-      return '<div class="fc-report-row" data-report-metric="'+key+'">'+value(order[0])+'<div class="fc-report-label">'+esc(label)+'</div>'+value(order[1])+'</div>';
-    }).join('');
-    return '<article class="fc-report-sheet" data-report-template="A"><div class="fc-report-kicker">'+esc(title)+'</div><div class="fc-report-head">'+person(order[0])+'<div class="fc-report-score">'+esc(String(scores[order[0]]??'—'))+' : '+esc(String(scores[order[1]]??'—'))+'</div>'+person(order[1])+'</div>'+(notice?'<p class="fc-report-subtitle">'+esc(notice)+'</p>':'')+rows+reportSources()+reportFooter('Herní údaje: kanonická evidence a společné API 13 metrik. Část = doložený mezisoučet, — = neznámá evidence. Bez pokusů není 0% úspěšnost.')+'</article>';
+      const bar=side=>{const x=values[side],absolute=x&&['count','average'].includes(x.kind),width=absolute?(x.coverage==='complete'&&x.value!==null&&maximum>0?x.value/maximum*100:null):federalReportMetric(x).bar;return '<div class="fc-report-bar '+(side===order[0]?'left':'')+'" style="--rep-color:'+REPORT_REPS[side].color+'">'+(width===null?'':'<div class="fc-report-track" aria-hidden="true"><span style="width:'+width+'%"></span></div>')+'</div>';};
+      return '<div class="fc-report-row" data-report-metric="'+key+'">'+reportValue(values[order[0]],order[0],null,true,false)+bar(order[0])+'<div class="fc-report-label">'+esc(label)+'</div>'+bar(order[1])+reportValue(values[order[1]],order[1],null,false,false)+'</div>';
+    }).join('')+'</section>').join('');
+    return '<article class="fc-report-sheet" data-report-template="A"><img class="fc-report-backdrop" src="assets/federal-report-billiards.webp" alt="">'+reportBrand()+'<div class="fc-report-title">FEDERAL CUP '+esc((title.match(/20[0-9]{2}/)||[''])[0])+'</div><div class="fc-report-kicker">'+esc(title.replace(/^FEDERAL CUP [0-9]+ · /,''))+'</div><div class="fc-report-head">'+person(order[0])+'<div class="fc-report-score">'+esc(String(scores[order[0]]??'—'))+' : '+esc(String(scores[order[1]]??'—'))+'</div>'+person(order[1])+'</div>'+(notice?'<p class="fc-report-subtitle">'+esc(notice)+'</p>':'')+'<div class="fc-report-statistics">'+rows+'</div>'+reportFooter('Herní údaje: kanonická evidence a společné API 13 metrik. Část = doložený mezisoučet, — = neznámá evidence. Bez pokusů není 0% úspěšnost.')+'</article>';
   }
   function reportPlayer(report,person,side){
     const result=federalReportResults(report,person.id,side),entry=report.people[person.id]?.conflict?null:report.season.individuals[person.id],metrics=entry?.metrics||federalCalculateMatch({}).sides[side].metrics;
     const count=n=>result.coverage==='unknown'?'—':result.coverage==='partial'?'Doloženo '+n+' (část)':String(n);
-    const cards=[['VÝHRY',count(result.wins)],['PROHRY',count(result.losses)],['ÚSPĚŠNOST',result.value===null?'—':result.value.toLocaleString('cs-CZ',{maximumFractionDigits:2})+' %'],['ČISTÉ HRY',federalReportMetric(metrics.cleanRuns).text]];
-    return '<article class="fc-report-sheet" data-report-template="B" data-report-person="'+esc(person.id)+'"><div class="fc-report-kicker">FEDERAL CUP '+report.year+' · STATISTIKY HRÁČE</div><header class="fc-report-person">'+reportFlag(side)+'<h2>'+esc(person.name||'Neznámé jméno')+'</h2></header><div class="fc-report-cards">'+cards.map(([label,value])=>'<div class="fc-report-card">'+label+'<strong>'+esc(value)+'</strong></div>').join('')+'</div><div class="fc-report-groups">'+REPORT_GROUPS.map(([group,rows])=>'<section class="fc-report-group"><h3>'+group+'</h3>'+rows.map(([key,label])=>'<div class="fc-report-personal-row" data-report-metric="'+key+'"><span>'+esc(label)+'</span>'+reportValue(metrics[key],side)+'</div>').join('')+'</section>').join('')+'</div><p class="fc-report-subtitle">'+esc('Doložené výsledky: '+result.sources.map(s=>'#'+s.fixtureNo+' '+s.type).join(', ')+(result.reasons.length?'. '+result.reasons.join('; '):result.sources.length?'': 'Žádné doložené dokončené zápasy.'))+'</p>'+reportSources()+reportFooter('Výhry/prohry: celé dokončené Singles, oba členové Doubles a všech pět nominovaných Team hráčů. Herní statistiky včetně čistých her: pouze Singles a skutečně doložené vlastní Team racky; Doubles strky se osobám nepřipisují. Zdroje výkonu: '+(entry?.sources?.map(s=>'#'+s.fixtureNo).join(', ')||'bez doložené osobní evidence')+'.')+'</article>';
+    const cards=[['VÝHRY',count(result.wins)],['PROHRY',count(result.losses)],['ÚSPĚŠNOST',result.value===null?'—':result.value.toLocaleString('cs-CZ',{maximumFractionDigits:0})+' %'],['ČISTÉ HRY',federalReportMetric(metrics.cleanRuns).text]];
+    return '<article class="fc-report-sheet" data-report-template="B" data-report-person="'+esc(person.id)+'"><img class="fc-report-backdrop" src="assets/federal-report-billiards.webp" alt="">'+reportBrand()+'<div class="fc-report-title">INDIVIDUÁLNÍ STATISTIKY</div><div class="fc-report-kicker">FEDERAL CUP '+report.year+'</div><div class="fc-report-player-head"><header class="fc-report-person" style="--rep-color:'+REPORT_REPS[side].color+'">'+reportFlag(side)+'<h2>'+esc(person.name||'Neznámé jméno')+'</h2></header><div class="fc-report-cards">'+cards.map(([label,value])=>'<div class="fc-report-card">'+label+'<strong>'+esc(value)+'</strong></div>').join('')+'</div></div><div class="fc-report-groups">'+REPORT_GROUPS.map(([group,rows])=>'<section class="fc-report-group"><h3>'+group+'</h3>'+rows.map(([key,label])=>'<div class="fc-report-personal-row" data-report-metric="'+key+'"><span>'+esc(label)+'</span>'+'<div class="fc-report-personal-bar">'+(federalReportMetric(metrics[key]).bar===null?'':'<div class="fc-report-track" style="--rep-color:'+REPORT_REPS[side].color+'"><span style="width:'+federalReportMetric(metrics[key]).bar+'%"></span></div>')+'</div>'+reportValue(metrics[key],side,null,false,false)+'</div>').join('')+'</section>').join('')+'</div><p class="fc-report-subtitle">'+esc('Doložené výsledky: '+result.sources.map(s=>'#'+s.fixtureNo+' '+s.type).join(', ')+(result.reasons.length?'. '+result.reasons.join('; '):result.sources.length?'': 'Žádné doložené dokončené zápasy.'))+'</p>'+reportFooter('Výhry/prohry: celé dokončené Singles, oba členové Doubles a všech pět nominovaných Team hráčů. Herní statistiky včetně čistých her: pouze Singles a skutečně doložené vlastní Team racky; Doubles strky se osobám nepřipisují. Zdroje výkonu: '+(entry?.sources?.map(s=>'#'+s.fixtureNo).join(', ')||'bez doložené osobní evidence')+'.')+'</article>';
   }
   function openFederalReport(button){
     if(!$('screen-federal-cup-2026')?.classList.contains('active'))return;
@@ -29894,11 +29908,76 @@ function renderStats(){
         else{const result=federalCalculateMatch(m),names=[0,1].map(side=>reportMatchName(m,side));content=reportComparison('FEDERAL CUP '+year+' · ZÁPAS #'+fixture+' · '+String(m.federalCupLink.type).toUpperCase(),names,m.scores||[],result.sides.map(x=>x.metrics),order,null,'Dokončený zápas · ID '+id+'. Neúplná nebo chybějící statistická evidence je označena v jednotlivých řádcích.');}
       }else content=unavailable('Neznámý typ reportu.');
     }
-    $('fcReportContent').innerHTML=content;reportReturnFocus=button;if(!reportDialog.open)reportDialog.showModal();reportDialog.scrollTop=0;
+    reportExportGeneration++;reportZoomed=false;
+    const hasSheet=content.includes('fc-report-sheet');
+    $('fcReportContent').innerHTML=hasSheet?'<div class="fc-report-preview-frame">'+content+'</div>'+reportSources():content;
+    for(const id of ['fcReportPng','fcReportPdf','fcReportZoom'])$(id).disabled=!hasSheet||reportExportBusy;
+    $('fcReportZoom').setAttribute('aria-pressed','false');$('fcReportExportStatus').textContent='';
+    reportReturnFocus=button;if(!reportDialog.open)reportDialog.showModal();reportDialog.scrollTop=0;layoutFederalReportPreview();
   }
+  function fitFederalReportNames(root){
+    for(const el of root.querySelectorAll('.fc-report-person h2')){
+      el.style.fontSize='38px';
+      for(let size=38;size>14&&(el.scrollHeight>el.clientHeight+1||el.scrollWidth>el.clientWidth+1);size--)el.style.fontSize=(size-1)+'px';
+      if(el.scrollHeight>el.clientHeight+1||el.scrollWidth>el.clientWidth+1)throw Error('Jméno se nevejde do Full HD reportu bez oříznutí. Export nebyl vytvořen.');
+    }
+    for(const el of root.querySelectorAll('.fc-report-value,.fc-report-card strong')){
+      const max=el.matches('.fc-report-card strong')?44:el.dataset.coverage==='partial'?14:24;el.style.whiteSpace='nowrap';el.style.fontSize=max+'px';
+      for(let size=max;size>12&&el.scrollWidth>el.clientWidth+1;size--)el.style.fontSize=(size-1)+'px';
+      if(el.scrollWidth>el.clientWidth+1)throw Error('Hodnota se nevejde do Full HD reportu bez oříznutí.');
+    }
+  }
+  function layoutFederalReportPreview(){
+    const root=$('fcReportContent').querySelector('.fc-report-sheet'),frame=root?.parentElement;if(!root||!reportDialog.open)return;
+    const scale=reportZoomed?1:Math.min(1,Math.max(1,reportDialog.clientWidth-24)/1920);
+    root.style.transform='scale('+scale+')';root.style.transformOrigin='top left';frame.style.width=(1920*scale)+'px';frame.style.height=(1080*scale)+'px';
+    try{fitFederalReportNames(root);}catch(e){$('fcReportExportStatus').textContent=e.message;}
+  }
+  async function createFederalReportCanvas(root){
+    if(!window.html2canvas)throw Error('Exportní knihovna se nenačetla. Obnov připojení a stránku.');
+    const host=document.createElement('div');host.id='fcReportExportSurface';host.setAttribute('aria-hidden','true');
+    host.style.cssText='position:fixed;left:0;top:0;width:1920px;height:1080px;z-index:-2147483647;pointer-events:none;';
+    const copy=root.cloneNode(true);copy.style.transform='none';host.appendChild(copy);document.body.appendChild(host);
+    try{
+      await Promise.race([document.fonts.ready,new Promise((_,reject)=>setTimeout(()=>reject(Error('Fonty se nepodařilo načíst.')),15000))]);
+      await Promise.all([...copy.querySelectorAll('img')].map(async img=>{
+        if(new URL(img.currentSrc||img.src,location.href).origin!==location.origin)throw Error('Grafický podklad musí být dostupný ze stejného webu.');
+        await img.decode().catch(()=>{throw Error('Grafický podklad nebo logo není načtené.');});if(!img.naturalWidth)throw Error('Grafický podklad nebo logo není načtené.');
+      }));
+      const canvas=await html2canvas(copy,{backgroundColor:'#090b0a',scale:1,width:1920,height:1080,windowWidth:1920,windowHeight:1080,scrollX:0,scrollY:0,useCORS:true,allowTaint:false,logging:false,removeContainer:true,onclone:doc=>{
+        const sheet=doc.querySelector('#fcReportExportSurface .fc-report-sheet');fitFederalReportNames(sheet);
+        if(sheet.scrollWidth>1920||sheet.scrollHeight>1080)throw Error('Obsah přesahuje Full HD formát. Export nebyl vytvořen, aby se nic neořízlo.');
+        const header=sheet.querySelector('.fc-report-head');if(header)for(const panel of header.querySelectorAll('.fc-report-person'))if(panel.getBoundingClientRect().bottom>header.getBoundingClientRect().bottom+1)throw Error('Hlavička reportu přesahuje vyhrazené místo.');
+        const footer=sheet.querySelector('.fc-report-footer').getBoundingClientRect();for(const row of sheet.querySelectorAll('[data-report-metric]'))if(row.getBoundingClientRect().bottom>footer.top+1)throw Error('Statistiky se překrývají s patičkou.');
+        for(const el of sheet.querySelectorAll('[data-report-metric],.fc-report-footer,.fc-report-brands,.fc-report-brands span,.fc-report-person h2,.fc-report-club-logo,.fc-report-pool-logo')){const box=el.getBoundingClientRect(),page=sheet.getBoundingClientRect();if(box.bottom>page.bottom+1||box.right>page.right+1)throw Error('Obsah reportu se nevejde do Full HD.');}
+      }});
+      if(canvas.width!==1920||canvas.height!==1080)throw Error('Export nemá požadované rozlišení.');
+      return canvas;
+    }finally{host.remove();}
+  }
+  async function exportFederalReport(format){
+    const root=$('fcReportContent').querySelector('.fc-report-sheet');
+    if(reportExportBusy||!root||!reportDialog.open||!$('screen-federal-cup-2026').classList.contains('active'))return;
+    const generation=reportExportGeneration,name=('federal-cup-'+(root.querySelector('.fc-report-kicker')?.textContent||'report')).normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9]+/gi,'-').toLowerCase().slice(0,120);
+    reportExportBusy=true;$('fcReportPng').disabled=true;$('fcReportPdf').disabled=true;$('fcReportExportStatus').textContent='Připravuji '+format.toUpperCase()+' ve Full HD…';
+    try{
+      if(format==='pdf'&&!window.jspdf?.jsPDF)throw Error('PDF knihovna se nenačetla. Obnov připojení a stránku.');
+      const canvas=await createFederalReportCanvas(root);let blob;
+      if(format==='png')blob=await new Promise((resolve,reject)=>canvas.toBlob(b=>b?resolve(b):reject(Error('PNG se nepodařilo vytvořit.')),'image/png'));
+      else{const pdf=new window.jspdf.jsPDF({orientation:'landscape',unit:'pt',format:[1440,810],compress:true});pdf.addImage(canvas.toDataURL('image/png'),'PNG',0,0,1440,810);blob=pdf.output('blob');}
+      if(!reportDialog.open||generation!==reportExportGeneration)return;
+      const url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=name+'.'+format;document.body.appendChild(a);try{a.click();}finally{a.remove();setTimeout(()=>URL.revokeObjectURL(url),60000);}
+      $('fcReportExportStatus').textContent=format.toUpperCase()+' připraveno ke stažení (1920 × 1080).';
+    }catch(e){if(reportDialog.open&&generation===reportExportGeneration)$('fcReportExportStatus').textContent='Export se nezdařil: '+e.message;}
+    finally{reportExportBusy=false;const enabled=reportDialog.open&&!!$('fcReportContent').querySelector('.fc-report-sheet');$('fcReportPng').disabled=!enabled;$('fcReportPdf').disabled=!enabled;}
+  }
+  $('fcReportPng').addEventListener('click',()=>exportFederalReport('png'));
+  $('fcReportPdf').addEventListener('click',()=>exportFederalReport('pdf'));
+  $('fcReportZoom').addEventListener('click',()=>{reportZoomed=!reportZoomed;$('fcReportZoom').setAttribute('aria-pressed',String(reportZoomed));layoutFederalReportPreview();});
+  window.addEventListener('resize',()=>{if(reportDialog.open)requestAnimationFrame(layoutFederalReportPreview);});
   $('screen-federal-cup-2026')?.addEventListener('click',e=>{const button=e.target.closest('[data-fc-report]');if(button)openFederalReport(button);});
   $('fcReportClose')?.addEventListener('click',()=>reportDialog.close());
-  reportDialog?.addEventListener('close',()=>{if(reportReturnFocus?.isConnected)reportReturnFocus.focus({preventScroll:true});$('fcReportContent').replaceChildren();});
+  reportDialog?.addEventListener('close',()=>{reportExportGeneration++;if(reportReturnFocus?.isConnected)reportReturnFocus.focus({preventScroll:true});$('fcReportContent').replaceChildren();});
   new MutationObserver(()=>{if(reportDialog.open&&!$('screen-federal-cup-2026').classList.contains('active'))reportDialog.close();}).observe($('screen-federal-cup-2026'),{attributes:true,attributeFilter:['class']});
 
   // Výhradně čtecí obrazovka; žádný druhý zápis dat ani editace utkání.

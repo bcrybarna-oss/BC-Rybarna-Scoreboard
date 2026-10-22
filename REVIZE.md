@@ -1,5 +1,13 @@
 # Revize aplikace Poolčítadlo
 
+## Dominik – Federal Cup etapa 3B, grafika podle referencí a PNG/PDF (v4.51.90 RC)
+Zadavatel: Dominik
+Datum: 22. 10. 2026
+Změny: Pokračování stejného nevydaného kandidáta 90 ve stávajícím PR #28, bez nové větve. Načteny nové originální reference A1/A2/B commity 209af0d a 5c6ce04, zachovány veškeré lokální změny. Dynamické kompozice podle předloh, SK vlevo červeně/CZ vpravo modře dle hostitele, zlaté skóre a dělení, oficiální značky, čistý samostatný podklad stolu s koulí 9 rekonstruovaný imagegen z A1. Všech 13 metrik ve čtyřech skupinách, B čtyři stejné karty, pouze procentní/poměrové sloupce; neúplnost a zdroje zachovány. PNG 1920×1080 a PDF 16:9 klientsky z dialogu FC; pevná publikace i na mobilu, zoom, načtení obrázků/fontů, chyby a zrušení exportu. Původní výpočty, stream i ostatní sekce neměněny. Dokumentace a reálné ukázky: docs/federal-reports-stage-3b.md.
+Testy: Výpočty a data 69/69, Node 179/181; pouze známá nezměněná selhání preview-match-reload-recovery.test.cjs:50,106 v test-modular. Reportové a skutečné exportní browser testy, Singles/Doubles/Team, mobil DPR3, české a dlouhé hodnoty, partial/unknown, chyby/cancel; PDF jedna strana 1440×810 pt a přesná shoda vloženého PNG, Poppler vizuální kontrola. Federal Cup/evidence/detailed-counter/Jump-Bank/stream-controls/isolation/lag/release-version i všechny původní PDF exporty prošly. Release gate proti čerstvému main f6c3e0f a diff --check PASS. GitHub CI se doplní po pushi. CI není plně zelené.
+Nasazení: Lokálně otestováno, připraveno k revizi ve stejném PR #28, nesloučeno a nenasazeno dle zadání. Produkce v4.51.89 RC. Žádné testovací zápisy do produkční Firebase.
+Omezení: Finální grafika a nový oddělený podklad čekají na společné vizuální posouzení. HTML není pixelová kopie polygonů/metalických písmen; původní čisté fotografické pozadí neexistuje. PDF je obrazové. Extrémní délka údajů má explicitní chybu místo ořezu. Fyzické telefony/iOS, produkční Auth/Rules/CORS a OBS neověřeny; knihovny vyžadují dostupnost CDN při prvním načtení. Dvě známá selhání zachována, žádné rozdělení CI sad ani změny oprávnění.
+
 ## Dominik – Federal Cup etapa 3A, funkční náhledy reportů (v4.51.90 RC)
 Zadavatel: Dominik
 Datum: 22. 10. 2026
