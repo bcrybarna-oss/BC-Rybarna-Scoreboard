@@ -94,9 +94,15 @@ const overlayHtml=overlaySource.replace('</script>','window.overlayIsolationTest
   assert.ok(requests.some(r=>r.method==='PUT'&&r.headers['if-match']));
   await poll();await unavailable();
   await a.evaluate(()=>publisherTest.resume());await poll();await alpha();
+  // A live publisher can change its own ETag too. Rejection preserves newer data.
+  await a.evaluate(()=>publisherTest.suspend());
+  race=()=>put(keyA,{...store.get(keyA),updatedAt:now});
+  assert.equal(await a.evaluate(id=>publisherTest.clear(id),matchA),false,'own heartbeat race must also preserve the newer state');
+  assert.equal(store.get(keyA).matchId,matchA);assert.equal(store.get(keyA).active,true);
+  // Verify successful clear separately with no concurrent publisher update.
   assert.equal(await a.evaluate(id=>publisherTest.clear(id),matchA),true);await poll();await unavailable();
-  await a.evaluate(()=>publisherTest.send(true));await poll();await alpha();
-  console.log('PASS conditional clear: changed match/412 preserved; own match can be cleared and resumed');
+  await a.evaluate(()=>publisherTest.resume());await poll();await alpha();
+  console.log('PASS conditional clear: foreign-match and own-heartbeat/412 preserved; idle own match clears and resumes');
 
   for(const status of [403,404,500]){failStatus=status;await poll();await unavailable();failStatus=0;await poll();await alpha();}
   invalidJson=true;await poll();await unavailable();invalidJson=false;await poll();await alpha();
