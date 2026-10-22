@@ -49,6 +49,14 @@ assert.ok(html.includes('window.streamTest='));
   },{mode,enabled});
   await page.waitForFunction(()=>!!streamTest.match);
   assert.equal(await page.locator('#streamDirectorPanel').isVisible(),enabled);
+  if(enabled){
+   const matchId=await page.evaluate(()=>streamTest.match.id);
+   const explicitUrl=await page.locator('#matchStreamOverlayUrl').inputValue();
+   assert.equal(new URL(explicitUrl).searchParams.get('matchId'),matchId);
+   // Each newly selected match has its own URL. Do not silently rebind the old OBS source.
+   const localUrl=new URL(explicitUrl);localUrl.protocol='http:';localUrl.host='stream-isolated.local';localUrl.pathname='/overlay.html';
+   await overlay.goto(localUrl.toString());
+  }
  }
  async function checkMode(mode){
   await page.locator('#'+ids[mode]).click();

@@ -14,6 +14,7 @@
     "test": "node --test tests/*.test.cjs",
     "test:federal-cup": "node tests/federal-cup-browser.cjs",
     "test:stream": "node tests/stream-controls-browser.cjs",
+    "test:stream-isolation": "node tests/stream-isolation-browser.cjs",
     "test:pdf": "node tests/pdf-download-browser.cjs",
     "test:historical": "node tests/historical-structure-browser.cjs",
     "test:detailed": "node tests/detailed-counter-browser.cjs",
