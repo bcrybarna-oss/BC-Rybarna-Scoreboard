@@ -1,5 +1,7 @@
 # Federal Cup – výpočet 11 statistik, etapa 2 (v4.51.88 RC)
 
+Nasazeno a ověřeno 22. 10. 2026: PR #22 sloučen jako cc3c78959779c02a21fea222524ce7a187145cad. Pages success, veřejné index.html i overlay.html přesně odpovídají vydání v4.51.88 RC; výpočty veřejného zdroje ověřeny podle všech 11 metrik obou stran, roční agregace a tří P1/P2 regresí. API je nadále interní, bez nového reportu nebo exportu. Níže zachována historie přípravy; aktuální nasazení, CI a omezení viz PROJECT_STATUS.md/REVIZE.md.
+
 Historie původní přípravy (21. 10. 2026), zadavatel Dominik: samostatná větev `feature/federal-statistics-calculation` z aktuálního main `090330ac6a4e86a78bffdd824cabb8fb12db0056`. Připraveno v [PR #22](https://github.com/bcrybarna-oss/BC-Rybarna-Scoreboard/pull/22), nesloučeno a nenasazeno; produkce zůstává v4.51.84 RC. Bez nové obrazovky, veřejného zobrazení statistik, grafického reportu, PDF, migrace nebo změny Rules.
 
 Aktualizace Dominik, 22. 10. 2026: původní větev PR #22 aktualizována merge z origin/main ed45d3794aff0e403bdd77dc720462c3f1fa8c89 (produkce v4.51.87 RC); historie i všechny streamovací změny PR #24–26 zachovány. Kandidát v4.51.88 RC zůstává ve stejném PR, nesloučen a nenasazen. Opraveny všechny tři reprodukce revize work/review22/REPORT.md. Původní výchozí stav a ověření níže jsou historické; aktuální stav viz PROJECT_STATUS.md.
