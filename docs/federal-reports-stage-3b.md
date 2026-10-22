@@ -1,6 +1,6 @@
 # Federal Cup – etapa 3B (Dominik, 22. 10. 2026)
 
-Kandidát **v4.51.90 RC**, pokračování stejného vydání a stejného PR #28. **Nesloučeno, nenasazeno.** Produkce zůstává v4.51.89 RC. Reference přibyly jako commity 209af0d a 5c6ce04; bezpečný fast-forward zachoval všechny lokální rozpracované úpravy 3B.
+Kandidát **v4.51.90 RC**, pokračování stejného vydání a stejného PR #28. **Otestováno a pushnuto v PR #28 (kód 83bc44b); nesloučeno, nenasazeno.** Produkce zůstává v4.51.89 RC. Reference přibyly jako commity 209af0d a 5c6ce04; bezpečný fast-forward zachoval všechny lokální rozpracované úpravy 3B.
 
 ## Reference a provedení
 
@@ -47,7 +47,7 @@ Exporty mají aktuální fixture data, nikoli fiktivní čísla z grafických p�
 - Export browser: skutečná stažení A1/A2/B PNG i PDF, Doubles/Team PNG, fyzické rozměry, 13 údajů, fonty/diakritika, skutečně načtené vlajky/loga/podklad, poměr PDF, mobil DPR3 se shodným PNG jako desktop, částečná evidence, zoom, chybějící knihovna a zrušení rozpracovaného exportu; bez kontaktování Firebase a bez JS chyb.
 - PDF: pypdf kontrola jedné stránky 1440×810 pt a bajtově shodných pixelů vloženého obrázku s PNG; Poppler render a vizuální kontrola. HTML náhled a canvas mohou mít drobné rozdíly antialiasingu/stínů; nejde o příslib bitové shody dvou renderovacích enginů.
 - Regrese současného indexu: Federal Cup, evidence (mock Auth, reload, full PUT/GET), detailed-counter, Jump/Bank a stream-controls/isolation/lag, release-version. Síť izolována; žádné produkční zápisy.
-- Release gate proti čerstvému origin/main f6c3e0f a git diff --check PASS. Všechny uvedené browserové regrese i původní čtyři PDF exporty PASS. GitHub CI se zaznamená po pushi.
+- Release gate proti čerstvému origin/main f6c3e0f a git diff --check PASS. Všechny uvedené browserové regrese i původní čtyři PDF exporty PASS. [CI kódového commitu 83bc44b](https://github.com/bcrybarna-oss/BC-Rybarna-Scoreboard/actions/runs/39792692476): Release version and revision **success**, Node **179/181 failure**. Log ověřen: výhradně dvě známá selhání preview-match-reload-recovery.test.cjs:50,106 v test-modular; žádná nová regrese. CI není plně zelené. Následný dokumentační commit nemění otestovaný kód.
 
 Spuštění exportu: `NODE_PATH` směřuje na Playwright runtime, `PDF_LIB_DIR` na místní dvě připnuté JS knihovny; `npm run test:federal-report-exports`. Sandbox zde rušil skutečná stažení; plné stažení ověřováno s povoleným browserem mimo sandbox a kompletně zachycenou sítí.
 
