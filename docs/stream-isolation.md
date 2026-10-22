@@ -1,6 +1,6 @@
 # Izolace OBS streamů — v4.51.86 RC
 
-Zadavatel: Dominik, 22. 10. 2026. Samostatná oprava z main `5244c3c55b319e34e5ccc9dbf6cdda9578c7e90d`. Pouze připravené vydání: **nesloučeno a nenasazeno**, během současného streamu se nesmí nasazovat. PR #22 se nemění.
+Zadavatel: Dominik, 22. 10. 2026. Samostatná oprava z main `5244c3c55b319e34e5ccc9dbf6cdda9578c7e90d`, [PR #25](https://github.com/bcrybarna-oss/BC-Rybarna-Scoreboard/pull/25), kódový commit `246ce52b30d13df3d774f7dc9a2aeb0f7cd722ca`. Pouze připravené vydání: **nesloučeno a nenasazeno**, během současného streamu se nesmí nasazovat. PR #22 se nemění.
 
 ## Příčina incidentu
 
@@ -44,7 +44,7 @@ Izolace obrazu není serverová autorizace: kdo by měl skutečné právo zapiso
 - Negativní kontrola téhož browser scénáře proti původnímu overlayi z main 5244c3c chybu reprodukuje: po výpadku A přejde na B a test podle očekávání selže.
 - `npm run test:stream`: všechny čtyři kombinace simple/full × overlay ON/OFF, původní čtyři režimy až do skutečného overlay.html, jména/skóre, reload/přihlášení a explicitní obnova, desktop/mobil/landscape/320 px — prošlo. Při záměrném startu nového zápasu test používá jeho novou konkrétní URL; starou URL proti nechtěné změně testuje zvlášť izolační sada.
 - Detailní počítadlo, Federal Cup a release-version browser prošly s 0 page errors, produkční síť blokovaná.
-- Úplná Node sada: **108/110**, pouze dvě známé nezměněné chyby preview-match-reload-recovery v test-modular (reload bez identity a obnova po přihlášení). Release gate proti čerstvému origin/main a git diff --check prošly. GitHub CI bude ověřeno na konkrétním commitu PR. Mobilní screenshoty společného panelu s novou adresou byly vizuálně zkontrolovány.
+- Úplná Node sada: **108/110**, pouze dvě známé nezměněné chyby preview-match-reload-recovery v test-modular (reload bez identity a obnova po přihlášení). Release gate proti čerstvému origin/main a git diff --check prošly. [GitHub CI kódového commitu](https://github.com/bcrybarna-oss/BC-Rybarna-Scoreboard/actions/runs/39730730115): release job success, Node 108/110; logy ověřeny, pouze tytéž dva známé testy (řádky 50 a 106). Mobilní screenshoty společného panelu s novou adresou byly vizuálně zkontrolovány. Následný dokumentační záznam nemění otestované HTML.
 
 Skutečná produkční Auth/Rules/CORS, systémové OBS, mobilní nativní browsery, fyzické telefony, zátěž a síťové vlastnosti Firebase nejsou mockem potvrzeny. Testy neprovádějí žádné produkční zápisy ani čtení dat živých zápasů.
 
