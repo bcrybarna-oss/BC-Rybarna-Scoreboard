@@ -1,6 +1,6 @@
 # Poslední funkční revize v4.51.90 RC
 
-Zadavatel **Dominik**, 23. 10. 2026. Stejný PR #28 / feature/federal-reports-stage-3a nad 6a8c57f; main f6c3e0f / produkce v4.51.89 RC. Lokálně otestováno, čeká push a CI. **Neslučovat a nenasazovat.** Cizí lokální kopie screenshotů i output/tmp zachovány.
+Zadavatel **Dominik**, 23. 10. 2026. Stejný PR #28 / feature/federal-reports-stage-3a nad 6a8c57f; main f6c3e0f / produkce v4.51.89 RC. Otestováno a pushnuto jako **ded86bc76b4f69bb4eaf6a3d7e9e92c23961ca68**; následný dokumentační commit nemění otestované HTML. **Neslučovat a nenasazovat.** Cizí lokální kopie screenshotů i output/tmp zachovány.
 
 ## Stream před startem a při obnově
 
@@ -30,6 +30,6 @@ V zápasu není volba zapnout/vypnout stream. Celý panel režimů/URL/kopírov�
 - Federal Cup, detailed-counter, stream-isolation, stream-lag, release-version, 7/7 federal-evidence-conflicts a report/UI browser PASS. Izolace s dvěma vydavateli, >21 s výpadek a stejné UID/jiný matchId zachována.
 - Plná Node sada **184/186**: pouze známá selhání preview-match-reload-recovery.test.cjs:50,106 nad test-modular, nezměněna a neskryta. CI není plně zelené.
 - Skutečné PNG/PDF všech reportů desktop/mobil DPR3 PASS; PNG bajtově shodné se schválenými. PDF jedna strana 1440×810 pt a přesné pixely vloženého PNG 1920×1080. Výpočty i report/export kód bajtově shodné s 6a8c57f. Chyby/cancel/duplicitní exporty stále chráněny.
-- Release gate po čerstvém fetchi main f6c3e0f a diff --check PASS. CI bude doplněno po pushi. Produkční síť se nepoužívá, mock backend zachycuje veškeré požadavky.
+- Release gate po čerstvém fetchi main f6c3e0f a diff --check PASS. [CI ded86bc](https://github.com/bcrybarna-oss/BC-Rybarna-Scoreboard/actions/runs/39916686239): Release version and revision **success**, Node **184/186 failure**. Log ověřen: jen známá selhání preview-match-reload-recovery.test.cjs:50,106 v test-modular; žádná nová regrese. CI není plně zelené. Produkční síť se nepoužívá, mock backend zachycuje veškeré požadavky.
 
 Fyzické telefony/iOS, skutečné OBS, produkční Auth/Firebase Rules a zátěž nebyly testovány. Nová volba není změna oprávnění; Rules a autorizační mechanismus se nemění. Originální PDF nebylo dostupné; kontrola pravidel vychází z výslovného přepisu zadavatele. Čeká finální kontrola a souhlas s vydáním.
