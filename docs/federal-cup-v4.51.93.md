@@ -2,6 +2,14 @@
 
 Zadavatel: Dominik. Datum: 23. 10. 2026. Větev `fix/federal-pushout-evidence` zmain ac620191e2abf75ae602a42a33f2bcceb99ea68c. **Nesloučeno a nenasazeno**, produkce92. Jeden společný opravný/vizuální PR.
 
+## Doladění vlajek a browserového testu
+
+Pokračování stejného PR #31 a nevydané verze93. Po vizuální připomínce odstraněno periodické svislé pásování: dvě širší nerovnoměrné záhybové plochy, společný dvourozměrný posun, šikmé měkké světlo a průhledné okolí. Přesné rovné národní vektory a symboly beze změny. Obě země mají identické parametry látky. Pro náhledy a export se používají společné PNG1920×1320 vyrenderované zSVG při2x, aby filtry nevytvářely schodové hrany vmalém zobrazení. Reprodukovatelné pomocí scripts/render-federal-cloth-assets.cjs. Plochá malá SVG beze změny.
+
+Aktualizován federal-evidence-browser.cjs podle schváleného zadávání: známé rychlé dokončení8koulí je pot/sequential_batch s8pokusy/8úspěšnými strky acomplete. Vrácený push out potvrzuje výslovně žádné koule. Všechny ostatní kontrolní scénáře zachovány a celý browser nyní PASS, včetně skutečného mocked Auth/PUT/GET/reload/UNDO, B&R/esa, faulů a Team/Doubles aktérů. Dřívější upozornění na zastaralý test níže zachycuje stav před touto aktualizací, již není otevřeným problémem.
+
+Detaily: [vlajky vpřehledu](screenshots/federal-93-flags-overview-detail.png), [vlajky vreportu](screenshots/federal-93-flags-report-detail.png), [dlaždice se zlatým pohárem](screenshots/federal-93-tile-detail.png). Aktualizovány i A1/A2/B, dialogy a desktop/mobil screenshoty. Statistiky, popisky, Resafe a společné tlačítko se dále nemění. Žádné produkční zápisy nebo migrace.
+
 ## Prezentace
 
 Dlaždice zachovává původní rozměry; HTML text FEDERAL CUP,2026,ČESKO×SLOVENSKO a popis21zápasů. Samostatný zlatý/bronzový pohár bez zeleného odlesku vpravo. Oba národní symboly i text jsou samostatné prvky.
@@ -42,4 +50,4 @@ Offline diagnostický CLI nyní přijímá přesný Singles/Doubles/Team fixture
 
 ## Omezení
 
-Čeká vizuální schválení. Žádný merge/deploy ani migrace, původní Team1:5 také beze změny. Produkční Auth/Firebase/Rules/OBS a fyzický iPhone neověřeny. Dvě známá modularizační selhání a výše popsaný zastaralý browserový scénář transparentně zachovány; CI není plně zelené. Pushnuto jako20a095be5813d7ff67cdc1e1ac573a063c206623 do [draft PR #31](https://github.com/bcrybarna-oss/BC-Rybarna-Scoreboard/pull/31). [CI20a095b](https://github.com/bcrybarna-oss/BC-Rybarna-Scoreboard/actions/runs/39982232668): Release version and revision **success**, Node **198/200 failure**; log potvrzuje pouze preview-match-reload-recovery.test.cjs:50,106. Žádná nová regrese v CI; CI není plně zelené.
+Čeká vizuální schválení. Žádný merge/deploy ani migrace, původní Team1:5 také beze změny. Produkční Auth/Firebase/Rules/OBS a fyzický iPhone neověřeny. Dvě známá modularizační selhání zachována; CI není plně zelené. Zastaralý browserový scénář byl v tomto pokračování aktualizován podle schválených pravidel a celý test prošel. Pushnuto jako20a095be5813d7ff67cdc1e1ac573a063c206623 do [draft PR #31](https://github.com/bcrybarna-oss/BC-Rybarna-Scoreboard/pull/31). [CI20a095b](https://github.com/bcrybarna-oss/BC-Rybarna-Scoreboard/actions/runs/39982232668): Release version and revision **success**, Node **198/200 failure**; log potvrzuje pouze preview-match-reload-recovery.test.cjs:50,106. Žádná nová regrese v CI; CI není plně zelené.

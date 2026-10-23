@@ -29996,7 +29996,7 @@ function renderStats(){
   const REPORT_SOURCES={breakSuccess:'Čítače skutečně provedených rozstřelů a jejich kanonické výsledky; eso je úspěšný break.',breakBallAverage:'Spadlé break koule dělené všemi provedenými breaky, včetně soft a faulových.',aces:'Samostatná evidence es; k čistým hrám se znovu nepřičítají.',ownBreakWins:'Dokončené racky se skutečným rozstřelujícím a vítězem; žádný odhad střídání.',pottingSuccess:'Úspěšné útočné strky / doložené útočné pokusy. Multipot je jeden strk; neurčité doplnění počet strků nevytváří.',cleanRuns:'Existující osobní metrika cleanRuns z doložených B&R, oddělená od es.',pottedBalls:'Řádné koule z kanonických strků, explicitní nebo bezpečně odvozené. Bez break, faulových a push out koulí.',jumpShots:'Úspěšné označené Jump strky / pokusy, včetně legálního úniku bez potopení; čítače kontrolují hlavní records.',bankShots:'Úspěšné označené Bank strky / pokusy. Bank není únik; rackové kopie se znovu nesčítají.',safetySuccess:'Úspěšné / vyhodnocené jistoty podle evidence obsluhy.',escapeSuccess:'Úspěšné / evidované úniky z jistot, včetně neúspěchů s faulem i bez něj.',resafes:'Doložené Resafe, každý právě jednou.',fouls:'Celkové fauly včetně break a únikových faulů, bez jejich opětovného přičtení.'};
   function reportSources(context=''){return '<details class="fc-report-sources"><summary>Zdroje jednotlivých ukazatelů a úplnost evidence</summary><p>Úplné údaje mají výsledek. Částečná evidence ukazuje jen doložené mezisoučty bez oficiálního procenta či sloupce. Neznámá evidence je —. Poměr 0/0 znamená žádné pokusy.</p><p class="fc-report-context">'+esc(context)+'</p><dl>'+REPORT_GROUPS.flatMap(([,rows])=>rows).map(([key,label])=>'<dt>'+esc(label)+'</dt><dd>'+esc(REPORT_SOURCES[key])+'</dd>').join('')+'</dl></details>';}
   const reportDialog=$('fcReportDialog');let reportReturnFocus=null,reportExportBusy=false,reportExportGeneration=0,reportZoomed=false;
-  function reportFlag(side){const rep=REPORT_REPS[side];return '<img width="120" height="80" class="fc-report-flag" alt="Vlajka '+rep.name+'" src="assets/federal-cup/flag-'+rep.id.toLowerCase()+'-cloth.svg">';}
+  function reportFlag(side){const rep=REPORT_REPS[side];return '<img width="120" height="80" class="fc-report-flag" alt="Vlajka '+rep.name+'" src="assets/federal-cup/flag-'+rep.id.toLowerCase()+'-cloth.png">';}
   function reportMatchName(m,side){
     if(m.federalCupLink?.type==='team')return REPORT_REPS[side].name;
     const people=federalStatsRows(m.federalCupLink?.lineupParticipants?.[side]),need=m.federalCupLink?.type==='doubles'?2:1;
@@ -30151,7 +30151,7 @@ function renderStats(){
     const a=teamAggregate(0),b=teamAggregate(1);
     const state=raceState(),done=state.played;
     function teamBox(name,flag,place,results,cls){
-      return '<div class="fc26-scoreboard-team '+cls+'"><img class="fc26-flag-svg fc26-flag-large" alt="Vlajka '+(flag==='sk'?'Slovenska':'Česka')+'" src="assets/federal-cup/flag-'+flag+'-cloth.svg">'+
+      return '<div class="fc26-scoreboard-team '+cls+'"><img class="fc26-flag-svg fc26-flag-large" alt="Vlajka '+(flag==='sk'?'Slovenska':'Česka')+'" src="assets/federal-cup/flag-'+flag+'-cloth.png">'+
         '<div class="fc26-scoreboard-name">'+name+'</div>'+
         '<div class="fc26-scoreboard-meta">'+place+'</div>'+
         '<div class="fc26-scoreboard-wins">'+results.matchWins+'</div>'+

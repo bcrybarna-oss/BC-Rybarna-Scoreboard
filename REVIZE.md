@@ -1,5 +1,14 @@
 # Revize aplikace Poolčítadlo
 
+## Dominik – jemné záhyby vlajek a aktuální evidence browser (v4.51.93 RC)
+Zadavatel: Dominik
+Datum: 23. 10. 2026
+Změny: Stejný PR #31 a nevydaná93. Odstraněna pravidelná harmonika velkých vlajek; široké nestejné záhyby, měkké šikmé světlo, shodné zpracování obou zemí a zachovaná přesná národní geometrie. Opakovaně používané průhledné PNG zeSVG při2x a reprodukovatelný renderovací skript. Nové detaily přehledu/reportu/dlaždice a obnovené A1/A2/B. Zastaralý federal-evidence-browser aktualizován pro známé sekvenční dokončení a explicitní nulový push out, ostatní kontroly zachovány.
+Testy: Celý federal-evidence-browser PASS včetně faulů/Resafe/MISS, B&R/esa, Team/Doubles, UNDO, mocked Auth/uložení/cloud GET/reload. Unit198/200 pouze známé dvě modularizační chyby. Desktop/mobil skutečného Singles#3 a všech6PNG/PDFpárů znovu PASS, vložené PDFpixely identické sPNG; hodnoty93 %/14 a95 %/38 zachovány, žádná změna výpočtů vtomto pokračování.
+Nasazení: Připraveno pro stejný draft PR #31; žádný merge/deploy, produkce92. Čeká grafické schválení. Dokumentace a screenshoty vdocs/federal-cup-v4.51.93.md.
+Omezení: Produkční Auth/Firebase/OBS a fyzický iPhone neověřeny. Původní export a produkční zápasy nezměněny. Dvě známá modularizační selhání zůstávají; CI není plně zelené.
+
+
 ## Dominik – společná revize Federal Cupu a evidence push outu (v4.51.93 RC)
 Zadavatel: Dominik
 Datum: 23. 10. 2026

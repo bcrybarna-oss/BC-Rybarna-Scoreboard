@@ -41,7 +41,7 @@
         810.0
       ],
       "pngPdfPixelsIdentical": true,
-      "pngSha256": "89bb3cf9e9cb38ef5ef4498898695dc3a7cc3bc4d37b0e2c2dcdf9b6c2e546be"
+      "pngSha256": "b065f3462af2f690b30f8852570aae262fe4881ad01f11d7acfe2f797a94a562"
     },
     {
       "name": "A1",
@@ -54,7 +54,7 @@
         810.0
       ],
       "pngPdfPixelsIdentical": true,
-      "pngSha256": "89bb3cf9e9cb38ef5ef4498898695dc3a7cc3bc4d37b0e2c2dcdf9b6c2e546be"
+      "pngSha256": "b065f3462af2f690b30f8852570aae262fe4881ad01f11d7acfe2f797a94a562"
     },
     {
       "name": "A2-mobile",
@@ -67,7 +67,7 @@
         810.0
       ],
       "pngPdfPixelsIdentical": true,
-      "pngSha256": "4109bedc58ae603a5bfadff2a5918460c5f4d004f5bf3ee3bffe6c20b186303b"
+      "pngSha256": "a1e2692a142b433f1bffa75a3a3d350485f0b31c9b57a49c4399f181b9cdf671"
     },
     {
       "name": "A2",
@@ -80,7 +80,7 @@
         810.0
       ],
       "pngPdfPixelsIdentical": true,
-      "pngSha256": "4109bedc58ae603a5bfadff2a5918460c5f4d004f5bf3ee3bffe6c20b186303b"
+      "pngSha256": "a1e2692a142b433f1bffa75a3a3d350485f0b31c9b57a49c4399f181b9cdf671"
     },
     {
       "name": "B-mobile",
@@ -93,7 +93,7 @@
         810.0
       ],
       "pngPdfPixelsIdentical": true,
-      "pngSha256": "dc15c72db033544fcb244fca594006bdd0761ec0e4e6ba9a1c0f3ca298bf9211"
+      "pngSha256": "f829248ce6c8db639563fbd9b50b2bbc44102cffd36b67c2dc42f866962fb153"
     },
     {
       "name": "B",
@@ -106,8 +106,10 @@
         810.0
       ],
       "pngPdfPixelsIdentical": true,
-      "pngSha256": "dc15c72db033544fcb244fca594006bdd0761ec0e4e6ba9a1c0f3ca298bf9211"
+      "pngSha256": "f829248ce6c8db639563fbd9b50b2bbc44102cffd36b67c2dc42f866962fb153"
     }
   ],
-  "writesToProduction": 0
+  "writesToProduction": 0,
+  "flagStyle": "broad unequal folds, soft diagonal light, identical geometry and treatment for SK/CZ; 2x transparent PNG rendered from exact SVG",
+  "evidenceBrowser": "PASS updated known sequential completion8attempts/8successes; all remaining scenarios retained"
 }
