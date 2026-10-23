@@ -42,4 +42,4 @@ Offline diagnostický CLI nyní přijímá přesný Singles/Doubles/Team fixture
 
 ## Omezení
 
-Čeká vizuální schválení. Žádný merge/deploy ani migrace, původní Team1:5 také beze změny. Produkční Auth/Firebase/Rules/OBS a fyzický iPhone neověřeny. Dvě známá modularizační selhání a výše popsaný zastaralý browserový scénář transparentně zachovány; CI není plně zelené. GitHub CI bude zkontrolováno po pushi.
+Čeká vizuální schválení. Žádný merge/deploy ani migrace, původní Team1:5 také beze změny. Produkční Auth/Firebase/Rules/OBS a fyzický iPhone neověřeny. Dvě známá modularizační selhání a výše popsaný zastaralý browserový scénář transparentně zachovány; CI není plně zelené. Pushnuto jako20a095be5813d7ff67cdc1e1ac573a063c206623 do [draft PR #31](https://github.com/bcrybarna-oss/BC-Rybarna-Scoreboard/pull/31). [CI20a095b](https://github.com/bcrybarna-oss/BC-Rybarna-Scoreboard/actions/runs/39982232668): Release version and revision **success**, Node **198/200 failure**; log potvrzuje pouze preview-match-reload-recovery.test.cjs:50,106. Žádná nová regrese v CI; CI není plně zelené.
