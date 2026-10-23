@@ -1,5 +1,14 @@
 # Revize aplikace Poolčítadlo
 
+
+## Dominik – Pushout Sports branding reportů ve stejné revizi (v4.51.91 RC)
+Zadavatel: Dominik
+Datum: 23. 10. 2026
+Změny: Originální transparentní žluté logo Pushout Sports beze změny vloženo do společné šablony A1/A2/B doprostřed nad nadpis, 600 × 82 px. Poolčítadlo vlevo, koule 9 vpravo, 13 statistik, výpočty, quick-finish logika i rozměry zachovány. Exportní mocky a kontroly aktualizovány o logo; ochrana proti vloženému HTML nadále kontroluje všechny nepovolené obrázky. Nové skutečné PNG/PDF A1/A2/B a desktop/mobil dialog v docs; dokumentace původu loga a nepovinného plakátu. Stejná větev a PR #29, nikoli nové vydání.
+Testy: Quick-finish browser, quick-action export A1/A2/B, obecný export (desktop/mobil DPR3 bajtově shodné PNG), UI/report browser, Federal Cup a release-version PASS. PNG1920×1080, 1stránkové PDF1440×810 a přesná shoda vložených pixelů všech tří PDF PASS; vizuální kontrola všech tří PNG a obou dialogů. Node189/191 jen známé dvě chyby preview-match-reload-recovery.test.cjs v test-modular. Výpočetní API a quick helper proti předchozí hlavě nezměněny; logo bajtově totožné s přílohou. Release gate a vzdálené CI budou zaznamenány po závěrečné kontrole.
+Nasazení: Lokálně otestováno; připraveno k aktualizaci existujícího PR #29. Neslučovat a nenasazovat; produkce nadále v4.51.90 RC. Žádné produkční testovací zápisy.
+Omezení: Plakát není dostupný; zadavatel výslovně schválil pokračování podle originálního loga a popsané kompozice. Vzorky jsou syntetické. Produkční Auth/Firebase/OBS a fyzický iOS neověřeny. CI není plně zelené kvůli známým dvěma chybám; čeká vizuální schválení.
+
 ## Dominik – oprava rychlého dohrávání a reportových hodnot Federal Cupu (v4.51.91 RC)
 Zadavatel: Dominik
 Datum: 23. 10. 2026

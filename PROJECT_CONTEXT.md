@@ -1,5 +1,8 @@
 # Poolčítadlo – společný kontext projektu
 
+Kandidát v4.51.91 RC / PR #29: reporty A1/A2/B mají společný branding Pushout Sports nad titulkem, původní logo Poolčítadla vlevo a pozadí s koulí 9 zůstávají. Originální 3000 × 410 logo je beze změny v assets/pushout-sports-logo-yellow.png; PNG1920×1080/PDF16:9 i výpočetní logika beze změny. Stejná nevydaná revize jako quick-finish; nesloučeno a nenasazeno. Podrobnosti docs/federal-pushout-branding-v4.51.91.md.
+
+
 Tento soubor je hlavní společný kontext pro vývoj aplikace Poolčítadlo. Slouží jako zdroj pravdy pro Jaroslava, Dominika i jejich ChatGPT asistenty.
 
 Povinná pravidla spolupráce jsou v `AGENTS.md`. Před každou prací čti také `REVIZE.md` a `PROJECT_STATUS.md`; aktuální verze, ověřené nasazení, rozpracované body a výsledky testů se udržují v `PROJECT_STATUS.md`. Tento soubor popisuje dlouhodobý kontext a nenahrazuje aktuální stav.
