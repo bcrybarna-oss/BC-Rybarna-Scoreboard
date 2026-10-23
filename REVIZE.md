@@ -1,5 +1,13 @@
 # Revize aplikace Poolčítadlo
 
+## Dominik – oprava rychlého dohrávání a reportových hodnot Federal Cupu (v4.51.91 RC)
+Zadavatel: Dominik
+Datum: 23. 10. 2026
+Změny: Nová opravná větev fix/federal-quick-finish-evidence z čerstvého main 3bdc844, produkce 90. Příčina reprodukována na původním main synteticky: DOHRÁVKA 9 potů / 0/0 partial kvůli inferred_pots bez pokusů a známého intentu. Nové rychlé ČISTÁ HRA/DOHRÁVKA při známém stolu zapisují pot/sequential_batch a jeden úspěšný pokus na zbývající kouli; klasifikace a jediná racková výhra zachovány. DOHRÁT zachovává sequential princip a neodhaduje neznámý stůl. Unknown completion nedoplňuje koule/strky, zůstává partial. Match/season API i agregace bajtově stejné, žádná migrace dokončených zápasů. Reporty A1/A2/B: 0/0, procenta jen z úplné evidence, částečné poměry/počty s *, unknown —, bez verbose textů a partial sloupců. Doubles dvě celé řádky jmen se škálováním. SVG/panely/vlajky/branding/pozadí a 13 názvů zachovány. Všechna aktivní místa a overlay verze 91. Nové testy, syntetické PNG/PDF a docs/federal-quick-finish-v4.51.91.md.
+Testy: Node189/191 pouze známá selhání preview-match-reload-recovery.test.cjs:50,106 v test-modular. Nový formatter a quick-finish browser PASS: 1–9 zbývajících, čistá po breaku, dohrávka dry/foul/vrácený push, neznámý stůl, multipot/MISS, oprávněnost, Singles/Doubles/Team/actor, jediné počty, undo/save/reload. Case report/export browser PASS A1/A2/B 9/9=100%, 0/0 a partial*, dlouhá jména, skutečné FullHD PNG/16:9 PDF; pypdf přesné vložené pixely. Obecné report/browser a Federal Cup/detailed/stream/lineup/release-version regrese PASS; závěrečná partial exportní kontrola PASS; 4 další unit testy přímé kanonické evidence PASS. Release gate proti čerstvému main3bdc844 a diff --check PASS. CI bude doplněno po pushi. CI není plně zelené.
+Nasazení: Lokálně otestovaný kandidát v4.51.91 RC, připraven k novému samostatnému PR. Nesloučeno a nenasazeno dle zadání; produkce v4.51.90 RC. Žádné produkční zápisy.
+Omezení: Původní produkční Doubles #2/Team #1 nebyly načteny; simulace není jejich analýza. Existující hotové zápasy neměněny ani zpětně nedoplňovány. Unknown/partial z jiných pravdivých důvodů zůstává. Ukázky jsou jednorackové syntetické snapshoty rychlé akce, ne soutěžní zápasy. Produkční Auth/Firebase/OBS a fyzický iOS neověřeny; čeká ruční revize a nové naklikání uživatelem.
+
 ## Dominik – ověřené produkční nasazení reportů a finálních úprav (v4.51.90 RC)
 Zadavatel: Dominik
 Datum: 23. 10. 2026

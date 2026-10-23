@@ -8,6 +8,9 @@ Každá samostatně nasazovaná funkční i vizuální změna povinně zvyšuje 
 
 ## Repozitář a produkce
 
+Kandidát91 (Dominik): pouze nové rychlé akce se známým 9/10-ball stolem používají předpoklad jedna zbývající koule = jeden úspěšný potápěcí strk (pot/sequential_batch). Zachováno B&R versus dohrávka, actor Team a dvojice Doubles. Unknown stav nemá odhad koule/strku; staré dokončené záznamy se nemigrují. Výpočty se nemění. Reportový formatter sdílí krátké 0/0 / procenta / partial* / —; oficiální procenta/sloupce pouze úplná evidence. Doubles nominace má dva neporušené řádky jmen se škálováním. Detaily a stav nové opravy v docs/federal-quick-finish-v4.51.91.md / PROJECT_STATUS.md. Bez merge/deploy, produkce90.
+
+
 Aktuální nasazení: v4.51.90 RC z externího merge PR #28, fe696f477d37f1f8ad2c99e242c1d789c746071c. Dne 23. 10. 2026 potvrzen úspěšný Pages deployment, přesná shoda veřejného HTML/assetů a bezpečný nepřihlášený smoke test. Rozsah a neověřené přihlášené funkce jsou výslovně v docs/deployment-v4.51.90.md / PROJECT_STATUS.md. Následující popisy kandidáta zachycují historii před sloučením; formulace bez merge/deploy v nich není aktuálním stavem produkce.
 
 
