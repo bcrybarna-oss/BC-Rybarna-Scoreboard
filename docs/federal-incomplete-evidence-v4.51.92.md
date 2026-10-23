@@ -1,5 +1,10 @@
 # Diagnostika neúplné evidence a prevence neznámého rychlého dokončení
 
+## Upřesnění po zadání pravidla MISS (23. 10. 2026)
+
+Níže je zachován historický výsledek nad nezměněným exportem. Dřívější závěr, že odvozená koule 6 před MISS musí mít neznámé pokusy, byl překonán výslovným pravidlem zadavatele: bezpečný odvod před MISS znamená jednu kouli, jeden pokus a jeden úspěšný strk. Původní export opravdu obsahuje unknown hodnoty, ale nové zadávání je již nemá vytvářet v tomto přesně vymezeném průchodu. RESAFE se známou nulou má explicitní pottedCount: 0. Podrobnosti, testy a oddělený návrh nápravy uloženého zápasu: [aktuální oprava](federal-zero-and-miss-v4.51.92.md). Žádná migrace ani změna původního exportu neproběhla.
+
+
 Zadavatel: **Dominik**, 23. 10. 2026. Kandidát **v4.51.92 RC**, větev `fix/federal-unknown-table-quick-finish` z main `0db27bb`. **Neslučovat a nenasazovat.** Produkce zůstává91.
 
 ## Aktualizace po obdržení skutečného exportu

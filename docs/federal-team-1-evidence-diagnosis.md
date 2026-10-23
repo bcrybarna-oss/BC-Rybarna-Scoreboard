@@ -1,5 +1,10 @@
 # Skutečná diagnostika Team #1: dvě odlišné příčiny neúplnosti
 
+## Upřesnění po zadání pravidla MISS (23. 10. 2026)
+
+Níže je zachován historický výsledek nad nezměněným exportem. Dřívější závěr, že odvozená koule 6 před MISS musí mít neznámé pokusy, byl překonán výslovným pravidlem zadavatele: bezpečný odvod před MISS znamená jednu kouli, jeden pokus a jeden úspěšný strk. Původní export opravdu obsahuje unknown hodnoty, ale nové zadávání je již nemá vytvářet v tomto přesně vymezeném průchodu. RESAFE se známou nulou má explicitní pottedCount: 0. Podrobnosti, testy a oddělený návrh nápravy uloženého zápasu: [aktuální oprava](federal-zero-and-miss-v4.51.92.md). Žádná migrace ani změna původního exportu neproběhla.
+
+
 Zadavatel: Dominik, 23. 10. 2026. Pouze čtení místního exportu a výpočty v paměti. Žádný zásah do exportu ani Firebase, žádná změna aplikace, merge či nasazení.
 
 ## Identita a výsledek

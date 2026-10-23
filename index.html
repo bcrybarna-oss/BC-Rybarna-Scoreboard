@@ -9816,11 +9816,12 @@ $('useClock').addEventListener('change',e=>$('clockSettings').classList.toggle('
     const count=Number(r.pottedCount??r.balls?.length??0);
     r.evidenceVersion=2;
     r.intent=r.intent||({pot:count?'pot':'unknown',miss:'pot',safety:'safety',escape:'escape',break:'other',inferred_pots:'unknown'}[r.kind]||'other');
-    const sequential=r.kind==='pot'&&r.entry==='sequential_batch';
+    const inferredSequential=r.kind==='inferred_pots'&&r.source==='inning_end'&&r.entry==='sequential_inference'&&r.derivationSafe===true&&Array.isArray(r.balls)&&r.balls.length>0&&new Set(r.balls).size===r.balls.length&&r.balls.every(n=>Number.isInteger(n)&&n>=1&&n<=10)&&count===r.balls.length;
+    const sequential=r.kind==='pot'&&r.entry==='sequential_batch'||inferredSequential;
     if(sequential)r.strokeCount=count;
     r.pottingAttempts=r.intent==='pot'?(['miss','foul'].includes(r.kind)?1:sequential?count:r.strokeCount===1?1:null):r.intent==='unknown'?(r.kind==='inferred_pots'&&count===0?0:null):0;
     if(r.kind==='table_correction'&&!r.foulId||r.kind==='turn_correction')r.pottingAttempts=null;
-    r.successfulPottingStrokes=['foul','miss'].includes(r.kind)?0:r.pottingAttempts===null?null:r.intent==='pot'&&r.kind==='pot'?r.pottingAttempts:0;
+    r.successfulPottingStrokes=['foul','miss'].includes(r.kind)?0:r.pottingAttempts===null?null:r.intent==='pot'&&(r.kind==='pot'||inferredSequential)?r.pottingAttempts:0;
     r.potsEvidence=['pot','escape'].includes(r.kind)?'explicit':r.kind==='inferred_pots'?(r.derivationSafe?'derived':'unknown'):'not_applicable';
     return r;
   }
@@ -10316,6 +10317,10 @@ $('useClock').addEventListener('change',e=>$('clockSettings').classList.toggle('
     const side=Number(info.side??match.turn),tag=d.tag;
     const r={id:uid(),kind,side,sideId:match.playerIds?.[side]||null,actor:detailedActor(side),
       rack:match.rackNumber,inning:d.inning.id,balls:[],...info};
+    // Persist a known count independently of arrays, which may vanish when empty in RTDB.
+    // Only an explicitly supplied ball list proves the count; absent/unknown is not zero.
+    if(!Object.hasOwn(info,'pottedCount')&&['pot','escape','break'].includes(kind)&&
+       Array.isArray(info.balls)&&!(kind==='break'&&info.ballNumbersKnown===false))r.pottedCount=info.balls.length;
     if(tag && ['jump','bank'].includes(tag.type) && tag.side===side && tag.rack===match.rackNumber &&
        ['pot','miss','foul','escape'].includes(kind) && (kind!=='escape'||tag.type==='jump')){
       r.strokeCount=1;
@@ -10379,12 +10384,14 @@ $('useClock').addEventListener('change',e=>$('clockSettings').classList.toggle('
   function invalidateDetailedInference(){
     const d=ensureDetailedPlay();if(d)d.inning.safeInference=false;
   }
-  function applyRotationInference(ball){
+  function applyRotationInference(ball,failureKind=null){
     const balls=rotationInference(ball);
     if(balls===null)return false;
     match.rackRemainingBalls=match.rackRemainingBalls.filter(n=>!balls.includes(n));
     if(balls.length){
-      recordDetailedShot('inferred_pots',{balls,strokeCount:null,source:'inning_end',derivationSafe:true});
+      const sequential=failureKind==='miss'&&ensureDetailedPlay()?.tableKnown===true&&exactBallTrackingDiscipline();
+      recordDetailedShot('inferred_pots',{balls,strokeCount:sequential?balls.length:null,source:'inning_end',derivationSafe:true,
+        ...(sequential?{entry:'sequential_inference',intent:'pot',pottedCount:balls.length}:{})});
       const st=match.stats[match.turn];st.regularPottedBalls=Number(st.regularPottedBalls||0)+balls.length;
       logEvent('Doplněné koule v náběhu • '+match.playerNames[match.turn]+' • '+balls.join(', '));
     }
@@ -10420,7 +10427,7 @@ $('useClock').addEventListener('change',e=>$('clockSettings').classList.toggle('
     const f=rotationFailure;if(!f||f.ball===null)return toast('Vyber kouli.');
     const inferred=rotationInference(f.ball);
     if(f.foulBalls.some(n=>inferred?.includes(n)))return toast('Koule nemůže být současně doplněná před faulem a potopená při faulu. Uprav výběr nebo evidenci stolu.');
-    applyRotationInference(f.ball);
+    applyRotationInference(f.ball,f.kind);
     rotationFailure=null;$('rotationFailureModal').classList.remove('show');
     if(f.kind==='miss'){
       pendingMissPlayer=match.turn;
@@ -10943,6 +10950,7 @@ $('useClock').addEventListener('change',e=>$('clockSettings').classList.toggle('
     const host=$('fc26RackPlayers'),ft=match?.federalTeam;
     host.classList.toggle('hidden',!ft||!!match.endedAt);
     if(!ft)return;
+    if(ft.pending)ft.players=[ft.players?.[0]||null,ft.players?.[1]||null];
     host.innerHTML=ft.pending ? '<strong>Rack '+match.rackNumber+' • vyber hráče</strong>'+[0,1].map(side=>{
       const names=federalSlots(side===0?match.federalCupLink.rosterA:match.federalCupLink.rosterB,5,'');
       return '<label>'+esc(match.playerNames[side])+'</label><select onchange="fc26PickRackPlayer('+side+',this.value)"><option value="">— vyber hráče —</option>'+names.map((name,i)=>{const participants=match.federalCupLink.rosterParticipants?.[side]||[],p=participants[i],value=names.filter(n=>n===name).length>1?p?.id||'':name;return '<option value="'+esc(value)+'" '+((p?ft.players[side]?.id===p.id:ft.players[side]?.name===name)?'selected':'')+'>'+esc(name)+(names.filter(n=>n===name).length>1?' ('+(i+1)+')':'')+'</option>';}).join('')+'</select>';
@@ -12963,7 +12971,7 @@ const isFourteen=match.discipline==='14.1' && !simpleCounter;
 
 
   function inferRemainingFromMissBall(ball){
-    return applyRotationInference(Number(ball));
+    return applyRotationInference(Number(ball),'miss');
   }
   function knownQuickRackBalls(){
     const d=ensureDetailedPlay(),balls=match?.rackRemainingBalls,max=match?.discipline==='9-ball'?9:match?.discipline==='10-ball'?10:null;

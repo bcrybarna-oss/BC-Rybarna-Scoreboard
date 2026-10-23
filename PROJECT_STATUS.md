@@ -6,6 +6,10 @@ Aktualizace: 23. 10. 2026. Zadavatel aktuální revize: **Dominik**.
 
 Aktuální verze: **v4.51.92 RC** (nevydaný opravný kandidát; produkce v4.51.91 RC).
 
+- **Aktuální pokračování PR #30 (Dominik, 23. 10. 2026):** explicitní pottedCount: 0 pro známou nulu RESAFE a dalších explicitních akcí; úzce vymezený bezpečný odvod před MISS eviduje jednu kouli jako jeden úspěšný pokus podle upřesnění zadavatele. Cloudový reload/UNDO a A1/A2/B PNG/PDF PASS. Node **194/196**, pouze dvě známá modularizační selhání; CI není plně zelené. Na paměťové kopii původního Team #1 cílená oprava dává **37/38 complete a 38 complete**. Původní export ani produkce nezměněny, žádná automatická migrace. [Oprava, testy a bezpečný plán nápravy](docs/federal-zero-and-miss-v4.51.92.md). Stejná nevydaná92; neslučovat ani nenasazovat.
+
+Historický závěr před upřesněním pravidla MISS (nahrazen výše):
+
 - **Skutečný Team #1 již diagnostikován (Dominik, 23. 10. 2026).** Match5a97e289-a5f5-4da4-bd85-8bc00daf1cc9/2026/Team1:5 ověřen v dodaném místním exportu, beze změny SHA256. CZ36/37* oprávněně označuje neznámé pokusy/intent odvozené koule6 před MISS na7 v racku1. CZ38* je unknown_pots u RESAFE rack3: původní balls[] je doložené undo snapshotem, v kanonickém záznamu chybí; jde o ztrátu explicitní nuly při uchování evidence. Reference/aktéři/racky bez chyb. PR #30 ani produkce91 tyto dvě příčiny zatím nemění; v tomto zápasu není rack_completion_unknown. Jen v paměťové kopii vrácené doložené balls[] mění count38 na complete, útok zůstává36/37*. Aplikační kód neměněn, žádné produkční zápisy/merge/deploy. [Skutečná diagnóza](docs/federal-team-1-evidence-diagnosis.md).
 
 Historie přípravy před obdržením skutečného exportu:

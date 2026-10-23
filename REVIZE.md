@@ -1,5 +1,14 @@
 # Revize aplikace Poolčítadlo
 
+## Dominik – explicitní nula RESAFE a bezpečný odvod před MISS (v4.51.92 RC)
+Zadavatel: Dominik
+Datum: 23. 10. 2026
+Změny: Pokračování stejného PR #30/verze92 oddělené od dřívější prevence neznámého stolu. Známý počet pot/escape/break ukládá pottedCount včetně nuly, absence se nenormalizuje. Bezpečný odvod před MISS ve známé rotaci zapisuje jednu kouli jako jeden úspěšný pokus s derived původem, bez dvojího započtení. Team reload obnoví prázdnou strukturu volby hráčů. Aktualizována diagnóza po upřesnění zadavatele a samostatný plán nápravy dvou doložených záznamů.
+Testy: Nové unit 4/4 PASS, 3/4 prokazatelně selžou na předchozím HEAD. Skutečná writer/reader cloudová cesta nad izolovaným mockem, RESAFE/ostatní úniky/UNDO/reload a safe MISS PASS. A1/A2/B complete/unknown PNG/PDF PASS. Detailed-counter, quick-finish, Federal Cup a unknown-table regrese PASS. Node194/196 pouze známé dvě preview-match-reload-recovery chyby; žádná nová regrese, CI není plně zelené. Paměťová cílená oprava původního zápasu ověřila37/38 complete a38complete; export SHA256 nezměněný.
+Nasazení: Připraveno a lokálně otestováno pro stejný draft PR #30; žádný merge/deploy, produkce91. Vzdálené CI bude zkontrolováno po pushi.
+Omezení: Žádná automatická migrace již uloženého zápasu, žádné produkční zápisy. Produkční Auth/Firebase, OBS a fyzický iPhone neověřeny. Historická interpretace inferred6 jako nutně unknown byla nahrazena výslovným pravidlem zadavatele.
+
+
 
 
 

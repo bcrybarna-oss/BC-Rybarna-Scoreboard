@@ -82,7 +82,7 @@ assert.ok(html.includes('window.fcTest='));
   const records=(m,kind)=>m.detailedPlay.records.filter(r=>r.kind===kind);
   await base();let before=await state();await failure('miss',5);let m=await state();
   assert.deepEqual(m.rackRemainingBalls,[5,6,7,8,9]);assert.equal(m.stats[0].breakPottedBalls,1);assert.equal(m.stats[0].regularPottedBalls,3);assert.equal(m.stats[0].matchOnlyMisses,1);assert.equal(m.stats[0].fouls,0);assert.equal(m.turn,1);
-  assert.deepEqual(records(m,'inferred_pots')[0].balls,[2,3,4]);assert.equal(records(m,'inferred_pots')[0].strokeCount,null);assert.equal(records(m,'miss')[0].ball,5);assert.equal(records(m,'break')[0].balls[0],1);
+  assert.deepEqual(records(m,'inferred_pots')[0].balls,[2,3,4]);assert.equal(records(m,'inferred_pots')[0].strokeCount,3);assert.equal(records(m,'miss')[0].ball,5);assert.equal(records(m,'break')[0].balls[0],1);
   const afterMissRecords=m.detailedPlay.records;
   await page.reload();await page.waitForSelector('#cloudLoginModal.show');await run(async()=>{fcTest.admin();await fcTest.resume()});m=await state();assert.deepEqual(m.detailedPlay.records,afterMissRecords);assert.deepEqual(m.rackRemainingBalls,[5,6,7,8,9]);
   await run(()=>fcTest.undo());m=await state();assert.deepEqual(m.rackRemainingBalls,before.rackRemainingBalls);assert.deepEqual(m.stats,before.stats);assert.deepEqual(m.detailedPlay,before.detailedPlay);

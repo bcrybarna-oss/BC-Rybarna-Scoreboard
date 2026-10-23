@@ -71,10 +71,10 @@ assert.ok(html.includes('window.fcTest='));
  try{
   const reportCases=[];
   const metrics=async()=>run(()=>fcTest.calculate(fcTest.match).sides.map(s=>s.metrics));
-  // SYNTHETIC diagnostic: unrecorded earlier pots inferred at MISS are not known attempts.
+  // SYNTHETIC diagnostic: safe MISS inference follows the user-confirmed one-ball/one-success rule.
   await setup(1);await select();await run(()=>{actionDryBreak();actionMiss();selectRotationFailureBall(3);confirmRotationFailure();});
   const diagnostic=await run(()=>{const m=fcTest.match,r=fcTest.calculate(m);return {synthetic:true,notTheReportedProductionMatch:true,scenario:'Team: dry break, MISS on 3 infers balls 1 and 2',metrics:r.sides.map(s=>({pottingSuccess:s.metrics.pottingSuccess,pottedBalls:s.metrics.pottedBalls})),records:m.detailedPlay.records.map(({id,rack,kind,source,entry,intent,potsEvidence,pottingAttempts,successfulPottingStrokes,balls,actor})=>({id,rack,kind,source,entry,intent,potsEvidence,pottingAttempts,successfulPottingStrokes,balls,actorId:actor?.id}))};});
-  assert.equal(diagnostic.metrics[1].pottingSuccess.coverage,'partial');assert.ok(diagnostic.metrics[1].pottingSuccess.reasons.includes('unknown_intent'));assert.equal(diagnostic.metrics[1].pottedBalls.components.derived,2);
+  assert.equal(diagnostic.metrics[1].pottingSuccess.coverage,'complete');assert.equal(diagnostic.metrics[1].pottingSuccess.numerator,2);assert.equal(diagnostic.metrics[1].pottingSuccess.denominator,3);assert.equal(diagnostic.metrics[1].pottedBalls.components.derived,2);
   if(process.env.FC_UNKNOWN_DIAGNOSTIC_FILE)fs.writeFileSync(process.env.FC_UNKNOWN_DIAGNOSTIC_FILE,JSON.stringify(diagnostic,null,2));
   if(process.env.FC_UNKNOWN_DIAGNOSTIC_ONLY){console.log(JSON.stringify(diagnostic));return;}
 
@@ -123,6 +123,6 @@ assert.ok(html.includes('window.fcTest='));
    await run(()=>fcTest.undo());assert.deepEqual((await state()).scores,[0,0]);await run(()=>fcTest.undo());assert.equal((await state()).detailedPlay.tableKnown,false);
   }
   if(process.env.FC_UNKNOWN_REPORT_CASES_FILE)fs.writeFileSync(process.env.FC_UNKNOWN_REPORT_CASES_FILE,JSON.stringify(reportCases,null,2));
-  assert.deepEqual(errors,[]);console.log('PASS exact break requires IDs before commit; unknown quick/clean/runout correction/cancel/undo/reload/Team actor; legitimate inferred MISS remains partial; isolated network only');
+  assert.deepEqual(errors,[]);console.log('PASS exact break requires IDs before commit; unknown quick/clean/runout correction/cancel/undo/reload/Team actor; safe inferred MISS gets one attempt per ball; isolated network only');
  }finally{await browser.close();}
 })().catch(e=>{console.error(e);process.exitCode=1;});
