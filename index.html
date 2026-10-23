@@ -2601,7 +2601,7 @@ html[data-theme="light"] #leagueSchedule .history-item .muted{
           <span class="by">by</span>
           <span class="club">BC Rybárna</span>
         </div>
-        <small class="modern-brand-version">v4.51.93 RC</small>
+        <small class="modern-brand-version">v4.51.94 RC</small>
       </div>
     </div>
     <div class="nav">
@@ -3215,7 +3215,7 @@ html[data-theme="light"] #leagueSchedule .history-item .muted{
         </div>
         <div class="subpanel" style="min-width:210px;text-align:center;margin:0">
           <div class="muted" style="font-size:10px;font-weight:950;letter-spacing:1px">AKTUÁLNÍ VERZE</div>
-          <div style="font-size:22px;font-weight:950;color:var(--gold2);margin-top:5px">v4.51.93 RC</div>
+          <div style="font-size:22px;font-weight:950;color:var(--gold2);margin-top:5px">v4.51.94 RC</div>
         </div>
       </div>
     </div>
@@ -5973,7 +5973,7 @@ html[data-theme="light"] #leagueSchedule .history-item .muted{
       </div>
 
       <div id="groupPlayoffSeedStatus" class="muted" style="margin-top:12px;min-height:20px"></div>
-      <div class="muted" style="margin-top:4px;font-size:11px">RC v4.51.93</div>
+      <div class="muted" style="margin-top:4px;font-size:11px">RC v4.51.94</div>
       <div class="modal-actions">
         <button id="groupPlayoffSeedApplyBtn" class="btn primary big" type="button">NASADIT DO PLAY-OFF</button>
         <button id="groupPlayoffSeedCancelBtn" class="btn">ZRUŠIT</button>
@@ -7158,7 +7158,7 @@ html[data-theme="light"] #leagueSchedule .history-item .muted{
     const btn=$('submitReportBtn');if(btn)btn.disabled=true;
     try{
       const id=uid(),p=currentUserPlayerId?data.players?.[currentUserPlayerId]:null;
-      const report={id,createdByUid:cloudUid,createdByPlayerId:currentUserPlayerId||'',createdByName:p?playerSelectionLabel(p):(cloudUserEmail||'Uživatel'),email:cloudUserEmail||'',type,area,description,appVersion:'v4.51.93 RC',createdAt:new Date().toISOString(),updatedAt:new Date().toISOString(),status:'new',adminNote:''};
+      const report={id,createdByUid:cloudUid,createdByPlayerId:currentUserPlayerId||'',createdByName:p?playerSelectionLabel(p):(cloudUserEmail||'Uživatel'),email:cloudUserEmail||'',type,area,description,appVersion:'v4.51.94 RC',createdAt:new Date().toISOString(),updatedAt:new Date().toISOString(),status:'new',adminNote:''};
       await reportRequest(id,'PUT',report);
       try{
         await writeReportUserMirror(report);
@@ -29996,7 +29996,7 @@ function renderStats(){
   const REPORT_SOURCES={breakSuccess:'Čítače skutečně provedených rozstřelů a jejich kanonické výsledky; eso je úspěšný break.',breakBallAverage:'Spadlé break koule dělené všemi provedenými breaky, včetně soft a faulových.',aces:'Samostatná evidence es; k čistým hrám se znovu nepřičítají.',ownBreakWins:'Dokončené racky se skutečným rozstřelujícím a vítězem; žádný odhad střídání.',pottingSuccess:'Úspěšné útočné strky / doložené útočné pokusy. Multipot je jeden strk; neurčité doplnění počet strků nevytváří.',cleanRuns:'Existující osobní metrika cleanRuns z doložených B&R, oddělená od es.',pottedBalls:'Řádné koule z kanonických strků, explicitní nebo bezpečně odvozené. Bez break, faulových a push out koulí.',jumpShots:'Úspěšné označené Jump strky / pokusy, včetně legálního úniku bez potopení; čítače kontrolují hlavní records.',bankShots:'Úspěšné označené Bank strky / pokusy. Bank není únik; rackové kopie se znovu nesčítají.',safetySuccess:'Úspěšné / vyhodnocené jistoty podle evidence obsluhy.',escapeSuccess:'Úspěšné / evidované úniky z jistot, včetně neúspěchů s faulem i bez něj.',resafes:'Doložené Resafe, každý právě jednou.',fouls:'Celkové fauly včetně break a únikových faulů, bez jejich opětovného přičtení.'};
   function reportSources(context=''){return '<details class="fc-report-sources"><summary>Zdroje jednotlivých ukazatelů a úplnost evidence</summary><p>Úplné údaje mají výsledek. Částečná evidence ukazuje jen doložené mezisoučty bez oficiálního procenta či sloupce. Neznámá evidence je —. Poměr 0/0 znamená žádné pokusy.</p><p class="fc-report-context">'+esc(context)+'</p><dl>'+REPORT_GROUPS.flatMap(([,rows])=>rows).map(([key,label])=>'<dt>'+esc(label)+'</dt><dd>'+esc(REPORT_SOURCES[key])+'</dd>').join('')+'</dl></details>';}
   const reportDialog=$('fcReportDialog');let reportReturnFocus=null,reportExportBusy=false,reportExportGeneration=0,reportZoomed=false;
-  function reportFlag(side){const rep=REPORT_REPS[side];return '<img width="120" height="80" class="fc-report-flag" alt="Vlajka '+rep.name+'" src="assets/federal-cup/flag-'+rep.id.toLowerCase()+'-cloth.png">';}
+  function reportFlag(side){const rep=REPORT_REPS[side];return '<img width="120" height="80" class="fc-report-flag" alt="Vlajka '+rep.name+'" src="assets/federal-cup/flag-'+rep.id.toLowerCase()+'-flat.svg">';}
   function reportMatchName(m,side){
     if(m.federalCupLink?.type==='team')return REPORT_REPS[side].name;
     const people=federalStatsRows(m.federalCupLink?.lineupParticipants?.[side]),need=m.federalCupLink?.type==='doubles'?2:1;
