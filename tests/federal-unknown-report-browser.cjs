@@ -13,6 +13,7 @@ const libs={'html2canvas.min.js':fs.readFileSync(path.join(libDir,'html2canvas.m
 (async()=>{fs.mkdirSync(out,{recursive:true});const browser=await chromium.launch({channel:'chrome',headless:true}),errors=[];let writes=0,firebase=0;
  async function client(mobile=false){const c=await browser.newContext({serviceWorkers:'block',acceptDownloads:true,viewport:mobile?{width:390,height:844}:{width:2042,height:1280},deviceScaleFactor:mobile?3:1,isMobile:mobile});
   await c.route('**/*',route=>{const q=route.request(),u=q.url();if(u==='http://fc-reports.local/')return route.fulfill({contentType:'text/html',body:html});
+   if(u.startsWith('http://fc-reports.local/assets/federal-cup/')){const file=new URL(u).pathname.slice(1);return route.fulfill({contentType:file.endsWith('.svg')?'image/svg+xml':'image/png',body:fs.readFileSync(path.join(__dirname,'..',file))});}
    const lib=Object.keys(libs).find(k=>u==='https://cdn.jsdelivr.net/npm/'+(k==='html2canvas.min.js'?'html2canvas@1.4.1/dist/':'jspdf@2.5.2/dist/')+k);if(lib)return route.fulfill({contentType:'application/javascript',body:libs[lib]});
    for(const [file,type]of [['assets/federal-report-billiards.webp','image/webp'],['assets/federal-report-pool-logo.png','image/png'],['assets/pushout-sports-logo-yellow.png','image/png'],['bc-rybarna-logo.png','image/png']])if(u==='http://fc-reports.local/'+file)return route.fulfill({contentType:type,body:fs.readFileSync(path.join(__dirname,'..',file))});
    if(!['GET','HEAD'].includes(q.method()))writes++;if(/firebaseio|firebasedatabase|identitytoolkit|securetoken/.test(u))firebase++;return route.abort();});
@@ -30,11 +31,11 @@ const libs={'html2canvas.min.js':fs.readFileSync(path.join(libDir,'html2canvas.m
   for(const testCase of cases){
    const m=testCase.match,conf=testCase.config;conf.reportHost='SK';await p.evaluate(({c,ms})=>reportTest.load(c,ms),{c:conf,ms:[m]});
    const actor=m.detailedPlay.records.find(r=>r.side===1&&r.kind==='pot').actor.id;
-   for(const [name,selector]of [['A1','[data-fc-report="match"]'],['A2','[data-fc-report="team"][data-rep="CZ"]'],['B','[data-fc-report="player"][data-person="'+actor+'"]']]){
+   for(const [name,selector]of [['A1','[data-fc-report="match"]'],['A2','[data-fc-report="team"]'],['B','[data-fc-report="player"][data-person="'+actor+'"]']]){
     await p.locator(selector).click();const sheet=p.locator('#fcReportContent article');assert.equal(await sheet.locator('[data-report-metric]').count(),13);
     const row=sheet.locator('[data-report-metric="pottingSuccess"]'),balls=sheet.locator('[data-report-metric="pottedBalls"]');
     if(testCase.complete){assert.match(await row.innerText(),/100 %/);assert.doesNotMatch(await row.innerText(),/\*/);assert.match(await balls.innerText(),/40/);}
-    else {assert.match(await row.innerText(),/\*/);assert.match(await balls.innerText(),/\*/);assert.equal(await row.locator('.fc-report-track').count(),0);}
+    else {assert.doesNotMatch(await row.innerText(),/\*/);assert.doesNotMatch(await balls.innerText(),/\*/);assert.ok(await row.locator('[data-coverage="partial"]').count());}
     await download(p,'png',name+(testCase.complete?'-known':'-corrected-partial'));await download(p,'pdf',name+(testCase.complete?'-known':'-corrected-partial'));await p.locator('#fcReportClose').click();
    }
   }

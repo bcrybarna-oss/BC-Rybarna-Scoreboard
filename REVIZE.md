@@ -1,5 +1,23 @@
 # Revize aplikace Poolčítadlo
 
+## Dominik – jemné záhyby vlajek a aktuální evidence browser (v4.51.93 RC)
+Zadavatel: Dominik
+Datum: 23. 10. 2026
+Změny: Stejný PR #31 a nevydaná93. Odstraněna pravidelná harmonika velkých vlajek; široké nestejné záhyby, měkké šikmé světlo, shodné zpracování obou zemí a zachovaná přesná národní geometrie. Opakovaně používané průhledné PNG zeSVG při2x a reprodukovatelný renderovací skript. Nové detaily přehledu/reportu/dlaždice a obnovené A1/A2/B. Zastaralý federal-evidence-browser aktualizován pro známé sekvenční dokončení a explicitní nulový push out, ostatní kontroly zachovány.
+Testy: Celý federal-evidence-browser PASS včetně faulů/Resafe/MISS, B&R/esa, Team/Doubles, UNDO, mocked Auth/uložení/cloud GET/reload. Unit198/200 pouze známé dvě modularizační chyby. Desktop/mobil skutečného Singles#3 a všech6PNG/PDFpárů znovu PASS, vložené PDFpixely identické sPNG; hodnoty93 %/14 a95 %/38 zachovány, žádná změna výpočtů vtomto pokračování.
+Nasazení: Otestováno a pushnuto jako2203595e4e74561e598791961277b6ce8e3814eb do stejného draft PR #31. [CI2203595](https://github.com/bcrybarna-oss/BC-Rybarna-Scoreboard/actions/runs/39984293770): release gate success, Node198/200 pouze známé preview-match-reload-recovery.test.cjs:50,106; žádná nová regrese v CI. Žádný merge/deploy, produkce92. Čeká grafické schválení. Dokumentace a screenshoty vdocs/federal-cup-v4.51.93.md.
+Omezení: Produkční Auth/Firebase/OBS a fyzický iPhone neověřeny. Původní export a produkční zápasy nezměněny. Dvě známá modularizační selhání zůstávají; CI není plně zelené.
+
+
+## Dominik – společná revize Federal Cupu a evidence push outu (v4.51.93 RC)
+Zadavatel: Dominik
+Datum: 23. 10. 2026
+Změny: Jedna opravná větev zaktuálního main92. Schválená dlaždice se samostatným zlatým pohárem aHTMLtextem, jedno společné tlačítko týmů, opakovaně použité přesné ploché/látkové vlajky, dostupné metriky bez hvězdiček apercenta izpartial, odstraněné drobné popisky aResafe. Internícoverage/reasons zachovány. Výslovné pravidlo zadavatele vylučuje push out koule zpotových statistik; nové potvrzení žádná/vybrané koule pouze aktualizuje stůl a zachová fyzický počet včetně0, bez volbyNevím. Neurčený faul není automaticky potápěcí pokus. Diagnostický CLI rozšířen naSingles/Doubles.
+Testy: Unit198/200 pouze známé dvě preview-match-reload-recovery chyby. Cílený reader baselineFAIL/opravaPASS, cloudmock/JSON/reload/UNDO/cancel/doubleconfirm/9a10spotting a záměryfauluPASS. FC/detailed/quickfinish/reporty/identity/mobil/longnames/fokus/Escape/verzePASS. SkutečnýSingles#3 lokálně93 %/14 a95 %/38, A1/A2/B desktop/mobil6PNG1920×1080/PDF16:9párů aidentickéPDFpixelyPASS. Starší evidence-browser:123 má totožný zastaralý TypeError i naorigin/main92, nezamlčen.
+Nasazení: Otestováno a pushnuto jako20a095be5813d7ff67cdc1e1ac573a063c206623 do draft PR #31; čeká vizuální schválení. Nesloučeno, nenasazeno, produkce92. [CI20a095b](https://github.com/bcrybarna-oss/BC-Rybarna-Scoreboard/actions/runs/39982232668): Release version and revision **success**, Node **198/200 failure**; log potvrzuje pouze preview-match-reload-recovery.test.cjs:50,106. Žádná nová regrese v CI; CI není plně zelené. Dokumentace docs/federal-cup-v4.51.93.md, screenshoty/exporty aověřovacíJSON. Žádné produkční zápisy.
+Omezení: Původní export azápasy nezměněny, žádná migrace. A2/Bukázky jsou výřez zjediného skutečnéhoSingles#3, nikolivcelýročník. ProdukčníAuth/Firebase/OBS afyzickýiOSneověřeny. CI neníplnězelené; známá selhání zachována. Čeká vizuálníschválení.
+
+
 ## Dominik – schválené produkční nasazení PR #30 (v4.51.92 RC)
 Zadavatel: Dominik
 Datum: 23. 10. 2026

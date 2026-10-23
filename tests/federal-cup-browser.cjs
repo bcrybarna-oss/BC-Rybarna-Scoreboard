@@ -84,7 +84,7 @@ assert.ok(html.includes('window.fcTest='));
   await run(()=>acceptTableAfterSoftBreak());m=await state();assert.equal(m.turn,1);assert.equal(m.pushOutEligibleFor,null);assert.equal(m.softBreakReturnEligibleFor,null);
   await run(()=>fcTest.undo());assert.equal((await state()).softBreakReturnEligibleFor,1);
   await run(()=>returnTableAfterSoftBreak());m=await state();assert.equal(m.turn,0);assert.equal(m.pushOutEligibleFor,0);
-  await run(()=>actionPushOut());m=await state();assert.equal(m.pushOutDecisionFor,1);assert.equal(m.stats[0].pushOuts,1);
+  await run(()=>{actionPushOut();confirmPushOutBalls('none');});m=await state();assert.equal(m.pushOutDecisionFor,1);assert.equal(m.stats[0].pushOuts,1);
   await page.reload();await page.waitForSelector('#cloudLoginModal.show');await run(async()=>{fcTest.admin();await fcTest.resume()});
   m=await state();assert.equal(m.pushOutDecisionFor,1);assert.equal(m.stats[0].pushOuts,1);
   await run(()=>fcTest.undo());assert.equal((await state()).pushOutEligibleFor,0);
@@ -123,7 +123,7 @@ assert.ok(html.includes('window.fcTest='));
     await page.locator('#actionSoftBreakBtn').click();await run(()=>toggleBreakBall(9));await page.locator('#breakBallSelectConfirmBtn').click();m=await state();assert.equal(m.stats[0].breakFouls,0);assert.equal(m.stats[0].softBreaks,1);assert.equal(m.rackRemainingBalls.includes(9),true);assert.equal(m.pushOutEligibleFor,null);
     await page.locator('#acceptSoftBreakBtn').click();assert.equal((await state()).turn,1);assert.equal(await page.locator('#actionPushOutBtn').isVisible(),false);
     await run(()=>fcTest.undo());await page.locator('#returnTableBtn').click();m=await state();assert.equal(m.turn,0);assert.equal(m.pushOutEligibleFor,0);
-    await page.locator('#actionPushOutBtn').click();await page.locator('#returnPushOutBtn').click();assert.equal((await state()).turn,0);
+    await page.locator('#actionPushOutBtn').click();await page.locator('#pushOutNoBallsBtn').click();await page.locator('#returnPushOutBtn').click();assert.equal((await state()).turn,0);
     await run(()=>fcTest.undo());await page.locator('#acceptPushOutBtn').click();assert.equal((await state()).turn,1);
   }
   console.log('PASS Team/Doubles/Singles through actual break/decision controls, spotted 9, push acceptance and return');

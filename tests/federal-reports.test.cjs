@@ -46,15 +46,17 @@ test('all 13 metric values are read unchanged through the existing API',()=>{
 test('host order is explicit, year 2026 default authorized; future years have no guessed host',()=>{
  assert.deepEqual(copy(ctx.federalReportOrder({year:2026})),[0,1]);assert.deepEqual(copy(ctx.federalReportOrder({year:2027,reportHost:'CZ'})),[1,0]);assert.equal(ctx.federalReportOrder({year:2027}),null);assert.equal(ctx.federalReportOrder({year:2026,reportHost:'other'}),null);
 });
-test('format partial/unknown/zero correctly, no bar for partial or no attempts',()=>{
- assert.equal(format({kind:'percent',coverage:'partial',numerator:3,denominator:5,value:60}).bar,null);assert.equal(format({kind:'percent',coverage:'partial',numerator:3,denominator:5}).text,'3 / 5*');
+test('format available partial percentages, unknown and known zero without stars',()=>{
+ assert.equal(format({kind:'percent',coverage:'partial',numerator:3,denominator:5,value:60}).bar,60);assert.equal(format({kind:'percent',coverage:'partial',numerator:3,denominator:5}).text,'60 %');
  assert.equal(format({coverage:'unknown'}).text,'—');const zero=format({kind:'ratio',coverage:'complete',numerator:0,denominator:0,value:null});assert.equal(zero.bar,null);assert.equal(zero.text,'0 / 0');
  assert.equal(format({kind:'percent',coverage:'complete',numerator:0,denominator:2,value:0}).bar,0);assert.equal(format({kind:'ratio',coverage:'complete',numerator:2,denominator:5,value:.4}).bar,40);
 });
 
-test('compact publication values never present partial evidence as an official percentage',()=>{
+test('publication uses recorded fractions without mutating partial coverage',()=>{
  assert.equal(format({kind:'percent',coverage:'complete',numerator:27,denominator:27,value:100}).text,'100 %');
- assert.equal(format({kind:'percent',coverage:'partial',numerator:27,denominator:27,value:100}).text,'27 / 27*');
- assert.equal(format({kind:'count',coverage:'partial',count:28,value:28}).text,'28*');
+ assert.equal(format({kind:'percent',coverage:'partial',numerator:27,denominator:27,value:100}).text,'100 %');
+ assert.equal(format({kind:'count',coverage:'partial',count:28,value:28}).text,'28');
  for(const kind of ['percent','ratio','average']){const x=format({kind,coverage:'complete',numerator:0,denominator:0,value:null});assert.equal(x.text,'0 / 0');assert.equal(x.bar,null);}
 });
+
+test('partial report14/15 is93 percent, absent facts remain unknown, formatter is immutable',()=>{const x={kind:'percent',coverage:'partial',numerator:14,denominator:15,value:null,reasons:['unknown_intent']},before=copy(x);assert.equal(format(x).text,'93 %');assert.deepEqual(x,before);assert.equal(format({kind:'count',coverage:'partial',count:14,value:null}).text,'14');assert.equal(format({kind:'percent',coverage:'partial',numerator:null,denominator:null,value:null}).text,'—');assert.equal(format({kind:'average',coverage:'partial',numerator:3,denominator:2,value:null}).text,'1,5');});

@@ -1,0 +1,115 @@
+{
+  "version": "v4.51.93 RC",
+  "deployment": "not deployed",
+  "sourceExportSha256": "7494ec7168498e43bce3bfb30f4d53556685dfc45eb130ad5816614992e83d48",
+  "matchId": "a9f06904-00a5-4518-a81a-eae5a9425a35",
+  "fixture": 3,
+  "type": "singles",
+  "scores": [
+    2,
+    5
+  ],
+  "scope": "local view containing only this match; A2/B are not the entire production season",
+  "display": {
+    "SK": {
+      "pottingSuccess": "93 %",
+      "pottedBalls": "14"
+    },
+    "CZ": {
+      "pottingSuccess": "95 %",
+      "pottedBalls": "38"
+    }
+  },
+  "internalSkPotting": {
+    "numerator": 14,
+    "denominator": 15,
+    "coverage": "partial",
+    "reasons": [
+      "unknown_attempts",
+      "unknown_intent"
+    ]
+  },
+  "exports": [
+    {
+      "name": "A1-mobile",
+      "png": [
+        1920,
+        1080
+      ],
+      "pdf": [
+        1440.0,
+        810.0
+      ],
+      "pngPdfPixelsIdentical": true,
+      "pngSha256": "b065f3462af2f690b30f8852570aae262fe4881ad01f11d7acfe2f797a94a562"
+    },
+    {
+      "name": "A1",
+      "png": [
+        1920,
+        1080
+      ],
+      "pdf": [
+        1440.0,
+        810.0
+      ],
+      "pngPdfPixelsIdentical": true,
+      "pngSha256": "b065f3462af2f690b30f8852570aae262fe4881ad01f11d7acfe2f797a94a562"
+    },
+    {
+      "name": "A2-mobile",
+      "png": [
+        1920,
+        1080
+      ],
+      "pdf": [
+        1440.0,
+        810.0
+      ],
+      "pngPdfPixelsIdentical": true,
+      "pngSha256": "a1e2692a142b433f1bffa75a3a3d350485f0b31c9b57a49c4399f181b9cdf671"
+    },
+    {
+      "name": "A2",
+      "png": [
+        1920,
+        1080
+      ],
+      "pdf": [
+        1440.0,
+        810.0
+      ],
+      "pngPdfPixelsIdentical": true,
+      "pngSha256": "a1e2692a142b433f1bffa75a3a3d350485f0b31c9b57a49c4399f181b9cdf671"
+    },
+    {
+      "name": "B-mobile",
+      "png": [
+        1920,
+        1080
+      ],
+      "pdf": [
+        1440.0,
+        810.0
+      ],
+      "pngPdfPixelsIdentical": true,
+      "pngSha256": "f829248ce6c8db639563fbd9b50b2bbc44102cffd36b67c2dc42f866962fb153"
+    },
+    {
+      "name": "B",
+      "png": [
+        1920,
+        1080
+      ],
+      "pdf": [
+        1440.0,
+        810.0
+      ],
+      "pngPdfPixelsIdentical": true,
+      "pngSha256": "f829248ce6c8db639563fbd9b50b2bbc44102cffd36b67c2dc42f866962fb153"
+    }
+  ],
+  "writesToProduction": 0,
+  "flagStyle": "broad unequal folds, soft diagonal light, identical geometry and treatment for SK/CZ; 2x transparent PNG rendered from exact SVG",
+  "evidenceBrowser": "PASS updated known sequential completion8attempts/8successes; all remaining scenarios retained"
+}

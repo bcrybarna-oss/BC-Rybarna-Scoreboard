@@ -13,6 +13,7 @@ const libs={'html2canvas.min.js':fs.readFileSync(path.join(libDir,'html2canvas.m
 (async()=>{fs.mkdirSync(out,{recursive:true});const browser=await chromium.launch({channel:'chrome',headless:true}),errors=[];let writes=0,firebase=0;
  async function client(mobile=false){const c=await browser.newContext({serviceWorkers:'block',acceptDownloads:true,viewport:mobile?{width:390,height:844}:{width:2042,height:1280},deviceScaleFactor:mobile?3:1,isMobile:mobile});
   await c.route('**/*',route=>{const q=route.request(),u=q.url();if(u==='http://fc-reports.local/')return route.fulfill({contentType:'text/html',body:html});
+   if(u.startsWith('http://fc-reports.local/assets/federal-cup/')){const file=new URL(u).pathname.slice(1);return route.fulfill({contentType:file.endsWith('.svg')?'image/svg+xml':'image/png',body:fs.readFileSync(path.join(__dirname,'..',file))});}
    const lib=Object.keys(libs).find(k=>u==='https://cdn.jsdelivr.net/npm/'+(k==='html2canvas.min.js'?'html2canvas@1.4.1/dist/':'jspdf@2.5.2/dist/')+k);if(lib)return route.fulfill({contentType:'application/javascript',body:libs[lib]});
    for(const [file,type]of [['assets/federal-report-billiards.webp','image/webp'],['assets/federal-report-pool-logo.png','image/png'],['assets/pushout-sports-logo-yellow.png','image/png'],['bc-rybarna-logo.png','image/png']])if(u==='http://fc-reports.local/'+file)return route.fulfill({contentType:type,body:fs.readFileSync(path.join(__dirname,'..',file))});
    if(!['GET','HEAD'].includes(q.method()))writes++;if(/firebaseio|firebasedatabase|identitytoolkit|securetoken/.test(u))firebase++;return route.abort();});
@@ -32,14 +33,14 @@ const libs={'html2canvas.min.js':fs.readFileSync(path.join(libDir,'html2canvas.m
    for(const unknown of [false,true]){
     const sample=JSON.parse(JSON.stringify(m));if(unknown){const r=Object.values(sample.detailedPlay.records).find(r=>r.side===1&&r.kind==='escape'&&r.pottedCount===0);delete r.pottedCount;delete r.balls;}
     await p.evaluate(({c,ms})=>reportTest.load(c,ms),{c:conf,ms:[sample]});
-    for(const [name,selector]of [['A1','[data-fc-report="match"]'],['A2','[data-fc-report="team"][data-rep="CZ"]'],['B','[data-fc-report="player"][data-person="'+actor+'"]']]){
+    for(const [name,selector]of [['A1','[data-fc-report="match"]'],['A2','[data-fc-report="team"]'],['B','[data-fc-report="player"][data-person="'+actor+'"]']]){
      await p.locator(selector).click();const sheet=p.locator('#fcReportContent article');assert.equal(await sheet.locator('[data-report-metric]').count(),13);
      assert.equal(await sheet.locator('[data-report-metric="pottingSuccess"] .fc-report-value').last().innerText(),'95 %');
-     assert.equal(await sheet.locator('[data-report-metric="pottedBalls"] .fc-report-value').last().innerText(),unknown?'21*':'21');
+     assert.equal(await sheet.locator('[data-report-metric="pottedBalls"] .fc-report-value').last().innerText(),'21');
      await download(p,'png',name+(unknown?'-unknown':'-known-zero'));await download(p,'pdf',name+(unknown?'-unknown':'-known-zero'));await p.locator('#fcReportClose').click();
     }
    }
   }
-  assert.equal(firebase,0);assert.equal(writes,0);assert.deepEqual(errors,[]);await c.close();console.log('PASS A1/A2/B PNG/PDF: safe inferred MISS 20/21=95%, zero RESAFE count21 complete after cloud reload, missing count remains21*; no Firebase/writes/JS errors');
+  assert.equal(firebase,0);assert.equal(writes,0);assert.deepEqual(errors,[]);await c.close();console.log('PASS A1/A2/B PNG/PDF: safe inferred MISS 20/21=95%, zero RESAFE count21 complete after cloud reload, missing count remains internally partial; visible21; no Firebase/writes/JS errors');
  }finally{await browser.close();}
 })().catch(e=>{console.error(e);process.exitCode=1;});

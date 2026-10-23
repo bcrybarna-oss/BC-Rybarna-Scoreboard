@@ -3,11 +3,11 @@
 const fs=require('node:fs'),path=require('node:path'),vm=require('node:vm');
 function diagnose(input,matchId){
  const rows=x=>Array.isArray(x)?x:Object.values(x||{}),ms=input.federalCupLink?[input]:rows(input.matches);
- const candidates=ms.filter(m=>Number(m.federalCupLink?.year)===2026&&Number(m.federalCupLink?.fixtureNo)===1&&m.federalCupLink?.type==='team');
+ const candidates=ms.filter(m=>Number(m.federalCupLink?.year)===2026&&Number.isInteger(Number(m.federalCupLink?.fixtureNo))&&Number(m.federalCupLink?.fixtureNo)>0&&['team','doubles','singles'].includes(m.federalCupLink?.type));
  const identity=m=>({matchId:m.id,year:m.federalCupLink?.year,fixtureNo:m.federalCupLink?.fixtureNo,type:m.federalCupLink?.type,scores:m.scores,startedAt:m.startedAt,endedAt:m.endedAt,status:m.status});
  if(!matchId)return {mode:'candidates_only',note:'Verify identity and timestamps; no newest-match assumption. Pass an exact matchId to calculate.',candidates:candidates.map(identity)};
  const found=ms.filter(m=>m.id===matchId);if(found.length!==1)throw Error('Exact matchId must select exactly one saved record');const m=found[0];
- if(!candidates.includes(m))throw Error('Expected Federal Cup 2026 fixture #1 Team');
+ if(!candidates.includes(m))throw Error('Expected a Federal Cup 2026 fixture with a supported type');
  const html=fs.readFileSync(path.join(__dirname,'../index.html'),'utf8'),a=html.indexOf('  function federalRackScoresAgree('),b=html.indexOf('\n  }',a)+4;
  const ctx={fetch(){throw Error('Network disabled');},localStorage:{setItem(){throw Error('Writes disabled');}}};vm.createContext(ctx);
  vm.runInContext(html.slice(a,b)+html.slice(html.indexOf('  // Federal Cup calculation contract v1.'),html.indexOf('  function detailedCounterActive()')),ctx);
