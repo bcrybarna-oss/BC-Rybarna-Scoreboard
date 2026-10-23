@@ -1,5 +1,8 @@
 # Poolčítadlo – společný kontext projektu
 
+Kandidát92: přesné rychlé dokončení9/10ball vyžaduje známý stůl; neznámý stav nejprve otevírá explicitní opravu bez automatického pokračování. Početní rozstřel bez čísel nelze v přesném režimu potvrdit; přesně zadaný rozstřel určí aktuální stůl i u obnovy. Legitimní dřívější neúplnost se nepřepisuje. Team agregace ani výpočetní API nezměněny; scénář Singles/Team4:5 complete. Skutečný Team1:5 ještě nebyl datově diagnostikován, čeká JSON/matchId. Viz docs/federal-incomplete-evidence-v4.51.92.md. Neslučovat a nenasazovat.
+
+
 Produkce v4.51.91 RC / PR #29 nasazena 23.10.2026, merge98cc286de7f77526c37a7bc706156b33630611c7. Reporty A1/A2/B mají sjednocenou hierarchii Pushout Sports (456×62,32 s lokálním SVG ztmavením) → FEDERAL CUP 2026 → podtitulek. Quick-finish známého stolu eviduje jednu kouli jako jeden úspěšný pokus; bez zpětné migrace hotových zápasů. Veřejné soubory bajtově ověřeny, nepřihlášený smoke/A2export PASS; skutečné cloudové A1/B/statistiky, produkční Auth/Firebase a OBS neověřeny. Node189/191 jen dvě známé modularizační chyby; CI není plně zelené. Podrobnosti docs/deployment-v4.51.91.md a docs/federal-pushout-branding-v4.51.91.md.
 
 

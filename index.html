@@ -2597,7 +2597,7 @@ html[data-theme="light"] #leagueSchedule .history-item .muted{
           <span class="by">by</span>
           <span class="club">BC Rybárna</span>
         </div>
-        <small class="modern-brand-version">v4.51.91 RC</small>
+        <small class="modern-brand-version">v4.51.92 RC</small>
       </div>
     </div>
     <div class="nav">
@@ -3211,7 +3211,7 @@ html[data-theme="light"] #leagueSchedule .history-item .muted{
         </div>
         <div class="subpanel" style="min-width:210px;text-align:center;margin:0">
           <div class="muted" style="font-size:10px;font-weight:950;letter-spacing:1px">AKTUÁLNÍ VERZE</div>
-          <div style="font-size:22px;font-weight:950;color:var(--gold2);margin-top:5px">v4.51.91 RC</div>
+          <div style="font-size:22px;font-weight:950;color:var(--gold2);margin-top:5px">v4.51.92 RC</div>
         </div>
       </div>
     </div>
@@ -5753,6 +5753,7 @@ html[data-theme="light"] #leagueSchedule .history-item .muted{
   </div></div>
   <div id="detailedTableCorrectionModal" class="modal"><div class="modal-card">
     <h2>OPRAVA EVIDENCE STOLU</h2><p>Označ všechny koule, které nyní zůstávají na stole. Oprava nepřipisuje úspěšné potopení ani strk.</p>
+    <p id="tableCorrectionUnknownNotice" class="muted hidden">Stav stolu není známý. Před rychlým dokončením potvrď skutečně zbývající koule včetně 9/10. Doplnění stolu neobnoví chybějící předchozí strky; jejich neúplnost ve statistikách zůstane.</p>
     <label id="tableCorrectionFoulLabel"><input type="checkbox" id="tableCorrectionFoul"> Odstraněné koule spadly při posledním faulu (9/10 se vrátí na bod).</label>
     <div id="detailedTableCorrectionBalls" class="exact-ball-grid"></div>
     <div class="modal-actions"><button class="btn primary" onclick="saveDetailedTableCorrection()">ULOŽIT EVIDENCI</button><button class="btn ghost" onclick="document.getElementById('detailedTableCorrectionModal').classList.remove('show')">ZRUŠIT</button></div>
@@ -5961,7 +5962,7 @@ html[data-theme="light"] #leagueSchedule .history-item .muted{
       </div>
 
       <div id="groupPlayoffSeedStatus" class="muted" style="margin-top:12px;min-height:20px"></div>
-      <div class="muted" style="margin-top:4px;font-size:11px">RC v4.51.91</div>
+      <div class="muted" style="margin-top:4px;font-size:11px">RC v4.51.92</div>
       <div class="modal-actions">
         <button id="groupPlayoffSeedApplyBtn" class="btn primary big" type="button">NASADIT DO PLAY-OFF</button>
         <button id="groupPlayoffSeedCancelBtn" class="btn">ZRUŠIT</button>
@@ -7146,7 +7147,7 @@ html[data-theme="light"] #leagueSchedule .history-item .muted{
     const btn=$('submitReportBtn');if(btn)btn.disabled=true;
     try{
       const id=uid(),p=currentUserPlayerId?data.players?.[currentUserPlayerId]:null;
-      const report={id,createdByUid:cloudUid,createdByPlayerId:currentUserPlayerId||'',createdByName:p?playerSelectionLabel(p):(cloudUserEmail||'Uživatel'),email:cloudUserEmail||'',type,area,description,appVersion:'v4.51.91 RC',createdAt:new Date().toISOString(),updatedAt:new Date().toISOString(),status:'new',adminNote:''};
+      const report={id,createdByUid:cloudUid,createdByPlayerId:currentUserPlayerId||'',createdByName:p?playerSelectionLabel(p):(cloudUserEmail||'Uživatel'),email:cloudUserEmail||'',type,area,description,appVersion:'v4.51.92 RC',createdAt:new Date().toISOString(),updatedAt:new Date().toISOString(),status:'new',adminNote:''};
       await reportRequest(id,'PUT',report);
       try{
         await writeReportUserMirror(report);
@@ -10432,6 +10433,7 @@ $('useClock').addEventListener('change',e=>$('clockSettings').classList.toggle('
   window.openDetailedTableCorrection=function(){
     if(!detailedCounterActive()||!exactBallTrackingDiscipline()||match.federalTeam?.pending)return;
     tableCorrectionBalls=(match.rackRemainingBalls||[]).slice();
+    $('tableCorrectionUnknownNotice').classList.toggle('hidden',!!knownQuickRackBalls());
     const last=match.detailedPlay?.records?.at(-1);
     $('tableCorrectionFoulLabel').classList.toggle('hidden',!(last?.rack===match.rackNumber&&(last?.kind==='foul'||last?.kind==='escape'&&last.foul)));
     $('tableCorrectionFoul').checked=false;
@@ -12112,6 +12114,7 @@ const isFourteen=match.discipline==='14.1' && !simpleCounter;
     if(spotNine && match.discipline==='9-ball')gone=gone.filter(n=>n!==9);
     if(spotTen && match.discipline==='10-ball')gone=gone.filter(n=>n!==10);
     match.rackRemainingBalls=fullRackBalls().filter(n=>!gone.includes(n));
+    const detailed=ensureDetailedPlay();if(detailed)detailed.tableKnown=true;
   }
 
   function exactBallVisualClass(n){
@@ -12136,7 +12139,8 @@ const isFourteen=match.discipline==='14.1' && !simpleCounter;
     panel.classList.toggle('hidden',!show);
     if(!show)return;
     const rem=Array.isArray(match.rackRemainingBalls)?match.rackRemainingBalls:fullRackBalls();
-    host.innerHTML=rem.length?rem.map(exactBallStaticHtml).join(''):'<span class="muted">Žádná evidovaná koule na stole</span>';
+    const tableKnown=!!knownQuickRackBalls();
+    host.innerHTML=!tableKnown?'<span class="muted">Stav stolu není známý. Před rychlým dokončením doplň čísla zbývajících koulí.</span>':rem.length?rem.map(exactBallStaticHtml).join(''):'<span class="muted">Žádná evidovaná koule na stole</span>';
 
     const quick=$('quickRunoutBtn');
     if(quick){
@@ -12149,7 +12153,7 @@ const isFourteen=match.discipline==='14.1' && !simpleCounter;
         match.safetyEscapeEligibleFor==null;
       quick.classList.toggle('hidden',!canQuick);
       if(canQuick){
-        quick.querySelector('span').textContent='DOHRÁT '+rem.join(' → ');
+        quick.querySelector('span').textContent=tableKnown?'DOHRÁT '+rem.join(' → '):'DOPLNIT STAV STOLU PŘED DOHRÁNÍM';
       }
     }
   }
@@ -12242,6 +12246,12 @@ const isFourteen=match.discipline==='14.1' && !simpleCounter;
 
   window.finishBreakPotCount=function(count){
     if(!match || !pendingBreakPotAction)return;
+    if(exactBallTrackingDiscipline()&&Number(count)>0&&!Array.isArray(pendingResolvedBreakBalls)){
+      $('breakPotCountText').textContent='Pro přesnou evidenci označ čísla všech koulí potopených z rozstřelu. Samotný počet nestačí.';
+      renderBreakPotCountButtons(pendingBreakPotAction);
+      $('breakPotCountModal').classList.add('show');
+      return;
+    }
     const action=pendingBreakPotAction;
     // U přesného výběru koulí musíme data uchovat až do zpracování akce.
     const resolvedBreakBalls=Array.isArray(pendingResolvedBreakBalls)?pendingResolvedBreakBalls.slice():null;
@@ -12942,6 +12952,7 @@ const isFourteen=match.discipline==='14.1' && !simpleCounter;
       const rem=knownQuickRackBalls();
       const i=Number(match.turn||0);
       if(!detailedTagAllowed('batch'))return;
+      if(!requireKnownQuickTable())return;
       beginDetailedAction('Dohráno postupně');
       saveManualEntryUndoSnapshot('Dohráno postupně');
       if(!rem){recordQuickRackCompletion(i);finishGameBallFromTrackedPlay(i,match.discipline==='9-ball'?9:10,'neznámý stav stolu');return;}
@@ -12957,6 +12968,12 @@ const isFourteen=match.discipline==='14.1' && !simpleCounter;
   function knownQuickRackBalls(){
     const d=ensureDetailedPlay(),balls=match?.rackRemainingBalls,max=match?.discipline==='9-ball'?9:match?.discipline==='10-ball'?10:null;
     return max&&d?.tableKnown===true&&Array.isArray(balls)&&balls.length>0&&balls.length<=max&&new Set(balls).size===balls.length&&balls.every(n=>Number.isInteger(n)&&n>=1&&n<=max)&&balls.includes(max)?balls.slice():null;
+  }
+  function requireKnownQuickTable(){
+    if(!exactBallTrackingDiscipline()||knownQuickRackBalls())return true;
+    toast('Před rychlým dokončením doplň skutečný stav stolu. Nic zatím nebylo započteno.');
+    openDetailedTableCorrection();
+    return false;
   }
   function recordQuickRackCompletion(i){
     const balls=knownQuickRackBalls();
@@ -13145,6 +13162,7 @@ const isFourteen=match.discipline==='14.1' && !simpleCounter;
       return;
     }
 
+    if(!requireKnownQuickTable())return;
     beginDetailedAction('Čistá hra');
     saveManualEntryUndoSnapshot('Čistá hra');
     const inferredLen=recordQuickRackCompletion(i);
@@ -13168,6 +13186,7 @@ const isFourteen=match.discipline==='14.1' && !simpleCounter;
       return;
     }
 
+    if(!requireKnownQuickTable())return;
     beginDetailedAction('Dohrávka');
     saveManualEntryUndoSnapshot('Dohrávka');
     const inferredLen=recordQuickRackCompletion(i);

@@ -22,13 +22,13 @@ assert.ok(html.includes('window.releaseTest='));
   await context.route('**/*',route=>{const r=route.request();if(!['GET','HEAD'].includes(r.method()))remoteWrites++;return r.url()==='https://release-isolated.local/'?route.fulfill({contentType:'text/html',body:html}):route.abort();});
   const page=await context.newPage(),errors=[];page.on('pageerror',e=>errors.push(e.message));
   await page.goto('https://release-isolated.local/');await page.locator('#cloudLoginModal.show').waitFor();await page.evaluate(()=>releaseTest.setup());
-  assert.equal((await page.locator('.modern-brand-version').textContent()).trim(),'v4.51.91 RC');
-  await page.evaluate(()=>releaseTest.screen('about'));assert.ok((await page.locator('#screen-about').innerText()).includes('v4.51.91 RC'));
-  assert.ok((await page.locator('#groupPlayoffSeedModal').textContent()).includes('RC v4.51.91'));
+  assert.equal((await page.locator('.modern-brand-version').textContent()).trim(),'v4.51.92 RC');
+  await page.evaluate(()=>releaseTest.screen('about'));assert.ok((await page.locator('#screen-about').innerText()).includes('v4.51.92 RC'));
+  assert.ok((await page.locator('#groupPlayoffSeedModal').textContent()).includes('RC v4.51.92'));
   const legacy=await page.evaluate(()=>JSON.stringify(releaseTest.legacy));
   await page.evaluate(async()=>{document.getElementById('reportDescription').value='Izolované ověření verze hlášení';await releaseTest.send();});
-  assert.equal(await page.evaluate(()=>releaseTest.saved.length),1);assert.equal(await page.evaluate(()=>releaseTest.saved[0].appVersion),'v4.51.91 RC');assert.equal(await page.evaluate(()=>JSON.stringify(releaseTest.legacy)),legacy);
+  assert.equal(await page.evaluate(()=>releaseTest.saved.length),1);assert.equal(await page.evaluate(()=>releaseTest.saved[0].appVersion),'v4.51.92 RC');assert.equal(await page.evaluate(()=>JSON.stringify(releaseTest.legacy)),legacy);
   assert.deepEqual(errors,[]);assert.equal(remoteWrites,0);
-  console.log('PASS release UI/header/about/playoff dialog and actual new report: v4.51.91 RC; 0 page errors, 0 remote writes');
+  console.log('PASS release UI/header/about/playoff dialog and actual new report: v4.51.92 RC; 0 page errors, 0 remote writes');
  }finally{await browser.close();}
 })().catch(e=>{console.error(e);process.exitCode=1;});
