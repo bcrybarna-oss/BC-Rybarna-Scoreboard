@@ -10,6 +10,8 @@ Aktualizován federal-evidence-browser.cjs podle schváleného zadávání: zná
 
 Detaily: [vlajky vpřehledu](screenshots/federal-93-flags-overview-detail.png), [vlajky vreportu](screenshots/federal-93-flags-report-detail.png), [dlaždice se zlatým pohárem](screenshots/federal-93-tile-detail.png). Aktualizovány i A1/A2/B, dialogy a desktop/mobil screenshoty. Statistiky, popisky, Resafe a společné tlačítko se dále nemění. Žádné produkční zápisy nebo migrace.
 
+Otestováno a pushnuto jako2203595e4e74561e598791961277b6ce8e3814eb. [CI2203595](https://github.com/bcrybarna-oss/BC-Rybarna-Scoreboard/actions/runs/39984293770): release gate success, Node198/200 pouze známé preview-match-reload-recovery.test.cjs:50,106; žádná nová regrese v CI. CI není plně zelené.
+
 ## Prezentace
 
 Dlaždice zachovává původní rozměry; HTML text FEDERAL CUP,2026,ČESKO×SLOVENSKO a popis21zápasů. Samostatný zlatý/bronzový pohár bez zeleného odlesku vpravo. Oba národní symboly i text jsou samostatné prvky.

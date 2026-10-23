@@ -5,7 +5,7 @@ Zadavatel: Dominik
 Datum: 23. 10. 2026
 Změny: Stejný PR #31 a nevydaná93. Odstraněna pravidelná harmonika velkých vlajek; široké nestejné záhyby, měkké šikmé světlo, shodné zpracování obou zemí a zachovaná přesná národní geometrie. Opakovaně používané průhledné PNG zeSVG při2x a reprodukovatelný renderovací skript. Nové detaily přehledu/reportu/dlaždice a obnovené A1/A2/B. Zastaralý federal-evidence-browser aktualizován pro známé sekvenční dokončení a explicitní nulový push out, ostatní kontroly zachovány.
 Testy: Celý federal-evidence-browser PASS včetně faulů/Resafe/MISS, B&R/esa, Team/Doubles, UNDO, mocked Auth/uložení/cloud GET/reload. Unit198/200 pouze známé dvě modularizační chyby. Desktop/mobil skutečného Singles#3 a všech6PNG/PDFpárů znovu PASS, vložené PDFpixely identické sPNG; hodnoty93 %/14 a95 %/38 zachovány, žádná změna výpočtů vtomto pokračování.
-Nasazení: Připraveno pro stejný draft PR #31; žádný merge/deploy, produkce92. Čeká grafické schválení. Dokumentace a screenshoty vdocs/federal-cup-v4.51.93.md.
+Nasazení: Otestováno a pushnuto jako2203595e4e74561e598791961277b6ce8e3814eb do stejného draft PR #31. [CI2203595](https://github.com/bcrybarna-oss/BC-Rybarna-Scoreboard/actions/runs/39984293770): release gate success, Node198/200 pouze známé preview-match-reload-recovery.test.cjs:50,106; žádná nová regrese v CI. Žádný merge/deploy, produkce92. Čeká grafické schválení. Dokumentace a screenshoty vdocs/federal-cup-v4.51.93.md.
 Omezení: Produkční Auth/Firebase/OBS a fyzický iPhone neověřeny. Původní export a produkční zápasy nezměněny. Dvě známá modularizační selhání zůstávají; CI není plně zelené.
 
 
