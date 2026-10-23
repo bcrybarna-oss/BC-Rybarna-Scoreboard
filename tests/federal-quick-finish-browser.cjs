@@ -90,7 +90,7 @@ assert.ok(html.includes('window.fcTest='));
   let x=await metrics(1);assert.equal(x.pottedBalls.count,2);assert.equal(x.pottingSuccess.denominator,1);assert.equal(x.pottingSuccess.numerator,1);
   await run(()=>{actionMiss();selectRotationFailureBall(3);confirmRotationFailure();});x=await metrics(1);assert.equal(x.pottedBalls.count,2);assert.equal(x.pottingSuccess.denominator,2);assert.equal(x.pottingSuccess.numerator,1);assert.equal(x.pottingSuccess.value,50);assert.equal((await state()).rackRemainingBalls.length,7);
   await run(()=>actionRunout());assert.deepEqual((await state()).scores,[0,0]);assert.equal((await metrics(1)).pottedBalls.count,2);
-  if(process.env.FC_QUICK_FIXTURE_FILE)fs.writeFileSync(process.env.FC_QUICK_FIXTURE_FILE,JSON.stringify(reportCases,null,2));
+  if(process.env.FC_QUICK_FIXTURE_FILE){fs.mkdirSync(path.dirname(process.env.FC_QUICK_FIXTURE_FILE),{recursive:true});fs.writeFileSync(process.env.FC_QUICK_FIXTURE_FILE,JSON.stringify(reportCases,null,2));}
   assert.deepEqual(errors,[]);console.log('PASS quick suffix 1–9, clean/runout eligibility/reasons, Singles/Doubles/Team actor, canonical attempts/pots, no double count, unknown table partial, undo/save/reload; every network request isolated');
  }finally{await browser.close();}
 })().catch(e=>{console.error(e);process.exitCode=1;});
