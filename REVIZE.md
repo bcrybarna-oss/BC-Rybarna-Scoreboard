@@ -1,5 +1,14 @@
 # Revize aplikace Poolčítadlo
 
+## Dominik – schválené produkční nasazení PR #31 (v4.51.93 RC)
+Zadavatel: Dominik
+Datum: 23. 10. 2026
+Změny: Po čerstvém fetchi mainac62019 a finální hlavě952e510, ověření release/CI a celého aktualizovaného federal-evidence-browser sloučeno PR #31 metodou merge se zachováním historie. Merge990e68e39688e93f13b67496a753bf729417ea9d nasazuje schválenou dlaždici/vlajky/reportové zobrazení/Resafe/společné tlačítko aexplicitní push out evidenci. Přidán deployment report,evidence a produkční screenshoty; dokumentace bez další změny aplikace/verze.
+Testy: Předmerge release gatePASS, finálníPR/mainCI release success,Node198/200 pouze známé preview-match-reload-recovery:50,106 se stejnými assertiony jako aktuální předmerge main. Celý evidence-browser PASS předmerge i na staženém produkčním HTML scloudmockem. Pages39985605856 všechny joby success. Veřejné index/overlay/12assetů HTTP200 přesné SHA256/běžné+fresh URL/verze93/desktop+mobil dlaždice,pohár,vlajky,společnétlačítko,Resafe,bez hvězdiček/popisků aA2PNG1920×1080/PDF16:9/0JS/console chyb/0pokusů o zápisPASS. KontrolníSingles#3 izolovaně na publikovaném HTML SK93 %/14,CZ95 %/38,partial metadata zachována;6A1/A2/Bdesktop/mobilPNG/PDFpárů aPNGshoda seschválenými artefaktyPASS. Zdrojovýexporthash nezměněn.
+Nasazení: Nasazeno a vuvedeném rozsahu ověřeno23.10.2026, smoke18:21CEST, https://bcrybarna-oss.github.io/BC-Rybarna-Scoreboard/ v4.51.93 RC. Žádné ruční opakování Pages. Podrobnosti docs/deployment-v4.51.93.md; následný čistě dokumentační commit nemění aplikaci/verzi.
+Omezení: Nepřihlášená veřejná relace nemá skutečné uložené A1/B; kontrolníSingles a A1/A2/B používají místní export a izolovaný cloudový mock nad publikovaným kódem. ProdukčníAuth/Firebase/Rules/OBS a fyzickýiPhone neověřeny. Existující zápasy včetně Team1:5 ani export nezměněny, žádná migrace nebo produkční testovací zápisy. CI není plně zelené kvůli dvěma známým modularizačním chybám.
+
+
 ## Dominik – jemné záhyby vlajek a aktuální evidence browser (v4.51.93 RC)
 Zadavatel: Dominik
 Datum: 23. 10. 2026

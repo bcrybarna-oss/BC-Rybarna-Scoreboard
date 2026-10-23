@@ -1,0 +1,159 @@
+{
+  "sha": "990e68e39688e93f13b67496a753bf729417ea9d",
+  "version": "v4.51.93 RC",
+  "verifiedAt": "2026-10-23T16:21:47.855Z",
+  "files": {
+    "index.html": {
+      "status": 200,
+      "sha256": "670f583cc7aa2619bce246e19744f830341878e7d6a18c5c54b6e5d838f3a14e",
+      "bytes": 1680856,
+      "etag": "W/\"6adb88df-19a5d8\""
+    },
+    "overlay.html": {
+      "status": 200,
+      "sha256": "e1b3de33fcbf85612ced69061a2d2af42e95ebf6da2cc858ceb8f63e52f5a0b9",
+      "bytes": 20884,
+      "etag": "W/\"6adb88e0-5194\""
+    },
+    "assets/federal-report-billiards.webp": {
+      "status": 200,
+      "sha256": "2a8d73c1b0a5ecd07597b993f0da5ed22b7c30bba6023448b8069d154bf3e228",
+      "bytes": 74790,
+      "etag": "\"6adb88df-12426\""
+    },
+    "assets/federal-report-pool-logo.png": {
+      "status": 200,
+      "sha256": "c28fd81775d4013e2b58716d6f8ef1a92691f4d5d4c0b8b2ba1b0d3a3a12c593",
+      "bytes": 220520,
+      "etag": "\"6adb88df-35d68\""
+    },
+    "assets/pushout-sports-logo-yellow.png": {
+      "status": 200,
+      "sha256": "049c2b4648a2e6106c5c41459c346689915256f62330ee17129b4484fc8314ff",
+      "bytes": 44487,
+      "etag": "\"6adb88df-adc7\""
+    },
+    "bc-rybarna-logo.png": {
+      "status": 200,
+      "sha256": "5ad8dccc37f3426e189916f5e5bce61fa922f82d8757283832ac01d224f1f083",
+      "bytes": 131525,
+      "etag": "\"6adb88df-201c5\""
+    },
+    "assets/poolcitadlo-logo.webp": {
+      "status": 200,
+      "sha256": "7f9caff46b1924186ef7d6a42b6b9079ee9ace9e7875d8f688e9fdc83bd488db",
+      "bytes": 27896,
+      "etag": "\"6adb88df-6cf8\""
+    },
+    "assets/federal-cup/flag-sk-flat.svg": {
+      "status": 200,
+      "sha256": "659b2c072f05d05e8b5d38caa878626459ac652c6dc02359094b423a4ae1d6ee",
+      "bytes": 1543,
+      "etag": "W/\"6adb88df-607\""
+    },
+    "assets/federal-cup/flag-cz-flat.svg": {
+      "status": 200,
+      "sha256": "172aa188241c3f5fbd95d7881095d65e2b681f105fb867923709cc09a5dcc3a0",
+      "bytes": 222,
+      "etag": "\"6adb88df-de\""
+    },
+    "assets/federal-cup/flag-sk-cloth.svg": {
+      "status": 200,
+      "sha256": "cf8cc9a9fec2f76db4ba3cf6f66c303488cb7ad738aba6dc8afe7535a7a968e7",
+      "bytes": 3230,
+      "etag": "W/\"6adb88df-c9e\""
+    },
+    "assets/federal-cup/flag-cz-cloth.svg": {
+      "status": 200,
+      "sha256": "e83808ab2c0c8a5a6b2dde63c44c8e22416ca0a38c00b468136643baca2064e8",
+      "bytes": 1910,
+      "etag": "W/\"6adb88df-776\""
+    },
+    "assets/federal-cup/flag-sk-cloth.png": {
+      "status": 200,
+      "sha256": "27faf3b6b76a07b4793ddadb3f549d104ef5c91256c300ad3d24d4dd25a9111a",
+      "bytes": 717340,
+      "etag": "\"6adb88df-af21c\""
+    },
+    "assets/federal-cup/flag-cz-cloth.png": {
+      "status": 200,
+      "sha256": "e6485509db399555689fe7b9e23aa1e9e70b27a28e3ca8f1ac2ad38c505cc7fb",
+      "bytes": 641363,
+      "etag": "\"6adb88df-9c953\""
+    },
+    "assets/federal-cup/gold-trophy.png": {
+      "status": 200,
+      "sha256": "d4c8ec993c1e20d16508e3f96aade23dc217593597ed3649ca7bc777f85c29c7",
+      "bytes": 1854457,
+      "etag": "\"6adb88df-1c4bf9\""
+    }
+  },
+  "normalAndFreshUrlsMatch": true,
+  "screens": [
+    "setup",
+    "home",
+    "players",
+    "about",
+    "federal-cup-2026",
+    "setup",
+    "home"
+  ],
+  "available": {
+    "A1": 0,
+    "A2": 1,
+    "B": 0
+  },
+  "publicA2Exports": [
+    {
+      "format": "Png",
+      "file": "public-empty-A2.png",
+      "bytes": 1434023
+    },
+    {
+      "format": "Pdf",
+      "file": "public-empty-A2.pdf",
+      "bytes": 855041
+    }
+  ],
+  "pageErrors": [],
+  "consoleErrors": [],
+  "blocked": [],
+  "writeAttempts": 0,
+  "limits": "Actual production Auth/Firebase data and writes, OBS and physical iPhone were not tested. Public fresh offline browser exposed A2 only; A1/B and control Singles verified in isolated fixture on downloaded published HTML.",
+  "pr": 31,
+  "pagesRun": 39985605856,
+  "mainRegressionRun": 39985606523,
+  "finalPrRegressionRun": 39984583712,
+  "releaseGate": "success",
+  "node": {
+    "passed": 198,
+    "total": 200,
+    "knownFailures": [
+      "preview-match-reload-recovery.test.cjs:50",
+      "preview-match-reload-recovery.test.cjs:106"
+    ],
+    "sameOnPreMergeMain": "ac620191e2abf75ae602a42a33f2bcceb99ea68c / run39974230195",
+    "newFailures": 0
+  },
+  "evidenceBrowser": {
+    "beforeMerge": "PASS full current test",
+    "publishedHtmlWithIsolatedAuthFirebase": "PASS full current test"
+  },
+  "isolatedPublishedCode": {
+    "source": "exact downloaded Pages index.html bytes; closure exposed by test hooks only; Auth/Firebase requests intercepted",
+    "fixture": "Singles #3 a9f06904-00a5-4518-a81a-eae5a9425a35",
+    "scope": "local immutable export view containing only this match, not live production season",
+    "SK": {
+      "success": "93 %",
+      "balls": "14",
+      "internalAttackCoverage": "partial"
+    },
+    "CZ": {
+      "success": "95 %",
+      "balls": "38"
+    },
+    "exports": "6 desktop/mobile PNG1920x1080 / PDF1440x810 pairs PASS; all PNG byte-identical to approved review artifacts",
+    "sourceExportSha256": "7494ec7168498e43bce3bfb30f4d53556685dfc45eb130ad5816614992e83d48",
+    "productionWrites": 0
+  }
+}
