@@ -4,6 +4,15 @@
 
 
 
+
+## Dominik – skutečná diagnóza Team1:5 z dodaného exportu (v4.51.92 RC)
+Zadavatel: Dominik
+Datum: 23. 10. 2026
+Změny: Pouze diagnostika/dokumentace. Ověřen přesný matchId5a97e289-a5f5-4da4-bd85-8bc00daf1cc9, ročník2026/Team#1/skóre1:5. Rozlišeny oprávněné unknown_attempts/unknown_intent pro odvozenou6 před MISS na7 v racku1 a chybná ztráta doloženého balls[] u českého RESAFE v racku3 (unknown_pots). Undo snapshot obsahuje původní explicitní nulu. Reference/racky/aktéři bez chyb; žádný rack_completion_unknown. PR #30 tyto konkrétní příčiny zatím neopravuje. Nový podrobný report a pravdivá aktualizace statusu/kontextu, aplikační kód neměněn.
+Testy: Diagnostický nástroj reprodukoval CZ36/37 partial s reasons unknown_attempts/unknown_intent a38 partial s unknown_pots, explicit37/derived1; SK3/3 a3 complete. Produkční91 a PR30 vracejí identický celý federalCalculateMatch výsledek. V hluboké paměťové kopii vrácené doložené balls[] u RESAFE mění pouze count38 na complete, útok zůstává36/37 partial. SHA256 zdrojového exportu před/po totožný. Bez síťových čtení zápasu a bez Firebase zápisů. Předchozí CI známé190/192 s pouze dvěma modularizačními chybami se tímto nemaskuje.
+Nasazení: Čistě dokumentační pokračování stejného kandidáta92 v PR #30, nesloučeno a nenasazeno; produkce91. Export nezměněn.
+Omezení: Přesný historický cloudový request nebyl zachycen; ztráta explicitní nuly je doložená rozdílem kanonického recordu a zachovaného undo snapshotu. Další cílená oprava musí uchovat nulu přes cloudový roundtrip a přidat odpovídající regresi, nikoli odhadovat chybějící pokusy ani plošně doplnit nuly do neurčitých záznamů.
+
 ## Dominik – diagnostika neúplnosti a ochrana rychlého dokončení (v4.51.92 RC)
 Zadavatel: Dominik
 Datum: 23. 10. 2026

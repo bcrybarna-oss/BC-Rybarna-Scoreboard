@@ -2,6 +2,12 @@
 
 Zadavatel: **Dominik**, 23. 10. 2026. Kandidát **v4.51.92 RC**, větev `fix/federal-unknown-table-quick-finish` z main `0db27bb`. **Neslučovat a nenasazovat.** Produkce zůstává91.
 
+## Aktualizace po obdržení skutečného exportu
+
+Export a přesný matchId byly následně dodány a beze změn přečteny. [Konkrétní diagnóza Team1:5](federal-team-1-evidence-diagnosis.md) prokazuje dvě odlišné příčiny: legitimní unknown pokusy odvozené6 v racku1 a ztracené doložené prázdné balls[] u RESAFE v racku3. Žádný rack_completion_unknown v tomto zápasu není. PR #30 tyto dvě příčiny zatím nemění; neprovádí se další funkční změna, merge ani nasazení.
+
+Následuje zachovaná historická analýza připravená před dostupností exportu:
+
 ## Co je a není doložené
 
 Skutečný nově zadaný Team #1, Slovensko1:5Česko, nebyl přečten: není přihlášená dostupná browserová relace ani Firebase konektor; zadavatel nemá zatím JSON ani matchId. **Přesná příčina jeho 36/37* a38* není potvrzená.** Nelze vypsat jeho coverage/reasons/components ani problematické racky bez záznamu. Žádná syntetická data níže nejsou označena za skutečný zápas a žádná produkční data nebyla zapisována ani měněna.
