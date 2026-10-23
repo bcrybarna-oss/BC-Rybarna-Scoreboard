@@ -1,5 +1,14 @@
 # Revize aplikace Poolčítadlo
 
+## Dominik – společná revize Federal Cupu a evidence push outu (v4.51.93 RC)
+Zadavatel: Dominik
+Datum: 23. 10. 2026
+Změny: Jedna opravná větev zaktuálního main92. Schválená dlaždice se samostatným zlatým pohárem aHTMLtextem, jedno společné tlačítko týmů, opakovaně použité přesné ploché/látkové vlajky, dostupné metriky bez hvězdiček apercenta izpartial, odstraněné drobné popisky aResafe. Internícoverage/reasons zachovány. Výslovné pravidlo zadavatele vylučuje push out koule zpotových statistik; nové potvrzení žádná/vybrané koule pouze aktualizuje stůl a zachová fyzický počet včetně0, bez volbyNevím. Neurčený faul není automaticky potápěcí pokus. Diagnostický CLI rozšířen naSingles/Doubles.
+Testy: Unit198/200 pouze známé dvě preview-match-reload-recovery chyby. Cílený reader baselineFAIL/opravaPASS, cloudmock/JSON/reload/UNDO/cancel/doubleconfirm/9a10spotting a záměryfauluPASS. FC/detailed/quickfinish/reporty/identity/mobil/longnames/fokus/Escape/verzePASS. SkutečnýSingles#3 lokálně93 %/14 a95 %/38, A1/A2/B desktop/mobil6PNG1920×1080/PDF16:9párů aidentickéPDFpixelyPASS. Starší evidence-browser:123 má totožný zastaralý TypeError i naorigin/main92, nezamlčen.
+Nasazení: Lokálně připraveno aotestováno, čekápush/CI a vizuálníschválení; nesloučeno, nenasazeno, produkce92. Dokumentace docs/federal-cup-v4.51.93.md, screenshoty/exporty aověřovacíJSON. Žádné produkční zápisy.
+Omezení: Původní export azápasy nezměněny, žádná migrace. A2/Bukázky jsou výřez zjediného skutečnéhoSingles#3, nikolivcelýročník. ProdukčníAuth/Firebase/OBS afyzickýiOSneověřeny. CI neníplnězelené; známá selhání zachována. Čeká vizuálníschválení.
+
+
 ## Dominik – schválené produkční nasazení PR #30 (v4.51.92 RC)
 Zadavatel: Dominik
 Datum: 23. 10. 2026

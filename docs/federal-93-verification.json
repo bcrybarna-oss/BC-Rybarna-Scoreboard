@@ -1,0 +1,113 @@
+{
+  "version": "v4.51.93 RC",
+  "deployment": "not deployed",
+  "sourceExportSha256": "7494ec7168498e43bce3bfb30f4d53556685dfc45eb130ad5816614992e83d48",
+  "matchId": "a9f06904-00a5-4518-a81a-eae5a9425a35",
+  "fixture": 3,
+  "type": "singles",
+  "scores": [
+    2,
+    5
+  ],
+  "scope": "local view containing only this match; A2/B are not the entire production season",
+  "display": {
+    "SK": {
+      "pottingSuccess": "93 %",
+      "pottedBalls": "14"
+    },
+    "CZ": {
+      "pottingSuccess": "95 %",
+      "pottedBalls": "38"
+    }
+  },
+  "internalSkPotting": {
+    "numerator": 14,
+    "denominator": 15,
+    "coverage": "partial",
+    "reasons": [
+      "unknown_attempts",
+      "unknown_intent"
+    ]
+  },
+  "exports": [
+    {
+      "name": "A1-mobile",
+      "png": [
+        1920,
+        1080
+      ],
+      "pdf": [
+        1440.0,
+        810.0
+      ],
+      "pngPdfPixelsIdentical": true,
+      "pngSha256": "89bb3cf9e9cb38ef5ef4498898695dc3a7cc3bc4d37b0e2c2dcdf9b6c2e546be"
+    },
+    {
+      "name": "A1",
+      "png": [
+        1920,
+        1080
+      ],
+      "pdf": [
+        1440.0,
+        810.0
+      ],
+      "pngPdfPixelsIdentical": true,
+      "pngSha256": "89bb3cf9e9cb38ef5ef4498898695dc3a7cc3bc4d37b0e2c2dcdf9b6c2e546be"
+    },
+    {
+      "name": "A2-mobile",
+      "png": [
+        1920,
+        1080
+      ],
+      "pdf": [
+        1440.0,
+        810.0
+      ],
+      "pngPdfPixelsIdentical": true,
+      "pngSha256": "4109bedc58ae603a5bfadff2a5918460c5f4d004f5bf3ee3bffe6c20b186303b"
+    },
+    {
+      "name": "A2",
+      "png": [
+        1920,
+        1080
+      ],
+      "pdf": [
+        1440.0,
+        810.0
+      ],
+      "pngPdfPixelsIdentical": true,
+      "pngSha256": "4109bedc58ae603a5bfadff2a5918460c5f4d004f5bf3ee3bffe6c20b186303b"
+    },
+    {
+      "name": "B-mobile",
+      "png": [
+        1920,
+        1080
+      ],
+      "pdf": [
+        1440.0,
+        810.0
+      ],
+      "pngPdfPixelsIdentical": true,
+      "pngSha256": "dc15c72db033544fcb244fca594006bdd0761ec0e4e6ba9a1c0f3ca298bf9211"
+    },
+    {
+      "name": "B",
+      "png": [
+        1920,
+        1080
+      ],
+      "pdf": [
+        1440.0,
+        810.0
+      ],
+      "pngPdfPixelsIdentical": true,
+      "pngSha256": "dc15c72db033544fcb244fca594006bdd0761ec0e4e6ba9a1c0f3ca298bf9211"
+    }
+  ],
+  "writesToProduction": 0
+}

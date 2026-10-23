@@ -5,3 +5,5 @@ test('diagnostic requires exact identity, reports only allowlisted fields, does 
  const list=diagnose(input);assert.equal(list.mode,'candidates_only');assert.equal(list.candidates[0].matchId,'new-team');
  const r=diagnose(input,'new-team');assert.equal(r.identity.type,'team');assert.ok(r.sides[1].pottingSuccess.components);assert.ok(r.records.length);assert.doesNotMatch(JSON.stringify(r),/DO_NOT_OUTPUT_SECRET|PRIVATE_EMAIL/);assert.equal(JSON.stringify(input),before);assert.throws(()=>diagnose(input,'missing'),/exactly one/);
 });
+
+test('read-only diagnostic supports exact Singles fixture identity and still rejects other seasons',()=>{const m=sample();m.id='singles3';m.federalCupLink.type='singles';m.federalCupLink.fixtureNo=3;const before=JSON.stringify(m);assert.equal(diagnose({matches:[m]},m.id).identity.fixtureNo,3);assert.equal(JSON.stringify(m),before);m.federalCupLink.year=2025;assert.throws(()=>diagnose({matches:[m]},m.id),/Federal Cup 2026/);});
