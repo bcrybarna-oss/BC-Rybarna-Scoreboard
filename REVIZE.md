@@ -1,5 +1,13 @@
 # Revize aplikace Poolčítadlo
 
+## Dominik – ostré vlajky pouze v reportech (v4.51.94 RC)
+Zadavatel: Dominik
+Datum: 23. 10. 2026
+Změny: Přímé přesné rovné SVG místo deformačních cloth PNG pouze A1/A2/B podle povolené záložní varianty; přímé zvlněné SVG v porovnání nezlepšilo kvalitu. Rozměry/rozložení/statistiky neměněny. Přehled a dlaždice beze změny. Povinné aktivní verze94, doplněna diagnóza, skutečné1:1 detaily a exportní kontrola.
+Testy: Desktop/mobil6PNG1920×1080/PDF1440×810párů PASS; obraz vPDF pixelově totožný sPNG; mimo vlajky A1/A2/B přesně shodné s93. Aktualizovaný presentation-browser PASS, skutečný místní Singles93 %/14 vs95 %/38 a interní partial zachovány,0Firebase/zápisů/JS chyb. Node198/200 pouze dvě známá preview-match-reload-recovery:50,106; release gate a diff --check PASS. CI není plně zelené. Podrobnosti docs/federal-report-flags-v4.51.94.md.
+Nasazení: Lokálně otestovaný kandidát94 v samostatné větvi z main ea1caaa. Nesloučeno a nenasazeno, produkce93. Čeká vizuální schválení.
+Omezení: V reportech rovné vlajky pro přednost ostrosti/správnosti symbolů. PDF zůstává FullHD rastrový report. Žádné změny původního JSON ani produkčních zápasů; skutečné Auth/Firebase/OBS a fyzický iPhone neověřeny.
+
 ## Dominik – schválené produkční nasazení PR #31 (v4.51.93 RC)
 Zadavatel: Dominik
 Datum: 23. 10. 2026

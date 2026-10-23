@@ -8,3 +8,7 @@
 Reference: uživatelem dodané `exec-7818429c-447e-48d2-a64d-c60d39e98351.png` (dlaždice) a `exec-43b84a1f-3b58-4557-a4e7-8c82bddcce08.png` (tabule/látka/společné tlačítko) v lokálním generated_images/01a168be-e87b-7aa0-a08c-bfdb3c7041f3. Žádný celý screenshot není použit jako produkční rozhraní.
 
 Doladění po revizi: odstraněno periodické svislé pásování. Produkční `flag-*-cloth.png` jsou průhledné rendery stejných přesných SVG při1920×1320, aby malé vlajky vbrowseru aexportu neměly schodové hrany filtru. Obnoví je `node scripts/render-federal-cloth-assets.cjs` sPlaywright/Chrome. Malé rovné SVG beze změny.
+
+## Kandidát94 – ostré reportové vlajky
+
+A1/A2/B používají přímo `flag-*-flat.svg` bez deformačního filtru a bez mezilehlého PNG. Geometrie národních symbolů není měněna. Velké zvlněné vlajky v přehledu a dlaždice zůstávají beze změny. Starší tvrzení o odstranění schodových hran PNG výše popisuje záměr verze93; skutečné exporty tuto kvalitu nepotvrdily. Viz `docs/federal-report-flags-v4.51.94.md`.

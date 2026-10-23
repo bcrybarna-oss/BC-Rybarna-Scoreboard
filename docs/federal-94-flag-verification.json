@@ -1,0 +1,44 @@
+[
+  {
+    "report": "A1",
+    "png": "1920x1080",
+    "pdf": "1440x810",
+    "pdfPixelsEqualPNG": true,
+    "unchangedOutsideFlags": true
+  },
+  {
+    "report": "A1-mobile",
+    "png": "1920x1080",
+    "pdf": "1440x810",
+    "pdfPixelsEqualPNG": true,
+    "unchangedOutsideFlags": true
+  },
+  {
+    "report": "A2",
+    "png": "1920x1080",
+    "pdf": "1440x810",
+    "pdfPixelsEqualPNG": true,
+    "unchangedOutsideFlags": true
+  },
+  {
+    "report": "A2-mobile",
+    "png": "1920x1080",
+    "pdf": "1440x810",
+    "pdfPixelsEqualPNG": true,
+    "unchangedOutsideFlags": true
+  },
+  {
+    "report": "B",
+    "png": "1920x1080",
+    "pdf": "1440x810",
+    "pdfPixelsEqualPNG": true,
+    "unchangedOutsideFlags": true
+  },
+  {
+    "report": "B-mobile",
+    "png": "1920x1080",
+    "pdf": "1440x810",
+    "pdfPixelsEqualPNG": true,
+    "unchangedOutsideFlags": true
+  }
+]
