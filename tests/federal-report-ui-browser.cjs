@@ -12,7 +12,7 @@ function config(ms){const c={year:2026,reportHost:'SK',teamAName:'Slovensko',tea
  const browser=await chromium.launch({channel:'chrome',headless:true});let writes=0,firebase=0;const errors=[];
  async function client(mobile=false){const c=await browser.newContext({serviceWorkers:'block',viewport:mobile?{width:390,height:844}:{width:1440,height:1000},deviceScaleFactor:1,isMobile:mobile});
   await c.route('**/*',route=>{const q=route.request(),u=q.url();if(u==='http://fc-reports.local/')return route.fulfill({contentType:'text/html',body:html});
-   for(const [file,type]of [['assets/federal-report-billiards.webp','image/webp'],['assets/federal-report-pool-logo.png','image/png'],['bc-rybarna-logo.png','image/png'],['assets/poolcitadlo-logo.webp','image/webp']])if(u==='http://fc-reports.local/'+file)return route.fulfill({contentType:type,body:fs.readFileSync(path.join(__dirname,'..',file))});
+   for(const [file,type]of [['assets/federal-report-billiards.webp','image/webp'],['assets/federal-report-pool-logo.png','image/png'],['assets/pushout-sports-logo-yellow.png','image/png'],['bc-rybarna-logo.png','image/png'],['assets/poolcitadlo-logo.webp','image/webp']])if(u==='http://fc-reports.local/'+file)return route.fulfill({contentType:type,body:fs.readFileSync(path.join(__dirname,'..',file))});
    if(!['GET','HEAD'].includes(q.method()))writes++;if(/firebaseio|firebasedatabase|identitytoolkit|securetoken/.test(u))firebase++;return route.abort();});
   const p=await c.newPage();p.on('pageerror',e=>errors.push(e.message));await p.goto('http://fc-reports.local/');await p.waitForSelector('#cloudLoginModal.show');const ms=fixtures();await p.evaluate(({c,ms})=>reportTest.load(c,ms),{c:config(ms),ms});return {c,p};
  }

@@ -1,5 +1,8 @@
 # Poolčítadlo – společný kontext projektu
 
+Kandidát v4.51.91 RC / PR #29: reporty A1/A2/B mají sjednocenou hierarchii Pushout Sports (456 × 62,32 s lokálním SVG ztmavením) → FEDERAL CUP 2026 → podtitulek typu reportu, původní logo Poolčítadla vlevo a pozadí s koulí 9 zůstávají. Originální 3000 × 410 logo je beze změny v assets/pushout-sports-logo-yellow.png; PNG1920×1080/PDF16:9 i výpočetní logika beze změny. Stejná nevydaná revize jako quick-finish; nesloučeno a nenasazeno. Podrobnosti docs/federal-pushout-branding-v4.51.91.md.
+
+
 Tento soubor je hlavní společný kontext pro vývoj aplikace Poolčítadlo. Slouží jako zdroj pravdy pro Jaroslava, Dominika i jejich ChatGPT asistenty.
 
 Povinná pravidla spolupráce jsou v `AGENTS.md`. Před každou prací čti také `REVIZE.md` a `PROJECT_STATUS.md`; aktuální verze, ověřené nasazení, rozpracované body a výsledky testů se udržují v `PROJECT_STATUS.md`. Tento soubor popisuje dlouhodobý kontext a nenahrazuje aktuální stav.
@@ -7,6 +10,9 @@ Povinná pravidla spolupráce jsou v `AGENTS.md`. Před každou prací čti tak�
 Každá samostatně nasazovaná funkční i vizuální změna povinně zvyšuje `v4.51.X RC` o 1 podle čerstvého vzdáleného main. Jedno vydání může mít více commitů; čistě dokumentační pokračování verzi nemění. Každé vydání má vlastní úplný záznam v REVIZE.md a aktuální PROJECT_STATUS.md. `node scripts/check-release.cjs --base origin/main` a samostatný CI job Release version and revision ověřují zvýšení verze při změně produkčních souborů, konzistenci všech čtyř aktivních míst a evidenci vydání. Podrobnosti a povinné kontroly jsou v AGENTS.md. Historické záznamy se nepřečíslovávají. CI není samo o sobě ochranou větve; nastavení GitHub branch protection se tímto nemění.
 
 ## Repozitář a produkce
+
+Kandidát91 (Dominik): pouze nové rychlé akce se známým 9/10-ball stolem používají předpoklad jedna zbývající koule = jeden úspěšný potápěcí strk (pot/sequential_batch). Zachováno B&R versus dohrávka, actor Team a dvojice Doubles. Unknown stav nemá odhad koule/strku; staré dokončené záznamy se nemigrují. Výpočty se nemění. Reportový formatter sdílí krátké 0/0 / procenta / partial* / —; oficiální procenta/sloupce pouze úplná evidence. Doubles nominace má dva neporušené řádky jmen se škálováním. Detaily a stav nové opravy v docs/federal-quick-finish-v4.51.91.md / PROJECT_STATUS.md. Bez merge/deploy, produkce90.
+
 
 Aktuální nasazení: v4.51.90 RC z externího merge PR #28, fe696f477d37f1f8ad2c99e242c1d789c746071c. Dne 23. 10. 2026 potvrzen úspěšný Pages deployment, přesná shoda veřejného HTML/assetů a bezpečný nepřihlášený smoke test. Rozsah a neověřené přihlášené funkce jsou výslovně v docs/deployment-v4.51.90.md / PROJECT_STATUS.md. Následující popisy kandidáta zachycují historii před sloučením; formulace bez merge/deploy v nich není aktuálním stavem produkce.
 

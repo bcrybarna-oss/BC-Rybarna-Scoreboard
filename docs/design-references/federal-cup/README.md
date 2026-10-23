@@ -18,3 +18,7 @@ Dodané originální PNG (commit 5c6ce04, ponechány beze změn):
 - Reportovací systém a související tlačítka jsou zatím **výhradně ve Federal Cupu**.
 
 Reference je nutné posuzovat spolu s dokumentací `docs/federal-reports-stage-3a.md`. Realizaci 3B, oddělený podklad, porovnání a exportní ukázky popisuje `docs/federal-reports-stage-3b.md`.
+
+## Pushout Sports – doplnění kandidáta v4.51.91 RC
+
+Dominik dodal 23. 10. 2026 originální `PUSHOUTSPORTS-LOGO-YELLOW.png` (3000 × 410, RGBA). Produkční `assets/pushout-sports-logo-yellow.png` je jeho bajtově totožná kopie; logo nebylo překresleno ani upraveno. Plakát není v repozitáři a nebyl vizuálně prohlédnut; zadavatel jej výslovně označil za nepovinnou inspiraci a popsal kompozici: žluté logo uprostřed nad nadpisem. Tuto hierarchii používají reporty A1/A2/B.

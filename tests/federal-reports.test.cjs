@@ -47,7 +47,14 @@ test('host order is explicit, year 2026 default authorized; future years have no
  assert.deepEqual(copy(ctx.federalReportOrder({year:2026})),[0,1]);assert.deepEqual(copy(ctx.federalReportOrder({year:2027,reportHost:'CZ'})),[1,0]);assert.equal(ctx.federalReportOrder({year:2027}),null);assert.equal(ctx.federalReportOrder({year:2026,reportHost:'other'}),null);
 });
 test('format partial/unknown/zero correctly, no bar for partial or no attempts',()=>{
- assert.equal(format({kind:'percent',coverage:'partial',numerator:3,denominator:5,value:60}).bar,null);assert.match(format({kind:'percent',coverage:'partial',numerator:3,denominator:5}).text,/Doloženo 3 \/ 5/);
- assert.equal(format({coverage:'unknown'}).text,'—');const zero=format({kind:'ratio',coverage:'complete',numerator:0,denominator:0,value:null});assert.equal(zero.bar,null);assert.match(zero.text,/bez pokusů/);
+ assert.equal(format({kind:'percent',coverage:'partial',numerator:3,denominator:5,value:60}).bar,null);assert.equal(format({kind:'percent',coverage:'partial',numerator:3,denominator:5}).text,'3 / 5*');
+ assert.equal(format({coverage:'unknown'}).text,'—');const zero=format({kind:'ratio',coverage:'complete',numerator:0,denominator:0,value:null});assert.equal(zero.bar,null);assert.equal(zero.text,'0 / 0');
  assert.equal(format({kind:'percent',coverage:'complete',numerator:0,denominator:2,value:0}).bar,0);assert.equal(format({kind:'ratio',coverage:'complete',numerator:2,denominator:5,value:.4}).bar,40);
+});
+
+test('compact publication values never present partial evidence as an official percentage',()=>{
+ assert.equal(format({kind:'percent',coverage:'complete',numerator:27,denominator:27,value:100}).text,'100 %');
+ assert.equal(format({kind:'percent',coverage:'partial',numerator:27,denominator:27,value:100}).text,'27 / 27*');
+ assert.equal(format({kind:'count',coverage:'partial',count:28,value:28}).text,'28*');
+ for(const kind of ['percent','ratio','average']){const x=format({kind,coverage:'complete',numerator:0,denominator:0,value:null});assert.equal(x.text,'0 / 0');assert.equal(x.bar,null);}
 });

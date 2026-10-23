@@ -934,11 +934,14 @@
 :is(#fcReportDialog,#fcReportExportSurface) .fc-report-sheet{position:relative;isolation:isolate;z-index:0;box-sizing:border-box;width:1920px;height:1080px;min-width:1920px;min-height:1080px;padding:124px 60px 24px;display:flex;flex-direction:column;background:#020a11;color:#f6f5ef;font-family:Arial,sans-serif;overflow:visible}
 :is(#fcReportDialog,#fcReportExportSurface) .fc-report-backdrop{position:absolute;inset:0;width:1920px;height:1080px;z-index:0;object-fit:cover}
 :is(#fcReportDialog,#fcReportExportSurface) .fc-report-pool-logo{position:absolute;top:16px;left:46px;width:460px;height:124.618px;object-fit:contain;object-position:left center}
+:is(#fcReportDialog,#fcReportExportSurface) .fc-report-pushout-logo{position:absolute;top:46px;left:732px;width:456px;height:62.32px;object-fit:contain}
 :is(#fcReportDialog,#fcReportExportSurface) .fc-report-title{height:86px;line-height:86px;text-align:center;flex-shrink:0;position:relative;z-index:1}
 :is(#fcReportDialog,#fcReportExportSurface) .fc-report-kicker{color:#f7da8b;text-shadow:0 2px 3px #000;text-align:center;letter-spacing:.045em;font-size:27px;line-height:34px;font-weight:700;flex-shrink:0}
 :is(#fcReportDialog,#fcReportExportSurface) .fc-report-head{display:grid;grid-template-columns:minmax(0,1fr) 360px minmax(0,1fr);align-items:start;gap:0;margin:5px 0 2px;height:160px;flex-shrink:0;position:relative}
 :is(#fcReportDialog,#fcReportExportSurface) .fc-report-person{position:relative;display:flex;align-items:center;gap:20px;min-width:0;height:132px;border:0;padding:22px 42px 8px 28px;box-sizing:border-box;background:transparent}
 :is(#fcReportDialog,#fcReportExportSurface) .fc-report-person h2{position:relative;box-sizing:border-box;font-size:44px;line-height:1.06;margin:0;min-width:0;flex:1;height:82px;display:flex;align-items:center;justify-content:center;font-weight:900;color:#f7f7f5;overflow-wrap:anywhere;text-shadow:0 1px 0 #fff8,0 3px 0 #60646b,0 5px 5px #000;text-transform:uppercase}
+:is(#fcReportDialog,#fcReportExportSurface) .fc-report-person h2.fc-report-pair{flex-direction:column;overflow-wrap:normal}
+:is(#fcReportDialog,#fcReportExportSurface) .fc-report-name-line{display:block;white-space:nowrap;flex-shrink:0;max-width:100%}
 :is(#fcReportDialog,#fcReportExportSurface) .fc-report-head .fc-report-person:last-child{flex-direction:row-reverse}
 :is(#fcReportDialog,#fcReportExportSurface) .fc-report-person .fc-report-subtitle{position:absolute;bottom:-20px;left:0;right:0;text-align:center;font-size:12px;line-height:16px;margin:0;letter-spacing:.07em;color:#c8c8c3}
 :is(#fcReportDialog,#fcReportExportSurface) .fc-report-person.selected{filter:drop-shadow(0 2px 3px #d2aa4a33)}
@@ -951,7 +954,7 @@
 :is(#fcReportDialog,#fcReportExportSurface) .fc-report-row{display:grid;grid-template-columns:170px minmax(0,1fr) 420px minmax(0,1fr) 170px;gap:24px;align-items:center;min-height:30px;padding:1px 0;border-bottom:1px solid #25496235;font-size:24px}
 :is(#fcReportDialog,#fcReportExportSurface) .fc-report-label{text-align:center;color:#f2f1ed;font-weight:400;font-size:22px;line-height:28px;white-space:nowrap}
 :is(#fcReportDialog,#fcReportExportSurface) .fc-report-value{font-variant-numeric:tabular-nums;overflow-wrap:anywhere;line-height:1.12;font-weight:700}
-:is(#fcReportDialog,#fcReportExportSurface) .fc-report-value[data-coverage="partial"]{font-size:14px}
+:is(#fcReportDialog,#fcReportExportSurface) .fc-report-value[data-coverage="partial"]{font-size:24px}
 :is(#fcReportDialog,#fcReportExportSurface) .fc-report-value.left{text-align:right}
 :is(#fcReportDialog,#fcReportExportSurface) .fc-report-track{position:relative;height:20px;background:linear-gradient(180deg,#061220,#102c45);border:1px solid #183c5755;border-radius:10px;overflow:hidden;box-sizing:border-box}
 :is(#fcReportDialog,#fcReportExportSurface) .fc-report-track>span{position:relative;display:block;height:100%;border:0;border-radius:8px 3px 3px 8px;background:linear-gradient(90deg,var(--rep-color),var(--rep-highlight,var(--rep-color)));box-shadow:none}
@@ -986,8 +989,8 @@
 :is(#fcReportDialog,#fcReportExportSurface) .fc-report-bar[style*="#488edf"],:is(#fcReportDialog,#fcReportExportSurface) .fc-report-track[style*="#488edf"]{--rep-highlight:#46c4ee}
 :is(#fcReportDialog,#fcReportExportSurface) .fc-report-footer:before{content:'';position:absolute;left:0;right:0;top:-1px;height:2px;background:linear-gradient(90deg,transparent,#e7bc61 20%,#ffe8a0 50%,#c49846 85%,transparent)}
 
-:is(#fcReportDialog,#fcReportExportSurface) .fc-report-sheet>:not(.fc-report-backdrop):not(.fc-report-shade):not(.fc-report-pool-logo){position:relative;z-index:1}
-:is(#fcReportDialog,#fcReportExportSurface) .fc-report-sheet>.fc-report-pool-logo{z-index:1}
+:is(#fcReportDialog,#fcReportExportSurface) .fc-report-sheet>:not(.fc-report-backdrop):not(.fc-report-shade):not(.fc-report-pool-logo):not(.fc-report-pushout-logo){position:relative;z-index:1}
+:is(#fcReportDialog,#fcReportExportSurface) .fc-report-sheet>.fc-report-pool-logo,:is(#fcReportDialog,#fcReportExportSurface) .fc-report-sheet>.fc-report-pushout-logo{z-index:1}
 #fcReportDialog .fc-report-sources{font-size:13px;line-height:1.5;color:#c7ba96;margin:14px}
 #fcReportDialog .fc-report-sources summary{cursor:pointer}
 #fcReportDialog .fc-report-sources dt{font-weight:bold;margin-top:8px}
@@ -2594,7 +2597,7 @@ html[data-theme="light"] #leagueSchedule .history-item .muted{
           <span class="by">by</span>
           <span class="club">BC Rybárna</span>
         </div>
-        <small class="modern-brand-version">v4.51.90 RC</small>
+        <small class="modern-brand-version">v4.51.91 RC</small>
       </div>
     </div>
     <div class="nav">
@@ -3208,7 +3211,7 @@ html[data-theme="light"] #leagueSchedule .history-item .muted{
         </div>
         <div class="subpanel" style="min-width:210px;text-align:center;margin:0">
           <div class="muted" style="font-size:10px;font-weight:950;letter-spacing:1px">AKTUÁLNÍ VERZE</div>
-          <div style="font-size:22px;font-weight:950;color:var(--gold2);margin-top:5px">v4.51.90 RC</div>
+          <div style="font-size:22px;font-weight:950;color:var(--gold2);margin-top:5px">v4.51.91 RC</div>
         </div>
       </div>
     </div>
@@ -5958,7 +5961,7 @@ html[data-theme="light"] #leagueSchedule .history-item .muted{
       </div>
 
       <div id="groupPlayoffSeedStatus" class="muted" style="margin-top:12px;min-height:20px"></div>
-      <div class="muted" style="margin-top:4px;font-size:11px">RC v4.51.90</div>
+      <div class="muted" style="margin-top:4px;font-size:11px">RC v4.51.91</div>
       <div class="modal-actions">
         <button id="groupPlayoffSeedApplyBtn" class="btn primary big" type="button">NASADIT DO PLAY-OFF</button>
         <button id="groupPlayoffSeedCancelBtn" class="btn">ZRUŠIT</button>
@@ -7143,7 +7146,7 @@ html[data-theme="light"] #leagueSchedule .history-item .muted{
     const btn=$('submitReportBtn');if(btn)btn.disabled=true;
     try{
       const id=uid(),p=currentUserPlayerId?data.players?.[currentUserPlayerId]:null;
-      const report={id,createdByUid:cloudUid,createdByPlayerId:currentUserPlayerId||'',createdByName:p?playerSelectionLabel(p):(cloudUserEmail||'Uživatel'),email:cloudUserEmail||'',type,area,description,appVersion:'v4.51.90 RC',createdAt:new Date().toISOString(),updatedAt:new Date().toISOString(),status:'new',adminNote:''};
+      const report={id,createdByUid:cloudUid,createdByPlayerId:currentUserPlayerId||'',createdByName:p?playerSelectionLabel(p):(cloudUserEmail||'Uživatel'),email:cloudUserEmail||'',type,area,description,appVersion:'v4.51.91 RC',createdAt:new Date().toISOString(),updatedAt:new Date().toISOString(),status:'new',adminNote:''};
       await reportRequest(id,'PUT',report);
       try{
         await writeReportUserMirror(report);
@@ -10256,8 +10259,8 @@ $('useClock').addEventListener('change',e=>$('clockSettings').classList.toggle('
     if(!metric||metric.coverage==='unknown')return {text:'—',bar:null,note:'Neznámá evidence'};
     const number=(n,average=false)=>Number.isFinite(n)?n.toLocaleString('cs-CZ',{minimumFractionDigits:average?1:0,maximumFractionDigits:average?1:0}):'—';
     const fraction=number(metric.numerator)+' / '+number(metric.denominator);
-    if(metric.coverage==='partial')return {text:'Doloženo '+(metric.kind==='count'?number(metric.count):fraction)+' (část)',bar:null,note:'Neúplná evidence'};
-    if(metric.kind!=='count'&&metric.denominator===0)return {text:fraction+' · bez pokusů',bar:null,note:'Žádné evidované pokusy'};
+    if(metric.coverage==='partial')return {text:(metric.kind==='count'?number(metric.count):fraction)+'*',bar:null,note:'Neúplná evidence'};
+    if(metric.kind!=='count'&&metric.denominator===0)return {text:fraction,bar:null,note:'Žádné evidované pokusy'};
     return {text:metric.kind==='percent'?number(metric.value)+' %':metric.kind==='ratio'?fraction:number(metric.value,metric.kind==='average'),bar:metric.value===null?null:['percent','ratio'].includes(metric.kind)?Math.max(0,Math.min(100,metric.value*(metric.kind==='ratio'?100:1))):null,note:'Úplná evidence'};
   }
   function detailedCounterActive(){
@@ -12936,14 +12939,12 @@ const isFourteen=match.discipline==='14.1' && !simpleCounter;
   if($('quickRunoutBtn')){
     $('quickRunoutBtn').onclick=()=>{
       if(!match || match.counterMode==='simple' || match.ghostMode || !exactBallTrackingDiscipline())return;
-      const rem=Array.isArray(match.rackRemainingBalls)
-        ? match.rackRemainingBalls.slice().sort((a,b)=>a-b)
-        : fullRackBalls();
-      if(!rem.length)return;
+      const rem=knownQuickRackBalls();
       const i=Number(match.turn||0);
       if(!detailedTagAllowed('batch'))return;
       beginDetailedAction('Dohráno postupně');
       saveManualEntryUndoSnapshot('Dohráno postupně');
+      if(!rem){recordQuickRackCompletion(i);finishGameBallFromTrackedPlay(i,match.discipline==='9-ball'?9:10,'neznámý stav stolu');return;}
       match.rackRemainingBalls=[];
       processSequentialCleanShots(i,rem,rem);
     };
@@ -12952,6 +12953,22 @@ const isFourteen=match.discipline==='14.1' && !simpleCounter;
 
   function inferRemainingFromMissBall(ball){
     return applyRotationInference(Number(ball));
+  }
+  function knownQuickRackBalls(){
+    const d=ensureDetailedPlay(),balls=match?.rackRemainingBalls,max=match?.discipline==='9-ball'?9:match?.discipline==='10-ball'?10:null;
+    return max&&d?.tableKnown===true&&Array.isArray(balls)&&balls.length>0&&balls.length<=max&&new Set(balls).size===balls.length&&balls.every(n=>Number.isInteger(n)&&n>=1&&n<=max)&&balls.includes(max)?balls.slice():null;
+  }
+  function recordQuickRackCompletion(i){
+    const balls=knownQuickRackBalls();
+    if(balls){
+      recordDetailedShot('pot',{balls,strokeCount:balls.length,entry:'sequential_batch',source:'rack_completion'});
+      match.stats[i].regularPottedBalls=Number(match.stats[i].regularPottedBalls||0)+balls.length;
+      match.rackRemainingBalls=[];
+      return balls.length;
+    }
+    const record=recordDetailedShot('inferred_pots',{balls:[],strokeCount:null,source:'rack_completion_unknown',derivationSafe:false});
+    if(record){record.pottingAttempts=null;record.successfulPottingStrokes=null;}
+    return null;
   }
   function remainingRackBallCount(){
     return Array.isArray(match?.rackRemainingBalls)?match.rackRemainingBalls.length:0;
@@ -13130,9 +13147,7 @@ const isFourteen=match.discipline==='14.1' && !simpleCounter;
 
     beginDetailedAction('Čistá hra');
     saveManualEntryUndoSnapshot('Čistá hra');
-    recordDetailedShot('inferred_pots',{balls:(match.rackRemainingBalls||[]).slice(),strokeCount:null,source:'rack_completion',derivationSafe:!!match.detailedPlay?.inning?.safeInference&&match.detailedPlay.tableKnown!==false});
-    if(match.federalCupLink&&match.detailedPlay?.inning?.safeInference&&match.detailedPlay.tableKnown!==false)match.stats[i].regularPottedBalls=Number(match.stats[i].regularPottedBalls||0)+remainingRackBallCount();
-    const inferredLen=remainingRackBallCount();
+    const inferredLen=recordQuickRackCompletion(i);
     addActionEvent('Čistá hra • Break & Run • '+match.playerNames[i]+(inferredLen?' • dohráno '+inferredLen+' koulí':''));
     match.stats[i].breakAndRun=Number(match.stats[i].breakAndRun||0)+1;
     match.runoutEligibleFor=null;
@@ -13155,10 +13170,8 @@ const isFourteen=match.discipline==='14.1' && !simpleCounter;
 
     beginDetailedAction('Dohrávka');
     saveManualEntryUndoSnapshot('Dohrávka');
-    recordDetailedShot('inferred_pots',{balls:(match.rackRemainingBalls||[]).slice(),strokeCount:null,source:'rack_completion',derivationSafe:!!match.detailedPlay?.inning?.safeInference&&match.detailedPlay.tableKnown!==false});
-    if(match.federalCupLink&&match.detailedPlay?.inning?.safeInference&&match.detailedPlay.tableKnown!==false)match.stats[i].regularPottedBalls=Number(match.stats[i].regularPottedBalls||0)+remainingRackBallCount();
+    const inferredLen=recordQuickRackCompletion(i);
     const runoutReason=match.runoutEligibleReason==='push_out_return'?'vráceném push outu':(match.runoutEligibleReason==='break_foul'?'faulu z breaku soupeře':'dry breaku soupeře');
-    const inferredLen=remainingRackBallCount();
     addActionEvent('Dohrávka po '+runoutReason+' • '+match.playerNames[i]+(inferredLen?' • '+inferredLen+' koulí':''));
     match.stats[i].runouts=Number(match.stats[i].runouts||0)+1;
     match.runoutEligibleFor=null;
@@ -29917,7 +29930,9 @@ function renderStats(){
   function reportMatchName(m,side){
     if(m.federalCupLink?.type==='team')return REPORT_REPS[side].name;
     const people=federalStatsRows(m.federalCupLink?.lineupParticipants?.[side]),need=m.federalCupLink?.type==='doubles'?2:1;
-    return people.length===need&&people.every(p=>typeof p.name==='string'&&p.name)?people.map(p=>p.name).join(' + '):savedMatchSideDisplayName(m,side);
+    if(people.length===need&&people.every(p=>typeof p.name==='string'&&p.name))return need===2?people.map(p=>p.name):people[0].name;
+    const fallback=savedMatchSideDisplayName(m,side),parts=String(fallback||'').split(' + ');
+    return need===2&&parts.length===2?parts:fallback;
   }
   function reportButton(kind,label,attrs=''){return '<button type="button" class="btn" data-fc-report="'+kind+'" '+attrs+'>'+label+'</button>';}
   // Decorative frames are separate from dynamically rendered scores and identities.
@@ -29935,27 +29950,27 @@ function renderStats(){
     const id=player?'fc-title-player':'fc-title-comparison';
     return '<div class="fc-report-title"><svg xmlns="http://www.w3.org/2000/svg" width="1796" height="86" viewBox="0 0 1796 100" role="img" aria-label="'+esc(text)+'"><defs><linearGradient id="'+id+'" x1="0" y1="0" x2="0" y2="1"><stop stop-color="#fff8d9"/><stop offset=".35" stop-color="#ffe8a3"/><stop offset=".52" stop-color="#d2a24a"/><stop offset=".72" stop-color="#ffe7a1"/><stop offset="1" stop-color="#ae7628"/></linearGradient></defs><text x="898" y="83" text-anchor="middle" font-family="Arial,sans-serif" font-size="'+(player?76:90)+'" font-weight="900" fill="#38220d" stroke="#020609" stroke-width="3">'+esc(text)+'</text><text x="898" y="79" text-anchor="middle" font-family="Arial,sans-serif" font-size="'+(player?76:90)+'" font-weight="900" fill="url(#'+id+')" stroke="#f6d996" stroke-width=".5">'+esc(text)+'</text></svg></div>';
   }
-  function reportShade(){return '<svg xmlns="http://www.w3.org/2000/svg" class="fc-report-shade" width="1920" height="1080" viewBox="0 0 1920 1080" aria-hidden="true"><defs><linearGradient id="fc-shade-content" x1="0" y1="0" x2="0" y2="1"><stop offset=".18" stop-color="#00050a" stop-opacity="0"/><stop offset=".29" stop-color="#00050a" stop-opacity=".13"/><stop offset=".43" stop-color="#00060b" stop-opacity=".7"/><stop offset=".9" stop-color="#00060b" stop-opacity=".53"/></linearGradient><radialGradient id="fc-shade-edge" cx=".5" cy=".57" r=".72"><stop offset=".42" stop-color="#000" stop-opacity="0"/><stop offset="1" stop-color="#000" stop-opacity=".4"/></radialGradient></defs><rect width="1920" height="1080" fill="url(#fc-shade-content)"/><rect width="1920" height="1080" fill="url(#fc-shade-edge)"/></svg>';}
-  function reportBrand(){return '<img class="fc-report-pool-logo" src="assets/federal-report-pool-logo.png" alt="Poolčítadlo">';}
+  function reportShade(){return '<svg xmlns="http://www.w3.org/2000/svg" class="fc-report-shade" width="1920" height="1080" viewBox="0 0 1920 1080" aria-hidden="true"><defs><linearGradient id="fc-shade-content" x1="0" y1="0" x2="0" y2="1"><stop offset=".18" stop-color="#00050a" stop-opacity="0"/><stop offset=".29" stop-color="#00050a" stop-opacity=".13"/><stop offset=".43" stop-color="#00060b" stop-opacity=".7"/><stop offset=".9" stop-color="#00060b" stop-opacity=".53"/></linearGradient><radialGradient id="fc-shade-brand"><stop stop-color="#00050a" stop-opacity=".86"/><stop offset=".58" stop-color="#00050a" stop-opacity=".64"/><stop offset="1" stop-color="#00050a" stop-opacity="0"/></radialGradient><radialGradient id="fc-shade-edge" cx=".5" cy=".57" r=".72"><stop offset=".42" stop-color="#000" stop-opacity="0"/><stop offset="1" stop-color="#000" stop-opacity=".4"/></radialGradient></defs><rect width="1920" height="1080" fill="url(#fc-shade-content)"/><rect width="1920" height="1080" fill="url(#fc-shade-edge)"/><ellipse cx="960" cy="77" rx="350" ry="105" fill="url(#fc-shade-brand)"/></svg>';}
+  function reportBrand(){return '<img class="fc-report-pool-logo" src="assets/federal-report-pool-logo.png" alt="Poolčítadlo"><img class="fc-report-pushout-logo" src="assets/pushout-sports-logo-yellow.png" alt="Pushout Sports">';}
   function reportFooter(text){return '<footer class="fc-report-footer"><div>'+esc(text)+'</div><div class="fc-report-brands"><span>Made by BC Rybárna</span><img class="fc-report-club-logo" src="bc-rybarna-logo.png" alt="BC Rybárna"></div></footer>';}
   function reportValue(metric,side,width=null,left=false,withBar=true){
     const x=federalReportMetric(metric),bar=width===null?x.bar:width;
     return '<div class="fc-report-value '+(left?'left':'')+'" style="--rep-color:'+REPORT_REPS[side].color+'" data-coverage="'+esc(metric?.coverage||'unknown')+'" title="'+esc([x.note,...(metric?.reasons||[])].join(' · '))+'">'+esc(x.text)+(!withBar||bar===null?'':'<div class="fc-report-track" aria-hidden="true"><span style="width:'+bar+'%"></span></div>')+'</div>';
   }
   function reportComparison(title,names,scores,metrics,order,selected=null,notice=''){
-    const person=side=>'<div class="fc-report-person '+(side===selected?'selected':'')+'" style="--rep-color:'+REPORT_REPS[side].color+'">'+reportFrame('person',side,side===order[0]?'left':'right')+reportFlag(side)+'<h2>'+esc(names[side])+'</h2><div class="fc-report-subtitle">'+(side===order[0]?'DOMÁCÍ':'HOSTÉ')+'</div></div>';
+    const person=side=>'<div class="fc-report-person '+(side===selected?'selected':'')+'" style="--rep-color:'+REPORT_REPS[side].color+'">'+reportFrame('person',side,side===order[0]?'left':'right')+reportFlag(side)+'<h2'+(Array.isArray(names[side])?' class="fc-report-pair"':'')+'>'+(Array.isArray(names[side])?names[side].map((name,i)=>'<span class="fc-report-name-line">'+(i?'+ ':'')+esc(name)+'</span>').join(''):esc(names[side]))+'</h2><div class="fc-report-subtitle">'+(side===order[0]?'DOMÁCÍ':'HOSTÉ')+'</div></div>';
     const rows=REPORT_GROUPS.map(([group,rows])=>'<section class="fc-report-comparison-group"><h3><span>'+group+'</span></h3>'+rows.map(([key,label])=>{
       const values=[0,1].map(side=>metrics[side]?.[key]),maximum=Math.max(0,...values.filter(x=>x?.coverage==='complete'&&x.value!==null).map(x=>x.value));
       const bar=side=>{const x=values[side],absolute=x&&['count','average'].includes(x.kind),width=absolute?(x.coverage==='complete'&&x.value!==null&&maximum>0?x.value/maximum*100:null):federalReportMetric(x).bar;return '<div class="fc-report-bar '+(side===order[0]?'left':'')+'" style="--rep-color:'+REPORT_REPS[side].color+'">'+(width===null?'':'<div class="fc-report-track" aria-hidden="true"><span style="width:'+width+'%"></span></div>')+'</div>';};
       return '<div class="fc-report-row" data-report-metric="'+key+'">'+reportValue(values[order[0]],order[0],null,true,false)+bar(order[0])+'<div class="fc-report-label">'+esc(label)+'</div>'+bar(order[1])+reportValue(values[order[1]],order[1],null,false,false)+'</div>';
     }).join('')+'</section>').join('');
-    return '<article class="fc-report-sheet" data-report-template="A"><img class="fc-report-backdrop" src="assets/federal-report-billiards.webp" alt="">'+reportShade()+reportBrand()+reportTitle('FEDERAL CUP '+(title.match(/20[0-9]{2}/)||[''])[0])+'<div class="fc-report-kicker">'+esc(title.replace(/^FEDERAL CUP [0-9]+ · /,''))+'</div><div class="fc-report-head">'+person(order[0])+'<div class="fc-report-score" data-score-caption="'+(title.includes('REPREZENTACÍ')?'Skóre zápasů':'VS')+'">'+reportFrame('score')+reportScoreText(String(scores[order[0]]??'—')+' : '+String(scores[order[1]]??'—'))+'</div>'+person(order[1])+'</div>'+(notice?'<p class="fc-report-subtitle">'+esc(notice)+'</p>':'')+'<div class="fc-report-statistics">'+rows+'</div>'+reportFooter('Statistiky vycházejí z dostupné evidence zápasů. Část = doložené údaje; — = neznámá evidence.')+'</article>';
+    return '<article class="fc-report-sheet" data-report-template="A"><img class="fc-report-backdrop" src="assets/federal-report-billiards.webp" alt="">'+reportShade()+reportBrand()+reportTitle('FEDERAL CUP '+(title.match(/20[0-9]{2}/)||[''])[0])+'<div class="fc-report-kicker">'+esc(title.replace(/^FEDERAL CUP [0-9]+ · /,''))+'</div><div class="fc-report-head">'+person(order[0])+'<div class="fc-report-score" data-score-caption="'+(title.includes('REPREZENTACÍ')?'Skóre zápasů':'VS')+'">'+reportFrame('score')+reportScoreText(String(scores[order[0]]??'—')+' : '+String(scores[order[1]]??'—'))+'</div>'+person(order[1])+'</div>'+(notice?'<p class="fc-report-subtitle">'+esc(notice)+'</p>':'')+'<div class="fc-report-statistics">'+rows+'</div>'+reportFooter('Statistiky vycházejí z dostupné evidence zápasů. * Neúplná evidence; — neznámý údaj.')+'</article>';
   }
   function reportPlayer(report,person,side){
     const result=federalReportResults(report,person.id,side),entry=report.people[person.id]?.conflict?null:report.season.individuals[person.id],metrics=entry?.metrics||federalCalculateMatch({}).sides[side].metrics;
-    const count=n=>result.coverage==='unknown'?'—':result.coverage==='partial'?'Doloženo '+n+' (část)':String(n);
+    const count=n=>result.coverage==='unknown'?'—':result.coverage==='partial'?n+'*':String(n);
     const cards=[['VÝHRY',count(result.wins)],['PROHRY',count(result.losses)],['% VÝHER',result.value===null?'—':result.value.toLocaleString('cs-CZ',{maximumFractionDigits:0})+' %'],['ČISTÉ HRY',federalReportMetric(metrics.cleanRuns).text]];
-    return '<article class="fc-report-sheet" data-report-template="B" data-report-person="'+esc(person.id)+'"><img class="fc-report-backdrop" src="assets/federal-report-billiards.webp" alt="">'+reportShade()+reportBrand()+reportTitle('INDIVIDUÁLNÍ STATISTIKY',true)+'<div class="fc-report-kicker">FEDERAL CUP '+report.year+'</div><div class="fc-report-player-head"><header class="fc-report-person" style="--rep-color:'+REPORT_REPS[side].color+'">'+reportFrame('person',side)+reportFlag(side)+'<h2>'+esc(person.name||'Neznámé jméno')+'</h2></header><div class="fc-report-cards">'+cards.map(([label,value])=>'<div class="fc-report-card">'+label+'<strong>'+esc(value)+'</strong></div>').join('')+'</div></div><div class="fc-report-groups">'+REPORT_GROUPS.map(([group,rows])=>'<section class="fc-report-group"><h3><span>'+group+'</span></h3>'+rows.map(([key,label])=>'<div class="fc-report-personal-row" data-report-metric="'+key+'"><span>'+esc(label)+'</span>'+'<div class="fc-report-personal-bar">'+(federalReportMetric(metrics[key]).bar===null?'':'<div class="fc-report-track" style="--rep-color:'+REPORT_REPS[side].color+'"><span style="width:'+federalReportMetric(metrics[key]).bar+'%"></span></div>')+'</div>'+reportValue(metrics[key],side,null,false,false)+'</div>').join('')+'</section>').join('')+'</div>'+reportFooter('Statistiky vycházejí z dostupné evidence zápasů. Část = doložené údaje; — = neznámá evidence.')+'</article>';
+    return '<article class="fc-report-sheet" data-report-template="B" data-report-person="'+esc(person.id)+'"><img class="fc-report-backdrop" src="assets/federal-report-billiards.webp" alt="">'+reportShade()+reportBrand()+reportTitle('FEDERAL CUP '+report.year)+'<div class="fc-report-kicker">INDIVIDUÁLNÍ STATISTIKY</div><div class="fc-report-player-head"><header class="fc-report-person" style="--rep-color:'+REPORT_REPS[side].color+'">'+reportFrame('person',side)+reportFlag(side)+'<h2>'+esc(person.name||'Neznámé jméno')+'</h2></header><div class="fc-report-cards">'+cards.map(([label,value])=>'<div class="fc-report-card">'+label+'<strong>'+esc(value)+'</strong></div>').join('')+'</div></div><div class="fc-report-groups">'+REPORT_GROUPS.map(([group,rows])=>'<section class="fc-report-group"><h3><span>'+group+'</span></h3>'+rows.map(([key,label])=>'<div class="fc-report-personal-row" data-report-metric="'+key+'"><span>'+esc(label)+'</span>'+'<div class="fc-report-personal-bar">'+(federalReportMetric(metrics[key]).bar===null?'':'<div class="fc-report-track" style="--rep-color:'+REPORT_REPS[side].color+'"><span style="width:'+federalReportMetric(metrics[key]).bar+'%"></span></div>')+'</div>'+reportValue(metrics[key],side,null,false,false)+'</div>').join('')+'</section>').join('')+'</div>'+reportFooter('Statistiky vycházejí z dostupné evidence zápasů. * Neúplná evidence; — neznámý údaj.')+'</article>';
   }
   function openFederalReport(button){
     if(!$('screen-federal-cup-2026')?.classList.contains('active'))return;
@@ -29990,11 +30005,11 @@ function renderStats(){
   function fitFederalReportNames(root){
     for(const el of root.querySelectorAll('.fc-report-person h2')){
       el.style.fontSize='44px';
-      for(let size=44;size>14&&(el.scrollHeight>el.clientHeight+1||el.scrollWidth>el.clientWidth+1);size--)el.style.fontSize=(size-1)+'px';
-      if(el.scrollHeight>el.clientHeight+1||el.scrollWidth>el.clientWidth+1)throw Error('Jméno se nevejde do Full HD reportu bez oříznutí. Export nebyl vytvořen.');
+      for(let size=44;size>14&&(el.scrollHeight>el.clientHeight+1||el.scrollWidth>el.clientWidth+1||[...el.querySelectorAll('.fc-report-name-line')].some(n=>n.scrollWidth>el.clientWidth+1));size--)el.style.fontSize=(size-1)+'px';
+      if(el.scrollHeight>el.clientHeight+1||el.scrollWidth>el.clientWidth+1||[...el.querySelectorAll('.fc-report-name-line')].some(n=>n.scrollWidth>el.clientWidth+1))throw Error('Jméno se nevejde do Full HD reportu bez oříznutí. Export nebyl vytvořen.');
     }
     for(const el of root.querySelectorAll('.fc-report-value,.fc-report-card strong')){
-      const max=el.matches('.fc-report-card strong')?48:el.dataset.coverage==='partial'?14:24;el.style.whiteSpace='nowrap';el.style.fontSize=max+'px';
+      const max=el.matches('.fc-report-card strong')?48:24;el.style.whiteSpace='nowrap';el.style.fontSize=max+'px';
       for(let size=max;size>12&&el.scrollWidth>el.clientWidth+1;size--)el.style.fontSize=(size-1)+'px';
       if(el.scrollWidth>el.clientWidth+1)throw Error('Hodnota se nevejde do Full HD reportu bez oříznutí.');
     }
@@ -30021,7 +30036,7 @@ function renderStats(){
         if(sheet.scrollWidth>1920||sheet.scrollHeight>1080)throw Error('Obsah přesahuje Full HD formát. Export nebyl vytvořen, aby se nic neořízlo.');
         const header=sheet.querySelector('.fc-report-head');if(header)for(const panel of header.querySelectorAll('.fc-report-person'))if(panel.getBoundingClientRect().bottom>header.getBoundingClientRect().bottom+1)throw Error('Hlavička reportu přesahuje vyhrazené místo.');
         const footer=sheet.querySelector('.fc-report-footer').getBoundingClientRect();for(const row of sheet.querySelectorAll('[data-report-metric]'))if(row.getBoundingClientRect().bottom>footer.top+1)throw Error('Statistiky se překrývají s patičkou.');
-        for(const el of sheet.querySelectorAll('[data-report-metric],.fc-report-footer,.fc-report-brands,.fc-report-brands span,.fc-report-person h2,.fc-report-club-logo,.fc-report-pool-logo')){const box=el.getBoundingClientRect(),page=sheet.getBoundingClientRect();if(box.bottom>page.bottom+1||box.right>page.right+1)throw Error('Obsah reportu se nevejde do Full HD.');}
+        for(const el of sheet.querySelectorAll('[data-report-metric],.fc-report-footer,.fc-report-brands,.fc-report-brands span,.fc-report-person h2,.fc-report-club-logo,.fc-report-pool-logo,.fc-report-pushout-logo')){const box=el.getBoundingClientRect(),page=sheet.getBoundingClientRect();if(box.bottom>page.bottom+1||box.right>page.right+1)throw Error('Obsah reportu se nevejde do Full HD.');}
       }});
       if(canvas.width!==1920||canvas.height!==1080)throw Error('Export nemá požadované rozlišení.');
       return canvas;
