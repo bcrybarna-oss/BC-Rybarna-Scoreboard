@@ -26,3 +26,7 @@ Plakát není dostupný; vycházíme z originálního loga a následného výslo
 [Desktopový dialog](screenshots/federal-91-pushout-desktop-dialog.png), [mobilní dialog](screenshots/federal-91-pushout-mobile-dialog.png). Ukázky jsou výhradně syntetické. Exporty a oba dialogy vizuálně prohlédnuty.
 
 Bez testovacích produkčních zápisů. Produkční Auth/Firebase/OBS a fyzický iPhone nejsou tímto ověřené. Verze zůstává nevydaný kandidát v4.51.91 RC; čeká vizuální schválení, bez merge/deploy.
+
+## Commit a CI
+
+Kód a výstupy: **19fe4531ddb18e82bacc194320b461f3e9e2cb90**, pushnuto do [PR #29](https://github.com/bcrybarna-oss/BC-Rybarna-Scoreboard/pull/29). Následný dokumentační commit nemění aplikaci. [CI 19fe453](https://github.com/bcrybarna-oss/BC-Rybarna-Scoreboard/actions/runs/39935348433): Release version and revision **success**, Node **189/191 failure**, log potvrzuje pouze známá selhání preview-match-reload-recovery.test.cjs:50,106 v test-modular. Žádná nová regrese; CI není plně zelené. Release gate proti čerstvému main3bdc844 a diff --check PASS. Nesloučeno a nenasazeno.
