@@ -1,7 +1,34 @@
 # Revize aplikace Poolčítadlo
 
+## Dominik – explicitní nula RESAFE a bezpečný odvod před MISS (v4.51.92 RC)
+Zadavatel: Dominik
+Datum: 23. 10. 2026
+Změny: Pokračování stejného PR #30/verze92 oddělené od dřívější prevence neznámého stolu. Známý počet pot/escape/break ukládá pottedCount včetně nuly, absence se nenormalizuje. Bezpečný odvod před MISS ve známé rotaci zapisuje jednu kouli jako jeden úspěšný pokus s derived původem, bez dvojího započtení. Team reload obnoví prázdnou strukturu volby hráčů. Aktualizována diagnóza po upřesnění zadavatele a samostatný plán nápravy dvou doložených záznamů.
+Testy: Nové unit 4/4 PASS, 3/4 prokazatelně selžou na předchozím HEAD. Skutečná writer/reader cloudová cesta nad izolovaným mockem, RESAFE/ostatní úniky/UNDO/reload a safe MISS PASS. A1/A2/B complete/unknown PNG/PDF PASS. Detailed-counter, quick-finish, Federal Cup a unknown-table regrese PASS. Node194/196 pouze známé dvě preview-match-reload-recovery chyby; žádná nová regrese, CI není plně zelené. Paměťová cílená oprava původního zápasu ověřila37/38 complete a38complete; export SHA256 nezměněný.
+Nasazení: Otestováno a pushnuto jako1ecf8317bd2f52b1592c9aadbef5ea35c6725571 do stejného draft PR #30; žádný merge/deploy, produkce91. [CI opravy 1ecf831](https://github.com/bcrybarna-oss/BC-Rybarna-Scoreboard/actions/runs/39967684036): Release version and revision success; Node194/196 failure, log potvrzuje výhradně preview-match-reload-recovery.test.cjs:50,106. Žádná nová regrese; CI není plně zelené.
+Omezení: Žádná automatická migrace již uloženého zápasu, žádné produkční zápisy. Produkční Auth/Firebase, OBS a fyzický iPhone neověřeny. Historická interpretace inferred6 jako nutně unknown byla nahrazena výslovným pravidlem zadavatele.
 
 
+
+
+
+
+
+## Dominik – skutečná diagnóza Team1:5 z dodaného exportu (v4.51.92 RC)
+Zadavatel: Dominik
+Datum: 23. 10. 2026
+Změny: Pouze diagnostika/dokumentace. Ověřen přesný matchId5a97e289-a5f5-4da4-bd85-8bc00daf1cc9, ročník2026/Team#1/skóre1:5. Rozlišeny oprávněné unknown_attempts/unknown_intent pro odvozenou6 před MISS na7 v racku1 a chybná ztráta doloženého balls[] u českého RESAFE v racku3 (unknown_pots). Undo snapshot obsahuje původní explicitní nulu. Reference/racky/aktéři bez chyb; žádný rack_completion_unknown. PR #30 tyto konkrétní příčiny zatím neopravuje. Nový podrobný report a pravdivá aktualizace statusu/kontextu, aplikační kód neměněn.
+Testy: Diagnostický nástroj reprodukoval CZ36/37 partial s reasons unknown_attempts/unknown_intent a38 partial s unknown_pots, explicit37/derived1; SK3/3 a3 complete. Produkční91 a PR30 vracejí identický celý federalCalculateMatch výsledek. V hluboké paměťové kopii vrácené doložené balls[] u RESAFE mění pouze count38 na complete, útok zůstává36/37 partial. SHA256 zdrojového exportu před/po totožný. Bez síťových čtení zápasu a bez Firebase zápisů. Předchozí CI známé190/192 s pouze dvěma modularizačními chybami se tímto nemaskuje.
+Nasazení: Čistě dokumentační pokračování stejného kandidáta92 v PR #30, nesloučeno a nenasazeno; produkce91. Export nezměněn.
+Omezení: Přesný historický cloudový request nebyl zachycen; ztráta explicitní nuly je doložená rozdílem kanonického recordu a zachovaného undo snapshotu. Další cílená oprava musí uchovat nulu přes cloudový roundtrip a přidat odpovídající regresi, nikoli odhadovat chybějící pokusy ani plošně doplnit nuly do neurčitých záznamů.
+
+## Dominik – diagnostika neúplnosti a ochrana rychlého dokončení (v4.51.92 RC)
+Zadavatel: Dominik
+Datum: 23. 10. 2026
+Změny: Samostatná větev z aktuálního main0db27bb. Skutečný nový Team1:5 zatím nedostupný bez přihlášení/exportu, konkrétní příčina hvězdiček není potvrzená. Doložena a opravena nehlídaná početní cesta rozstřelu bez čísel a tiché rychlé dokončení neznámého stolu: přesný rozstřel vyžaduje čísla před uložením, DOHRÁT/ČISTÁ HRA/DOHRÁVKA nejprve nabídnou doplnění stolu bez připsání strků/výhry. Explicitní rozstřel stanoví tableKnown i v obnovené starší struktuře. Doplnění zachovává legitimní minulou neúplnost. Žádná změna coverage/výpočtů13metrik, Team agregace, Firebase Rules či streamu; žádná migrace hotových zápasů. Offline diagnostický nástroj a návod Administrace/Záloha dat/EXPORT DAT (JSON). Všechna aktivní místa a overlay verze92.
+Testy: Kontrola zadavatele Singles4:5 i stejný Team PASS: všechny rozstřely po jedné přesně určené kouli, jedna strana postupnými POT akcemi, druhá ČISTOU HROU, čisté hry4:5 a obě úspěšnosti100 %, průměr1,0, complete. Team racky/identity/references, osobní i roční agregace a skutečný reload/JSON/Firebase array-object převod PASS. Nový cílený guard test selže na origin/main91 a projde po opravě. Neznámé rychlé akce/cancel/UNDO/reload a pravdivá partial po opravě PASS. A1/A2/B skutečné PNG1920×1080 a PDF1440×810 pro complete i partial PASS, vložené pixely shodné. Quick-finish, Federal Cup, detailed-counter, report a release-version browser regrese PASS. Node190/192 jen známé dvě preview-match-reload-recovery.test.cjs chyby. Release gate proti čerstvému main0db27bb a diff --check PASS; [CI2438aec](https://github.com/bcrybarna-oss/BC-Rybarna-Scoreboard/actions/runs/39958466520): Release version and revision **success**, Node **190/192 failure**. Log potvrzuje pouze známé preview-match-reload-recovery.test.cjs:50,106 vtest-modular, žádná nová regrese. CI není plně zelené.
+Nasazení: Otestováno a pushnuto jako **2438aec009ba91d3ee67c32ba368ce57f61cee7f** do [draft PR #30](https://github.com/bcrybarna-oss/BC-Rybarna-Scoreboard/pull/30). Následný zápis ověřeného CI a ochrana chybového výpisu offline JSON parseru (unit PASS) nemění aplikaci. Neslučovat a nenasazovat dle zadání; produkce91. Žádné produkční zápisy ani čtení skutečného zápasu.
+Omezení: Bez konkrétního matchId/záznamu není potvrzené, že nalezená chyba způsobila Team1:5. MISS inferred_pots správně ponechává neznámý počet strků; samotný rozdíl koulí/úspěšných strků nemusí být chyba. Syntetické výstupy nejsou skutečná data zadavatele. Produkční Auth/Firebase, OBS a fyzický iOS neověřeny; dvě známá modularizační selhání zachována, CI není plně zelené.
 
 ## Dominik – schválené produkční nasazení PR #29 (v4.51.91 RC)
 Zadavatel: Dominik

@@ -94,7 +94,7 @@ assert.ok(html.includes('window.fcTest='));
   await run(()=>winRack(1));m=await state();assert.deepEqual(m.scores,[0,1]);assert.equal(m.breaker,1);assert.ok(m.federalTeam.pending);assert.equal(m.federalTeam.racks[0].players[0].name,'SK2');assert.equal(m.federalTeam.racks[0].stats[0].breaks,1);
   await run(()=>fcTest.undo());m=await state();assert.deepEqual(m.scores,[0,0]);assert.equal(m.federalTeam.racks.length,0);assert.equal(m.federalTeam.pending,false);
   await run(()=>winRack(1));await select('SK5','CZ1');await run(()=>{actionBreakFoul();finishBreakPotCount(0)});m=await state();assert.equal(m.stats[1].breakFouls,1);assert.equal(m.turn,0);assert.equal(m.pushOutEligibleFor,null);
-  await run(()=>winRack(0));await select('SK1','CZ5');await run(()=>{actionBreakOk();finishBreakPotCount(1)});m=await state();assert.equal(m.turn,0);assert.equal(m.pushOutEligibleFor,0);
+  await run(()=>winRack(0));await select('SK1','CZ5');await run(()=>{actionBreakOk();toggleBreakBall(1)});await page.locator('#breakBallSelectConfirmBtn').click();m=await state();assert.equal(m.turn,0);assert.equal(m.pushOutEligibleFor,0);
   // Complete one fixture, never one fixture per rack.
   for(let i=0;i<4;i++){await run(()=>winRack(0));if(i<3)await select('SK3','CZ2');}
   m=await state();assert.deepEqual(m.scores,[5,1]);assert.equal(m.federalTeam.racks.length,6);assert.ok(m.endedAt);

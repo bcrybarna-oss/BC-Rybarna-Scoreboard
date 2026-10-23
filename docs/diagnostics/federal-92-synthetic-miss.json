@@ -1,0 +1,101 @@
+{
+  "synthetic": true,
+  "notTheReportedProductionMatch": true,
+  "scenario": "Team: dry break, MISS on 3 infers balls 1 and 2",
+  "metrics": [
+    {
+      "pottingSuccess": {
+        "kind": "percent",
+        "numerator": 0,
+        "denominator": 0,
+        "count": null,
+        "value": null,
+        "coverage": "complete",
+        "reasons": [
+          "zero_denominator"
+        ],
+        "components": {}
+      },
+      "pottedBalls": {
+        "kind": "count",
+        "numerator": 0,
+        "denominator": null,
+        "count": 0,
+        "value": 0,
+        "coverage": "complete",
+        "reasons": [],
+        "components": {
+          "explicit": 0,
+          "derived": 0
+        }
+      }
+    },
+    {
+      "pottingSuccess": {
+        "kind": "percent",
+        "numerator": 0,
+        "denominator": 1,
+        "count": null,
+        "value": null,
+        "coverage": "partial",
+        "reasons": [
+          "unknown_attempts",
+          "unknown_intent"
+        ],
+        "components": {}
+      },
+      "pottedBalls": {
+        "kind": "count",
+        "numerator": 2,
+        "denominator": null,
+        "count": 2,
+        "value": 2,
+        "coverage": "complete",
+        "reasons": [],
+        "components": {
+          "explicit": 0,
+          "derived": 2
+        }
+      }
+    }
+  ],
+  "records": [
+    {
+      "id": "mvkyndv52qlb5912e08193sdkqwolo",
+      "rack": 1,
+      "kind": "break",
+      "intent": "other",
+      "potsEvidence": "not_applicable",
+      "pottingAttempts": 0,
+      "successfulPottingStrokes": 0,
+      "balls": [],
+      "actorId": "fc-mvkynde7mxg97twflisbzsd3oyasdt"
+    },
+    {
+      "id": "mvkyndvg9a16dh3kgbr2e53clw24s",
+      "rack": 1,
+      "kind": "inferred_pots",
+      "source": "inning_end",
+      "intent": "unknown",
+      "potsEvidence": "derived",
+      "pottingAttempts": null,
+      "successfulPottingStrokes": null,
+      "balls": [
+        1,
+        2
+      ],
+      "actorId": "fc-mvkynde7wf10vphsl4r4o3q7wm8v"
+    },
+    {
+      "id": "mvkyndvhwrofalnu7kcu73p3ii3cuc",
+      "rack": 1,
+      "kind": "miss",
+      "intent": "pot",
+      "potsEvidence": "not_applicable",
+      "pottingAttempts": 1,
+      "successfulPottingStrokes": 0,
+      "balls": [],
+      "actorId": "fc-mvkynde7wf10vphsl4r4o3q7wm8v"
+    }
+  ]
+}

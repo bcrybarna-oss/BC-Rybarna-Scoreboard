@@ -1,5 +1,8 @@
 # Poolčítadlo – společný kontext projektu
 
+Kandidát92 / PR #30: známá nula explicitních pot/escape/break akcí se ukládá číselně, aby přežila odstranění prázdných polí v cloudu. Chybějící/null údaj není nula. Bezpečný odvod před MISS ve známém přesném rotačním stole dle zadavatele znamená jednu kouli = jeden úspěšný pokus, zachovává inferred_pots / derived původ a entry sequential_inference. Jiné neznámé situace ani historické záznamy se automaticky nepřeklasifikují. Prevence rychlého dokončení neznámého stolu zůstává samostatnou částí. Původní Team1:5 není migrován; samostatný plán cílené opravy a testy viz docs/federal-zero-and-miss-v4.51.92.md. Produkce91, neslučovat a nenasazovat.
+
+
 Produkce v4.51.91 RC / PR #29 nasazena 23.10.2026, merge98cc286de7f77526c37a7bc706156b33630611c7. Reporty A1/A2/B mají sjednocenou hierarchii Pushout Sports (456×62,32 s lokálním SVG ztmavením) → FEDERAL CUP 2026 → podtitulek. Quick-finish známého stolu eviduje jednu kouli jako jeden úspěšný pokus; bez zpětné migrace hotových zápasů. Veřejné soubory bajtově ověřeny, nepřihlášený smoke/A2export PASS; skutečné cloudové A1/B/statistiky, produkční Auth/Firebase a OBS neověřeny. Node189/191 jen dvě známé modularizační chyby; CI není plně zelené. Podrobnosti docs/deployment-v4.51.91.md a docs/federal-pushout-branding-v4.51.91.md.
 
 
