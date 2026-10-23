@@ -1,5 +1,8 @@
 # Federal Cup – rychlé dokončení a zobrazení statistik v4.51.91 RC
 
+**Aktuální stav 23. 10. 2026:** PR #29 schváleně sloučen a verze v4.51.91 RC nasazena. [Deployment report](deployment-v4.51.91.md). Níže zachovaná historie přípravy kandidáta; tehdejší zákaz merge/deploy byl nahrazen následným výslovným souhlasem zadavatele.
+
+
 Zadavatel **Dominik**, 23. 10. 2026. Nová opravná větev `fix/federal-quick-finish-evidence` z aktuálního main 3bdc844. Produkce zůstává v4.51.90 RC. **Neslučovat a nenasazovat.**
 
 ## Příčina a diagnostika

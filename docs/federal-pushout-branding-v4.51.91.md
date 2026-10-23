@@ -1,5 +1,8 @@
 # Pushout Federal Cup – branding reportů v4.51.91 RC
 
+**Aktuální stav 23. 10. 2026:** PR #29 schváleně sloučen a verze v4.51.91 RC nasazena. [Deployment report](deployment-v4.51.91.md). Níže zachovaná historie přípravy kandidáta; tehdejší zákaz merge/deploy byl nahrazen následným výslovným souhlasem zadavatele.
+
+
 Zadavatel: Dominik, 23. 10. 2026. Pokračování **stejné větve a PR #29**, společně s opravou quick-finish. **Nesloučeno a nenasazeno.**
 
 Originální žluté logo Pushout Sports (3000 × 410, transparentní PNG) je beze změny v assets/pushout-sports-logo-yellow.png. Společná šablona jej umísťuje doprostřed, 456 × 62,32 px (o 24 % menší než předchozích 600 × 82), nad zlatý nadpis. Poolčítadlo vlevo a devítková koule vpravo zůstávají; A1/A2 mají FEDERAL CUP 2026, B nově stejný hlavní FEDERAL CUP 2026 a pod ním INDIVIDUÁLNÍ STATISTIKY. Logo, soutěž a typ reportu tak mají společnou hierarchii. Pod logem je měkké lokální ztmavení pomocí radiálního SVG přechodu; nemá viditelný obdélníkový okraj. Logo končí nad titulkem, který má stále stejnou pozici. Nezměnila se pozice statistik, skóre, panelů ani patičky. Porovnání exportů před/po potvrzuje pixelově totožný celý obsah od y=250 dolů u A1/A2/B.

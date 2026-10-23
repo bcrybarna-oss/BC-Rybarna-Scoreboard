@@ -1,6 +1,6 @@
 # Poolčítadlo – společný kontext projektu
 
-Kandidát v4.51.91 RC / PR #29: reporty A1/A2/B mají sjednocenou hierarchii Pushout Sports (456 × 62,32 s lokálním SVG ztmavením) → FEDERAL CUP 2026 → podtitulek typu reportu, původní logo Poolčítadla vlevo a pozadí s koulí 9 zůstávají. Originální 3000 × 410 logo je beze změny v assets/pushout-sports-logo-yellow.png; PNG1920×1080/PDF16:9 i výpočetní logika beze změny. Stejná nevydaná revize jako quick-finish; nesloučeno a nenasazeno. Podrobnosti docs/federal-pushout-branding-v4.51.91.md.
+Produkce v4.51.91 RC / PR #29 nasazena 23.10.2026, merge98cc286de7f77526c37a7bc706156b33630611c7. Reporty A1/A2/B mají sjednocenou hierarchii Pushout Sports (456×62,32 s lokálním SVG ztmavením) → FEDERAL CUP 2026 → podtitulek. Quick-finish známého stolu eviduje jednu kouli jako jeden úspěšný pokus; bez zpětné migrace hotových zápasů. Veřejné soubory bajtově ověřeny, nepřihlášený smoke/A2export PASS; skutečné cloudové A1/B/statistiky, produkční Auth/Firebase a OBS neověřeny. Node189/191 jen dvě známé modularizační chyby; CI není plně zelené. Podrobnosti docs/deployment-v4.51.91.md a docs/federal-pushout-branding-v4.51.91.md.
 
 
 Tento soubor je hlavní společný kontext pro vývoj aplikace Poolčítadlo. Slouží jako zdroj pravdy pro Jaroslava, Dominika i jejich ChatGPT asistenty.

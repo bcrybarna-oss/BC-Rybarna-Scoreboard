@@ -1,0 +1,80 @@
+{
+  "sha": "98cc286de7f77526c37a7bc706156b33630611c7",
+  "version": "v4.51.91 RC",
+  "verifiedAt": "2026-10-23T10:27:35.761Z",
+  "files": {
+    "index.html": {
+      "status": 200,
+      "sha256": "fe44864981201f1f421b91fd8407f72f06676665278f11bf6f850f541f1f1aae",
+      "bytes": 1673966,
+      "etag": "W/\"6adb3675-198aee\""
+    },
+    "overlay.html": {
+      "status": 200,
+      "sha256": "e4b45d02501a47b343e68b514f11f5215d99fe99b175d9065a00ce5ae8410a6b",
+      "bytes": 20884,
+      "etag": "W/\"6adb3675-5194\""
+    },
+    "assets/federal-report-billiards.webp": {
+      "status": 200,
+      "sha256": "2a8d73c1b0a5ecd07597b993f0da5ed22b7c30bba6023448b8069d154bf3e228",
+      "bytes": 74790,
+      "etag": "\"6adb3675-12426\""
+    },
+    "assets/federal-report-pool-logo.png": {
+      "status": 200,
+      "sha256": "c28fd81775d4013e2b58716d6f8ef1a92691f4d5d4c0b8b2ba1b0d3a3a12c593",
+      "bytes": 220520,
+      "etag": "\"6adb3675-35d68\""
+    },
+    "assets/pushout-sports-logo-yellow.png": {
+      "status": 200,
+      "sha256": "049c2b4648a2e6106c5c41459c346689915256f62330ee17129b4484fc8314ff",
+      "bytes": 44487,
+      "etag": "\"6adb3675-adc7\""
+    },
+    "bc-rybarna-logo.png": {
+      "status": 200,
+      "sha256": "5ad8dccc37f3426e189916f5e5bce61fa922f82d8757283832ac01d224f1f083",
+      "bytes": 131525,
+      "etag": "\"6adb3675-201c5\""
+    },
+    "assets/poolcitadlo-logo.webp": {
+      "status": 200,
+      "sha256": "7f9caff46b1924186ef7d6a42b6b9079ee9ace9e7875d8f688e9fdc83bd488db",
+      "bytes": 27896,
+      "etag": "\"6adb3675-6cf8\""
+    }
+  },
+  "normalAndFreshUrlsMatch": true,
+  "screens": [
+    "setup",
+    "home",
+    "players",
+    "about",
+    "federal-cup-2026",
+    "setup"
+  ],
+  "available": {
+    "A1": 0,
+    "A2": 2,
+    "B": 0
+  },
+  "publicA2Exports": [
+    {
+      "format": "Png",
+      "file": "C:\\Users\\mencl\\Documents\\ChatGPT\\Poolčítadlo\\work\\release91-production\\public-empty-A2.png",
+      "bytes": 1429995
+    },
+    {
+      "format": "Pdf",
+      "file": "C:\\Users\\mencl\\Documents\\ChatGPT\\Poolčítadlo\\work\\release91-production\\public-empty-A2.pdf",
+      "bytes": 857521
+    }
+  ],
+  "pageErrors": [],
+  "consoleErrors": [],
+  "blocked": [],
+  "writeAttempts": 0,
+  "limits": "Public unmodified HTML; no matches created, no roster/results edited, no Firebase requests allowed, no real login. Empty offline A2 exported; actual saved A1/B/statistics need production auth. Functional match/lineup scenarios are separate isolated tests."
+}

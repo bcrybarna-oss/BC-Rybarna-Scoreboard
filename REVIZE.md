@@ -2,6 +2,15 @@
 
 
 
+
+## Dominik – schválené produkční nasazení PR #29 (v4.51.91 RC)
+Zadavatel: Dominik
+Datum: 23. 10. 2026
+Změny: Po čerstvém fetchi main3bdc844/hlavy1da968f, kontrole diffu a release gate sloučeno schválené PR #29 metodou merge se zachováním historie. Merge98cc286de7f77526c37a7bc706156b33630611c7, obsah aplikace shodný s otestovanou hlavou. Oprava quick-finish, krátké hodnoty/partial, Doubles řádky a finální Pushout branding A1/A2/B nasazeny. Nový deployment report/evidence/screenshoty a aktuální status/kontext; žádná další funkční změna ani zvýšení verze.
+Testy: Předmerge release gate PASS, PR CI releasePASS a189/191 pouze známé dvě chyby. Pages39939112485 všechny3joby success. Main CI39939108785 Release version and revision success, Node189/191 failure; log potvrzuje pouze preview-match-reload-recovery.test.cjs:50,106 vtest-modular. Známé testy/CI/modularizace vPR nezměněny. Veřejné index/overlay a5assetů HTTP200/SHA256 přesná shoda merge, běžné/fresh URL a browserverze91 PASS. Bezpečná nepřihlášená navigace/FC/A2logo/13metrik/PNG1920×1080/PDF1440×810/identické vložené pixely/mobilnízoom/Escape a nastavení volitelného streamu/pořadí panelu PASS; 0JS/console chyb a0pokusů o zápis. Předchozí izolované quick-finish/UNDO/reload/actor/13metrik/export/preview/longnames regrese zachovány na shodném kódu, nebyly zaměněny za produkční datový test.
+Nasazení: Nasazeno a v popsaném rozsahu ověřeno na https://bcrybarna-oss.github.io/BC-Rybarna-Scoreboard/ v4.51.91 RC, ověřeno23.10.2026 12:27 CEST (10:27UTC). Úspěšné automatické Pages nebylo ručně opakováno. Následná dokumentace může vyvolat automatický Pages běh, aplikaci ani verzi nemění. Žádné produkční testovací zápisy.
+Omezení: Ve čerstvé offline relaci bez skutečného přihlášení nejsou uložená A1/B/produční statistiky dostupné; neověřeny. A2 export je pravdivě prázdný souhrn sunknown údaji, nikoli důkaz správnosti cloudových dat. Fyzický iPhone/iOS, skutečné OBS a produkční Auth/Firebase/Rules neověřeny. CI není plně zelené kvůli známým dvěma modularizačním selháním. Existující hotové zápasy nebyly migrovány ani zpětně opravovány.
+
 ## Dominik – finální hierarchie a kontrast Pushout hlaviček (v4.51.91 RC)
 Zadavatel: Dominik
 Datum: 23. 10. 2026
