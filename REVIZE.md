@@ -1,5 +1,13 @@
 # Revize aplikace Poolčítadlo
 
+## Dominik – finální revize ovládání a čistých exportů Federal Cupu (v4.51.90 RC)
+Zadavatel: Dominik
+Datum: 23. 10. 2026
+Změny: Pokračování stejného otevřeného PR #28 nad b5d66d8, čerstvý main nadále f6c3e0f / produkce v4.51.89 RC. Vizuálně schválené A1/A2/B bez redesignu. Publikované listy už neobsahují kanonickou evidenci, API, interní ID, zdrojové seznamy zápasů ani VYBRANÁ REPREZENTACE. Stručná poznámka o dostupné evidenci zachovává význam část/—; všechny podrobnosti a osobní rozlišení výsledků/výkonu přesunuty do rozbalovací nápovědy mimo plátno. Sjednocen podpis a BC logo se zachovaným poměrem stran; nepřekrývají statistiky. Střídmá reportová tlačítka pouze v FC: 44px výška, zarovnání soupisek a rozestupy zápasových akcí. Zvětšení posouvá jen náhled, exporty/zavření zůstávají dostupné, přepíná se text ZVĚTŠIT/ZMENŠIT. Nový izolovaný UI browser a šest požadovaných pohledů plus tři mobilní detaily v docs/screenshots/. Schválené SVG, pozadí, 13 metrik, názvy, data, Firebase, počítadlo a stream beze změny.
+Testy: Data/výpočty 69/69, Node 179/181 pouze známá nezměněná selhání preview-match-reload-recovery.test.cjs:50,106 v test-modular. Browser reportů/UI: 21/10/2 vstupů jen v FC, stabilní identity a typy, neúplné/unknown údaje, nedokončený zápas bez exportů, zarovnání/44px, desktop/mobil, nápověda, focus/Close/Escape, zoom/pan a neměnná data/localStorage. Federal Cup, detailed-counter, stream-controls/isolation/lag/release-version PASS. Skutečné PNG 1920×1080 / PDF 1440×810 A1/A2/B i mobil DPR3 PASS, všechny mobilní PNG bajtově shodné s desktopem. Technické texty nejsou v publikaci, podrobnosti zůstávají v nápovědě; dvojklik PNG/PDF vyvolá jediný render, chyba a cancel obnoví ovládání. Pypdf: jedna stránka a přesná shoda pixelů vloženého PNG; Poppler všechny tři vizuálně ověřen. Release gate po čerstvém main f6c3e0f a diff --check PASS. GitHub CI bude doplněno po pushi. CI není plně zelené.
+Nasazení: Lokálně otestováno, připraveno k revizi ve stejném PR #28, nesloučeno a nenasazeno dle zadání. Produkce v4.51.89 RC. Žádné testovací zápisy do produkční Firebase.
+Omezení: Zadavatel již schválil grafiku reportů; ke schválení čeká skutečný vzhled ovládání. PDF obrazové; drobné rozdíly vyhlazování HTML textů vůči canvasu. Fyzické telefony/iOS a skutečné produkční Auth/OBS neověřeny. Známé modularizační chyby neměněny ani skryty. Původní UI screenshoty používají plně syntetická data, nejde o produkční provoz.
+
 ## Dominik – finální vizuální doladění Federal Cup reportů (v4.51.90 RC)
 Zadavatel: Dominik
 Datum: 22. 10. 2026

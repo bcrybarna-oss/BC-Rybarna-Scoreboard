@@ -2,6 +2,49 @@
 
 Kandidát **v4.51.90 RC**, pokračování stejného vydání a stejného PR #28. **Finální vizuální iterace nad ea5d6e0, kód 238a1cfff546384a20bdba4fe1c5a1f54f927045 otestován a pushnut ve stejném otevřeném PR #28; nesloučeno, nenasazeno.** Produkce zůstává v4.51.89 RC. Reference přibyly jako commity 209af0d a 5c6ce04; bezpečný fast-forward zachoval všechny lokální rozpracované úpravy 3B.
 
+## Finální revize UI a exportů (Dominik, 23. 10. 2026)
+
+Zadavatel potvrdil vizuální schválení A1/A2/B. Tato revize neprovádí redesign a nezasahuje do výpočtů. Výchozí hlava b5d66d8, po čerstvém fetchi main stále f6c3e0f; stejný nevydaný kandidát v4.51.90 RC a stejný PR #28. **Nesloučeno, nenasazeno.** Ke společnému přijetí nyní čeká skutečné ovládání v aplikaci.
+
+### Čistá publikace a zachované vysvětlení
+
+V PNG/PDF už nejsou interní ID, kanonická evidence, API 13 metrik, zdrojové výpisy typu #1 team ani VYBRANÁ REPREZENTACE. A1 dál uvádí veřejné číslo/typ zápasu; jde o identifikaci utkání pro diváka, nikoli interní databázové ID. A2 má symetrické DOMÁCÍ/HOSTÉ a pouze decentní grafické zvýraznění vybraného týmu. Všechny publikace mají stručně: „Statistiky vycházejí z dostupné evidence zápasů. Část = doložené údaje; — = neznámá evidence.“ Částečné hodnoty a neznámé údaje se nadále nesmějí vydávat za úplné výsledky; zůstávají bez smyšlených procent a sloupců.
+
+Rozbalovací nápověda mimo plátno zachovává všech 13 zdrojových vysvětlení, ID zápasu/hráče, použité zápasy a důvody neúplnosti i rozdíl mezi osobními výsledky celých Singles/Doubles/Team a vlastním herním výkonem Singles/Team. Otevření nic neukládá ani nečte z Firebase. Logo BC Rybárna má konzistentní poměr stran a vertikální střed s podpisem; rozměry a odsazení zachovávají místo pro všech 13 řádků.
+
+### Revize skutečných vstupů
+
+- U výsledkové tabule dvě STATISTIKY TÝMU, podle stabilní reprezentace SK/CZ.
+- U všech 21 fixture STATISTIKY ZÁPASU, vazba přes matchId + fixture a rok; nedokončený/nedostupný/nahrazený novějším záznamem má vysvětlení a zakázané exporty.
+- U deseti naplněných míst soupisky STATISTIKY HRÁČE podle stabilního ID, ne jména či indexu. Neznámá identita má vysvětlení; nedoložený výkon —.
+
+Původní kontrola ukázala hráčská tlačítka nepravidelně za různě dlouhými jmény a zápasové akce těsně vedle sebe. Minimální změny: střídmé černo-zlaté tlačítko s výškou alespoň 44 px, jednotné pravé zarovnání v soupisce, odstupy a zalamování dvojice zápasových akcí. Výsledek/jména zůstávají dominantní. Žádné reportové vstupy nepřidány jinam.
+
+Dialog zachovává nativní modalitu, zavření/ Escape/návrat fokusu. Mobilní zvětšení posouvá pouze samostatný náhled; toolbar a vysvětlivky se horizontálně neodsunou. Tlačítko střídá ZVĚTŠIT/ZMENŠIT NÁHLED a aria-pressed. Během exportu jsou PNG/PDF vypnuté a druhá syntetická kliknutí nezaloží další render; zavření zruší zastaralé stažení. Chyba knihovny má viditelnou zprávu a obnoví tlačítka.
+
+### Povinné skutečné UI screenshoty
+
+Všechny ze skutečného současného index.html, se syntetickými izolovanými daty a zachycenou sítí. Desktop 1440×1000, mobil 390×844; mobilní celá stránka ukazuje všechny tři druhy vstupů. Doplňkové mobilní výřezy jsou samostatné viewport screenshoty kvůli čitelnosti.
+
+| Pohled | Soubor |
+| --- | --- |
+| 1. Desktop: tabule a STATISTIKY TÝMU | [Screenshot](screenshots/federal-ui-desktop-teams.png) |
+| 2. Desktop: program a STATISTIKY ZÁPASU | [Screenshot](screenshots/federal-ui-desktop-matches.png) |
+| 3. Desktop: soupisky a STATISTIKY HRÁČE | [Screenshot](screenshots/federal-ui-desktop-players.png) |
+| 4. Desktop: otevřený dialog a exporty | [Screenshot](screenshots/federal-ui-desktop-dialog.png) |
+| 5. Mobil: vstupy v celé obrazovce FC | [Celá stránka](screenshots/federal-ui-mobile-entries.png); [tabule](screenshots/federal-ui-mobile-teams.png), [zápasy](screenshots/federal-ui-mobile-matches.png), [soupisky](screenshots/federal-ui-mobile-players.png) |
+| 6. Mobil: otevřený dialog | [Screenshot](screenshots/federal-ui-mobile-dialog.png) |
+
+Finální PNG/PDF A1/A2/B jsou na původních odkazech níže. Screenshoty zachycují offline syntetickou kontrolu, proto aplikace pravdivě upozorňuje na nepřihlášený stav; nejde o ověření skutečné produkční Auth.
+
+### Ověření této revize
+
+Data/výpočty 69/69. Node 179/181, pouze dvě známé nezměněné chyby preview-match-reload-recovery.test.cjs:50,106 nad test-modular; CI není plně zelené. Report browser a nový `tests/federal-report-ui-browser.cjs`: 21/10/2 FC-only vstupů, 44px a zarovnání, identity/typy, partial/unknown, nedostupnost, rozbalovací podrobnosti, Close/Escape/focus, mobilní zoom/pan bez odsunutí ovládání, neměnné data/localStorage a 0 Firebase či vzdálených zápisů/JS chyb. Nativní dialog při tabulaci může předat fokus browser chrome (body jako activeElement); nikoli jinému ovládání stránky.
+
+Relevantní Federal Cup, detailed-counter, stream-controls/isolation/lag/release-version PASS. Výpočetní API, report-data agregace/formátování, SVG score/title/frame/shade, fotopodklad, originální reference a overlay bajtově beze změny proti b5d66d8. Finální exportní test PASS: PNG 1920×1080 a PDF 1440×810 A1/A2/B, všechny tři na mobilu DPR3 se stejnými PNG jako desktop; bez technických textů a výpisů v plátnu, podrobnosti zachované mimo plátno. Duplicitní kliknutí na oba exporty během renderu vyvolají právě jeden render; cancel/chyby nezanechají soubor nebo zakázané ovládání. Pypdf potvrdil jednu stránku a přesnou shodu pixelů vloženého PNG, Poppler všechny tři vizuálně ověřen. Průměrný rozdíl screenshotu náhledu a PNG R/G/B (0–255): A1 6,08/5,41/5,32; A2 6,72/6,01/5,83; B 6,56/5,71/4,63. Geometrie a text všech 13 řádků kontrolovány nezávisle. Release gate po čerstvém main f6c3e0f a diff --check PASS. GitHub CI bude doplněno po pushi. Bez produkčních zápisů, merge/deploy.
+
+Následuje dokumentace předchozí grafické iterace a původní konstrukce reportů; aktuální předání UI je výše.
+
 ## Reference a provedení
 
 Závazné originály: [A1](design-references/federal-cup/A1_match_report.png), [A2](design-references/federal-cup/A2_national_teams.png), [B](design-references/federal-cup/B_individual_player.png). Originální PNG nejsou upravené a nejsou runtime pozadím s pevnými daty.

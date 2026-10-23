@@ -8,6 +8,8 @@ Každá samostatně nasazovaná funkční i vizuální změna povinně zvyšuje 
 
 ## Repozitář a produkce
 
+Od finální revize kandidáta 90 (Dominik, 23. 10. 2026) je publikovaný list oddělený od technické nápovědy: PNG/PDF neobsahují interní ID/API/zdrojové výpisy, stručná poznámka a část/— zachovávají informaci o úplnosti. Zdroje, identity a pravidla osobních výsledků/výkonu zůstávají v rozbalovacím details dialogu mimo plátno. Mobilní zoom má vlastní posuvnou oblast, takže ovládací tlačítka zůstávají dostupná. Existující FC vstupy a stabilní identity zachovány, minimálně upraveno jen zarovnání/rozestupy/dotyková velikost. Grafika A1/A2/B schválená, ovládání k revizi; bez merge/deploy.
+
 Finální vizuální iterace stejného kandidáta 90: A1/A2 sdílejí dekorativní SVG rámy a dynamický SVG text skóre s měřením šířky, B vlastní kartu a % VÝHER. Metrika escapeSuccess se v reportech jmenuje Úspěšnost úniků z jistot; oba přejmenované texty nemění vzorce. Titulky a ztmavení/vinětace jsou SVG kvůli shodě náhledu a html2canvas. Fotopodklad, výpočty, herní data, synchronizace i stream beze změny. Podrobné porovnání a aktuální stav v docs/federal-reports-stage-3b.md / PROJECT_STATUS.md.
 
 Etapa 3B stejného kandidáta v4.51.90 RC (Dominik): pevná HTML publikace 1920×1080 podle originálů docs/design-references/federal-cup, samostatný fotopodklad bez dat. PNG klientsky html2canvas, PDF jsPDF s celým stejným PNG, žádný další server/ukládání. Mobilní škálování náhledu nemění exportní rozměry; dekódování assetů/fontů, kontrola přetečení a token generace chrání export při zavření/přepnutí. Podrobná omezení a ukázky docs/federal-reports-stage-3b.md. PR #28 zůstává nesloučený a nenasazený; grafika k vizuální revizi.
