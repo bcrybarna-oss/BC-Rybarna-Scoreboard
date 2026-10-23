@@ -20,4 +20,4 @@ function diagnose(input,matchId){
   missingReferences:racks.flatMap(k=>rows(k.shotIds).filter(id=>!ids.includes(id)).map(id=>({rack:k.rack,shotId:id}))) };
 }
 module.exports={diagnose};
-if(require.main===module){try{if(!process.argv[2])throw Error('Usage: node scripts/diagnose-federal-evidence.cjs backup.json [exact-matchId]');console.log(JSON.stringify(diagnose(JSON.parse(fs.readFileSync(process.argv[2],'utf8')),process.argv[3]),null,2));}catch(e){console.error(e.message);process.exitCode=1;}}
+if(require.main===module){try{if(!process.argv[2])throw Error('Usage: node scripts/diagnose-federal-evidence.cjs backup.json [exact-matchId]');let input;try{input=JSON.parse(fs.readFileSync(process.argv[2],'utf8'));}catch{throw Error('Cannot read or parse the JSON input; no input content printed');}console.log(JSON.stringify(diagnose(input,process.argv[3]),null,2));}catch(e){console.error(e.message);process.exitCode=1;}}
