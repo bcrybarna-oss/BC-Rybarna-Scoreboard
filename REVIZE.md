@@ -1,5 +1,13 @@
 # Revize aplikace Poolčítadlo
 
+## Dominik – ověřené nasazení ostrých reportových vlajek (v4.51.94 RC)
+Zadavatel: Dominik
+Datum: 23. 10. 2026
+Změny: Po schválení a finální kontrole PR #32 sloučeno se zachováním historie merge1f3def4e40899323209de29190b1d27c8465a67b. Rovné SVG pouze A1/A2/B nasazeny, přehled/dlaždice/statistiky beze změny. Následná dokumentace nemění aplikaci/verzi.
+Testy: Release gate/finálníPR/mainrelease success. Node198/200 jen známé preview-match-reload-recovery:50,106, actual assertiony předmerge shodné s aktuálním main; CI není plně zelené. Pages39998101433 success. Veřejné HTML/12assetů HTTP200 přesné SHA256, verze94, desktop/mobil/A2PNG1920×1080/PDF16:9/0JS chyb/0zápisů PASS. Dlaždice desktop/mobil přesně stejné pixely jako93, overview cloth assety beze změny. Na staženém produkčním HTML A1/A2/B6PNG/PDFpárů PASS; PDFpixely stejnéPNG a všechnyPNG totožné se schválenými94. Singles93 %/14 vs95 %/38 zachován; původní export nezměněn.
+Nasazení: Nasazeno a v uvedeném rozsahu ověřeno23.10.2026 19:50CEST, https://bcrybarna-oss.github.io/BC-Rybarna-Scoreboard/ v4.51.94 RC. Automatické Pages nebylo ručně opakováno. Podrobnosti docs/deployment-v4.51.94.md.
+Omezení: Skutečné cloudové A1/B/produkčníAuth/Firebase/OBS a fyzickýiOS neověřeny. Veřejný A2 ověřen přímo, A1/A2/B funkčně na přesném publikovaném kódu s izolovanou kopií místních dat. Žádné produkční zápisy, migrace nebo změny skutečných zápasů. PDF zůstává rastrový FullHD.
+
 ## Dominik – ostré vlajky pouze v reportech (v4.51.94 RC)
 Zadavatel: Dominik
 Datum: 23. 10. 2026
