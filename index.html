@@ -2476,7 +2476,6 @@ html[data-theme="light"] #leagueSchedule .history-item .muted{
 #screen-setup.setup-compact:not(.setup-expanded) #threeFoulRow,
 #screen-setup.setup-compact:not(.setup-expanded) #shotClockRow,
 #screen-setup.setup-compact:not(.setup-expanded) #clockSettings,
-#screen-setup.setup-compact:not(.setup-expanded) #setupStreamOptionsPanel,
 #screen-setup.setup-compact:not(.setup-expanded) #doublesRow,
 #screen-setup.setup-compact:not(.setup-expanded) #solo14Row,
 #screen-setup.setup-compact:not(.setup-expanded) #solo14GhostRow,
@@ -3074,15 +3073,18 @@ html[data-theme="light"] #leagueSchedule .history-item .muted{
         </div>
       </div>
 
+
+      </div>
+
       <div id="setupStreamOptionsPanel" class="subpanel" style="margin-top:16px">
         <div class="toggle-row">
           <div>
-            <strong>Stream overlay</strong>
-            <div class="muted">Posílat aktuální stav zápasu do živého overlaye pro Stůl 1.</div>
+            <strong>Streamování zápasu</strong>
+            <div class="muted"><span id="setupStreamChoice">Bez streamu</span> · Po zahájení již nelze volbu změnit.</div>
           </div>
-          <label class="switch"><input id="streamEnabled" type="checkbox" checked><span class="slider"></span></label>
+          <label class="switch"><input id="streamEnabled" type="checkbox" aria-label="Použít stream overlay" autocomplete="off"><span class="slider"></span></label>
         </div>
-        <div style="margin-top:12px">
+        <div id="setupStreamDetails" class="hidden" style="margin-top:12px">
           <label>Adresa overlaye</label>
           <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
             <input id="streamOverlayUrl" type="text" readonly placeholder="Po přihlášení se zobrazí tvoje vlastní adresa overlaye" style="flex:1;min-width:260px">
@@ -3097,7 +3099,6 @@ html[data-theme="light"] #leagueSchedule .history-item .muted{
         </div>
       </div>
 
-      </div>
 
       <div id="simpleSetupInfo" class="subpanel hidden" style="margin-top:16px">
         <strong>JEDNODUCHÉ POČÍTADLO</strong>
@@ -4548,21 +4549,6 @@ html[data-theme="light"] #leagueSchedule .history-item .muted{
         </div>
       </div>
 
-      <div id="streamDirectorPanel" class="subpanel hidden" aria-label="Ovládání streamu">
-        <div id="streamModeInfo" class="muted" aria-live="polite">Aktuálně: LIVE</div>
-        <div class="stream-director-buttons">
-          <button id="streamModeLiveBtn" type="button" class="btn">LIVE</button>
-          <button id="streamModePauseBtn" type="button" class="btn">PAUZA</button>
-          <button id="streamModeSoonBtn" type="button" class="btn">BRZY ZAČÍNÁME</button>
-          <button id="streamModeEndBtn" type="button" class="btn">KONEC</button>
-        </div>
-        <div style="margin-top:10px">
-          <label for="matchStreamOverlayUrl">Adresa overlaye tohoto zápasu</label>
-          <input id="matchStreamOverlayUrl" type="text" readonly style="width:100%;min-width:0" aria-label="Pevná OBS adresa tohoto zápasu">
-          <button id="copyMatchStreamOverlayUrl" type="button" class="btn" style="margin-top:6px">KOPÍROVAT ADRESU ZÁPASU</button>
-        </div>
-      </div>
-
       <div id="streamLagControls" class="subpanel hidden">
         <strong id="streamLagStatus">Čeká se na výsledek tempa</strong>
         <p class="muted">Výsledek lze opravit pouze před prvním odehraným rozstřelem.</p>
@@ -4650,6 +4636,21 @@ html[data-theme="light"] #leagueSchedule .history-item .muted{
         <button id="manualBreaker" class="btn ghost">Změnit rozstřel</button>
         <button id="finishMatch" class="btn">Ukončit a uložit jako nedohraný</button>
         <button id="cancelMatch" class="btn danger">ZRUŠIT ZÁPAS BEZ ULOŽENÍ</button>
+      </div>
+
+      <div id="streamDirectorPanel" class="subpanel hidden" aria-label="Ovládání streamu">
+        <div id="streamModeInfo" class="muted" aria-live="polite">Aktuálně: LIVE</div>
+        <div class="stream-director-buttons">
+          <button id="streamModeLiveBtn" type="button" class="btn">LIVE</button>
+          <button id="streamModePauseBtn" type="button" class="btn">PAUZA</button>
+          <button id="streamModeSoonBtn" type="button" class="btn">BRZY ZAČÍNÁME</button>
+          <button id="streamModeEndBtn" type="button" class="btn">KONEC</button>
+        </div>
+        <div style="margin-top:10px">
+          <label for="matchStreamOverlayUrl">Adresa overlaye tohoto zápasu</label>
+          <input id="matchStreamOverlayUrl" type="text" readonly style="width:100%;min-width:0" aria-label="Pevná OBS adresa tohoto zápasu">
+          <button id="copyMatchStreamOverlayUrl" type="button" class="btn" style="margin-top:6px">KOPÍROVAT ADRESU ZÁPASU</button>
+        </div>
       </div>
 
       <div class="hr"></div>
@@ -10523,9 +10524,9 @@ $('useClock').addEventListener('change',e=>$('clockSettings').classList.toggle('
     const scheduledChallenge=window.pendingScheduledChallenge ? JSON.parse(JSON.stringify(window.pendingScheduledChallenge)) : null;
     window.pendingScheduledChallenge=null;
     const federalCupLink=pendingFederalCupLink ? JSON.parse(JSON.stringify(pendingFederalCupLink)) : null;
-    if(federalCupLink&&typeof window.fc26CanStartMatch==='function'&&!window.fc26CanStartMatch(federalCupLink.fixtureNo)){
+    if(federalCupLink&&typeof window.fc26CanStartMatch==='function'&&!window.fc26CanStartMatch(federalCupLink.fixtureNo,federalCupLink)){
       pendingFederalCupLink=null;
-      toast('Federal Cup je již rozhodnutý nebo má tento zápas uložený výsledek. Nový zápas nelze zahájit.');
+      toast('Nasazení Federal Cupu se změnilo, porušuje pravidla nebo je zápas již rozhodnutý. Znovu připrav zápas z rozpisu.');
       return;
     }
     if(federalCupLink)applyFederalCupSetup();
@@ -10682,7 +10683,7 @@ $('useClock').addEventListener('change',e=>$('clockSettings').classList.toggle('
           ))
         : null,
       streamEnabled:$('streamEnabled').checked,
-      streamMode:'live',
+      streamMode:'soon',
       streamMatchTitle:$('streamMatchTitle').value.trim(),
       scheduledChallengeId:scheduledChallenge?.id||null,
       scheduledChallengePublic:scheduledChallenge?.isPublic===true,
@@ -10781,6 +10782,8 @@ $('useClock').addEventListener('change',e=>$('clockSettings').classList.toggle('
     pendingTournamentLink=null;
     pendingLeagueLink=null;
     pendingFederalCupLink=null;
+    try{sessionStorage.removeItem('bc_rybarna_stream_setup_draft');}catch(e){}
+    $('streamEnabled').checked=false;refreshStreamSetup();
     autosaveCurrent();
     startLiveHeartbeat();
 
@@ -10991,10 +10994,24 @@ $('useClock').addEventListener('change',e=>$('clockSettings').classList.toggle('
     return STREAM_OVERLAY_BASE_URL + sep + binding.toString() + '#' + binding.toString();
   }
 
+  const STREAM_SETUP_DRAFT_KEY='bc_rybarna_stream_setup_draft';
+  function refreshStreamSetup(){
+    const enabled=!!$('streamEnabled')?.checked;
+    $('setupStreamChoice').textContent=enabled?'Použít stream overlay':'Bez streamu';
+    $('setupStreamDetails').classList.toggle('hidden',!enabled);
+    refreshStreamOverlayUrl();
+  }
+  try{$('streamEnabled').checked=sessionStorage.getItem(STREAM_SETUP_DRAFT_KEY)==='true';}catch(e){}
+  $('streamEnabled').addEventListener('change',()=>{
+    try{sessionStorage.setItem(STREAM_SETUP_DRAFT_KEY,String($('streamEnabled').checked));}catch(e){}
+    refreshStreamSetup();
+  });
+  refreshStreamSetup();
+
   function refreshStreamOverlayUrl(){
     const url=currentStreamOverlayUrl();
     const input=$('streamOverlayUrl');
-    if(input)input.value=url;
+    if(input)input.value=$('streamEnabled')?.checked?url:'';
     const matchInput=$('matchStreamOverlayUrl');
     if(matchInput)matchInput.value=match?.streamEnabled?url:'';
     const help=$('helpStreamOverlayUrl');
@@ -29622,44 +29639,49 @@ function renderStats(){
   }
 
   function validateSideFixture(f,side){
-    const l=lineup(f.n)[side],need=requiredSlots(f),r=roster(side).filter(Boolean);
-    if(need && !allChosen(l,need))return {ok:false,msg:'Doplň sestavu.'};
-    if(need && new Set(l.slice(0,need)).size!==need)return {ok:false,msg:'Stejný hráč nemůže být v jednom zápase dvakrát.'};
-    if(need && l.slice(0,need).some(id=>!r.includes(id)))return {ok:false,msg:'Vybraný hráč není v soupisce týmu.'};
+    const ids=n=>lineup(n)[side].map(value=>federalParticipantSnapshot(cfg(),side,value)?.id||'');
+    const l=ids(f.n),need=requiredSlots(f),r=roster(side).map(value=>federalParticipantSnapshot(cfg(),side,value)?.id).filter(Boolean),errors=[];
+    if(need && !allChosen(l,need))errors.push('Doplň sestavu.');
+    if(need && new Set(l.slice(0,need)).size!==need)errors.push('Stejný hráč nemůže být v jednom zápase dvakrát.');
+    if(need && l.slice(0,need).some(id=>!r.includes(id)))errors.push('Vybraný hráč není v soupisce týmu.');
 
     if(f.t==='doubles'){
       const key=pairKey(l.slice(0,2));
       for(const other of FIXTURES.filter(x=>x.t==='doubles'&&x.n!==f.n)){
-        const ol=lineup(other.n)[side];
-        if(allChosen(ol,2)&&pairKey(ol.slice(0,2))===key)return {ok:false,msg:'Stejná dvojice už je nasazená v zápase '+other.n+'.'};
+        const ol=ids(other.n);
+        if(allChosen(ol,2)&&pairKey(ol.slice(0,2))===key)errors.push('Stejná dvojice už je nasazená v zápase '+other.n+'.');
       }
     }
     if(f.n===3){
-      const used=new Set(lineup(2)[side].slice(0,2).filter(Boolean));
-      if(l[0]&&used.has(l[0]))return {ok:false,msg:'V zápase 3 nesmí nastoupit hráč ze zápasu 2.'};
+      const used=new Set(ids(2).slice(0,2).filter(Boolean));
+      if(l[0]&&used.has(l[0]))errors.push('V zápase 3 nesmí nastoupit hráč ze zápasu 2.');
     }
     if(f.n===4){
-      const used=new Set([...lineup(2)[side].slice(0,2),...lineup(3)[side].slice(0,1)].filter(Boolean));
-      if(l.slice(0,2).some(id=>used.has(id)))return {ok:false,msg:'Zápas 4 musí odehrát hráči, kteří nehráli zápasy 2 a 3.'};
+      const used=new Set([...ids(2).slice(0,2),...ids(3).slice(0,1)].filter(Boolean));
+      if(l.slice(0,2).some(id=>used.has(id)))errors.push('Zápas 4 musí odehrát hráči, kteří nehráli zápasy 2 a 3.');
     }
 
     const groups=[[7,8,9],[12,13,14],[16,17,18,19,20]];
     for(const nums of groups){
       if(!nums.includes(f.n))continue;
       const vals=[];
-      nums.forEach(n=>vals.push(...lineup(n)[side].slice(0,requiredSlots(FIXTURES.find(x=>x.n===n))).filter(Boolean)));
-      if(new Set(vals).size!==vals.length)return {ok:false,msg:'V této povinné skupině nesmí jeden hráč nastoupit dvakrát.'};
-      const full=nums.every(n=>allChosen(lineup(n)[side],requiredSlots(FIXTURES.find(x=>x.n===n))));
-      if(full && (vals.length!==5 || new Set(vals).size!==5))return {ok:false,msg:'V této skupině musí nastoupit všech 5 hráčů ze soupisky právě jednou.'};
+      nums.forEach(n=>vals.push(...ids(n).slice(0,requiredSlots(FIXTURES.find(x=>x.n===n))).filter(Boolean)));
+      if(new Set(vals).size!==vals.length)errors.push('V této povinné skupině nesmí jeden hráč nastoupit dvakrát.');
+      const full=nums.every(n=>allChosen(ids(n),requiredSlots(FIXTURES.find(x=>x.n===n))));
+      if(full && (vals.length!==5 || new Set(vals).size!==5))errors.push('V této skupině musí nastoupit všech 5 hráčů ze soupisky právě jednou.');
     }
-    return {ok:true,msg:'Sestava je v pořádku.'};
+    return {ok:errors.length===0,msg:[...new Set(errors)].join(' ')};
   }
 
   function validateFixture(f){
-    if(f.t==='team')return {ok:uniqueRoster('a')&&uniqueRoster('b'),msg:'Doplň obě soupisky pěti hráčů.'};
-    if(!uniqueRoster('a')||!uniqueRoster('b'))return {ok:false,msg:'Nejdřív nastav 5 různých hráčů v obou soupiskách.'};
-    const a=validateSideFixture(f,'a'),b=validateSideFixture(f,'b');
-    return a.ok&&b.ok?{ok:true,msg:'Sestava splňuje pravidla.'}:{ok:false,msg:(a.ok?'Tým B: '+b.msg:'Tým A: '+a.msg)};
+    const errors=[];
+    for(const [side,name] of [['a','Slovensko'],['b','Česko']]){
+      const messages=[];
+      if(!uniqueRoster(side))messages.push('Doplň soupisku pěti různých hráčů.');
+      if(f.t!=='team'){const result=validateSideFixture(f,side);if(!result.ok)messages.push(result.msg);}
+      if(messages.length)errors.push(name+': '+messages.join(' '));
+    }
+    return {ok:errors.length===0,msg:errors.length?errors.join('\n'):'Sestava splňuje pravidla.'};
   }
 
   function globalRuleStatus(){
@@ -29715,7 +29737,14 @@ function renderStats(){
 
   // Používá se i v hlavním tlačítku ZAHÁJIT ZÁPAS, aby nešlo otevřít
   // dříve připravený zápas, pokud už mezitím jedna reprezentace vyhrála.
-  window.fc26CanStartMatch=function(n){
+  window.fc26CanStartMatch=function(n,preparedLink=null){
+    const f=FIXTURES.find(x=>x.n===Number(n));
+    if(!f||!validateFixture(f).ok)return false;
+    if(preparedLink){
+      const current=['a','b'].map(side=>(f.t==='team'?roster(side):lineup(f.n)[side].slice(0,requiredSlots(f))).map(v=>federalParticipantSnapshot(cfg(),side,v)?.id||''));
+      const saved=f.t==='team'?preparedLink.rosterParticipants:preparedLink.lineupParticipants;
+      if(JSON.stringify(current)!==JSON.stringify(saved?.map(ps=>ps.map(p=>p?.id||''))))return false;
+    }
     return !raceState().decided&&!completedMatch(Number(n))&&!cfg().teamResults?.[n]?.done;
   };
   async function saveLineupSelect(n,side,idx,value){
@@ -29834,7 +29863,7 @@ function renderStats(){
         '<div class="fc26-side"><strong>'+esc(cfg().teamAName)+'</strong>'+lineupSelectHtml(f,'a')+'</div>'+
         '<div class="fc26-side"><strong>'+esc(cfg().teamBName)+'</strong>'+lineupSelectHtml(f,'b')+'</div>'+
       '</div>'+
-      '<div class="'+(v.ok?'fc26-rule-ok':'fc26-rule-warn')+'" style="font-size:11px;margin-top:8px">'+esc(v.msg)+'</div>'+
+      '<div class="'+(v.ok?'fc26-rule-ok':'fc26-rule-warn')+'" style="font-size:11px;margin-top:8px;white-space:pre-line">'+esc(v.msg)+'</div>'+
       '<div class="fc26-actions"><button class="btn primary" '+(!v.ok?'disabled':'')+' onclick="fc26StartFixture('+f.n+')">HRÁT PŘES POČÍTADLO</button></div>';
     }
     return '<div class="fc26-fixture '+(done?'done':'')+(cancelled?' cancelled':'')+'">'+

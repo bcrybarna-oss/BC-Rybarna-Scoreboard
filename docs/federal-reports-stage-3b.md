@@ -1,5 +1,7 @@
 # Federal Cup – etapa 3B (Dominik, 22. 10. 2026)
 
+Poslední funkční doplnění stejného kandidáta (Dominik, 23. 10. 2026) je v [samostatném přehledu](release-90-final-functional-review.md): volitelný stream před startem, panel pod akcemi a úplná validace nasazování. Schválené grafické reporty, 13 výpočtů a exportní kód zůstávají bajtově nezměněné. Skutečné exporty a UI znovu regresně ověřeny; PR #28 bez merge/deploy.
+
 Kandidát **v4.51.90 RC**, pokračování stejného vydání a stejného PR #28. **Finální vizuální iterace nad ea5d6e0, kód 238a1cfff546384a20bdba4fe1c5a1f54f927045 otestován a pushnut ve stejném otevřeném PR #28; nesloučeno, nenasazeno.** Produkce zůstává v4.51.89 RC. Reference přibyly jako commity 209af0d a 5c6ce04; bezpečný fast-forward zachoval všechny lokální rozpracované úpravy 3B.
 
 ## Aktuální zjednodušení vieweru (Dominik, 23. 10. 2026)

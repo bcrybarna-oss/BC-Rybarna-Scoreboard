@@ -8,6 +8,11 @@ Každá samostatně nasazovaná funkční i vizuální změna povinně zvyšuje 
 
 ## Repozitář a produkce
 
+Kandidát 90 – poslední funkční revize (Dominik, 23. 10. 2026): nový zápas má výchozí streamEnabled=false. Uživatel může před startem zvolit overlay i v kompaktním nastavení; rozpracovaná volba je jen sessionStorage draft, po úspěšném startu se vymaže. Rozhoduje uložený příznak konkrétního zápasu, během hry se nepřepíná. Nové zapnuté streamy začínají soon; staré záznamy svůj režim zachovávají a bez příznaku jsou bez streamu. Oddělená běžná synchronizace Livescore zůstává, zatímco OBS stream/users se bez zapnutí nepublikuje. Stream panel je v obou počítadlech až za herními akcemi/UNDO/tempo/rozstřel, před událostmi. URL a izolace UID+matchId neměněny.
+
+Nasazování FC porovnává stabilní participant ID jako neuspořádané dvojice, vypisuje souběžně všechny relevantní chyby Slovenska/Česka a před konečným startem ověřuje aktuální pravidla i shodu připravených ID. Dříve spuštěné zápasy lze stále obnovit. Textová reference docs/federal-cup-2026-lineup-rules.md je přepis pravidel dodaných Dominikem, není originální PDF. Schválené reporty/13 výpočtů a exporty se touto revizí nemění; PR #28 bez merge/deploy.
+
+
 Divácký Federal Cup od zjednodušení kandidáta 90 (Dominik, 23. 10. 2026) používá výhradně grafické reporty: tabule A2, program A1, soupisky B. A1 tlačítko jen pro dostupný dokončený uložený zápas podle stejného výběru jako dialog, včetně hodnocené série; změna dat mezi vykreslením a kliknutím zůstává chráněná kontrolou dialogu. Ruční výsledek bez detailu či neodehraný zápas nemá A1. Staré detailní statistiky a podkladové agregace existují dál pro ostatní části i admin; viewer nemá jejich listener ani starou týmovou tabulku. Soupisky následují přímo po programu. Grafika a výpočty reportů se tím nemění.
 
 

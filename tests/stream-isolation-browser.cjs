@@ -51,7 +51,7 @@ const overlayHtml=overlaySource.replace('</script>','window.overlayIsolationTest
   return c;
  }
  const aContext=await context(),bContext=await context(),cContext=await context(),obsContext=await context();
- async function publisher(c,uid,name){const p=await c.newPage();await p.goto(origin+'/');await p.waitForFunction(()=>!!window.publisherTest);await p.waitForSelector('#cloudLoginModal.show');await p.evaluate(value=>window.testNow=value,now);await p.evaluate(({uid,name})=>publisherTest.start(uid,name),{uid,name});await p.waitForFunction(()=>!!publisherTest.match);await p.evaluate(()=>publisherTest.send(true));return p;}
+ async function publisher(c,uid,name){const p=await c.newPage();await p.goto(origin+'/');await p.waitForFunction(()=>!!window.publisherTest);await p.waitForSelector('#cloudLoginModal.show');await p.evaluate(value=>window.testNow=value,now);await p.evaluate(({uid,name})=>publisherTest.start(uid,name),{uid,name});await p.waitForFunction(()=>!!publisherTest.match);assert.equal(await p.evaluate(()=>publisherTest.match.streamMode),'soon');await p.locator('#streamModeLiveBtn').click();await p.evaluate(()=>publisherTest.send(true));return p;}
  const a=await publisher(aContext,'publisher-A','Alpha A'),matchA=await a.evaluate(()=>publisherTest.match.id);
  const aState=structuredClone(store.get(keyA));
  const explicit=await a.locator('#matchStreamOverlayUrl').inputValue();
