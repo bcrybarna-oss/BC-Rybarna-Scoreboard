@@ -8,6 +8,9 @@ Každá samostatně nasazovaná funkční i vizuální změna povinně zvyšuje 
 
 ## Repozitář a produkce
 
+Aktuální nasazení: v4.51.90 RC z externího merge PR #28, fe696f477d37f1f8ad2c99e242c1d789c746071c. Dne 23. 10. 2026 potvrzen úspěšný Pages deployment, přesná shoda veřejného HTML/assetů a bezpečný nepřihlášený smoke test. Rozsah a neověřené přihlášené funkce jsou výslovně v docs/deployment-v4.51.90.md / PROJECT_STATUS.md. Následující popisy kandidáta zachycují historii před sloučením; formulace bez merge/deploy v nich není aktuálním stavem produkce.
+
+
 Kandidát 90 – poslední funkční revize (Dominik, 23. 10. 2026): nový zápas má výchozí streamEnabled=false. Uživatel může před startem zvolit overlay i v kompaktním nastavení; rozpracovaná volba je jen sessionStorage draft, po úspěšném startu se vymaže. Rozhoduje uložený příznak konkrétního zápasu, během hry se nepřepíná. Nové zapnuté streamy začínají soon; staré záznamy svůj režim zachovávají a bez příznaku jsou bez streamu. Oddělená běžná synchronizace Livescore zůstává, zatímco OBS stream/users se bez zapnutí nepublikuje. Stream panel je v obou počítadlech až za herními akcemi/UNDO/tempo/rozstřel, před událostmi. URL a izolace UID+matchId neměněny.
 
 Nasazování FC porovnává stabilní participant ID jako neuspořádané dvojice, vypisuje souběžně všechny relevantní chyby Slovenska/Česka a před konečným startem ověřuje aktuální pravidla i shodu připravených ID. Dříve spuštěné zápasy lze stále obnovit. Textová reference docs/federal-cup-2026-lineup-rules.md je přepis pravidel dodaných Dominikem, není originální PDF. Schválené reporty/13 výpočtů a exporty se touto revizí nemění; PR #28 bez merge/deploy.

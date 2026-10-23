@@ -1,5 +1,13 @@
 # Revize aplikace Poolčítadlo
 
+## Dominik – ověřené produkční nasazení reportů a finálních úprav (v4.51.90 RC)
+Zadavatel: Dominik
+Datum: 23. 10. 2026
+Změny: Dokončení nasazení již externě sloučeného PR #28; merge/main fe696f477d37f1f8ad2c99e242c1d789c746071c. Žádný opakovaný merge, nová verze ani funkční úprava. Po čerstvém fetchi bezpečný fast-forward místního main, cizí kopie screenshotů/output/tmp zachovány. Aktualizována dokumentace skutečného nasazení a evidence veřejných souborů/UI.
+Testy: Pages 39922449218 build/deploy/report success. Produkce index.html/overlay.html a 4 assety HTTP 200, SHA-256/bajty shodné s merge; běžné i fresh URL mají verzi 90. Veřejný browser bez přihlášení: navigace, Federal Cup tabule/program/soupisky, odstraněné prvky nepřítomny, Bez streamu a volba před startem, DOM pořadí panelu, overlay bez UID nedostupný PASS. A2 prázdný offline souhrn/13 metrik/vysvětlivky/mobil/PNG1920×1080/PDF1×1440×810 se shodnými vloženými pixely PASS. 0 pageerror/console errors a 0 pokusů o zápis; žádný produkční zápas ani editace dat. Izolovaně na main 74/74 unit, lineup/stream/report browser PASS; čerstvé skutečné A1/A2/B PNG/PDF desktop/mobil DPR3 PASS včetně chyb/cancel/duplicitního exportu a neměnných dat. CI po merge 39922449965: release gate success, Node184/186 pouze známé dvě chyby preview-match-reload-recovery.test.cjs:50,106 v test-modular; log ověřen, žádná nová regrese, CI není plně zelené. Podrobnosti docs/deployment-v4.51.90.md a JSON evidence.
+Nasazení: **Nasazeno a v rozsahu provedených kontrol ověřeno v4.51.90 RC**, veřejná URL https://bcrybarna-oss.github.io/BC-Rybarna-Scoreboard/, kód fe696f477d37f1f8ad2c99e242c1d789c746071c. Úspěšný automatický Pages deployment ručně neopakován. Následná dokumentace beze změny aplikačních souborů/verze.
+Omezení: Veřejné ověření není přihlášený end-to-end test. Skutečné uložené A1/B/cloudové statistiky a produkční Auth/Firebase/Rules, fyzický iPhone/iOS i OBS neověřeny; zápisové scénáře pouze izolovaně. A2 export nad prázdnou offline evidencí se nevydává za ověřená skutečná data. Známé modularizační chyby zachovány.
+
 ## Dominik – volitelný stream a úplná validace nasazování Federal Cupu (v4.51.90 RC)
 Zadavatel: Dominik
 Datum: 23. 10. 2026

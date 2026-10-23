@@ -1,0 +1,115 @@
+{
+  "sha": "fe696f477d37f1f8ad2c99e242c1d789c746071c",
+  "version": "v4.51.90 RC",
+  "verifiedAt": "2026-10-23T08:16:26.024Z",
+  "files": {
+    "index.html": {
+      "status": 200,
+      "sha256": "b9ff691efec1730ec6fa2d3969e096c9a67f694fe1b69ee2f239d45e3557e289",
+      "bytes": 1672507,
+      "etag": "W/\"6adb15ee-19853b\""
+    },
+    "overlay.html": {
+      "status": 200,
+      "sha256": "f7ed303b9b99fa215cbb69060b819747f408e709f0d27fd545295a3a39a5f215",
+      "bytes": 20884,
+      "etag": "W/\"6adb15ee-5194\""
+    },
+    "assets/federal-report-billiards.webp": {
+      "status": 200,
+      "sha256": "2a8d73c1b0a5ecd07597b993f0da5ed22b7c30bba6023448b8069d154bf3e228",
+      "bytes": 74790,
+      "etag": "\"6adb15ee-12426\""
+    },
+    "assets/federal-report-pool-logo.png": {
+      "status": 200,
+      "sha256": "c28fd81775d4013e2b58716d6f8ef1a92691f4d5d4c0b8b2ba1b0d3a3a12c593",
+      "bytes": 220520,
+      "etag": "\"6adb15ee-35d68\""
+    },
+    "bc-rybarna-logo.png": {
+      "status": 200,
+      "sha256": "5ad8dccc37f3426e189916f5e5bce61fa922f82d8757283832ac01d224f1f083",
+      "bytes": 131525,
+      "etag": "\"6adb15ee-201c5\""
+    },
+    "assets/poolcitadlo-logo.webp": {
+      "status": 200,
+      "sha256": "7f9caff46b1924186ef7d6a42b6b9079ee9ace9e7875d8f688e9fdc83bd488db",
+      "bytes": 27896,
+      "etag": "\"6adb15ee-6cf8\""
+    }
+  },
+  "normalAndFreshUrlsMatch": true,
+  "screens": [
+    "setup",
+    "home",
+    "players",
+    "about",
+    "federal-cup-2026",
+    "setup"
+  ],
+  "available": {
+    "A1": 0,
+    "A2": 2,
+    "B": 0
+  },
+  "publicA2Exports": [
+    {
+      "format": "Png",
+      "file": "public-empty-A2.png",
+      "bytes": 1461985
+    },
+    {
+      "format": "Pdf",
+      "file": "public-empty-A2.pdf",
+      "bytes": 867840
+    }
+  ],
+  "pageErrors": [],
+  "consoleErrors": [],
+  "blocked": [],
+  "writeAttempts": 0,
+  "limits": "Public unmodified HTML; no matches created, no roster/results edited, no Firebase requests allowed, no real login. Empty offline A2 exported; actual saved A1/B/statistics need production auth. Functional match/lineup scenarios are separate isolated tests.",
+  "pagesRun": 39922449218,
+  "regressionRun": 39922449965,
+  "releaseGate": "success",
+  "node": {
+    "tests": 186,
+    "pass": 184,
+    "fail": 2,
+    "knownFailures": [
+      "preview-match-reload-recovery.test.cjs:50",
+      "preview-match-reload-recovery.test.cjs:106"
+    ]
+  },
+  "publicA2Dimensions": {
+    "png": [
+      1920,
+      1080
+    ],
+    "pdfMediaBox": [
+      0,
+      0,
+      1440,
+      810
+    ],
+    "pages": 1,
+    "embeddedPixelsIdentical": true
+  },
+  "isolatedMainVerification": {
+    "unit": {
+      "tests": 74,
+      "pass": 74,
+      "fail": 0
+    },
+    "browser": [
+      "federal-lineup-browser",
+      "stream-controls-browser",
+      "federal-reports-browser",
+      "federal-report-exports-browser"
+    ],
+    "result": "PASS",
+    "firebaseProductionWrites": 0
+  }
+}
