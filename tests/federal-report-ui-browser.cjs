@@ -20,8 +20,17 @@ function config(ms){const c={year:2026,reportHost:'SK',teamAName:'Slovensko',tea
  async function shot(p,name){await p.screenshot({path:path.join(out,name+'.png')});}
  try{const {c,p}=await client();
   const snapshot=p=>p.evaluate(()=>JSON.stringify({data:reportTest.data,storage:{...localStorage}}));const before=await snapshot(p);
-  async function controls(p){assert.equal(await p.locator('[data-fc-report]').evaluateAll(es=>es.every(e=>e.closest('#screen-federal-cup-2026')&&e.getBoundingClientRect().height>=44)),true);assert.equal(await p.evaluate(()=>document.documentElement.scrollWidth<=document.documentElement.clientWidth),true);}
-  await controls(p);assert.equal(await p.locator('[data-fc-report="match"]').count(),21);assert.equal(await p.locator('[data-fc-report="player"]').count(),10);assert.equal(await p.locator('[data-fc-report="team"]').count(),2);
+  async function controls(p){
+   const root=p.locator('#screen-federal-cup-2026');
+   assert.equal(await root.locator('[data-fc26-view-match],#fc26ViewerStats,.fc26-stat-table').count(),0);
+   assert.doesNotMatch(await root.innerText(),/DETAILNÍ STATISTIKY ZÁPASU|Statistiky obou týmů|Ruční Team výsledky obsahují pouze skóre/);
+   assert.equal(await p.locator('#fc26ViewerSchedule').evaluate(e=>e.nextElementSibling.textContent.trim()==='Soupisky týmů'&&e.nextElementSibling.nextElementSibling.id==='fc26ViewerRosters'),true);
+   assert.equal(await p.locator('#fc26ViewerSchedule .fc26-view-match').evaluateAll(es=>es.every((e,i)=>{const bs=e.querySelectorAll('button');return bs.length===(i<3?1:0)&&Array.from(bs).every(b=>b.textContent==='STATISTIKY ZÁPASU'&&b.dataset.fcReport==='match');})),true);
+   assert.equal(await p.locator('[data-fc-report]').evaluateAll(es=>es.every(e=>e.closest('#screen-federal-cup-2026')&&e.getBoundingClientRect().height>=44)),true);
+   assert.equal(await p.evaluate(()=>document.documentElement.scrollWidth<=document.documentElement.clientWidth),true);
+  }
+  await controls(p);assert.equal(await p.locator('[data-fc-report="match"]').count(),3);assert.equal(await p.locator('[data-fc-report="player"]').count(),10);assert.equal(await p.locator('[data-fc-report="team"]').count(),2);
+  await p.screenshot({path:path.join(out,'federal-ui-desktop-overview.png'),fullPage:true});
   const edges=await p.locator('#fc26ViewerRosters .fc26-view-roster').first().locator('[data-fc-report]').evaluateAll(es=>es.map(e=>e.getBoundingClientRect().right));assert.ok(Math.max(...edges)-Math.min(...edges)<1);
   await scroll(p,'#screen-federal-cup-2026 .fc26-view-head');await shot(p,'federal-ui-desktop-teams');
   await scroll(p,'#fc26ViewerSchedule');await shot(p,'federal-ui-desktop-matches');
@@ -30,11 +39,11 @@ function config(ms){const c={year:2026,reportHost:'SK',teamAName:'Slovensko',tea
   // Native modal may yield focus to browser chrome (body active), never to underlying page controls.
   for(let i=0;i<8;i++){await p.keyboard.press('Tab');assert.equal(await p.evaluate(()=>document.activeElement===document.body||!!document.activeElement.closest('#fcReportDialog')),true);}
   await p.locator('#fcReportContent details summary').click();assert.equal(await p.locator('#fcReportContent details dt').count(),13);assert.match(await p.locator('.fc-report-context').innerText(),/ID zápasu singles/);assert.doesNotMatch(await p.locator('#fcReportContent article').innerText(),/kanonick|API 13|ID zápasu/);await p.locator('#fcReportClose').click();assert.equal(await p.locator('[data-fc-report="match"][data-fixture="3"]').evaluate(e=>e===document.activeElement),true);
-  await p.locator('[data-fc-report="match"][data-fixture="4"]').click();assert.match(await p.locator('#fcReportContent').innerText(),/ještě nebyl dokončen/);for(const id of ['fcReportPng','fcReportPdf','fcReportZoom'])assert.equal(await p.locator('#'+id).isDisabled(),true);await p.keyboard.press('Escape');assert.equal(await p.locator('[data-fc-report="match"][data-fixture="4"]').evaluate(e=>e===document.activeElement),true);assert.equal(await snapshot(p),before);
+  assert.equal(await p.locator('[data-fc-report="match"][data-fixture="4"]').count(),0);assert.equal(await snapshot(p),before);
   const mobile=await client(true);const mbefore=await snapshot(mobile.p);await controls(mobile.p);await mobile.p.screenshot({path:path.join(out,'federal-ui-mobile-entries.png'),fullPage:true});
   for(const [s,n]of [['#fc26ViewerScoreboard','teams'],['#fc26ViewerSchedule','matches'],['#fc26ViewerRosters','players']]){await scroll(mobile.p,s);await shot(mobile.p,'federal-ui-mobile-'+n);}
   await mobile.p.locator('[data-fc-report="player"][data-person="a1"]').click();await mobile.p.locator('#fcReportContent article img').evaluateAll(es=>Promise.all(es.map(i=>i.decode())));await shot(mobile.p,'federal-ui-mobile-dialog');
   await mobile.p.locator('#fcReportZoom').click();assert.equal(await mobile.p.locator('#fcReportZoom').innerText(),'ZMENŠIT NÁHLED');const viewport=mobile.p.locator('.fc-report-preview-viewport');assert.equal(await viewport.evaluate(e=>e.scrollWidth>e.clientWidth),true);await viewport.evaluate(e=>e.scrollLeft=600);assert.ok((await mobile.p.locator('#fcReportClose').boundingBox()).x>=0);assert.equal(await mobile.p.evaluate(()=>document.getElementById('fcReportDialog').scrollWidth<=document.getElementById('fcReportDialog').clientWidth),true);await mobile.p.locator('#fcReportZoom').click();assert.equal(await viewport.evaluate(e=>e.scrollWidth<=e.clientWidth+1),true);await mobile.p.locator('#fcReportContent details summary').click();assert.match(await mobile.p.locator('.fc-report-context').innerText(),/Doubles strky se osobám nepřipisují/);await mobile.p.keyboard.press('Escape');assert.equal(await mobile.p.locator('[data-fc-report="player"][data-person="a1"]').evaluate(e=>e===document.activeElement),true);assert.equal(await snapshot(mobile.p),mbefore);
-  assert.equal(writes,0);assert.equal(firebase,0);assert.deepEqual(errors,[]);await mobile.c.close();await c.close();console.log('PASS 21/10/2 FC-only 44px controls/alignment, unavailable report, details, native focus trap/Close/Escape, mobile zoom/pan with fixed controls, immutable data/storage, actual desktop/mobile UI screenshots; 0 Firebase/writes/page errors');
+  assert.equal(writes,0);assert.equal(firebase,0);assert.deepEqual(errors,[]);await mobile.c.close();await c.close();console.log('PASS 3/10/2 FC-only 44px controls/alignment, completed-only reports, removed legacy presentation, details, native focus trap/Close/Escape, mobile zoom/pan with fixed controls, immutable data/storage, actual desktop/mobile UI screenshots; 0 Firebase/writes/page errors');
  }finally{await browser.close();}
 })().catch(e=>{console.error(e);process.exitCode=1;});

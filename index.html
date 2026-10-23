@@ -3132,8 +3132,6 @@ html[data-theme="light"] #leagueSchedule .history-item .muted{
       <div id="fc26ViewerProgress"></div>
       <h2 class="fc26-view-title2">Program a výsledky</h2>
       <div id="fc26ViewerSchedule"></div>
-      <h2 class="fc26-view-title2">Statistiky obou týmů</h2>
-      <div id="fc26ViewerStats"></div>
       <h2 class="fc26-view-title2">Soupisky týmů</h2>
       <div id="fc26ViewerRosters"></div>
       <dialog id="fcReportDialog" aria-labelledby="fcReportDialogTitle">
@@ -30029,11 +30027,12 @@ function renderStats(){
   function renderFederalCupViewer(){
     if(!$('fc26ViewerScoreboard'))return;
     const conf=cfg();
-    const reportYear=Number(conf.year),reportSources=Number.isInteger(reportYear)?federalCalculateSeason(data.matches,conf,reportYear).fixtures:[];
+    const reportYear=Number(conf.year),reportData=Number.isInteger(reportYear)?federalReportData(data.matches,conf,reportYear):null;
+    const reportSources=Number.isInteger(reportYear)?federalCalculateSeason(data.matches,conf,reportYear).fixtures:[];
     const admin=canEdit();
     $('fc26ViewerEditor').classList.toggle('hidden',!admin);
     $('fc26ViewerNotice').textContent=cloudAuthenticated
-      ? 'Aktuální výsledky se pravidelně obnovují. U odehraných Singles a Doubles lze otevřít detailní statistiky.'
+      ? 'Aktuální výsledky se pravidelně obnovují. U dokončených zápasů s uloženým záznamem lze otevřít grafický report.'
       : 'Pro aktuální cloudové výsledky je potřeba přihlášení. Zobrazená data mohou být ze zařízení.';
     const a=teamAggregate(0),b=teamAggregate(1);
     const state=raceState(),done=state.played;
@@ -30060,6 +30059,7 @@ function renderStats(){
     function fixture(f){
       const reportSource=reportSources.find(s=>s.fixtureNo===f.n&&s.source==='detailed');
       const m=reportSource?federalStatsRows(data.matches).filter(m=>m.id===reportSource.matchId&&Number(m.federalCupLink?.year)===reportYear&&Number(m.federalCupLink?.fixtureNo)===f.n&&m.endedAt&&!['incomplete','playing','active'].includes(m.status)).sort((a,b)=>(Date.parse(b.endedAt)||0)-(Date.parse(a.endedAt)||0))[0]:null;
+      const reportAvailable=!!(m&&federalReportOrder(conf)&&reportData.selected.some(s=>s.fixtureNo===f.n&&s.matchId===m.id&&s.source==='detailed')&&['singles','doubles','team'].includes(m.federalCupLink?.type)&&federalReportWinner(m.scores)!==null);
       const r=f.t==='team'?conf.teamResults?.[f.n]:null;
       const l=lineup(f.n);
       const finished=!!m||r?.done===true;
@@ -30078,26 +30078,13 @@ function renderStats(){
         '<div><div class="fc26-view-match-score">'+score+'</div>'+
         '<div class="fc26-view-match-status">'+(outsideResult?'MIMO HODNOCENÍ':cancelled?'NEHRAJE SE':finished?'DOHRÁNO':'ČEKÁ SE')+'</div></div>'+
         '<div class="fc26-view-match-side right">'+esc(String(sideName('b',1)))+'</div>'+
-        '<div class="fc26-view-match-detail">'+reportButton('match','STATISTIKY ZÁPASU','data-fixture="'+f.n+'" data-match-id="'+esc(String(m?.id||''))+'"')+
-        (m?'<button type="button" class="btn" data-fc26-view-match="'+esc(String(m.id||''))+'">DETAILNÍ STATISTIKY ZÁPASU</button>':'')+'</div></div>';
+        (reportAvailable?'<div class="fc26-view-match-detail">'+reportButton('match','STATISTIKY ZÁPASU','data-fixture="'+f.n+'" data-match-id="'+esc(String(m.id))+'"')+'</div>':'')+'</div>';
     }
     $('fc26ViewerSchedule').innerHTML=[1,2,3,4].map(block=>
       '<div class="fc26-block"><div class="fc26-block-head"><h3>Blok '+block+'</h3>'+
       '<span class="muted">'+FIXTURES.filter(f=>f.b===block&&f.t!=='team').length+' Singles / Doubles</span></div>'+
       FIXTURES.filter(f=>f.b===block).map(fixture).join('')+'</div>').join('');
 
-    const stats=[
-      ['Vyhrané zápasy','matchWins'],['Prohrané zápasy','matchLosses'],
-      ['Součet skóre +','racksFor'],['Součet skóre −','racksAgainst'],
-      ['Breaky','breaks'],['Dry break','dryBreaks'],['Fauly z breaku','breakFouls'],
-      ['Eso','aces'],['Break & Run','breakAndRun'],['Dohrávky','runouts'],
-      ['Jistoty','safeties'],['Úspěšné jistoty','successfulSafeties'],['MISS','misses']
-    ];
-    $('fc26ViewerStats').innerHTML='<div style="overflow:auto"><table class="fc26-stat-table">'+
-      '<thead><tr><th>Statistika</th><th>🇸🇰 Slovensko</th><th>🇨🇿 Česko</th></tr></thead><tbody>'+
-      stats.map(([label,key])=>'<tr><td>'+esc(label)+'</td><td>'+a[key]+'</td><td>'+b[key]+'</td></tr>').join('')+
-      '</tbody></table></div>'+
-      '<div class="muted" style="font-size:11px;margin-top:9px">Herní statistiky zahrnují zápasy hrané přes počítadlo. Ruční Team výsledky obsahují pouze skóre.</div>';
     const rosterHtml=(side,title)=>'<div class="fc26-view-roster"><h3>'+title+'</h3>'+
       roster(side).map((name,i)=>'<div class="fc26-view-roster-line"><span class="fc-report-roster-name"><span class="muted">'+(i+1)+'.</span> '+
         esc(String(participantName(side,name)||'Bude doplněno'))+'</span>'+(name?reportButton('player','STATISTIKY HRÁČE','data-person="'+esc(String(conf['rosterParticipantIds'+(side==='a'?'A':'B')]?.[i]||''))+'"'):'')+'</div>').join('')+'</div>';
@@ -30124,10 +30111,6 @@ function renderStats(){
   $('fc26ViewerRefresh')?.addEventListener('click',refreshFederalCupViewer);
   $('fc26ViewerEditor')?.addEventListener('click',()=>{if(canEdit())showScreen('federal-cup-editor')});
   $('fc26EditorBack')?.addEventListener('click',()=>showScreen('federal-cup-2026'));
-  $('fc26ViewerSchedule')?.addEventListener('click',e=>{
-    const btn=e.target.closest('[data-fc26-view-match]');
-    if(btn?.dataset.fc26ViewMatch)showSavedMatchStats(btn.dataset.fc26ViewMatch);
-  });
   setInterval(()=>{
     if(!document.hidden&&$('screen-federal-cup-2026')?.classList.contains('active'))refreshFederalCupViewer();
   },25000);

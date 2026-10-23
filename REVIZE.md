@@ -1,5 +1,13 @@
 # Revize aplikace Poolčítadlo
 
+## Dominik – zjednodušení diváckého Federal Cupu (v4.51.90 RC)
+Zadavatel: Dominik
+Datum: 23. 10. 2026
+Změny: Pokračování stejného nevydaného kandidáta a PR #28 nad a621cd9; main po čerstvém fetchi f6c3e0f, produkce v4.51.89 RC. Divácký přehled obsahuje tabuli reprezentací, program/výsledky a přímo navazující soupisky. Odstraněna prezentace Statistiky obou týmů i původní DETAILNÍ STATISTIKY ZÁPASU a jejich viewer listener. Jediné STATISTIKY ZÁPASU se vykreslí jen pro dokončený uložený zápas dostupný podle stávajícího výběru A1 (rok, fixture, ID, platný typ/výsledek, hostitel, hodnocená série). A2/B zachovány. Schválený design, 13 výpočtů, podkladové agregace, admin, staré detailní statistiky mimo viewer, Firebase, počítadlo a stream neměněny. Aktualizované desktop/mobil screenshoty se syntetickými daty.
+Testy: Výpočty 69/69; plná Node sada 179/181, výhradně dvě známá selhání preview-match-reload-recovery.test.cjs:50,106 v test-modular. Report browser a skutečné desktop/mobil UI PASS: jeden A1 u dokončených, žádný u neodehraných/aktivních/bez endedAt/neplatných/ručních bez detailu/neznámého hostitele/mimo sérii; nahrazené ID odmítnuto. Staré statistiky otevřeny skutečným tlačítkem Historie. Odstraněné prvky nepřítomny, soupisky přímo po programu, identity/barvy/13 metrik/partial/unknown, focus/Close/Escape a mobilní zoom zachovány. Federal Cup, detailní počítadlo, stream-controls, stream-isolation, stream-lag a release-version browser PASS. Skutečné PNG/PDF A1/A2/B desktop/mobil DPR3 a původní čtyři PDF exporty PASS. PNG všech tří reportů bajtově shodné se schválenými docs/screenshots; pypdf ověřil jednu stránku 1440×810 a přesné pixely vloženého PNG 1920×1080, Poppler A1 vizuálně ověřen. Výpočty a report/export kód bajtově shodné s a621cd9. CI této úpravy zatím čeká na push, není deklarováno jako zelené.
+Nasazení: Otestováno a připraveno k pushi v existující větvi PR #28. Release gate po čerstvém fetchi main f6c3e0f a diff --check PASS. Bez merge/deploy dle zadání, produkce zůstává v4.51.89 RC. Žádné produkční testovací zápisy.
+Omezení: Skutečné ovládání čeká na schválení Dominikem. Fyzické telefony/iOS a produkční Auth/Firebase/OBS neověřeny. Známé modularizační chyby zachovány a vykázány. Screenshoty jsou izolovaná syntetická data.
+
 ## Dominik – finální revize ovládání a čistých exportů Federal Cupu (v4.51.90 RC)
 Zadavatel: Dominik
 Datum: 23. 10. 2026

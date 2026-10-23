@@ -2,7 +2,28 @@
 
 Kandidát **v4.51.90 RC**, pokračování stejného vydání a stejného PR #28. **Finální vizuální iterace nad ea5d6e0, kód 238a1cfff546384a20bdba4fe1c5a1f54f927045 otestován a pushnut ve stejném otevřeném PR #28; nesloučeno, nenasazeno.** Produkce zůstává v4.51.89 RC. Reference přibyly jako commity 209af0d a 5c6ce04; bezpečný fast-forward zachoval všechny lokální rozpracované úpravy 3B.
 
-## Finální revize UI a exportů (Dominik, 23. 10. 2026)
+## Aktuální zjednodušení vieweru (Dominik, 23. 10. 2026)
+
+Stejná větev a PR #28 nad a621cd9, main f6c3e0f / produkce 89. Kandidát **v4.51.90 RC** zůstává nevydaný. Lokálně otestováno: 69/69 výpočty, Node 179/181 pouze známé dvě test-modular chyby; report/UI, Federal Cup, detailní počítadlo, stream-controls/isolation/lag/release-version a skutečné PNG/PDF reportů i původní PDF exporty PASS. A1/A2/B PNG bajtově shodné se schválenými; PDF 1×16:9 a přesné vložené pixely. CI čeká na push. **Neslučovat a nenasazovat.** Následující oddíl nahrazuje dřívější chování 21 zápasových tlačítek popsané v historické revizi níže.
+
+Viewer nyní tvoří pouze tabule reprezentací, program/výsledky a přímo navazující soupisky. Není zde nadpis/tabulka/poznámka Statistiky obou týmů ani původní detailní tlačítko. A1 STATISTIKY ZÁPASU je právě jedno a pouze u dostupného dokončeného uloženého zápasu. Používá existující selector reportu (rok, fixture, ID, stav, platný výsledek/typ, hostitel, hodnocená série); neodehrané, ruční výsledky bez detailu a zápasy mimo sérii tlačítko nemají. Ochrana proti zastaralému ID při otevření zůstává. A2 a B beze změny, stejně jako admin a staré detailní statistiky jinde v aplikaci.
+
+Aktuální syntetické screenshoty skutečného index.html (desktop 1440×1000, mobil 390×844):
+
+| Pohled | Soubor |
+| --- | --- |
+| Desktop celý přehled | [Přehled](screenshots/federal-ui-desktop-overview.png) |
+| Desktop program | [Zápasy](screenshots/federal-ui-desktop-matches.png) |
+| Desktop soupisky | [Soupisky](screenshots/federal-ui-desktop-players.png) |
+| Mobil celý přehled | [Přehled](screenshots/federal-ui-mobile-entries.png) |
+| Mobil program | [Zápasy](screenshots/federal-ui-mobile-matches.png) |
+| Mobil soupisky | [Soupisky](screenshots/federal-ui-mobile-players.png) |
+
+`npm run test:federal-report-ui` znovu pořizuje tyto i původní dialog/tabule screenshoty. Report browser navíc ověřuje dostupnost a skutečné otevření starých detailních statistik z Historie. PNG/PDF generátor a vizuální šablony se touto změnou nemění. Veškerá síť při testech izolována; žádné testovací zápisy do produkční Firebase.
+
+## Historická finální revize UI a exportů (před zjednodušením)
+
+
 
 Zadavatel potvrdil vizuální schválení A1/A2/B. Tato revize neprovádí redesign a nezasahuje do výpočtů. Výchozí hlava b5d66d8, po čerstvém fetchi main stále f6c3e0f; stejný nevydaný kandidát v4.51.90 RC a stejný PR #28. **Otestováno a pushnuto jako b8ff6187e628b64ce18873e31bef896c0c4fc575; nesloučeno, nenasazeno.** Ke společnému přijetí nyní čeká skutečné ovládání v aplikaci.
 

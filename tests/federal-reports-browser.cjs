@@ -15,7 +15,7 @@ function config(ms){const c={year:2026,reportHost:'SK',teamAName:'Slovensko',tea
   let ms=fixtures(),c=config(ms);await page.evaluate(({c,ms})=>reportTest.load(c,ms),{c,ms});
   const modal=page.locator('#fcReportDialog'),content=page.locator('#fcReportContent'),close=async()=>{await page.locator('#fcReportClose').click();await modal.waitFor({state:'hidden'});};
   const snapshot=()=>page.evaluate(()=>JSON.stringify({data:reportTest.data,storage:{...localStorage}}));
-  assert.equal(await page.locator('#fc26ViewerSchedule [data-fc-report="match"]').count(),21);assert.equal(await page.locator('#fc26ViewerRosters [data-fc-report="player"]').count(),10);assert.equal(await page.locator('#fc26ViewerScoreboard [data-fc-report="team"]').count(),2);
+  assert.equal(await page.locator('#fc26ViewerSchedule [data-fc-report="match"]').count(),3);assert.equal(await page.locator('#fc26ViewerRosters [data-fc-report="player"]').count(),10);assert.equal(await page.locator('#fc26ViewerScoreboard [data-fc-report="team"]').count(),2);
   assert.equal(await page.locator('[data-fc-report]').evaluateAll(es=>es.every(e=>e.closest('#screen-federal-cup-2026'))),true);const before=await snapshot();
   await page.evaluate(()=>{window.reportFetchCalls=0;window.fetch=()=>{window.reportFetchCalls++;throw Error('Reports must not fetch');};});
   for(const [n,type]of [[3,'singles'],[2,'doubles'],[1,'team']]){
@@ -24,7 +24,7 @@ function config(ms){const c={year:2026,reportHost:'SK',teamAName:'Slovensko',tea
    if(type==='singles'&&process.env.FC_ARTIFACT_DIR){fs.mkdirSync(process.env.FC_ARTIFACT_DIR,{recursive:true});await content.locator('article').screenshot({path:path.join(process.env.FC_ARTIFACT_DIR,'match.png')});}
    await close();assert.equal(await button.evaluate(e=>e===document.activeElement),true);
   }
-  await page.locator('[data-fc-report="match"][data-fixture="4"]').click();assert.match(await content.innerText(),/Report není dostupný/);assert.equal(await content.locator('[data-report-metric]').count(),0);await close();
+  assert.equal(await page.locator('[data-fc-report="match"][data-fixture="4"]').count(),0);
   await page.locator('[data-fc-report="player"][data-person="a1"]').click();assert.equal(await content.locator('[data-report-metric]').count(),13);assert.equal(await content.locator('.fc-report-card').count(),4);assert.equal(await content.locator('.fc-report-card strong').nth(1).innerText(),'3');assert.equal(await content.locator('.fc-report-card strong').nth(2).innerText(),'0 %');assert.equal((await content.locator('header').textContent()).trim(),'Alexandra 1');assert.match(await content.locator('details').textContent(),/Doubles strky se osobám nepřipisují/);
   const widths=await content.locator('.fc-report-card').evaluateAll(es=>es.map(e=>e.getBoundingClientRect().width));assert.ok(Math.max(...widths)-Math.min(...widths)<1);assert.equal(await content.locator('[data-report-metric="breakBallAverage"] .fc-report-track').count(),0);assert.equal(await content.locator('[data-report-metric="pottedBalls"] .fc-report-track').count(),0);
   if(process.env.FC_ARTIFACT_DIR)await content.locator('article').screenshot({path:path.join(process.env.FC_ARTIFACT_DIR,'player.png')});await content.locator('details summary').click();assert.equal(await content.locator('details dt').count(),13);assert.equal(await content.locator('details').getAttribute('open'),'');await close();
@@ -42,6 +42,26 @@ function config(ms){const c={year:2026,reportHost:'SK',teamAName:'Slovensko',tea
   const stable=page.locator('[data-fc-report="match"][data-fixture="3"]');assert.equal(await stable.getAttribute('data-match-id'),'singles');await stable.evaluate(e=>e.dataset.matchId='older-match');await stable.click();assert.match(await content.innerText(),/nahrazen novějším/);await close();
   await page.evaluate(c=>reportTest.load(c,[]),c);await page.locator('[data-fc-report="team"][data-rep="SK"]').click();assert.equal(await content.locator('[data-coverage="unknown"]').count(),26);assert.match(await content.innerText(),/Dosud žádné dokončené/);await close();await page.locator('[data-fc-report="player"][data-person="a1"]').click();assert.equal(await content.locator('.fc-report-card strong').nth(2).innerText(),'—');await close();
   c.year=2027;delete c.reportHost;await page.evaluate(c=>reportTest.load(c,[]),c);await page.locator('[data-fc-report="team"][data-rep="SK"]').click();assert.match(await content.innerText(),/hostitelskou reprezentaci/);await close();
+  // Availability follows the existing report selector, without changing scores or data.
+  for(const variant of ['active','missing-end','draw','invalid-type','manual-only','unknown-host','after-clinch']){
+   const rows=fixtures(),conf=config(rows);
+   if(variant==='active')rows[2].status='active';
+   if(variant==='missing-end')delete rows[2].endedAt;
+   if(variant==='draw')rows[2].scores=[5,5];
+   if(variant==='invalid-type')rows[2].federalCupLink.type='invalid';
+   if(variant==='manual-only'){rows.length=0;conf.teamResults={1:{done:true,a:5,b:3}};}
+   if(variant==='unknown-host'){conf.year=2027;delete conf.reportHost;}
+   if(variant==='after-clinch'){
+    rows.length=0;for(let n=1;n<=12;n++){const m=fixtures()[2];m.id='clinch-'+n;m.federalCupLink.fixtureNo=n;m.scores=[5,0];rows.push(m);}
+   }
+   await page.evaluate(({c,ms})=>reportTest.load(c,ms),{c:conf,ms:rows});
+   assert.equal(await page.locator('[data-fc-report="match"][data-fixture="'+(variant==='manual-only'?1:variant==='after-clinch'?12:3)+'"]').count(),0,variant);
+   if(variant==='after-clinch'){assert.equal(await page.locator('[data-fc-report="match"]').count(),11);assert.match(await page.locator('#fc26ViewerSchedule .fc26-view-match').nth(11).innerText(),/5 : 0/);}
+  }
+  // Legacy detailed statistics remain accessible through the actual History button.
+  ms=fixtures();c=config(ms);await page.evaluate(({c,ms})=>reportTest.load(c,ms),{c,ms});await page.evaluate(()=>reportTest.screen('history'));
+  await page.locator('#historyList [onclick^="showSavedMatchStats"]').first().click();assert.equal(await page.locator('#matchStatsModal').isVisible(),true);assert.equal(await page.locator('#matchStatsPdf').isVisible(),true);
+  await page.evaluate(()=>document.querySelectorAll('.modal.show').forEach(e=>e.classList.remove('show')));
   for(const screen of ['home','setup','history','players','tournament','league']){await page.evaluate(s=>reportTest.screen(s),screen);assert.equal(await page.locator('[data-fc-report]:visible').count(),0);assert.equal(await modal.isVisible(),false);}
   assert.deepEqual(errors,[]);assert.equal(writes,0);console.log('PASS all three FC-only entry points, exact match IDs, 13 metrics, Team five/Doubles two, switching, host/colors, partial/unknown, sources, long names/mobile, focus/Escape; immutable data/storage, 0 report fetches, 0 writes, 0 JS errors');
  }finally{await browser.close();}

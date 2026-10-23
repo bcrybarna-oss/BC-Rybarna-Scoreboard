@@ -8,6 +8,9 @@ Každá samostatně nasazovaná funkční i vizuální změna povinně zvyšuje 
 
 ## Repozitář a produkce
 
+Divácký Federal Cup od zjednodušení kandidáta 90 (Dominik, 23. 10. 2026) používá výhradně grafické reporty: tabule A2, program A1, soupisky B. A1 tlačítko jen pro dostupný dokončený uložený zápas podle stejného výběru jako dialog, včetně hodnocené série; změna dat mezi vykreslením a kliknutím zůstává chráněná kontrolou dialogu. Ruční výsledek bez detailu či neodehraný zápas nemá A1. Staré detailní statistiky a podkladové agregace existují dál pro ostatní části i admin; viewer nemá jejich listener ani starou týmovou tabulku. Soupisky následují přímo po programu. Grafika a výpočty reportů se tím nemění.
+
+
 Od finální revize kandidáta 90 (Dominik, 23. 10. 2026) je publikovaný list oddělený od technické nápovědy: PNG/PDF neobsahují interní ID/API/zdrojové výpisy, stručná poznámka a část/— zachovávají informaci o úplnosti. Zdroje, identity a pravidla osobních výsledků/výkonu zůstávají v rozbalovacím details dialogu mimo plátno. Mobilní zoom má vlastní posuvnou oblast, takže ovládací tlačítka zůstávají dostupná. Existující FC vstupy a stabilní identity zachovány, minimálně upraveno jen zarovnání/rozestupy/dotyková velikost. Grafika A1/A2/B schválená, ovládání k revizi; bez merge/deploy.
 
 Finální vizuální iterace stejného kandidáta 90: A1/A2 sdílejí dekorativní SVG rámy a dynamický SVG text skóre s měřením šířky, B vlastní kartu a % VÝHER. Metrika escapeSuccess se v reportech jmenuje Úspěšnost úniků z jistot; oba přejmenované texty nemění vzorce. Titulky a ztmavení/vinětace jsou SVG kvůli shodě náhledu a html2canvas. Fotopodklad, výpočty, herní data, synchronizace i stream beze změny. Podrobné porovnání a aktuální stav v docs/federal-reports-stage-3b.md / PROJECT_STATUS.md.
