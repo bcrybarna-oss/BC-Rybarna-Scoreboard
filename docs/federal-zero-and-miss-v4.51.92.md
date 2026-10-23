@@ -16,7 +16,7 @@ Team cloudový reload také obnovuje prázdnou strukturu výběru hráčů [null
 - Browser používá skutečný produkční secureMatchRequest a resumeLocalMatch nad izolovaným mockem cloudového formátu. Model odstraňuje prázdná pole/null, zachovává číselnou nulu; nejde o spojení s produkční Firebase. RESAFE, další nulové úniky, UNDO, serializace, cloudové načtení a reload PASS.
 - Syntetický Team průchod: koule 6 před MISS na 7, RESAFE a další racky dávají 20/21 complete a 21 koulí complete i po cloudovém reloadu. Odstranění skutečně nedoloženého počtu nadále vyvolá unknown_pots. A1/A2/B i osobní a reprezentační souhrny jsou konzistentní.
 - Skutečné exporty A1/A2/B pro complete i unknown scénář: PNG 1920×1080 a PDF 16:9 PASS; chybějící počet má hvězdičku, známá nula nikoli. Artefakty jsou lokálně v output/pdf/federal-zero92/ (syntetická data).
-- Detailed counter, quick-finish, Federal Cup a unknown-table browser regrese PASS, včetně kontrolního Singles/Team 4:5, ČISTÉ HRY, dohrávek a reloadu. Node 194/196 PASS: pouze známé dvě chyby preview-match-reload-recovery.test.cjs v test-modular, bez nové regrese. CI není plně zelené. Stav vzdáleného CI je uveden v PR.
+- Detailed counter, quick-finish, Federal Cup a unknown-table browser regrese PASS, včetně kontrolního Singles/Team 4:5, ČISTÉ HRY, dohrávek a reloadu. Node 194/196 PASS: pouze známé dvě chyby preview-match-reload-recovery.test.cjs v test-modular, bez nové regrese. CI není plně zelené. [CI opravy 1ecf831](https://github.com/bcrybarna-oss/BC-Rybarna-Scoreboard/actions/runs/39967684036): Release version and revision success; Node194/196 failure, log potvrzuje výhradně preview-match-reload-recovery.test.cjs:50,106. Žádná nová regrese; CI není plně zelené.
 
 ## Původní zápas: pouze návrh cílené nápravy
 
