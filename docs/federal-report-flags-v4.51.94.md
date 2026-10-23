@@ -39,3 +39,5 @@ Reprodukce: nastav PDF_LIB_DIR na připnuté html2canvas1.4.1/jsPDF2.5.2, FC_REA
 Verze94 je povinný nový vizuální kandidát podle AGENTS.md,93 už byla vydána. Overlay se mění pouze číslem verze. Čeká schválení vzhledu, neslučovat ani nenasazovat. Skutečné OBS/Auth/produkční Firebase a fyzický iPhone nebyly testovány a tato změna je neovlivňuje.
 
 Finální lokální Node regrese:198/200, pouze dvě známá preview-match-reload-recovery.test.cjs:50,106; nejde o plně zelené CI. Release gate proti čerstvému origin/main ea1caaa a git diff --check PASS.
+
+Otestováno a pushnuto jako **6822a96684423126eccbe09efc63415db84b3411** do [draft PR #32](https://github.com/bcrybarna-oss/BC-Rybarna-Scoreboard/pull/32). [CI39991497286](https://github.com/bcrybarna-oss/BC-Rybarna-Scoreboard/actions/runs/39991497286): Release version and revision **success**, Node **198/200 failure**; log potvrzuje pouze známá preview-match-reload-recovery.test.cjs:50,106, žádná nová regrese. CI není plně zelené. Následný dokumentační commit nemění aplikaci ani náhledy. **Nesloučeno a nenasazeno.**
