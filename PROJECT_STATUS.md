@@ -4,7 +4,11 @@ Aktualizace: 23. 10. 2026. Zadavatel aktuální revize: **Dominik**.
 
 ## Verze a nasazení
 
-Aktuální verze: **v4.51.92 RC** (nevydaný opravný kandidát; produkce v4.51.91 RC).
+Aktuální verze: **v4.51.92 RC** (nasazeno a v níže uvedeném rozsahu ověřeno).
+
+- **PRODUKCE v4.51.92 RC – Dominik, 23. 10. 2026.** Schválené PR #30 sloučeno merge commitem **e98cd9ce1b38af4143b08ac343467c98cee3692c**. [Pages39973425345](https://github.com/bcrybarna-oss/BC-Rybarna-Scoreboard/actions/runs/39973425345) všechny joby success. Veřejné index/overlay a5assetů HTTP200 a SHA256 shoda, běžné/fresh URL a verze92, desktop/mobil navigace/FC/A2 PNG1920×1080/PDF16:9 a0JS/console chyb/0pokusů o zápis PASS. Na staženém produkčním HTML izolovaně MISS6→7 bez duplicity, RESAFE pottedCount0 přes cloudový mock/reload/UNDO a A1/A2/B6párů exportů PASS; chybějící údaje zůstávají unknown. [Main CI39973426961](https://github.com/bcrybarna-oss/BC-Rybarna-Scoreboard/actions/runs/39973426961): release success, Node194/196 pouze dvě známá selhání shodná spředmerge main. CI není plně zelené. Původní Team1:5 nezměněn, žádná migrace. Produkční Auth/Firebase/OBS a fyzický iOS neověřeny. [Deployment report](docs/deployment-v4.51.92.md), [evidence](docs/deployment-v4.51.92-verification.json).
+
+Historie přípravy před schváleným nasazením92:
 
 - **Aktuální pokračování PR #30 (Dominik, 23. 10. 2026):** explicitní pottedCount: 0 pro známou nulu RESAFE a dalších explicitních akcí; úzce vymezený bezpečný odvod před MISS eviduje jednu kouli jako jeden úspěšný pokus podle upřesnění zadavatele. Cloudový reload/UNDO a A1/A2/B PNG/PDF PASS. Node **194/196**, pouze dvě známá modularizační selhání; CI není plně zelené. Na paměťové kopii původního Team #1 cílená oprava dává **37/38 complete a 38 complete**. Původní export ani produkce nezměněny, žádná automatická migrace. [Oprava, testy a bezpečný plán nápravy](docs/federal-zero-and-miss-v4.51.92.md). Otestováno a pushnuto jako **1ecf8317bd2f52b1592c9aadbef5ea35c6725571**. [CI opravy 1ecf831](https://github.com/bcrybarna-oss/BC-Rybarna-Scoreboard/actions/runs/39967684036): Release version and revision success; Node194/196 failure, log potvrzuje výhradně preview-match-reload-recovery.test.cjs:50,106. Žádná nová regrese; CI není plně zelené. Stejná nevydaná92; neslučovat ani nenasazovat.
 

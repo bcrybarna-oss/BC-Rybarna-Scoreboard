@@ -1,5 +1,7 @@
 # Poolčítadlo – společný kontext projektu
 
+Produkce v4.51.92 RC / PR #30 nasazena23.10.2026 merge e98cd9ce1b38af4143b08ac343467c98cee3692c. Explicitní nula RESAFE přežívá prázdná pole vcloudu; bezpečný odvod před MISS ve známé rotaci dává jednu kouli = jeden úspěšný pokus sderived původem. Prevence rychlého dokončení neznámého stolu aktivní. Bez migrace hotových zápasů; původní Team1:5 zůstává nezměněný. Přímý veřejný smoke/verze/asset hash/A2export a izolované scénáře na staženém HTML PASS. Main release success, Node194/196 známé dvě chyby. Rozsah a neověřené produkční Auth/Firebase/OBS/iOS: docs/deployment-v4.51.92.md. Následující kandidátové poznámky jsou zachovaná historie před schválením.
+
 Kandidát92 / PR #30: známá nula explicitních pot/escape/break akcí se ukládá číselně, aby přežila odstranění prázdných polí v cloudu. Chybějící/null údaj není nula. Bezpečný odvod před MISS ve známém přesném rotačním stole dle zadavatele znamená jednu kouli = jeden úspěšný pokus, zachovává inferred_pots / derived původ a entry sequential_inference. Jiné neznámé situace ani historické záznamy se automaticky nepřeklasifikují. Prevence rychlého dokončení neznámého stolu zůstává samostatnou částí. Původní Team1:5 není migrován; samostatný plán cílené opravy a testy viz docs/federal-zero-and-miss-v4.51.92.md. Produkce91, neslučovat a nenasazovat.
 
 

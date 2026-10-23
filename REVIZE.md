@@ -1,5 +1,14 @@
 # Revize aplikace Poolčítadlo
 
+## Dominik – schválené produkční nasazení PR #30 (v4.51.92 RC)
+Zadavatel: Dominik
+Datum: 23. 10. 2026
+Změny: Po čerstvém fetchi main0db27bb/finální hlavěfd967ca a ověření shodných známých CI chyb sloučeno PR #30 merge commiteme98cd9ce1b38af4143b08ac343467c98cee3692c se zachováním historie. RESAFE explicitní nula, bezpečný MISS a prevence neznámého stolu nasazeny. Pouze dokumentace nasazení doplněna; bez další změny aplikace/verze.
+Testy: Finální PR a main release gate success, Node194/196 jen známé preview-match-reload-recovery:50,106 se stejnými assertiony jako aktuální předmerge main; nová regrese nezjištěna, CI není plně zelené. Pages39973425345 všechny joby success. Veřejné HTML/5assetů HTTP200 přesné SHA256, běžné/fresh URL, verze92/navigace/FC/mobil/A2PNG1920×1080/PDF16:9/0JS/console chyb/0pokusů o zápis PASS. Na staženém produkčním HTML safeMISS bez duplicity unit4/4 a cloudmock RESAFE/ostatní úniky/reload/UNDO plus A1/A2/B6PNG/PDFpárů PASS. Chybějící počet zůstává unknown.
+Nasazení: Nasazeno a vpopisovaném rozsahu ověřeno23.10.2026 16:54CEST, https://bcrybarna-oss.github.io/BC-Rybarna-Scoreboard/ v4.51.92 RC. Automatické Pages nebylo ručně opakováno. Podrobnosti docs/deployment-v4.51.92.md a strojová evidence. Následný dokumentační commit nemění aplikaci.
+Omezení: Bez skutečného přihlášení dostupný pouze prázdný A2, skutečné cloudové A1/B neověřeny. Funkční testy publikovaného kódu používají syntetická data a cloudový mock. Produkční Auth/Firebase/Rules, OBS a fyzický iOS neověřeny. Původní Team1:5 ani export nezměněny, žádná migrace ani produkční testovací zápisy.
+
+
 ## Dominik – explicitní nula RESAFE a bezpečný odvod před MISS (v4.51.92 RC)
 Zadavatel: Dominik
 Datum: 23. 10. 2026

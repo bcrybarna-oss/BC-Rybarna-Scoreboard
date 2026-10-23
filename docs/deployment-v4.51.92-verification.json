@@ -1,0 +1,169 @@
+{
+  "sha": "e98cd9ce1b38af4143b08ac343467c98cee3692c",
+  "version": "v4.51.92 RC",
+  "verifiedAt": "2026-10-23T14:54:34.078Z",
+  "files": {
+    "index.html": {
+      "status": 200,
+      "sha256": "e2c70e572c4ad5cd0e79c405e227dac7e92f0780ccc6b70ca7ba8394631fbf54",
+      "bytes": 1676478,
+      "etag": "W/\"6adb74f4-1994be\""
+    },
+    "overlay.html": {
+      "status": 200,
+      "sha256": "e491823d724624bdf800c4e670b99f395f55a1bfeac0ea50594899caca1ebe49",
+      "bytes": 20884,
+      "etag": "W/\"6adb74f4-5194\""
+    },
+    "assets/federal-report-billiards.webp": {
+      "status": 200,
+      "sha256": "2a8d73c1b0a5ecd07597b993f0da5ed22b7c30bba6023448b8069d154bf3e228",
+      "bytes": 74790,
+      "etag": "\"6adb74f4-12426\""
+    },
+    "assets/federal-report-pool-logo.png": {
+      "status": 200,
+      "sha256": "c28fd81775d4013e2b58716d6f8ef1a92691f4d5d4c0b8b2ba1b0d3a3a12c593",
+      "bytes": 220520,
+      "etag": "\"6adb74f4-35d68\""
+    },
+    "assets/pushout-sports-logo-yellow.png": {
+      "status": 200,
+      "sha256": "049c2b4648a2e6106c5c41459c346689915256f62330ee17129b4484fc8314ff",
+      "bytes": 44487,
+      "etag": "\"6adb74f4-adc7\""
+    },
+    "bc-rybarna-logo.png": {
+      "status": 200,
+      "sha256": "5ad8dccc37f3426e189916f5e5bce61fa922f82d8757283832ac01d224f1f083",
+      "bytes": 131525,
+      "etag": "\"6adb74f4-201c5\""
+    },
+    "assets/poolcitadlo-logo.webp": {
+      "status": 200,
+      "sha256": "7f9caff46b1924186ef7d6a42b6b9079ee9ace9e7875d8f688e9fdc83bd488db",
+      "bytes": 27896,
+      "etag": "\"6adb74f4-6cf8\""
+    }
+  },
+  "normalAndFreshUrlsMatch": true,
+  "screens": [
+    "setup",
+    "home",
+    "players",
+    "about",
+    "federal-cup-2026",
+    "setup"
+  ],
+  "available": {
+    "A1": 0,
+    "A2": 2,
+    "B": 0
+  },
+  "publicA2Exports": [
+    {
+      "format": "Png",
+      "file": "public-empty-A2.png",
+      "bytes": 1429995
+    },
+    {
+      "format": "Pdf",
+      "file": "public-empty-A2.pdf",
+      "bytes": 857521
+    }
+  ],
+  "pageErrors": [],
+  "consoleErrors": [],
+  "blocked": [],
+  "writeAttempts": 0,
+  "limits": "Public unmodified HTML; no matches created, no roster/results edited, no Firebase requests allowed, no real login. Empty offline A2 exported; actual saved A1/B/statistics need production auth. Functional match/lineup scenarios are separate isolated tests.",
+  "pr": 30,
+  "pagesRun": 39973425345,
+  "mainRegressionRun": 39973426961,
+  "releaseGate": "success",
+  "node": {
+    "passed": 194,
+    "total": 196,
+    "knownFailures": [
+      "preview-match-reload-recovery.test.cjs:50",
+      "preview-match-reload-recovery.test.cjs:106"
+    ],
+    "newFailures": 0,
+    "sameFailuresOnPreMergeMain": "0db27bb46bf3d4d51df3fc43b851a39cdd3312de / run39939729519"
+  },
+  "isolatedPublishedCode": {
+    "source": "exact downloaded index.html bytes from Pages, test hooks only; no production Auth/Firebase",
+    "unit": "4/4 PASS including duplicate inference guard",
+    "browser": "PASS MISS6-before7, RESAFE and other zero escapes, real writer/reader JSON and reload against empty-array-dropping mock, UNDO; missing counts remain unknown",
+    "exports": [
+      {
+        "name": "A1-known-zero",
+        "png": [
+          1920,
+          1080
+        ],
+        "pdf": [
+          1440.0,
+          810.0
+        ]
+      },
+      {
+        "name": "A1-unknown",
+        "png": [
+          1920,
+          1080
+        ],
+        "pdf": [
+          1440.0,
+          810.0
+        ]
+      },
+      {
+        "name": "A2-known-zero",
+        "png": [
+          1920,
+          1080
+        ],
+        "pdf": [
+          1440.0,
+          810.0
+        ]
+      },
+      {
+        "name": "A2-unknown",
+        "png": [
+          1920,
+          1080
+        ],
+        "pdf": [
+          1440.0,
+          810.0
+        ]
+      },
+      {
+        "name": "B-known-zero",
+        "png": [
+          1920,
+          1080
+        ],
+        "pdf": [
+          1440.0,
+          810.0
+        ]
+      },
+      {
+        "name": "B-unknown",
+        "png": [
+          1920,
+          1080
+        ],
+        "pdf": [
+          1440.0,
+          810.0
+        ]
+      }
+    ]
+  },
+  "originalMatch": "unchanged, no migration or repair",
+  "originalBackupSha256": "7ad5bf902cdd24d585a4bd092f564bcc7a61eb8d692d84008d58013926716c4a"
+}
