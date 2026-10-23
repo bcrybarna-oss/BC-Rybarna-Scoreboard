@@ -1,6 +1,15 @@
 # Revize aplikace Poolčítadlo
 
 
+
+## Dominik – finální hierarchie a kontrast Pushout hlaviček (v4.51.91 RC)
+Zadavatel: Dominik
+Datum: 23. 10. 2026
+Změny: Stejná větev a PR #29/verze91. Logo zmenšeno o24 % (600×82 →456×62,32), původní asset/proporce/barvy beze změny. Měkký lokální radiální SVG přechod pod logem zvyšuje kontrast SPORTS bez černého obdélníku. B sjednocen s A1/A2: hlavní FEDERAL CUP 2026 a pod ním INDIVIDUÁLNÍ STATISTIKY. Rozměry hlavičky a všechny panely, statistiky, SVG skóre, Poolčítadlo a BC Rybárna zachovány; výpočty i quick-finish beze změny. Aktualizovány skutečné PNG/PDF a desktop/mobil screenshoty i dokumentace.
+Testy: Quick-finish browser a export nad novými snapshoty, obecný export A1/A2/B, UI/report browser PASS; 13 metrik, dlouhá jména, mobile DPR3 identický PNG, preview/export, zoom/pan, focus/Escape, error/cancel/dvojklik. PNG1920×1080, PDF1×1440×810, přesné vložené pixely všech PDF PASS. Celý obsah od y250 dolů všech tří šablon pixelově totožný s předchozím exportem; žádný posun či změna statistik. Node189/191 jen známé dvě chyby preview-match-reload-recovery.test.cjs:50,106 v test-modular. Release gate a vzdálené CI budou zaznamenány po závěrečné kontrole.
+Nasazení: Lokálně otestováno, připraveno do existujícího PR #29. Nesloučeno a nenasazeno; produkce nadále90, kandidát91. Žádné produkční zápisy.
+Omezení: Čeká finální grafické schválení a ruční ověření statistik zadavatelem. Všechny nové ukázky jsou syntetické; fyzický iOS, OBS a produkční Auth/Firebase neověřeny. Známá dvě modularizační selhání zachována, CI není plně zelené.
+
 ## Dominik – Pushout Sports branding reportů ve stejné revizi (v4.51.91 RC)
 Zadavatel: Dominik
 Datum: 23. 10. 2026

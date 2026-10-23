@@ -27,6 +27,8 @@ const libs={'html2canvas.min.js':fs.readFileSync(path.join(libDir,'html2canvas.m
   async function checkVisual(sheet,name){
    const brand=sheet.locator('.fc-report-pushout-logo');assert.equal(await brand.count(),1);assert.equal(await brand.getAttribute('alt'),'Pushout Sports');
    assert.equal(await brand.evaluate(e=>e.complete&&e.naturalWidth===3000&&e.naturalHeight===410),true);
+   assert.equal(await sheet.locator('.fc-report-title svg').getAttribute('aria-label'),'FEDERAL CUP 2026');assert.equal(await sheet.locator('.fc-report-kicker').textContent(),name==='player'?'INDIVIDUÁLNÍ STATISTIKY':name==='teams'?'STATISTIKY REPREZENTACÍ':'ZÁPAS #3 · SINGLES');
+   assert.equal(await brand.evaluate(e=>{const s=getComputedStyle(e);return Math.abs(parseFloat(s.width)-456)<.02&&Math.abs(parseFloat(s.height)-62.32)<.02&&Math.abs(parseFloat(s.width)/parseFloat(s.height)-3000/410)<.001;}),true,'Original logo proportions at 76% of previous size');assert.equal(await sheet.locator('.fc-report-shade ellipse[fill="url(#fc-shade-brand)"]').count(),1);
    assert.equal(await sheet.evaluate(s=>{const logo=s.querySelector('.fc-report-pushout-logo').getBoundingClientRect(),title=s.querySelector('.fc-report-title').getBoundingClientRect(),pool=s.querySelector('.fc-report-pool-logo').getBoundingClientRect();return logo.bottom<title.top&&logo.left>pool.right&&Math.abs((logo.left+logo.right)/2-(title.left+title.right)/2)<1;}),true,'Pushout logo stays centered above the headline without colliding with Poolcitadlo');
 
    assert.doesNotMatch(await sheet.innerText(),/kanonick|API 13|\bID\b|Doložené výsledky|#\d+ (?:team|singles|doubles)|VYBRANÁ REPREZENTACE/i);assert.match(await sheet.innerText(),/Statistiky vycházejí z dostupné evidence zápasů/);
