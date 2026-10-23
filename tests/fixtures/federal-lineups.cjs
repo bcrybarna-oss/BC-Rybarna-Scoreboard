@@ -1,0 +1,3 @@
+'use strict';
+function config(){const c={rosterA:[],rosterB:[],rosterParticipantIdsA:[],rosterParticipantIdsB:[],participants:{},lineups:{}};for(const side of ['a','b'])for(let i=1;i<=5;i++){const id=side+i,name=side.toUpperCase()+i,k=side.toUpperCase();c['roster'+k].push(name);c['rosterParticipantIds'+k].push(id);c.participants[id]={id,name,team:side,year:2026};}const slots={2:[1,2],3:[3],4:[4,5],6:[1],7:[1,3],8:[5],9:[2,4],11:[1],12:[1,4],13:[2],14:[3,5],15:[1],16:[1],17:[2],18:[3],19:[4],20:[5],21:[1]};for(const [n,ps]of Object.entries(slots))c.lineups[n]={a:ps.map(i=>'a'+i),b:ps.map(i=>'b'+i)};return c;}
+module.exports={config};

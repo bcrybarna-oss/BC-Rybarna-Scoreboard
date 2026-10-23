@@ -48,7 +48,7 @@ assert.ok(html.includes('window.streamTest='));
    streamTest.start();
   },{mode,breakMode,enabled,discipline,winnerTable});
   await page.waitForFunction(()=>!!streamTest.match);
-  if(enabled){const url=new URL(await page.locator('#matchStreamOverlayUrl').inputValue());url.protocol='http:';url.host='stream-isolated.local';url.pathname='/overlay.html';await overlay.goto(url.toString());await sync();}
+  if(enabled){const url=new URL(await page.locator('#matchStreamOverlayUrl').inputValue());url.protocol='http:';url.host='stream-isolated.local';url.pathname='/overlay.html';await overlay.goto(url.toString());assert.equal((await state()).streamMode,'soon');await page.locator('#streamModeLiveBtn').click();await sync();}
  }
  const state=()=>page.evaluate(()=>JSON.parse(JSON.stringify(streamTest.match)));
  async function sync(){await page.evaluate(()=>streamTest.send(true));await overlay.waitForFunction(()=>!!document.querySelector('#overlay .scoreboard'));}
