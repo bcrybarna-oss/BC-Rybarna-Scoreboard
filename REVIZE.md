@@ -1,5 +1,21 @@
 # Revize aplikace Poolčítadlo
 
+## Dominik – finální dvoulistový Pushout export (v4.51.95 RC)
+Zadavatel: Dominik
+Datum: 24. 10. 2026
+Změny: Ve stejném PR #33/kandidátu95 odstraněn celý list Data notes a jeho exportní konstrukce, bez přesunu poznámek. Zůstávají pouze Pushout a Metadata. Interní coverage/reasons/unattributed, sportovní výpočty a všechny hodnoty/formátování zbylých listů zachovány. Aktualizované testy a skutečně stažená ukázka, místní předchozí soubor zachován ve výstupním archivu.
+Testy:9/9 cílených testů PASS;6Singles/Doubles/Team desktop/mobil XLSX přesně2listy, ZIP/openpyxl validace a kontrolní Singles9metrik PASS. sheet1.xml/sheet2.xml/styles.xml přesně stejné jako před úpravou. Node207/209 pouze dvě známé preview-match-reload-recovery:50,106, bez nové regrese; CI není plně zelené.
+Nasazení: Schváleno zadavatelem, před merge čeká finální GitHub CI a porovnání známých selhání s aktuálním main. Zatím produkce94, finální výsledek bude zaznamenán po skutečném nasazení.
+Omezení: Žádné produkční zápisy/migrace. Skutečná přihlášená relace není dostupná v připojených browserech; produkční kontrola musí transparentně odlišit veřejný web a izolovaná místní data.
+
+## Dominik – export pro Pushout ze společného API (v4.51.95 RC)
+Zadavatel: Dominik
+Datum: 24. 10. 2026
+Změny: Čtyři nové metriky ve společném API, zachována aplikační konvence B&R a původních13metrik. Tlačítko pouze u dokončeného uloženého zápasu, místní XLSX Pushout/Metadata/Data notes s devíti anglickými metrikami, numerickými počty/procenty a jednoznačným scope. Bez smyšlené osobní atribuce Doubles/Team, bez soukromých přihlašovacích údajů či produkčních zápisů. Aktivní verze95.
+Testy: Cílené API a browser testy, skutečné Singles/Doubles/Team desktop/mobil XLSX, nezávislá openpyxl/ZIP kontrola a vizuální import všech3listů. Kontrolní Singles odpovídá schváleným hodnotám; původní JSON neměněn. Nová exportní sada9/9 PASS, Node207/209 pouze známé dvě modularizační chyby; CI není plně zelené. Browser XLSX6souborů, reportPNG/PDF6párů shodných se94 a nezávislé číselné/ZIP/notes kontroly PASS. Detaily docs/pushout-export-v4.51.95.md.
+Nasazení: Otestováno a pushnuto jako **3b001b86bd1890b3eec945f04754733f6834a878** do [draft PR #33](https://github.com/bcrybarna-oss/BC-Rybarna-Scoreboard/pull/33). [CI40072599235](https://github.com/bcrybarna-oss/BC-Rybarna-Scoreboard/actions/runs/40072599235): Release version and revision **success**, Node **207/209 failure**; log potvrzuje pouze známé preview-match-reload-recovery.test.cjs:50,106, žádná nová regrese. CI není plně zelené. Následný dokumentační commit nemění otestované HTML, exportér ani ukázkový XLSX. **Nesloučeno a nenasazeno.** Produkce94. Čeká kontrola PR.
+Omezení: Fyzický iPhone/Safari a skutečný Microsoft Excel neověřeny. Testování izolované, bez produkční Auth/Firebase. Známá dvě modularizační selhání nejsou zakryta; CI není plně zelené.
+
 ## Dominik – ověřené nasazení ostrých reportových vlajek (v4.51.94 RC)
 Zadavatel: Dominik
 Datum: 23. 10. 2026

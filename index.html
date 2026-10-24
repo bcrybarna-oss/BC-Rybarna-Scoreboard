@@ -1042,6 +1042,7 @@
     </div>
   </div>
 
+<script src="assets/pushout-xlsx.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.2/dist/jspdf.umd.min.js"></script>
 
@@ -2571,6 +2572,7 @@ html[data-theme="light"] #leagueSchedule .history-item .muted{
 :is(#fcReportDialog,#fcReportExportSurface) .fc-report-footer>.fc-report-brands{flex:0 0 auto;max-width:none}
 
 
+.fc26-view-match-detail{display:flex;justify-content:center;gap:8px;flex-wrap:wrap}.fc-pushout-export{color:var(--gold2);border-color:rgba(212,175,55,.35);font-size:11px;letter-spacing:.3px}
 .fc26-flag-svg{border:0;border-radius:0;background:transparent;box-shadow:none;object-fit:contain}
 .fc26-flag-large{aspect-ratio:16/11;width:clamp(100px,15vw,160px)}
 .fc-home-tile{border-color:#b38c37;background:radial-gradient(ellipse at 95% 100%,#172332 0,transparent 65%),linear-gradient(150deg,#080a0d,#070809);isolation:isolate}
@@ -2601,7 +2603,7 @@ html[data-theme="light"] #leagueSchedule .history-item .muted{
           <span class="by">by</span>
           <span class="club">BC Rybárna</span>
         </div>
-        <small class="modern-brand-version">v4.51.94 RC</small>
+        <small class="modern-brand-version">v4.51.95 RC</small>
       </div>
     </div>
     <div class="nav">
@@ -3215,7 +3217,7 @@ html[data-theme="light"] #leagueSchedule .history-item .muted{
         </div>
         <div class="subpanel" style="min-width:210px;text-align:center;margin:0">
           <div class="muted" style="font-size:10px;font-weight:950;letter-spacing:1px">AKTUÁLNÍ VERZE</div>
-          <div style="font-size:22px;font-weight:950;color:var(--gold2);margin-top:5px">v4.51.94 RC</div>
+          <div style="font-size:22px;font-weight:950;color:var(--gold2);margin-top:5px">v4.51.95 RC</div>
         </div>
       </div>
     </div>
@@ -5973,7 +5975,7 @@ html[data-theme="light"] #leagueSchedule .history-item .muted{
       </div>
 
       <div id="groupPlayoffSeedStatus" class="muted" style="margin-top:12px;min-height:20px"></div>
-      <div class="muted" style="margin-top:4px;font-size:11px">RC v4.51.94</div>
+      <div class="muted" style="margin-top:4px;font-size:11px">RC v4.51.95</div>
       <div class="modal-actions">
         <button id="groupPlayoffSeedApplyBtn" class="btn primary big" type="button">NASADIT DO PLAY-OFF</button>
         <button id="groupPlayoffSeedCancelBtn" class="btn">ZRUŠIT</button>
@@ -7158,7 +7160,7 @@ html[data-theme="light"] #leagueSchedule .history-item .muted{
     const btn=$('submitReportBtn');if(btn)btn.disabled=true;
     try{
       const id=uid(),p=currentUserPlayerId?data.players?.[currentUserPlayerId]:null;
-      const report={id,createdByUid:cloudUid,createdByPlayerId:currentUserPlayerId||'',createdByName:p?playerSelectionLabel(p):(cloudUserEmail||'Uživatel'),email:cloudUserEmail||'',type,area,description,appVersion:'v4.51.94 RC',createdAt:new Date().toISOString(),updatedAt:new Date().toISOString(),status:'new',adminNote:''};
+      const report={id,createdByUid:cloudUid,createdByPlayerId:currentUserPlayerId||'',createdByName:p?playerSelectionLabel(p):(cloudUserEmail||'Uživatel'),email:cloudUserEmail||'',type,area,description,appVersion:'v4.51.95 RC',createdAt:new Date().toISOString(),updatedAt:new Date().toISOString(),status:'new',adminNote:''};
       await reportRequest(id,'PUT',report);
       try{
         await writeReportUserMirror(report);
@@ -10049,6 +10051,8 @@ $('useClock').addEventListener('change',e=>$('clockSettings').classList.toggle('
     const successful=[total,dry,soft,overlap,bf].some(v=>v===null)?null:total-dry-soft+overlap-bf;
     const metrics={};
     metrics.breakSuccess=metric('percent',successful,total,['breaks','dryBreaks','softBreaks','softDryBreaks','breakFouls'],breakReasons);
+    metrics.drySoftBreaks=metric('count',[dry,soft,overlap].some(v=>v===null)?null:dry+soft-overlap,null,['dryBreaks','softBreaks','softDryBreaks'],breakReasons);
+    metrics.foulBreaks=metric('count',bf,null,['breakFouls'],breakReasons);
     const balls=num('breakPottedBalls'),tracked=num('breakPottedTracked'),ballReasons=[...breakReasons];
     if(tracked!==null&&total!==null&&tracked!==total)ballReasons.push('untracked_break_balls');
     if(tracked!==null&&total!==null&&tracked>total)ballReasons.push('inconsistent_break_tracking');
@@ -10065,6 +10069,8 @@ $('useClock').addEventListener('change',e=>$('clockSettings').classList.toggle('
     const own=racks.filter(r=>r.breaker===side),ownWins=own.filter(r=>r.winner===side).length;
     metrics.ownBreakWins=federalMetric('ratio',fresh||racks.length?ownWins:null,fresh||racks.length?own.length:null,
       rackReasons.length?(racks.length?'partial':'unknown'):'complete',rackReasons);
+    const ownMetric=metrics.ownBreakWins;
+    metrics.ownBreakLosses=federalMetric('count',ownMetric.numerator===null||ownMetric.denominator===null?null:ownMetric.denominator-ownMetric.numerator,null,ownMetric.coverage,ownMetric.reasons);
     for(const [name,key,flag]of [['aces','aces','ace'],['cleanRuns','breakAndRun','breakAndRun']]){
       const reasons=[];
       if(service('potting'))reasons.push('score_correction_missing_racks');
@@ -10112,6 +10118,8 @@ $('useClock').addEventListener('change',e=>$('clockSettings').classList.toggle('
     const recordCoverage=reasons=>reasons.length?(fresh||records.length?'partial':'unknown'):'complete';
     metrics.pottedBalls=federalMetric('count',fresh||records.length?explicit+derived:null,null,recordCoverage(potReasons),potReasons,{explicit,derived});
     metrics.pottingSuccess=federalMetric('percent',fresh||records.length?success:null,fresh||records.length?attempts:null,recordCoverage(attackReasons),attackReasons);
+    const attack=metrics.pottingSuccess,missed=attack.numerator===null||attack.denominator===null||success>attempts?null:attempts-success;
+    metrics.missedPots=federalMetric('count',missed,null,missed===null?'unknown':attack.coverage,attack.reasons);
     const safetyReasons=[];
     if(num('trackedSafeties')!==null&&num('safeties')!==null&&num('trackedSafeties')!==num('safeties'))safetyReasons.push('unevaluated_safeties');
     metrics.safetySuccess=metric('percent',num('successfulSafeties'),num('trackedSafeties'),['safeties','trackedSafeties','successfulSafeties'],safetyReasons);
@@ -10177,15 +10185,16 @@ $('useClock').addEventListener('change',e=>$('clockSettings').classList.toggle('
       const metrics=federalStatsSide(synthetic,g.side,m.detailedPlay?.records||[]);
       // Successful breaks are derived, unlike direct counters: an absent failure
       // counter cannot turn an unproven break into a known success by subtraction.
-      metrics.breakSuccess=federalMergeMetrics(g.racks.map(rack=>({metrics:federalStatsSide({...synthetic,
+      const rackBreakMetrics=federalMergeMetrics(g.racks.map(rack=>({metrics:federalStatsSide({...synthetic,
         scores:[0,1].map(side=>rack.winner===side?1:0),stats:rack.stats||[],federalTeam:{racks:[rack]},
-        detailedPlay:{...synthetic.detailedPlay,records:synthetic.detailedPlay.records.filter(r=>r.rack===rack.rack)}},g.side,m.detailedPlay?.records||[])}))).breakSuccess;
+        detailedPlay:{...synthetic.detailedPlay,records:synthetic.detailedPlay.records.filter(r=>r.rack===rack.rack)}},g.side,m.detailedPlay?.records||[])})));
+      for(const key of ['breakSuccess','drySoftBreaks','foulBreaks'])metrics[key]=rackBreakMetrics[key];
       if(!federalStatsRacksComplete(m)||result.unattributed.some(x=>x.reason==='ambiguous_rack_actor'&&x.side===g.side)||!m.endedAt){
         const reason=badActor?'actor_rack_conflict':!m.endedAt?'unfinished_team_match':'incomplete_attribution';
         for(const [key,x]of Object.entries(metrics))metrics[key]=federalMetric(x.kind,x.numerator,x.denominator,x.numerator===null?'unknown':'partial',[...x.reasons,reason],x.components);
       }
       if(badActor||result.unattributed.some(x=>x.reason==='unassigned_shot_rack'&&(x.side==null||x.side===g.side))){
-        for(const key of ['pottedBalls','pottingSuccess','jumpShots','bankShots']){const x=metrics[key];metrics[key]=federalMetric(x.kind,x.numerator,x.denominator,x.numerator===null?'unknown':'partial',[...x.reasons,badActor?'actor_rack_conflict':'unassigned_shot_rack'],x.components);}
+        for(const key of ['pottedBalls','pottingSuccess','missedPots','jumpShots','bankShots']){const x=metrics[key];metrics[key]=federalMetric(x.kind,x.numerator,x.denominator,x.numerator===null?'unknown':'partial',[...x.reasons,badActor?'actor_rack_conflict':'unassigned_shot_rack'],x.components);}
       }
       Object.defineProperty(result.individuals,g.person.id,{value:{owner:{kind:'participant',id:g.person.id,name:g.person.name},metrics,scope:'completed_racks',rackIds:g.racks.map(r=>r.id)},enumerable:true});
     }
@@ -10282,6 +10291,34 @@ $('useClock').addEventListener('change',e=>$('clockSettings').classList.toggle('
     if(!Number.isFinite(value))return unknown;
     return {text:number(value,metric.kind==='average')+(metric.kind==='percent'?' %':''),bar:metric.kind==='percent'?Math.max(0,Math.min(100,value)):null,note};
   }
+  // One-match presentation model. All sporting values come from the shared API.
+  function federalPushoutModel(m){
+    if(!m?.id||!m.endedAt||['incomplete','playing','active'].includes(m.status)||federalReportWinner(m.scores)===null)throw Error('Export vyžaduje dokončený uložený zápas.');
+    const result=federalCalculateMatch(m),type=result.type;
+    if(!['singles','doubles','team'].includes(type)||!Number.isInteger(result.year)||!Number.isInteger(result.fixtureNo)||result.fixtureNo<1||result.fixtureNo>21)throw Error('Neplatná identita zápasu Federal Cupu.');
+    const reps=['Slovakia','Czechia'],entity=type==='team'?'Team':type==='doubles'?'Pair':'Individual';
+    const entries=result.sides.map(s=>type==='singles'&&s.owner.kind==='participant'&&result.individuals[s.owner.id]?result.individuals[s.owner.id]:type==='doubles'&&s.owner.kind==='pair'&&result.pairs[s.owner.id]?result.pairs[s.owner.id]:s);
+    const identified=entries.map(e=>type==='team'||type==='singles'&&e.owner.kind==='participant'&&!!result.individuals[e.owner.id]||type==='doubles'&&e.owner.kind==='pair'&&!!result.pairs[e.owner.id]);
+    const names=entries.map((e,i)=>type==='team'?reps[i]:identified[i]?e.owner.name:reps[i]);
+    const cell=(value,style=0)=>({value,style}),header=row=>row.map(v=>cell(v,1));
+    const specs=[['Pot percentage','pottingSuccess'],['Missed pots','missedPots'],['Fouls','fouls'],['Successful breaks','breakSuccess'],['Dry/soft breaks','drySoftBreaks'],['Foul breaks','foulBreaks'],['Break and runs','cleanRuns'],['Break and win','ownBreakWins'],['Break and lose','ownBreakLosses']];
+    const main=[[cell('PUSHOUT FEDERAL CUP '+result.year,2),cell('',2),cell('',2)],header(['Match #'+result.fixtureNo+' · '+type.toUpperCase(),String(m.discipline||'Unknown discipline'),'Final score '+m.scores[0]+' : '+m.scores[1]]),[cell('This match only',5),cell(identified.every(Boolean)?entity:'Side totals',5),cell('',5)],[],header(['Metric',...names])];
+    for(const [label,key]of specs){
+      const values=entries.map((e,i)=>{
+        const source=e.metrics[key];
+        const metric=key==='breakSuccess'||key==='ownBreakWins'?federalMetric('count',source.numerator,null,source.coverage,source.reasons,source.components):source;
+        const displayed=federalReportMetric(metric),text=displayed.text;
+        let value=text==='—'?'—':metric.kind==='percent'&&text.includes('%')?Number(text.replace(/\s|%/g,'').replace(',','.'))/100:metric.kind==='count'&&Number.isFinite(metric.count)?metric.count:text;
+        return cell(value,typeof value==='number'&&metric.kind==='percent'?4:3);
+      });
+      main.push([cell(label,5),...values]);
+    }
+    const metadata=[header(['Field','Value']),['Tournament','Pushout Federal Cup'],['Year',result.year],['Match number',result.fixtureNo],['Match type',type],['Discipline',String(m.discipline||'—')],['Match ID',m.id],['Started at (UTC)',m.startedAt||'—'],['Completed at (UTC)',m.endedAt],['Final score',m.scores[0]+' : '+m.scores[1]],['Scope','This match only'],['Entity type',identified.every(Boolean)?entity:'Side totals (identity unavailable)'],['Calculation API version',result.version],['Export schema','pushout-match-v1']];
+    names.forEach((name,i)=>metadata.push(['Side '+(i+1),name],['Representation '+(i+1),reps[i]],['Opponent '+(i+1),names[1-i]],['Score '+(i+1),m.scores[i]]));
+    const safe=s=>String(s).normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9]+/gi,'-').replace(/^-|-$/g,'').toLowerCase().slice(0,65)||'unknown';
+    return {filename:'pushout-federal-cup-'+result.year+'-match-'+result.fixtureNo+'-'+type+'-'+safe(names[0])+'-vs-'+safe(names[1])+'.xlsx',sheets:[{name:'Pushout',widths:[34,38,38],freeze:5,merges:['A1:C1'],rows:main},{name:'Metadata',widths:[30,95],freeze:1,rows:metadata}]};
+  }
+
   function detailedCounterActive(){
     return !!match && match.counterMode!=='simple' && !match.ghostMode && match.discipline!=='14.1';
   }
@@ -30133,6 +30170,23 @@ function renderStats(){
   $('fcReportZoom').addEventListener('click',()=>{reportZoomed=!reportZoomed;$('fcReportZoom').setAttribute('aria-pressed',String(reportZoomed));$('fcReportZoom').textContent=reportZoomed?'ZMENŠIT NÁHLED':'ZVĚTŠIT NÁHLED';layoutFederalReportPreview();});
   window.addEventListener('resize',()=>{if(reportDialog.open)requestAnimationFrame(layoutFederalReportPreview);});
   $('screen-federal-cup-2026')?.addEventListener('click',e=>{const button=e.target.closest('[data-fc-report]');if(button)openFederalReport(button);});
+  let pushoutExportBusy=false;
+  $('screen-federal-cup-2026')?.addEventListener('click',async event=>{
+    const button=event.target.closest('[data-fc-pushout]');if(!button||pushoutExportBusy||!$('screen-federal-cup-2026').classList.contains('active'))return;
+    const buttons=[...document.querySelectorAll('[data-fc-pushout]')];pushoutExportBusy=true;buttons.forEach(b=>b.disabled=true);
+    try{
+      // Yield before serializing, both for feedback and to guard repeated clicks.
+      await new Promise(resolve=>setTimeout(resolve,0));
+      const year=Number(cfg().year),fixture=Number(button.dataset.fixture),id=button.dataset.fcPushout;
+      const selected=federalReportData(data.matches,cfg(),year).selected.some(s=>s.matchId===id&&s.fixtureNo===fixture&&s.source==='detailed');
+      const matches=federalStatsRows(data.matches).filter(m=>m.id===id&&Number(m.federalCupLink?.year)===year&&Number(m.federalCupLink?.fixtureNo)===fixture);
+      if(!selected||matches.length!==1)throw Error('Uložený zápas není dostupný nebo má nejednoznačnou identitu.');
+      if(!window.PushoutXlsx)throw Error('Exportní podklad se nenačetl. Obnov stránku.');
+      const model=federalPushoutModel(matches[0]);
+      const url=URL.createObjectURL(new Blob([window.PushoutXlsx.write(model)],{type:window.PushoutXlsx.mime})),link=document.createElement('a');link.href=url;link.download=model.filename;document.body.appendChild(link);try{link.click();}finally{link.remove();setTimeout(()=>URL.revokeObjectURL(url),60000);}toast('XLSX pro Pushout připraven.');
+    }catch(error){toast('Export pro Pushout se nezdařil: '+error.message);}
+    finally{pushoutExportBusy=false;buttons.forEach(b=>b.disabled=false);}
+  });
   $('fcReportClose')?.addEventListener('click',()=>reportDialog.close());
   reportDialog?.addEventListener('close',()=>{reportExportGeneration++;if(reportReturnFocus?.isConnected)reportReturnFocus.focus({preventScroll:true});$('fcReportContent').replaceChildren();});
   new MutationObserver(()=>{if(reportDialog.open&&!$('screen-federal-cup-2026').classList.contains('active'))reportDialog.close();}).observe($('screen-federal-cup-2026'),{attributes:true,attributeFilter:['class']});
@@ -30193,7 +30247,7 @@ function renderStats(){
         '<div><div class="fc26-view-match-score">'+score+'</div>'+
         '<div class="fc26-view-match-status">'+(outsideResult?'MIMO HODNOCENÍ':cancelled?'NEHRAJE SE':finished?'DOHRÁNO':'ČEKÁ SE')+'</div></div>'+
         '<div class="fc26-view-match-side right">'+esc(String(sideName('b',1)))+'</div>'+
-        (reportAvailable?'<div class="fc26-view-match-detail">'+reportButton('match','STATISTIKY ZÁPASU','data-fixture="'+f.n+'" data-match-id="'+esc(String(m.id))+'"')+'</div>':'')+'</div>';
+        (reportAvailable?'<div class="fc26-view-match-detail">'+reportButton('match','STATISTIKY ZÁPASU','data-fixture="'+f.n+'" data-match-id="'+esc(String(m.id))+'"')+' <button type="button" class="btn fc-pushout-export" data-fc-pushout="'+esc(String(m.id))+'" data-fixture="'+f.n+'">EXPORT PRO PUSHOUT</button>'+'</div>':'')+'</div>';
     }
     $('fc26ViewerSchedule').innerHTML=[1,2,3,4].map(block=>
       '<div class="fc26-block"><div class="fc26-block-head"><h3>Blok '+block+'</h3>'+

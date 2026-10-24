@@ -4,9 +4,9 @@ const {taggedReference}=require('./fixtures/federal-tags.cjs'),{reference,copy}=
 const html=fs.readFileSync(path.join(__dirname,'../index.html'),'utf8'),a=html.indexOf('  function federalRackScoresAgree('),b=html.indexOf('\n  }',a)+4;
 const ctx={fetch(){throw Error('No network')},localStorage:{setItem(){throw Error('No writes')}}};vm.createContext(ctx);vm.runInContext(html.slice(a,b)+html.slice(html.indexOf('  // Federal Cup calculation contract v1.'),html.indexOf('  function detailedCounterActive()')),ctx);
 const calc=m=>copy(ctx.federalCalculateMatch(m)),season=ms=>copy(ctx.federalCalculateSeason(ms,{year:2026},2026));
-test('13 metrics: tagged pot/miss/foul/escape are attributes, original eleven stay unchanged',()=>{
+test('tagged actions remain attributes with additive Pushout fields; original metrics unchanged',()=>{
  const m=taggedReference(),base=calc(reference()),r=calc(m);
- assert.equal(Object.keys(r.sides[0].metrics).length,13);
+ assert.equal(Object.keys(r.sides[0].metrics).length,17);
  for(const side of [0,1])for(const [key,x]of Object.entries(base.sides[side].metrics))if(!['jumpShots','bankShots'].includes(key))assert.deepEqual(r.sides[side].metrics[key],x,key);
  for(const [side,key,n,d]of [[0,'jumpShots',2,3],[0,'bankShots',1,3],[1,'jumpShots',0,1],[1,'bankShots',1,2]]){const x=r.sides[side].metrics[key];assert.equal(x.kind,'ratio');assert.equal(x.numerator,n);assert.equal(x.denominator,d);assert.equal(x.value,n/d);assert.equal(x.coverage,'complete');}
 });
