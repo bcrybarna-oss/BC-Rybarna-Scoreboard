@@ -10,6 +10,7 @@ const original=fs.readFileSync(path.join(__dirname,'..','index.html'),'utf8');
 const hook=`
 window.fcTest={
   get match(){return match},get data(){return data},
+  get preparedLink(){return pendingFederalCupLink},
   get clockRunning(){return timerRunning},
   breakStats,
   start:startMatch,undo,beginRack,snapshot,restoreSnapshot,calculate:federalCalculateMatch,
@@ -24,6 +25,10 @@ window.fcTest={
   async resume(){const m=loadDeviceActiveMatch();if(m)await resumeLocalMatch(m.id);return m;},
   showStats(){openMatchStatsCard(match,false)},
   persist:persistFinishedMatch,
+  loadMatches:loadSecureMatches,
+  report(){return federalReportData(data.matches,data.federalCup2026,2026)},
+  reviewConfig(c){data.federalCup2026=c},
+  saveReview:saveSecureMatch,
   screen:showScreen,
   render:renderMatch,
 };
@@ -68,6 +73,7 @@ assert.ok(html.includes('window.fcTest='));
    await page.locator('#fc26RackPlayers button').click();
  }
  try{
+  if(!process.env.FC_FIXTURE9_ONLY){
   await setup();let m=await state();assert.ok(m.federalTeam.pending);assert.deepEqual(m.stats.map(s=>s.breaks),[0,0]);
   assert.equal(m.lagWinner,0);assert.deepEqual(m.stats.map(s=>s.lagWins),[1,0]);
   if(process.env.FC_SCREENSHOT_DIR){await page.setViewportSize({width:390,height:844});await page.locator('#fc26RackPlayers').screenshot({path:path.join(process.env.FC_SCREENSHOT_DIR,'team-rack-selection.png')});await page.setViewportSize({width:1280,height:720});}
@@ -109,6 +115,24 @@ assert.ok(html.includes('window.fcTest='));
   console.log('PASS Team selection, four breaks, soft accept/return, push out, undo, reload, rack attribution, completion');
   for(const n of [2,3]){await setup(n);m=await state();assert.equal(m.discipline,'9-ball');assert.equal(m.target,5);assert.equal(m.counterMode,'full');assert.equal(m.breakMode,'alternate');assert.equal(m.doublesMode,n===2);assert.equal(m.ghostMode,false);await run(()=>winRack(0));assert.equal((await state()).breaker,1);}
   console.log('PASS Singles/Doubles fixed setup and alternating break');
+  // A completed Doubles fixture must retain its link through actual secure PUT/GET
+  // and a browser reload, not just show a final score in the counter.
+  await setup(2);
+  for(const side of [0,1,0,1,0,1,0,0])await run(side=>winRack(side),side);
+  const doubles=await state();assert.deepEqual(doubles.scores,[5,3]);assert.ok(doubles.endedAt);
+  assert.equal(doubles.federalCupLink.fixtureNo,2);assert.equal(doubles.federalCupLink.type,'doubles');
+  assert.equal(doubles.federalEvidence.racks.length,8);
+  assert.equal(await run(()=>fcTest.persist()),true);
+  const stored=writes.filter(w=>w.key==='/matches/'+doubles.id+'.json').at(-1).value;
+  assert.deepEqual(stored.federalCupLink,doubles.federalCupLink);
+  await page.reload();await page.waitForSelector('#cloudLoginModal.show');
+  await run(async()=>{fcTest.admin();await fcTest.loadMatches();renderFederalCup2026();fcTest.screen('federal-cup-2026')});
+  const row=page.locator('.fc26-view-match').filter({has:page.locator('.fc26-view-match-type strong',{hasText:/^#2$/})});
+  assert.match(await row.innerText(),/5\s*:\s*3/);assert.equal(await row.locator('button',{hasText:'STATISTIKY ZÁPASU'}).count(),1);
+  const report=await run(()=>fcTest.report());assert.ok(report.selected.some(s=>s.matchId===doubles.id));
+  assert.equal(report.people[doubles.federalCupLink.lineupParticipants[0][0].id].wins>=1,true);
+  assert.deepEqual(report.season.fixtures.filter(f=>f.fixtureNo===2).map(f=>f.matchId),[doubles.id]);
+  console.log('PASS completed Doubles 5:3: secure save, cloud GET, reload, schedule, team/participant result and report source');
   for(const n of [1,2,3]){
     if(process.env.FC_DEBUG)console.log('Controls fixture',n);
     await setup(n);if(n===1)await select();
@@ -262,6 +286,47 @@ assert.ok(html.includes('window.fcTest='));
   await requestEscapePot();await run(()=>toggleShotBallSelection(9));await page.locator('#shotBallConfirmBtn').click();m=await state();assert.deepEqual(m.scores,[0,1]);assert.equal(m.federalTeam.racks[0].stats[1].successfulSafetyEscapes,1);assert.equal(m.stats[1].breakAndRun,0);
   await run(()=>fcTest.undo());m=await state();assert.deepEqual(m.scores,[0,0]);assert.equal(m.stats[1].successfulSafetyEscapes,0);assert.equal(m.rackRemainingBalls.includes(9),true);assert.equal(m.federalTeam.racks.length,0);
   console.log('PASS safety escape exact pot: Singles/Doubles/Team, required selection/cancel, ball removal, event/full undo, reload, next shot and winning 9');
+  }
+  if(process.env.FC_FIXTURE9_BACKUP){
+    const {plan}=require('../scripts/plan-federal-fixture-9-link.cjs');
+    const input=JSON.parse(fs.readFileSync(process.env.FC_FIXTURE9_BACKUP,'utf8')),review=plan(input);
+    for(const key of Object.keys(mock))delete mock[key];
+    mock.matches=Object.fromEntries(Object.values(input.matches).map(m=>[m.id,m]));
+    await run(async c=>{fcTest.admin();fcTest.reviewConfig(c);await fcTest.loadMatches();fcTest.screen('federal-cup-2026');renderFederalCup2026()},input.federalCup2026);
+    const row9=page.locator('.fc26-view-match').filter({has:page.locator('.fc26-view-match-type strong',{hasText:/^#9$/})});
+    assert.match(await row9.innerText(),/ČEKÁ SE/);
+    assert.deepEqual((await run(()=>fcTest.report())).series,[6,2]);
+    await run(m=>fcTest.saveReview(m),review.after);
+    await page.reload();await page.waitForSelector('#cloudLoginModal.show');
+    await run(async()=>{fcTest.admin();await fcTest.loadMatches();fcTest.screen('federal-cup-2026');renderFederalCup2026()});
+    const actualReport=await run(()=>fcTest.report());assert.deepEqual(actualReport.series,[7,2]);
+    assert.match(await row9.innerText(),/5\s*:\s*3/);assert.doesNotMatch(await row9.innerText(),/ČEKÁ SE/);
+    assert.equal(await row9.locator('[data-fc-report="match"]').getAttribute('data-match-id'),review.before.id);
+    for(const side of [0,1])for(const p of review.after.federalCupLink.lineupParticipants[side])assert.ok(actualReport.people[p.id].sources.some(s=>s.matchId===review.before.id));
+    const restored=await run(id=>fcTest.data.matches.find(m=>m.id===id),review.before.id);delete restored.federalCupLink;delete restored.updatedAt;
+    const expected=JSON.parse(JSON.stringify(review.before));delete expected.updatedAt;assert.deepEqual(restored,expected);
+    for(const viewport of [{width:1440,height:1000},{width:390,height:844}]){
+      await page.setViewportSize(viewport);assert.equal(await row9.locator('[data-fc-report="match"]').count(),1);
+      if(process.env.FC_FIXTURE9_SCREENSHOTS){fs.mkdirSync(process.env.FC_FIXTURE9_SCREENSHOTS,{recursive:true});await row9.screenshot({path:path.join(process.env.FC_FIXTURE9_SCREENSHOTS,'fixture-9-'+viewport.width+'.png')});}
+      await row9.locator('[data-fc-report="match"]').click();await page.waitForSelector('#fcReportDialog[open]');
+      assert.match(await page.locator('#fcReportDialog').innerText(),/ZÁPAS #9/);await page.keyboard.press('Escape');
+    }
+    // Mock rollback removes only the proposed association; original records stay intact.
+    delete mock.matches[review.before.id].federalCupLink;
+    await run(async()=>{await fcTest.loadMatches();renderFederalCup2026()});
+    assert.match(await row9.innerText(),/ČEKÁ SE/);assert.deepEqual((await run(()=>fcTest.report())).series,[6,2]);
+    console.log('PASS actual backup #9: missing-link reproduction; link-only mock save/reload, 7:2, A1 desktop/mobile, participant results, unchanged play and rollback');
+    // The same real nomination is valid when launched through the schedule.
+    await run(async c=>{fcTest.reviewConfig(c);await fc26StartFixture(9);document.getElementById('fc26LagWinner').value='0';fcTest.start()},input.federalCup2026);
+    const launched=await state();assert.ok(launched,JSON.stringify(await run(()=>({prepared:fcTest.preparedLink,canStart:fc26CanStartMatch(9),toast:document.querySelector('#toast')?.textContent,screen:document.querySelector('.screen.active')?.id}))));assert.equal(launched.federalCupLink.fixtureNo,9);assert.equal(launched.nineBallBreakRule,'kitchen');assert.equal(launched.federalEvidence.fromStart,true);
+    for(const side of [0,1,0,1,0,1,0,0])await run(side=>winRack(side),side);
+    assert.equal(await run(()=>fcTest.persist()),true);
+    await page.reload();await page.waitForSelector('#cloudLoginModal.show');
+    await run(async()=>{fcTest.admin();await fcTest.loadMatches();fcTest.screen('federal-cup-2026');renderFederalCup2026()});
+    assert.match(await row9.innerText(),/5\s*:\s*3/);assert.deepEqual((await run(()=>fcTest.report())).series,[7,2]);
+    assert.equal(await row9.locator('[data-fc-report="match"]').getAttribute('data-match-id'),launched.id);
+    console.log('PASS actual #9 nomination: new schedule launch, completion, cloud save/reload, correct team score/report identity (isolated mock only)');
+  }
   assert.deepEqual(errors,[]);
   console.log('Mock requests:',external,'mock writes:',writes.length,'page errors:',errors.length);
  }finally{await browser.close()}

@@ -1,0 +1,36 @@
+{
+  "desktop": {
+    "twoSheets": true,
+    "nineMetricsCorrect": true,
+    "ownBreakWins": [
+      2,
+      1
+    ],
+    "ownBreakLosses": [
+      2,
+      3
+    ],
+    "PNG": [
+      1920,
+      1080
+    ],
+    "PDF": "16:9, pixels identical to PNG"
+  },
+  "mobile": {
+    "twoSheets": true,
+    "nineMetricsCorrect": true,
+    "ownBreakWins": [
+      2,
+      1
+    ],
+    "ownBreakLosses": [
+      2,
+      3
+    ],
+    "PNG": [
+      1920,
+      1080
+    ],
+    "PDF": "16:9, pixels identical to PNG"
+  }
+}

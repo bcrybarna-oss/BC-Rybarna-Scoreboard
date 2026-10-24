@@ -1,0 +1,218 @@
+{
+  "matchId": "3d4c35e6-e336-49d5-a9b3-9955cec59c3d",
+  "sourceSha256": "4701a20ed0583b503a12b29a39ba522a6a4239630c22ebc4bbdf172d97088c47",
+  "snapshots": [
+    {
+      "mode": "desktop",
+      "all13Metrics": {
+        "breakSuccess": [
+          "100 %",
+          "25 %"
+        ],
+        "breakBallAverage": [
+          "1,8",
+          "0,3"
+        ],
+        "aces": [
+          "0",
+          "0"
+        ],
+        "ownBreakWins": [
+          "2 / 4",
+          "1 / 4"
+        ],
+        "cleanRuns": [
+          "2",
+          "0"
+        ],
+        "pottedBalls": [
+          "48",
+          "12"
+        ],
+        "pottingSuccess": [
+          "94 %",
+          "86 %"
+        ],
+        "safetySuccess": [
+          "60 %",
+          "100 %"
+        ],
+        "escapeSuccess": [
+          "100 %",
+          "33 %"
+        ],
+        "resafes": [
+          "1",
+          "0"
+        ],
+        "fouls": [
+          "0",
+          "2"
+        ],
+        "jumpShots": [
+          "0 / 0",
+          "0 / 1"
+        ],
+        "bankShots": [
+          "0 / 1",
+          "0 / 0"
+        ]
+      },
+      "pushoutRows": [
+        [
+          "Pot percentage",
+          0.94,
+          0.86
+        ],
+        [
+          "Missed pots",
+          3,
+          2
+        ],
+        [
+          "Fouls",
+          0,
+          2
+        ],
+        [
+          "Successful breaks",
+          4,
+          1
+        ],
+        [
+          "Dry/soft breaks",
+          0,
+          3
+        ],
+        [
+          "Foul breaks",
+          0,
+          0
+        ],
+        [
+          "Break and runs",
+          2,
+          0
+        ],
+        [
+          "Break and win",
+          2,
+          1
+        ],
+        [
+          "Break and lose",
+          2,
+          3
+        ]
+      ]
+    },
+    {
+      "mode": "mobile",
+      "all13Metrics": {
+        "breakSuccess": [
+          "100 %",
+          "25 %"
+        ],
+        "breakBallAverage": [
+          "1,8",
+          "0,3"
+        ],
+        "aces": [
+          "0",
+          "0"
+        ],
+        "ownBreakWins": [
+          "2 / 4",
+          "1 / 4"
+        ],
+        "cleanRuns": [
+          "2",
+          "0"
+        ],
+        "pottedBalls": [
+          "48",
+          "12"
+        ],
+        "pottingSuccess": [
+          "94 %",
+          "86 %"
+        ],
+        "safetySuccess": [
+          "60 %",
+          "100 %"
+        ],
+        "escapeSuccess": [
+          "100 %",
+          "33 %"
+        ],
+        "resafes": [
+          "1",
+          "0"
+        ],
+        "fouls": [
+          "0",
+          "2"
+        ],
+        "jumpShots": [
+          "0 / 0",
+          "0 / 1"
+        ],
+        "bankShots": [
+          "0 / 1",
+          "0 / 0"
+        ]
+      },
+      "pushoutRows": [
+        [
+          "Pot percentage",
+          0.94,
+          0.86
+        ],
+        [
+          "Missed pots",
+          3,
+          2
+        ],
+        [
+          "Fouls",
+          0,
+          2
+        ],
+        [
+          "Successful breaks",
+          4,
+          1
+        ],
+        [
+          "Dry/soft breaks",
+          0,
+          3
+        ],
+        [
+          "Foul breaks",
+          0,
+          0
+        ],
+        [
+          "Break and runs",
+          2,
+          0
+        ],
+        [
+          "Break and win",
+          2,
+          1
+        ],
+        [
+          "Break and lose",
+          2,
+          3
+        ]
+      ]
+    }
+  ],
+  "writes": 0,
+  "firebase": 0,
+  "pageErrors": [],
+  "sourceUnchanged": true
+}

@@ -4,7 +4,37 @@ Aktualizace: 24. 10. 2026. Zadavatel aktuální revize: **Dominik**.
 
 ## Verze a nasazení
 
-Aktuální verze: **v4.51.95 RC** (nasazeno a v níže uvedeném rozsahu ověřeno).
+Aktuální verze: **v4.51.96 RC** (připravený kandidát v PR #34, nesloučeno a nenasazeno). Produkce: **v4.51.95 RC**.
+
+- **Doplněná rekonstrukce racků #9 – Dominik,24.10.2026:** všech osm skutečných breaker/winner párů doloženo aktuálními break/game-ball záznamy, přeživšími událostmi skóre a odpovídajícími prefixovými undo snapshoty. SharedAPI nyní bez zápisu vrací SK2/4 aCZ1/4 vlastních breaků vyhraných,2/3 prohraných; Pushout používá stejné údaje. Kanonické racky mají přednost, žádné sčítání snapshotů/odhad ze skóre. Neúplná či konfliktní historie zůstává unknown. Poty48/12 aúspěšnost94/86 % nezměněny. Cílené14/14, plná sada225/227 pouze dvě známé chyby, desktop/mobil skutečné PNG/PDF/XLSX PASS. [Tabulka důkazů a omezení](docs/federal-fixture-9-rack-reconstruction.md). Kandidát96/PR34, neslučovat/nenasazovat. Následující první diagnóza je zachovaná historie před rekonstrukcí.
+
+- **Diagnostika statistik #9 – Dominik,24.10.2026:** uživatel doplnil schválenou vazbu; nový export proti původnímu i BEFORE záloze mění pouze federalCupLink, herní data shodná. Prokázáno přeskočení46původních strků bez evidenceVersion2. Čistý čtecí adaptér společného API obnovuje doložené hodnoty SK48/51=94 % a48 koulí, CZ12/14=86 % a12 koulí; nezmění ledger ani vazbu, zachovává partial a neznámé rackové výsledky. Neznámá evidence se nevydává za0. Regrese na main selže, cílené69/69 PASS, celá sada219/221 pouze známé dvě chyby. Skutečný export v izolovaném browseru:13metrik, A2/páry, desktop/mobil PNG/PDF/XLSX a nezávislé kontroly PASS,0Firebase/0zápisů/0JS chyb. **Neslučovat/nenasazovat.** [Diagnóza a artefakty](docs/federal-fixture-9-statistics-diagnosis.md).
+
+
+
+
+
+## Finální CI rekonstrukce
+
+Commit `ee428999a2d525296b50d63c1baaf25642dfbc58` pushnut do draft PR #34. [CI40129989648](https://github.com/bcrybarna-oss/BC-Rybarna-Scoreboard/actions/runs/40129989648): **Release version and revision success**, Node **222PASS/2FAIL/3SKIP ze227**. Log potvrzuje pouze známé preview-match-reload-recovery.test.cjs:50/:106. Tři skipy potřebují místní soukromé exporty, lokálně225PASS/2FAIL/0SKIP. Cílené API/integrita/reporty75/75PASS. Následující dokumentační commit nemění otestovaný kód. Nic nesloučeno ani nenasazeno.
+
+
+### Ověřený commit a GitHub CI
+
+Oprava pushnuta jako `33719159e2c08cc270c30cc1cadd62e36992579c` do existujícího draft PR #34. [CI40127936545](https://github.com/bcrybarna-oss/BC-Rybarna-Scoreboard/actions/runs/40127936545): Release version and revision **success**; Node **217 PASS / 2 FAIL / 2 SKIP ze221**. Log obou selhání ukazuje pouze známé preview-match-reload-recovery.test.cjs:50/:106. Dva skipy jsou soukromé exportní kontroly, které lokálně prošly. CI není plně zelené. Celý stávající federal-evidence-browser také PASS (stabilní identity, sekvenční/multipot, foul/MISS/escape/Resafe, B&R, Team/páry, UNDO, mockAuth/reload/resume/PUT/GET;0JS chyb). Následný dokumentační commit nemění otestovaný aplikační kód. Nic nesloučeno ani nenasazeno.
+
+
+Následuje historie přípravy před ručním doplněním vazby uživatelem; starší formulace „dosud neprovedeno“ označují tehdejší stav.
+
+- **Funkční test konzolového pomocníka #9 – Dominik, 24.10.2026:** přímo nezměněný federal-fixture-9-console.js SHA256 `5bb814728874343d8538c3962ac750cef7267d7a98c2cdd0b406262f9059c384` prošel15/15 izolovanými Chrome/Firebase-mock scénáři. Skutečné debug()/paused scope/instalace/undebug()/resume, GET záloha/diff bez zápisu, přesný If-Match PUT pouze vazby, blokace změn zápasu/nominace/duplicit, HTTP412 bez retry, ztracená odpověď po úspěchu rozlišena verify, bezpečný rollback a blokace pozdějších změn/oprávnění PASS. Realistická RTDB serializace a všechny původní/schválené kanonické hashe doloženy. **0 skutečných produkčních požadavků/zápisů**, schválená cílená oprava stále neprovedena. PR34 neslučovat/nenasazovat. [Výsledky a hashe](docs/federal-fixture-9-console-verification.md), [ruční postup](docs/federal-fixture-9-manual-console.md). ETag nezamyká nominaci/jiné zápasy: při ručním provedení musí trvat klid administrátorů. Dvě známé Node CI chyby zůstávají oddělené od této plně úspěšné cílené sady.
+
+Historie přípravy manuálního postupu před funkčním ověřením:
+
+- **Jednorázový ruční postup #9 – Dominik, 24.10.2026:** přihlášení Admin/Cloud ONLINE bylo dostupné a živý divácký přehled stále ukazoval #9 ČEKÁ SE / týmové6:2. Následně na žádost připraven konzolový helper a [přesný postup](docs/federal-fixture-9-manual-console.md): existující auth funkce přes paused scope bez exportu tokenů, GET/záloha/diff oddělené od jednorázového If-Match PUT a verify/rollback. **Helper nebyl spuštěn**, pouze syntax check; produkce bez zápisu. Atomický ETag chrání jen cílový zápas, nikoli jiné zápasy/nominaci; nutný zajištěný klid ostatních administrátorů, jinak zápis neprovádět. PR34 neslučovat/nenasazovat, verze se nemění. Nový helper není pokryt výsledky předchozího CI.
+
+- **Rozpracovaná diagnostika #9 – Dominik, 24.10.2026:** skutečný Doubles `3d4c35e6-e336-49d5-a9b3-9955cec59c3d`, 5:3, 17:54:09–18:27:05 CEST nemá federalCupLink ani federalEvidence. Proto jej FC nevybírá; žádná duplicita #9 v exportu. Připraven pouze offline návrh doplnění vazby 2026/#9/doubles a nominace ze stejného exportu, záloha a rollback. Izolovaně výsledek #9 5:3 a týmové skóre 6:2→7:2, stejné strky/statistiky, A1 desktop/mobil a cloud mock/reload PASS. Standardní Doubles ukládání vazbu zachovává; konkrétní historie založení neprokázána. Produkce/export beze změny, aplikace ani verze se nemění. **Produkční náprava čeká výslovné schválení konkrétního návrhu. Neslučovat a nenasazovat.** [Diagnóza, návrh a bezpečný návrat](docs/federal-fixture-9-link-diagnosis.md). Cílené Node65/65; celá sada210PASS/2známéFAIL/1volitelnýSKIP, CI není plně zelené.
+
+  Pushnuto jako `8890f24cf13f1ee0033e04609efdddd887ceff61` do [draft PR #34](https://github.com/bcrybarna-oss/BC-Rybarna-Scoreboard/pull/34). [CI40118428244](https://github.com/bcrybarna-oss/BC-Rybarna-Scoreboard/actions/runs/40118428244): release **success**, Node210/213, pouze známé dvě chyby :50/:106 a jeden volitelný skip soukromého exportu. Následné doplnění výsledku CI je pouze dokumentační.
 
 - **PRODUKCE v4.51.95 RC – Dominik,24.10.2026:** schválené PR #33 sloučeno merge **48706bd65d383e31b80c67a589fddc4de68e1ce0**, [Pages40074836634](https://github.com/bcrybarna-oss/BC-Rybarna-Scoreboard/actions/runs/40074836634) success. Veřejné index/overlay/13assetů HTTP200 přesné SHA256/verze95/navigace/desktop/mobil/0JS chyb a0zápisů PASS. Na neupravené produkční URL s izolovanou offline kopií uloženého Singles#3 reálně kliknuto EXPORT PRO PUSHOUT a staženy desktop/mobil XLSX, přesně2listy Pushout/Metadata, všech9hodnot správně a XML/styly obou listů byteově stejné jako před odebráním Data notes. Poznámky nepřesunuty, interní diagnostika zachována. FinálníPR/mainrelease success, Node207/209 pouze dvě známé chyby shodné s aktuálním předmerge main; CI není plně zelené. Produkční zápasy/export neměněny, žádná migrace. Skutečné Auth/Firebase/OBS a fyzickýiOS/Excel neověřeny. [Deployment report](docs/deployment-v4.51.95.md), [evidence](docs/deployment-v4.51.95-verification.json).
 
