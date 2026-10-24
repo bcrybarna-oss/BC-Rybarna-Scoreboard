@@ -4,7 +4,7 @@ Aktualizace: 24. 10. 2026. Zadavatel aktuální revize: **Dominik**.
 
 ## Verze a nasazení
 
-Aktuální produkční verze: **v4.51.96 RC** — nasazeno a v níže uvedeném rozsahu ověřeno24.10.2026.
+Aktuální verze: **v4.51.96 RC** — nasazeno a v níže uvedeném rozsahu ověřeno24.10.2026.
 
 - **PRODUKCE96 – Dominik:** schválené PR34 sloučeno merge3e095d702cb0838aaf4a4aa674540234426209f4, Pages40130394877 success. Veřejné index/overlay/13assetů HTTP200 a přesnáSHA256/verze96/navigace/desktop/mobil/0JS chyb PASS. Na neupravené produkční URL s izolovanou offline kopií skutečného #9 staženy PNG/PDF/XLSX desktop/mobil:SK48koulí/94 %/ownbreak2/4/lose2,CZ12/86 %/1/4/lose3. PNG1920×1080,PDF16:9/pixelyshodné,XLSX2listy/9správnýchmetrik PASS. Standardní FC#1–8 výsledky a metriky stran95/96 stejné; jeden neznámý osobní Team příspěvek správněunknown místo falešné0. FinálníPR/mainrelease success,Node222/227 pouze dvě známé chyby shodné s aktuálním předmerge main a3soukroméSKIP;CI není plně zelené. Žádné produkční zápisy/migrace/helper. ŽiváAuth/Firebase#9/OBS/iPhone/Excel neověřeny. [Deployment report](docs/deployment-v4.51.96.md).
 
