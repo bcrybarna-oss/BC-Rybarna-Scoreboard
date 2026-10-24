@@ -1,5 +1,13 @@
 # Revize aplikace Poolčítadlo
 
+## Dominik – export pro Pushout ze společného API (v4.51.95 RC)
+Zadavatel: Dominik
+Datum: 24. 10. 2026
+Změny: Čtyři nové metriky ve společném API, zachována aplikační konvence B&R a původních13metrik. Tlačítko pouze u dokončeného uloženého zápasu, místní XLSX Pushout/Metadata/Data notes s devíti anglickými metrikami, numerickými počty/procenty a jednoznačným scope. Bez smyšlené osobní atribuce Doubles/Team, bez soukromých přihlašovacích údajů či produkčních zápisů. Aktivní verze95.
+Testy: Cílené API a browser testy, skutečné Singles/Doubles/Team desktop/mobil XLSX, nezávislá openpyxl/ZIP kontrola a vizuální import všech3listů. Kontrolní Singles odpovídá schváleným hodnotám; původní JSON neměněn. Nová exportní sada9/9 PASS, Node207/209 pouze známé dvě modularizační chyby; CI není plně zelené. Browser XLSX6souborů, reportPNG/PDF6párů shodných se94 a nezávislé číselné/ZIP/notes kontroly PASS. Detaily docs/pushout-export-v4.51.95.md.
+Nasazení: Kandidát v samostatné větvi z aktuálního main fd40f0e, nesloučeno a nenasazeno. Produkce94. Čeká kontrola PR.
+Omezení: Fyzický iPhone/Safari a skutečný Microsoft Excel neověřeny. Testování izolované, bez produkční Auth/Firebase. Známá dvě modularizační selhání nejsou zakryta; CI není plně zelené.
+
 ## Dominik – ověřené nasazení ostrých reportových vlajek (v4.51.94 RC)
 Zadavatel: Dominik
 Datum: 23. 10. 2026

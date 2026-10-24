@@ -1,0 +1,62 @@
+[
+  {
+    "file": "doubles-desktop.xlsx",
+    "typed": true,
+    "sheets": [
+      "Pushout",
+      "Metadata",
+      "Data notes"
+    ],
+    "sha256": "702d64df2829cb703dc6e8b51bfa41194c50df7cec33a58175eef0b05c2fcde5"
+  },
+  {
+    "file": "doubles-mobile.xlsx",
+    "typed": true,
+    "sheets": [
+      "Pushout",
+      "Metadata",
+      "Data notes"
+    ],
+    "sha256": "702d64df2829cb703dc6e8b51bfa41194c50df7cec33a58175eef0b05c2fcde5"
+  },
+  {
+    "file": "singles-desktop.xlsx",
+    "typed": true,
+    "sheets": [
+      "Pushout",
+      "Metadata",
+      "Data notes"
+    ],
+    "sha256": "9d03c2f5cbc5a1f16ed8514c778f1fb19469ef5ede3944e9a3dca24198f67f90"
+  },
+  {
+    "file": "singles-mobile.xlsx",
+    "typed": true,
+    "sheets": [
+      "Pushout",
+      "Metadata",
+      "Data notes"
+    ],
+    "sha256": "9d03c2f5cbc5a1f16ed8514c778f1fb19469ef5ede3944e9a3dca24198f67f90"
+  },
+  {
+    "file": "team-desktop.xlsx",
+    "typed": true,
+    "sheets": [
+      "Pushout",
+      "Metadata",
+      "Data notes"
+    ],
+    "sha256": "342fce8c68c6768bc3e8edf7def88f1f2ebbecb992dcdc5d3eda17b4c532f80f"
+  },
+  {
+    "file": "team-mobile.xlsx",
+    "typed": true,
+    "sheets": [
+      "Pushout",
+      "Metadata",
+      "Data notes"
+    ],
+    "sha256": "342fce8c68c6768bc3e8edf7def88f1f2ebbecb992dcdc5d3eda17b4c532f80f"
+  }
+]

@@ -40,8 +40,8 @@ test('season success uses wins/(wins+losses); excludes post-clinch fixtures cons
  const ms=Array.from({length:12},(_,i)=>{const m=fixture('singles','m'+i);m.federalCupLink.fixtureNo=i+1;if(i!==1)m.scores=[5,3];return m;});const r=data(ms);assert.deepEqual(r.series,[11,1]);assert.equal(results(r).value,11/12*100);
  ms[1].scores=[5,3];const end=data(ms);assert.equal(end.selected.length,11);assert.equal(end.excluded.length,1);assert.equal(end.season.fixtures.length,11);assert.equal(results(end).wins,11);
 });
-test('all 13 metric values are read unchanged through the existing API',()=>{
- const m=fixture(),r=data([m]),direct=copy(ctx.federalCalculateSeason([m],config,2026));assert.equal(Object.keys(r.season.individuals.a1.metrics).length,13);assert.deepEqual(r.season,direct);
+test('all original metrics plus additive Pushout fields are read unchanged through the existing API',()=>{
+ const m=fixture(),r=data([m]),direct=copy(ctx.federalCalculateSeason([m],config,2026));assert.equal(Object.keys(r.season.individuals.a1.metrics).length,17);assert.deepEqual(r.season,direct);
 });
 test('host order is explicit, year 2026 default authorized; future years have no guessed host',()=>{
  assert.deepEqual(copy(ctx.federalReportOrder({year:2026})),[0,1]);assert.deepEqual(copy(ctx.federalReportOrder({year:2027,reportHost:'CZ'})),[1,0]);assert.equal(ctx.federalReportOrder({year:2027}),null);assert.equal(ctx.federalReportOrder({year:2026,reportHost:'other'}),null);

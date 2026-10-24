@@ -1,10 +1,12 @@
 # Aktuální stav Poolčítadla
 
-Aktualizace: 23. 10. 2026. Zadavatel aktuální revize: **Dominik**.
+Aktualizace: 24. 10. 2026. Zadavatel aktuální revize: **Dominik**.
 
 ## Verze a nasazení
 
-Aktuální verze: **v4.51.94 RC** (nasazeno a v níže uvedeném rozsahu ověřeno).
+Aktuální verze: **v4.51.95 RC** (kandidát exportu Pushout; nesloučeno a nenasazeno, produkce zůstává v4.51.94 RC).
+
+- **Dominik – export pro Pushout95:** společné API doplněno o4metriky bez změny původních13, lokální XLSX se3listy a9anglickými řádky u dokončeného zápasu. Singles/Doubles/Team vlastníci zachováni, žádná smyšlená osobní atribuce. Skutečné desktop/mobil soubory a kontrolní Singles ověřeny nezávisle, XLSX browser i reportPNG/PDFregrese PASS. Node207/209 pouze dvě známé chyby, exportní sada9/9 PASS; CI není plně zelené. [Implementace, testy a omezení](docs/pushout-export-v4.51.95.md). **Neslučovat a nenasazovat.**
 
 - **PRODUKCE v4.51.94 RC – Dominik,23.10.2026:** PR #32 sloučeno merge **1f3def4e40899323209de29190b1d27c8465a67b**. [Pages39998101433](https://github.com/bcrybarna-oss/BC-Rybarna-Scoreboard/actions/runs/39998101433) success. Veřejné index/overlay/12assetů HTTP200 přesné SHA256, verze94, navigace/desktop/mobil/A2PNG/PDF/ostré rovné SVG/0JS chyb a0zápisů PASS. Přehled zachovává cloth PNG; dlaždice desktop/mobil pixelově stejná jako93. A1/A2/B izolovaně na publikovaném kódu6PNG/PDFpárů PASS, PDFpixely přesněPNG, všechnyPNG shodné se schválenými94; SinglesSK93 %/14 vsCZ95 %/38. Main release success, Node198/200 pouze známé dvě chyby shodné s aktuálním předmerge main; CI není plně zelené. Žádné změny produkčních zápasů/migrace/exportu. Skutečné cloudové A1/B/produkčníAuth/OBS/fyzickýiOS neověřeny. [Deployment report](docs/deployment-v4.51.94.md), [evidence](docs/deployment-v4.51.94-verification.json).
 

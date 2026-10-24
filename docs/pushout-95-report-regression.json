@@ -1,0 +1,32 @@
+[
+  {
+    "report": "A1",
+    "pngIdenticalToApproved94": true,
+    "pdfPixelsEqualPNG": true
+  },
+  {
+    "report": "A1-mobile",
+    "pngIdenticalToApproved94": true,
+    "pdfPixelsEqualPNG": true
+  },
+  {
+    "report": "A2",
+    "pngIdenticalToApproved94": true,
+    "pdfPixelsEqualPNG": true
+  },
+  {
+    "report": "A2-mobile",
+    "pngIdenticalToApproved94": true,
+    "pdfPixelsEqualPNG": true
+  },
+  {
+    "report": "B",
+    "pngIdenticalToApproved94": true,
+    "pdfPixelsEqualPNG": true
+  },
+  {
+    "report": "B-mobile",
+    "pngIdenticalToApproved94": true,
+    "pdfPixelsEqualPNG": true
+  }
+]
