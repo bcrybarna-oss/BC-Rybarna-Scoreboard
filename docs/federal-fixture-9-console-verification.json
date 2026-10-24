@@ -1,0 +1,104 @@
+{
+  "helperSha256": "5bb814728874343d8538c3962ac750cef7267d7a98c2cdd0b406262f9059c384",
+  "appSha256": "04fa1db9a6abb5ce054375b6afdbe4d2701bea21b18264fdbaaebca77929ac75",
+  "sourceBackupSha256": "0aa18c9b610709025150ef55fd6fd177f1972612d72703635cbdd74e8b52f7eb",
+  "beforeCanonicalSha256": "7195a1c5562cfd1aac3e913170a412e6607aa6bd4c229a17a599d79b15876f6e",
+  "afterCanonicalSha256": "f9a9e3ca955488d9b87afe932564a0563975c2cb9660067435c58c28fbc36f78",
+  "approvedLinkExactlyEqual": true,
+  "realisticFirebaseSerialization": true,
+  "debuggerInstallation": "Chrome debug()/paused call frame/exact snippet/undebug()/resume; original application closures",
+  "realProductionRequests": 0,
+  "realProductionWrites": 0,
+  "results": [
+    {
+      "name": "prepare-backup-zero-writes",
+      "status": "PASS",
+      "putsAttempted": 0,
+      "putsApplied": 0
+    },
+    {
+      "name": "commit-link-only-and-rollback",
+      "status": "PASS",
+      "putsAttempted": 2,
+      "putsApplied": 2
+    },
+    {
+      "name": "prepare-stops-match",
+      "status": "PASS",
+      "putsAttempted": 0,
+      "putsApplied": 0
+    },
+    {
+      "name": "commit-stops-match",
+      "status": "PASS",
+      "putsAttempted": 0,
+      "putsApplied": 0
+    },
+    {
+      "name": "prepare-stops-nomination",
+      "status": "PASS",
+      "putsAttempted": 0,
+      "putsApplied": 0
+    },
+    {
+      "name": "commit-stops-nomination",
+      "status": "PASS",
+      "putsAttempted": 0,
+      "putsApplied": 0
+    },
+    {
+      "name": "prepare-stops-duplicate",
+      "status": "PASS",
+      "putsAttempted": 0,
+      "putsApplied": 0
+    },
+    {
+      "name": "commit-stops-duplicate",
+      "status": "PASS",
+      "putsAttempted": 0,
+      "putsApplied": 0
+    },
+    {
+      "name": "etag-412-no-retry",
+      "status": "PASS",
+      "putsAttempted": 1,
+      "putsApplied": 0
+    },
+    {
+      "name": "success-response-lost-verify-detects-applied",
+      "status": "PASS",
+      "putsAttempted": 1,
+      "putsApplied": 1
+    },
+    {
+      "name": "verify-detects-original-without-put",
+      "status": "PASS",
+      "putsAttempted": 0,
+      "putsApplied": 0
+    },
+    {
+      "name": "rollback-stops-later-change-before-prepare",
+      "status": "PASS",
+      "putsAttempted": 1,
+      "putsApplied": 1
+    },
+    {
+      "name": "rollback-stops-later-change-after-prepare",
+      "status": "PASS",
+      "putsAttempted": 1,
+      "putsApplied": 1
+    },
+    {
+      "name": "missing-etag-and-revoked-role-stop",
+      "status": "PASS",
+      "putsAttempted": 0,
+      "putsApplied": 0
+    },
+    {
+      "name": "server-permission-denied-no-bypass-or-retry",
+      "status": "PASS",
+      "putsAttempted": 1,
+      "putsApplied": 0
+    }
+  ]
+}
