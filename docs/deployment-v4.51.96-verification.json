@@ -1,0 +1,274 @@
+{
+  "version": "v4.51.96 RC",
+  "mergeCommit": "3e095d702cb0838aaf4a4aa674540234426209f4",
+  "preMergeMain": "a12b69d600c3585fc02b79f96f02c63564334c6e",
+  "approvedHead": "243ab12b94a245470e6aa7396bc439849d483f70",
+  "pagesRun": 40130394877,
+  "prCiRun": 40130066555,
+  "mainCiRun": 40130395493,
+  "ci": {
+    "release": "success",
+    "tests": 227,
+    "pass": 222,
+    "knownFailures": 2,
+    "privateExportSkips": 3,
+    "sameAssertionsAsPreviousMain": true
+  },
+  "publicSmoke": {
+    "sha": "3e095d702cb0838aaf4a4aa674540234426209f4",
+    "version": "v4.51.96 RC",
+    "verifiedAt": "2026-10-24T20:37:04.955Z",
+    "files": {
+      "index.html": {
+        "status": 200,
+        "sha256": "61b435fa70e23e4cf4e00d06075b31ad8b00679e5a42969ee91661eb86fa67b9",
+        "bytes": 1695587,
+        "etag": "W/\"6add169e-19df63\""
+      },
+      "overlay.html": {
+        "status": 200,
+        "sha256": "2256ba1aa9b8f1aca96786f029b387ae025d9c08ee4cedd70e988e51ca9d0cfb",
+        "bytes": 20884,
+        "etag": "W/\"6add169e-5194\""
+      },
+      "assets/pushout-xlsx.js": {
+        "status": 200,
+        "sha256": "5e4436656444c3f87b2c8550414b49070eb7d8974455e321425388bc639ae874",
+        "bytes": 7977,
+        "etag": "W/\"6add169e-1f29\""
+      },
+      "assets/federal-report-billiards.webp": {
+        "status": 200,
+        "sha256": "2a8d73c1b0a5ecd07597b993f0da5ed22b7c30bba6023448b8069d154bf3e228",
+        "bytes": 74790,
+        "etag": "\"6add169e-12426\""
+      },
+      "assets/federal-report-pool-logo.png": {
+        "status": 200,
+        "sha256": "c28fd81775d4013e2b58716d6f8ef1a92691f4d5d4c0b8b2ba1b0d3a3a12c593",
+        "bytes": 220520,
+        "etag": "\"6add169e-35d68\""
+      },
+      "assets/pushout-sports-logo-yellow.png": {
+        "status": 200,
+        "sha256": "049c2b4648a2e6106c5c41459c346689915256f62330ee17129b4484fc8314ff",
+        "bytes": 44487,
+        "etag": "\"6add169e-adc7\""
+      },
+      "bc-rybarna-logo.png": {
+        "status": 200,
+        "sha256": "5ad8dccc37f3426e189916f5e5bce61fa922f82d8757283832ac01d224f1f083",
+        "bytes": 131525,
+        "etag": "\"6add169e-201c5\""
+      },
+      "assets/poolcitadlo-logo.webp": {
+        "status": 200,
+        "sha256": "7f9caff46b1924186ef7d6a42b6b9079ee9ace9e7875d8f688e9fdc83bd488db",
+        "bytes": 27896,
+        "etag": "\"6add169e-6cf8\""
+      },
+      "assets/federal-cup/flag-sk-flat.svg": {
+        "status": 200,
+        "sha256": "659b2c072f05d05e8b5d38caa878626459ac652c6dc02359094b423a4ae1d6ee",
+        "bytes": 1543,
+        "etag": "W/\"6add169e-607\""
+      },
+      "assets/federal-cup/flag-cz-flat.svg": {
+        "status": 200,
+        "sha256": "172aa188241c3f5fbd95d7881095d65e2b681f105fb867923709cc09a5dcc3a0",
+        "bytes": 222,
+        "etag": "\"6add169e-de\""
+      },
+      "assets/federal-cup/flag-sk-cloth.svg": {
+        "status": 200,
+        "sha256": "cf8cc9a9fec2f76db4ba3cf6f66c303488cb7ad738aba6dc8afe7535a7a968e7",
+        "bytes": 3230,
+        "etag": "W/\"6add169e-c9e\""
+      },
+      "assets/federal-cup/flag-cz-cloth.svg": {
+        "status": 200,
+        "sha256": "e83808ab2c0c8a5a6b2dde63c44c8e22416ca0a38c00b468136643baca2064e8",
+        "bytes": 1910,
+        "etag": "W/\"6add169e-776\""
+      },
+      "assets/federal-cup/flag-sk-cloth.png": {
+        "status": 200,
+        "sha256": "27faf3b6b76a07b4793ddadb3f549d104ef5c91256c300ad3d24d4dd25a9111a",
+        "bytes": 717340,
+        "etag": "\"6add169e-af21c\""
+      },
+      "assets/federal-cup/flag-cz-cloth.png": {
+        "status": 200,
+        "sha256": "e6485509db399555689fe7b9e23aa1e9e70b27a28e3ca8f1ac2ad38c505cc7fb",
+        "bytes": 641363,
+        "etag": "\"6add169e-9c953\""
+      },
+      "assets/federal-cup/gold-trophy.png": {
+        "status": 200,
+        "sha256": "d4c8ec993c1e20d16508e3f96aade23dc217593597ed3649ca7bc777f85c29c7",
+        "bytes": 1854457,
+        "etag": "\"6add169e-1c4bf9\""
+      }
+    },
+    "normalAndFreshUrlsMatch": true,
+    "screens": [
+      "setup",
+      "home",
+      "players",
+      "about",
+      "federal-cup-2026",
+      "setup",
+      "home"
+    ],
+    "available": {
+      "A1": 0,
+      "A2": 1,
+      "B": 0
+    },
+    "publicA2Exports": [
+      {
+        "format": "Png",
+        "file": "C:\\Users\\mencl\\Documents\\ChatGPT\\Poolčítadlo\\work\\release96-production\\public-empty-A2.png",
+        "bytes": 1451040
+      },
+      {
+        "format": "Pdf",
+        "file": "C:\\Users\\mencl\\Documents\\ChatGPT\\Poolčítadlo\\work\\release96-production\\public-empty-A2.pdf",
+        "bytes": 855692
+      }
+    ],
+    "pageErrors": [],
+    "consoleErrors": [],
+    "blocked": [],
+    "writeAttempts": 0,
+    "limits": "Public unmodified HTML; no matches created, no roster/results edited, no Firebase requests allowed, no real login. Empty offline A2 exported; actual saved A1/B/statistics need production auth. Functional match/lineup scenarios are separate isolated tests."
+  },
+  "publicSavedCopy": {
+    "sha": "3e095d702cb0838aaf4a4aa674540234426209f4",
+    "version": "v4.51.96 RC",
+    "verifiedAt": "2026-10-24T20:37:25.590Z",
+    "htmlUnmodified": true,
+    "origin": "https://bcrybarna-oss.github.io/BC-Rybarna-Scoreboard/",
+    "context": "Isolated fresh browser, local offline copy of the user-supplied saved Doubles #9; no real production Auth or cloud match access.",
+    "matchId": "3d4c35e6-e336-49d5-a9b3-9955cec59c3d",
+    "downloads": [
+      {
+        "mode": "desktop",
+        "filename": "pushout-federal-cup-2026-match-9-doubles-mark-szabo-jakub-koniar-vs-tom-kurz-jan-meisner.xlsx",
+        "bytes": 13427,
+        "sha256": "43f9798a1bebd622fdc1d6ef539ffdb396b3326e9e4d66104ef17149c40cea58"
+      },
+      {
+        "mode": "mobile",
+        "filename": "pushout-federal-cup-2026-match-9-doubles-mark-szabo-jakub-koniar-vs-tom-kurz-jan-meisner.xlsx",
+        "bytes": 13427,
+        "sha256": "43f9798a1bebd622fdc1d6ef539ffdb396b3326e9e4d66104ef17149c40cea58"
+      }
+    ],
+    "pageErrors": [],
+    "consoleErrors": [],
+    "blocked": [],
+    "writeAttempts": 0
+  },
+  "downloads": [
+    {
+      "mode": "desktop",
+      "PNG": [
+        1920,
+        1080
+      ],
+      "PDF": "16:9, image pixels match PNG",
+      "XLSX": "2 sheets, 9 correct rows, numeric percent format",
+      "ownBreakWin": [
+        2,
+        1
+      ],
+      "ownBreakLose": [
+        2,
+        3
+      ]
+    },
+    {
+      "mode": "mobile",
+      "PNG": [
+        1920,
+        1080
+      ],
+      "PDF": "16:9, image pixels match PNG",
+      "XLSX": "2 sheets, 9 correct rows, numeric percent format",
+      "ownBreakWin": [
+        2,
+        1
+      ],
+      "ownBreakLose": [
+        2,
+        3
+      ]
+    }
+  ],
+  "standardFcComparisons": [
+    {
+      "fixture": 7,
+      "type": "doubles",
+      "differences": []
+    },
+    {
+      "fixture": 4,
+      "type": "doubles",
+      "differences": []
+    },
+    {
+      "fixture": 5,
+      "type": "team",
+      "differences": []
+    },
+    {
+      "fixture": 2,
+      "type": "doubles",
+      "differences": []
+    },
+    {
+      "fixture": 3,
+      "type": "singles",
+      "differences": []
+    },
+    {
+      "fixture": 8,
+      "type": "singles",
+      "differences": []
+    },
+    {
+      "fixture": 1,
+      "type": "team",
+      "differences": [
+        {
+          "path": ".individuals.fc-93258549-c0ef-4370-ac4b-cc059db90465.metrics.pottingSuccess.denominator",
+          "before": 0,
+          "after": null
+        },
+        {
+          "path": ".individuals.fc-93258549-c0ef-4370-ac4b-cc059db90465.metrics.missedPots.numerator",
+          "before": 0,
+          "after": null
+        },
+        {
+          "path": ".individuals.fc-93258549-c0ef-4370-ac4b-cc059db90465.metrics.missedPots.count",
+          "before": 0,
+          "after": null
+        },
+        {
+          "path": ".individuals.fc-93258549-c0ef-4370-ac4b-cc059db90465.metrics.missedPots.coverage",
+          "before": "partial",
+          "after": "unknown"
+        }
+      ]
+    },
+    {
+      "fixture": 6,
+      "type": "singles",
+      "differences": []
+    }
+  ],
+  "productionWrites": 0,
+  "consoleRepairHelperExecuted": false
+}

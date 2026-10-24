@@ -1,5 +1,8 @@
 # Poolčítadlo – společný kontext projektu
 
+Produkce v4.51.96 RC / PR34 nasazena24.10.2026 merge3e095d702cb0838aaf4a4aa674540234426209f4, Pages40130394877 success. Čtení původních strků a konzervativní rekonstrukce racků aktivní, bez migrací/zápisů. VeřejnéHTML/assety/desktop/mobil a skutečnéPNG/PDF/XLSX na veřejnéURL s izolovanou offline kopií #9 PASS:SK48/94 %/2/4/lose2,CZ12/86 %/1/4/lose3. StandardníFCvýsledky/metrikystran zachovány. Release success,Nodejen2známéFAIL+3soukroméSKIP. ŽiváAuth/Firebase#9/OBS/iOS/Excel neověřeny. Viz docs/deployment-v4.51.96.md. Níže následuje zachovaná historie přípravy před nasazením.
+
+
 Kandidát96/PR34 – doplnění rackové historie: při chybějícím kanonickém ledgeru lze ownBreakWins/ownBreakLosses doložit úplným surviving_history řetězcem explicitníbreak+legálnígameball+jednobodovéskóre+přeživšíprefixovésnapshoty. Žádné sčítání snapshotů, ukládání/migrace nebo odhad vítězů z celkového skóre. Existující kanonické racky mají vždy přednost; neúplný/konfliktní řetězec či nepodložené faulové/eso/manuální ukončení zůstane unknown. Skutečný #9 tak prokazuje2/4 proti1/4 a prohry2/3, detaily docs/federal-fixture-9-rack-reconstruction.md. Dřívější konstatování nedostupných rackových výsledků níže je historie první diagnózy před úplným prozkoumáním událostí.
 
 

@@ -1,5 +1,13 @@
 # Revize aplikace Poolčítadlo
 
+## Dominik – ověřené nasazení statistik a racků #9 (v4.51.96 RC)
+Zadavatel: Dominik
+Datum: 24. 10. 2026
+Změny: Po výslovném schválení a finální kontrole PR34 sloučeno merge3e095d702cb0838aaf4a4aa674540234426209f4 se zachováním historie. Nasazena čtecí kompatibilita původních strků a doložená rekonstrukce8racků. Produkční zápasy beze změny/migrace; konzolový helper znovu nespouštěn. Následná dokumentace nemění aplikaci/verzi.
+Testy: FinálníPR/mainrelease success;Node222/227 pouze známé preview-match-reload-recovery:50,106 shodné s aktuálním předmerge main a3soukroméSKIP. Pages40130394877 success. VeřejnéHTML/13assetů přesnéSHA256/verze96 adesktop/mobil/0JS chyb PASS. Na neupravené produkční URL s místní offline kopií skutečného #9 report/PNG/PDF/XLSX PASS:SK48/94 %/2/4/lose2,CZ12/86 %/1/4/lose3,1920×1080/16:9/2listy/9metrik. StandardníFC#1–8 výsledky/metriky stran shodné95/96; jeden neznámý osobní Team příspěvekunknown místo falešné0. CI není plně zelené.
+Nasazení: Nasazeno a v uvedeném rozsahu ověřeno24.10.2026 na https://bcrybarna-oss.github.io/BC-Rybarna-Scoreboard/ v4.51.96 RC. Bez ručního opakování Pages. Podrobnosti docs/deployment-v4.51.96.md.
+Omezení: Živý cloudový #9 a produkčníAuth/Firebase neověřeny; skutečný zápas ověřen jako izolovaná místní kopie dodaného exportu na publikovaném kódu.0produkčníchzápisů. ReálnéOBS/fyzickýiPhone/Excel neověřeny.
+
 ## Dominik – doložená historie vlastních break výher #9 (v4.51.96 RC)
 Zadavatel: Dominik
 Datum: 24. 10. 2026

@@ -4,7 +4,11 @@ Aktualizace: 24. 10. 2026. Zadavatel aktuální revize: **Dominik**.
 
 ## Verze a nasazení
 
-Aktuální verze: **v4.51.96 RC** (připravený kandidát v PR #34, nesloučeno a nenasazeno). Produkce: **v4.51.95 RC**.
+Aktuální produkční verze: **v4.51.96 RC** — nasazeno a v níže uvedeném rozsahu ověřeno24.10.2026.
+
+- **PRODUKCE96 – Dominik:** schválené PR34 sloučeno merge3e095d702cb0838aaf4a4aa674540234426209f4, Pages40130394877 success. Veřejné index/overlay/13assetů HTTP200 a přesnáSHA256/verze96/navigace/desktop/mobil/0JS chyb PASS. Na neupravené produkční URL s izolovanou offline kopií skutečného #9 staženy PNG/PDF/XLSX desktop/mobil:SK48koulí/94 %/ownbreak2/4/lose2,CZ12/86 %/1/4/lose3. PNG1920×1080,PDF16:9/pixelyshodné,XLSX2listy/9správnýchmetrik PASS. Standardní FC#1–8 výsledky a metriky stran95/96 stejné; jeden neznámý osobní Team příspěvek správněunknown místo falešné0. FinálníPR/mainrelease success,Node222/227 pouze dvě známé chyby shodné s aktuálním předmerge main a3soukroméSKIP;CI není plně zelené. Žádné produkční zápisy/migrace/helper. ŽiváAuth/Firebase#9/OBS/iPhone/Excel neověřeny. [Deployment report](docs/deployment-v4.51.96.md).
+
+Následuje zachovaná historie přípravy96 před schválením a nasazením; starší pokyny neslučovat/nenasazovat již byly nahrazeny výslovným schválením zadavatele.
 
 - **Doplněná rekonstrukce racků #9 – Dominik,24.10.2026:** všech osm skutečných breaker/winner párů doloženo aktuálními break/game-ball záznamy, přeživšími událostmi skóre a odpovídajícími prefixovými undo snapshoty. SharedAPI nyní bez zápisu vrací SK2/4 aCZ1/4 vlastních breaků vyhraných,2/3 prohraných; Pushout používá stejné údaje. Kanonické racky mají přednost, žádné sčítání snapshotů/odhad ze skóre. Neúplná či konfliktní historie zůstává unknown. Poty48/12 aúspěšnost94/86 % nezměněny. Cílené14/14, plná sada225/227 pouze dvě známé chyby, desktop/mobil skutečné PNG/PDF/XLSX PASS. [Tabulka důkazů a omezení](docs/federal-fixture-9-rack-reconstruction.md). Kandidát96/PR34, neslučovat/nenasazovat. Následující první diagnóza je zachovaná historie před rekonstrukcí.
 
