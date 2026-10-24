@@ -1,5 +1,29 @@
 # Revize aplikace Poolčítadlo
 
+## Dominik – izolované funkční testy jednorázové opravy vazby #9 (v4.51.95 RC)
+Zadavatel: Dominik
+Datum: 24. 10. 2026
+Změny: Připravený konzolový pomocník funkčně ověřen beze změny jeho kódu/payloadu. Přidána cílená browserová sada, realistický model RTDB serializace, strojová evidence a aktualizovaný ruční návod. Nejde o funkční vydání aplikace; produkční HTML, assety, výpočty a verze zůstávají beze změny.
+Testy:15/15 browser scénářů PASS proti mockované Firebase v nové Chrome relaci, včetně skutečné debuggerové instalace v původním aplikačním scope. prepare GET+download/diff bez PUT; commit pouze federalCupLink s If-Match; změny zápasu/nominace/duplicit blokují zápis; HTTP412 bez opakování; ztracená odpověď po uplatněném PUT rozlišena verify; rollback vrací přesnou zálohu, pozdější změny jej blokují. Chybějící ETag/role/server403 bezpečně zastaví. Původní export a schválená vazba včetně obou původních a kanonických hashů ověřeny i po RTDB serializaci. Helper SHA5bb814728874343d8538c3962ac750cef7267d7a98c2cdd0b406262f9059c384 beze změny. Release gate PASS. Předchozí známé dvě Node CI chyby zůstávají, nejsou touto sadou opraveny ani skryty.
+Nasazení: Žádné. Helper pouze izolovaně otestován;0 skutečných produkčních požadavků a zápisů. Cílená produkční oprava již schválená zadavatelem dosud neprovedena. PR34 neslučovat ani nenasazovat.
+Omezení: Mock není reálná produkční Auth/Firebase relace. Cílový zápas má atomickou If-Match ochranu; nominace a ostatní zápasy společný zámek nemají. Ruční provedení vyžaduje klid ostatních administrátorů. Podrobnosti docs/federal-fixture-9-console-verification.md a docs/federal-fixture-9-manual-console.md.
+
+## Dominik – příprava ručního konzolového postupu pro vazbu #9 (v4.51.95 RC)
+Zadavatel: Dominik
+Datum: 24. 10. 2026
+Změny: Připraven jednorázový manuální helper scripts/federal-fixture-9-console.js a přesný návod docs/federal-fixture-9-manual-console.md. Využije existující session/auth closure bez vypisování/kopírování tokenů; kontrola GET/záloha/diff oddělená od podmíněného PUT jediného zápasu a čtení/rollbacku. Nemění aplikační soubory ani verzi. Původní zápas, export i PR34 zůstávají bez nasazení či produkčního zápisu.
+Testy: Pouze syntaktická kontrola node --check bez vykonání helperu a kontrola zdroje aktuální aplikace/primární dokumentace Firebase a Chrome. Na žádost nebyl spuštěn instalátor ani prepare/commit/verify/rollback, ani v živé aplikaci. Předchozí testy/CI PR34 nejsou ověřením nového pomocníka.
+Nasazení: Žádné; jde pouze o připravený ruční postup. PR34 neslučovat ani nenasazovat. Produkce95 beze změny.
+Omezení: ETag zaručuje atomickou ochranu pouze opravovaného zápasu. Kontroly nominace a ostatních zápasů před PUT nemají společný atomický zámek; bez zajištěného klidu administrátorů zápis neprovádět. Pokud je požadována absolutní atomická garance všech větví, tento postup nestačí. Přístup do paused scope nebyl v této relaci vyzkoušen; při nedostupnosti zastavit bez extrakce tokenů či změn Rules. Jakýkoli rozdíl oproti schválené záloze nebo známý konflikt blokuje zápis; síťově nejistý výsledek se pouze ověřuje, nikoli automaticky opakuje.
+
+## Dominik – diagnostika chybějící vazby Doubles #9 (v4.51.95 RC)
+Zadavatel: Dominik
+Datum: 24. 10. 2026
+Změny: Nad skutečným exportem identifikován matchId3d4c35e6-e336-49d5-a9b3-9955cec59c3d, dokončeno5:3, bez federalCupLink/federalEvidence. Připraven offline návrh doplnění pouze vazby na2026/#9/doubles se schvalovaným snapshotem nominace, soukromá záloha a rollback; žádný produkční vykonavatel. Doplněny cílené testy uložení/načtení/reloadu Doubles a dokumentace. Aplikace ani výpočetní logika se nemění, nejde o nové vydání.
+Testy: Cílené Node65/65 PASS; celá sada210PASS/2FAIL/1SKIP ze213, pouze známé preview-match-reload-recovery:50,106. Volitelný test skutečného soukromého exportu při zadání cesty PASS. Browser izolovaně propojení #9, 5:3, týmové6:2→7:2, správné výsledky účastníků a reportA1 desktop/mobil, zachování ostatních polí a rollback PASS. Standardní Doubles secure mockPUT/GET a reload zachovává vazbu. Původní export nezměněn. CI není plně zelené.
+Nasazení: Žádné. Produkce95 beze změny; návrh nápravy není aplikován. Neslučovat ani nenasazovat. Podrobnosti docs/federal-fixture-9-link-diagnosis.md.
+Omezení: Živá produkční Auth/Firebase relace neověřena; skutečná data doložena dodaným exportem. Prokázána chybějící vazba, nikoli konkrétní cesta uživatele před založením. Nominace k doplnění je aktuální ze zálohy, nikoli dokázaný historický snapshot. Chybějící racky/evidence se nevyrábějí. Produkční zápis vyžaduje samostatné schválení, čerstvý GET/zálohu/kontrolu souběhu a podmíněný zápis s ETag.
+
 ## Dominik – ověřené nasazení dvoulistového exportu Pushout (v4.51.95 RC)
 Zadavatel: Dominik
 Datum: 24. 10. 2026
