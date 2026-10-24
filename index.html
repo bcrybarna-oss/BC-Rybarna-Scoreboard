@@ -2603,7 +2603,7 @@ html[data-theme="light"] #leagueSchedule .history-item .muted{
           <span class="by">by</span>
           <span class="club">BC Rybárna</span>
         </div>
-        <small class="modern-brand-version">v4.51.95 RC</small>
+        <small class="modern-brand-version">v4.51.96 RC</small>
       </div>
     </div>
     <div class="nav">
@@ -3217,7 +3217,7 @@ html[data-theme="light"] #leagueSchedule .history-item .muted{
         </div>
         <div class="subpanel" style="min-width:210px;text-align:center;margin:0">
           <div class="muted" style="font-size:10px;font-weight:950;letter-spacing:1px">AKTUÁLNÍ VERZE</div>
-          <div style="font-size:22px;font-weight:950;color:var(--gold2);margin-top:5px">v4.51.95 RC</div>
+          <div style="font-size:22px;font-weight:950;color:var(--gold2);margin-top:5px">v4.51.96 RC</div>
         </div>
       </div>
     </div>
@@ -5975,7 +5975,7 @@ html[data-theme="light"] #leagueSchedule .history-item .muted{
       </div>
 
       <div id="groupPlayoffSeedStatus" class="muted" style="margin-top:12px;min-height:20px"></div>
-      <div class="muted" style="margin-top:4px;font-size:11px">RC v4.51.95</div>
+      <div class="muted" style="margin-top:4px;font-size:11px">RC v4.51.96</div>
       <div class="modal-actions">
         <button id="groupPlayoffSeedApplyBtn" class="btn primary big" type="button">NASADIT DO PLAY-OFF</button>
         <button id="groupPlayoffSeedCancelBtn" class="btn">ZRUŠIT</button>
@@ -7160,7 +7160,7 @@ html[data-theme="light"] #leagueSchedule .history-item .muted{
     const btn=$('submitReportBtn');if(btn)btn.disabled=true;
     try{
       const id=uid(),p=currentUserPlayerId?data.players?.[currentUserPlayerId]:null;
-      const report={id,createdByUid:cloudUid,createdByPlayerId:currentUserPlayerId||'',createdByName:p?playerSelectionLabel(p):(cloudUserEmail||'Uživatel'),email:cloudUserEmail||'',type,area,description,appVersion:'v4.51.95 RC',createdAt:new Date().toISOString(),updatedAt:new Date().toISOString(),status:'new',adminNote:''};
+      const report={id,createdByUid:cloudUid,createdByPlayerId:currentUserPlayerId||'',createdByName:p?playerSelectionLabel(p):(cloudUserEmail||'Uživatel'),email:cloudUserEmail||'',type,area,description,appVersion:'v4.51.96 RC',createdAt:new Date().toISOString(),updatedAt:new Date().toISOString(),status:'new',adminNote:''};
       await reportRequest(id,'PUT',report);
       try{
         await writeReportUserMirror(report);
@@ -9936,6 +9936,39 @@ $('useClock').addEventListener('change',e=>$('clockSettings').classList.toggle('
     const conflicts=new Set([...byId].filter(([,group])=>new Set(group.map(federalStatsRecordSignature)).size>1).map(([id])=>id));
     return {byId,conflicts};
   }
+  // Pure compatibility reader for ordinary-counter records linked to FC later.
+  // Never writes a version marker, migrates the ledger or guesses missing counts.
+  function federalStatsReadableShot(record){
+    if(record.evidenceVersion===2)return record;
+    const r={...record},has=k=>Object.hasOwn(record,k),valid=n=>Number.isInteger(n)&&n>=0;
+    const count=has('pottedCount')?record.pottedCount:Array.isArray(record.balls)?record.balls.length:null;
+    // Only the documented old schema is readable; future schemas remain unknown.
+    const supported=record.evidenceVersion==null||record.evidenceVersion===1;
+    if(!supported)return {...r,intent:'unknown',pottedCount:null,potsEvidence:'unknown',pottingAttempts:null,successfulPottingStrokes:null};
+    const intent=supported?({pot:'pot',miss:'pot',break:'other',safety:'safety',escape:'escape',push_out:'other'}[r.kind]||'unknown'):'unknown';
+    if(!has('intent'))r.intent=intent;
+    if(!has('pottedCount'))r.pottedCount=count;
+    if(!has('potsEvidence'))r.potsEvidence=supported&&['pot','escape'].includes(r.kind)?'explicit':
+      supported&&['break','safety','push_out','miss','foul'].includes(r.kind)?'not_applicable':'unknown';
+    let attempts=null,successful=null;
+    if(supported&&r.kind==='pot'&&r.intent==='pot'&&valid(count)&&count>0){
+      // A sequential batch explicitly declares one successful stroke per ball;
+      // a single/multipot explicitly declares one stroke. Ball count alone does not.
+      attempts=r.entry==='sequential_batch'?count:r.strokeCount===1?1:null;
+      successful=attempts;
+    }else if(supported&&r.kind==='miss'&&r.intent==='pot'){
+      attempts=r.strokeCount===1?1:null;successful=0;
+    }else if(supported&&['break','safety','push_out','escape'].includes(r.kind)&&['other','safety','escape'].includes(r.intent)){
+      attempts=0;successful=0;
+    }else if(supported&&r.kind==='foul'){
+      // Explicit attacking intent is required; a foul is not automatically a miss.
+      attempts=r.intent==='pot'&&r.strokeCount===1?1:['safety','other','escape'].includes(r.intent)?0:null;
+      successful=0;
+    }
+    if(!has('pottingAttempts'))r.pottingAttempts=attempts;
+    if(!has('successfulPottingStrokes'))r.successfulPottingStrokes=successful;
+    return r;
+  }
   function federalStatsShotIssues(m,side,referenceRecords=null){
     const records=federalStatsRows(referenceRecords||m.detailedPlay?.records),racks=federalStatsRackRows(m),{byId,conflicts}=federalStatsRecordIndex(records),refs=new Map(),issues=new Set();
     const affects=r=>!r || ![0,1].includes(r.side) || r.side===side;
@@ -10090,10 +10123,18 @@ $('useClock').addEventListener('change',e=>$('clockSettings').classList.toggle('
     if(service('potting'))attackReasons.push('score_correction_potting');
     if(duplicate){potReasons.push('duplicate_record');attackReasons.push('duplicate_record');}
     if(all.some(r=>![0,1].includes(r.side))){potReasons.push('unknown_side');attackReasons.push('unknown_side');}
-    let explicit=0,derived=0,attempts=0,success=0;
-    for(const r of records){
-      if(r.evidenceVersion!==2){potReasons.push('legacy_record');attackReasons.push('legacy_record');continue;}
+    let explicit=0,derived=0,attempts=0,success=0,unknownPots=false,unknownAttempts=false,unknownSuccess=false;
+    for(const original of records){
+      const r=federalStatsReadableShot(original);
+      if(original.evidenceVersion!==2){
+        potReasons.push('legacy_record');attackReasons.push('legacy_record');
+      }
       const valid=n=>Number.isInteger(n)&&n>=0;
+      const count=r.pottedCount??(Array.isArray(r.balls)?r.balls.length:null);
+      if(r.potsEvidence==='unknown'||['pot','escape','inferred_pots'].includes(r.kind)&&
+        (!['explicit','derived'].includes(r.potsEvidence)||!valid(count))||r.potsEvidence==='derived'&&(r.kind!=='inferred_pots'||r.derivationSafe!==true))unknownPots=true;
+      if(!valid(r.pottingAttempts))unknownAttempts=true;
+      if(!valid(r.successfulPottingStrokes))unknownSuccess=true;
       if(!['pot','safety','escape','other','unknown'].includes(r.intent)||r.intent==='unknown'&&!(r.kind==='inferred_pots'&&(r.pottedCount??r.balls?.length)===0))attackReasons.push('unknown_intent');
       if(['pot','escape','inferred_pots'].includes(r.kind)&&!['explicit','derived','unknown'].includes(r.potsEvidence))potReasons.push('missing_pot_evidence');
       if(valid(r.pottingAttempts))attempts+=r.pottingAttempts;
@@ -10104,7 +10145,6 @@ $('useClock').addEventListener('change',e=>$('clockSettings').classList.toggle('
           ['break','safety','push_out'].includes(r.kind)&&r.pottingAttempts>0||
           (r.kind==='foul'||r.kind==='miss'||r.foul===true)&&r.successfulPottingStrokes>0)attackReasons.push('inconsistent_attack');
       }
-      const count=r.pottedCount??(Array.isArray(r.balls)?r.balls.length:null);
       if(r.pottedCount!=null&&r.balls?.length&&r.pottedCount!==r.balls.length)potReasons.push('inconsistent_pot_count');
       if(r.kind==='foul'||r.kind==='break'||r.kind==='push_out'||r.foul===true)continue;
       if(r.potsEvidence==='unknown')potReasons.push('unknown_pots');
@@ -10116,8 +10156,11 @@ $('useClock').addEventListener('change',e=>$('clockSettings').classList.toggle('
       }
     }
     const recordCoverage=reasons=>reasons.length?(fresh||records.length?'partial':'unknown'):'complete';
-    metrics.pottedBalls=federalMetric('count',fresh||records.length?explicit+derived:null,null,recordCoverage(potReasons),potReasons,{explicit,derived});
-    metrics.pottingSuccess=federalMetric('percent',fresh||records.length?success:null,fresh||records.length?attempts:null,recordCoverage(attackReasons),attackReasons);
+    const knownPots=fresh||records.length?(explicit+derived>0||!unknownPots?explicit+derived:null):null;
+    const knownSuccess=fresh||records.length?(success>0||!unknownSuccess?success:null):null;
+    const knownAttempts=fresh||records.length?(attempts>0||!unknownAttempts?attempts:null):null;
+    metrics.pottedBalls=federalMetric('count',knownPots,null,knownPots===null?'unknown':recordCoverage(potReasons),potReasons,{explicit,derived});
+    metrics.pottingSuccess=federalMetric('percent',knownSuccess,knownAttempts,knownSuccess===null&&knownAttempts===null?'unknown':recordCoverage(attackReasons),attackReasons);
     const attack=metrics.pottingSuccess,missed=attack.numerator===null||attack.denominator===null||success>attempts?null:attempts-success;
     metrics.missedPots=federalMetric('count',missed,null,missed===null?'unknown':attack.coverage,attack.reasons);
     const safetyReasons=[];

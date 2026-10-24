@@ -1,0 +1,30 @@
+{
+  "desktop": {
+    "sheets": [
+      "Pushout",
+      "Metadata"
+    ],
+    "nineMetrics": "PASS",
+    "percentFormat": "0%",
+    "png": [
+      1920,
+      1080
+    ],
+    "pdfRatio": "16:9",
+    "pdfPixelsEqualPng": true
+  },
+  "mobile": {
+    "sheets": [
+      "Pushout",
+      "Metadata"
+    ],
+    "nineMetrics": "PASS",
+    "percentFormat": "0%",
+    "png": [
+      1920,
+      1080
+    ],
+    "pdfRatio": "16:9",
+    "pdfPixelsEqualPng": true
+  }
+}

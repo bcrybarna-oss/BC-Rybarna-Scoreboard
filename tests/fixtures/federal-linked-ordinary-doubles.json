@@ -1,0 +1,972 @@
+{
+  "id": "3d4c35e6-e336-49d5-a9b3-9955cec59c3d",
+  "discipline": "9-ball",
+  "doublesMode": true,
+  "status": "complete",
+  "startedAt": "2026-10-24T15:54:09.777Z",
+  "endedAt": "2026-10-24T16:27:05.963Z",
+  "playerIds": [
+    "efbf5977-f3ea-4c43-a2e6-94cef082228e",
+    "df600b07-1899-401c-91bd-962717e3a050"
+  ],
+  "playerNames": [
+    "Mark Szabo + Jakub Koniar",
+    "Tom Kurz + Jan Meisner"
+  ],
+  "teamPlayerIds": [
+    [
+      "efbf5977-f3ea-4c43-a2e6-94cef082228e",
+      "a94f12a3-4c68-46eb-a2e1-9d99db0e072b"
+    ],
+    [
+      "df600b07-1899-401c-91bd-962717e3a050",
+      "a702701b-157d-4b16-ac04-0bd366e9149e"
+    ]
+  ],
+  "teamPlayerNames": [
+    [
+      "Mark Szabo",
+      "Jakub Koniar"
+    ],
+    [
+      "Tom Kurz",
+      "Jan Meisner"
+    ]
+  ],
+  "scores": [
+    5,
+    3
+  ],
+  "stats": [
+    {
+      "accidentalSafeties": 0,
+      "aces": 0,
+      "bankShotAttempts": 1,
+      "bankShotSuccessful": 0,
+      "breakAndRun": 2,
+      "breakBall1": 4,
+      "breakBall10": 0,
+      "breakBall2": 0,
+      "breakBall3": 0,
+      "breakBall4": 1,
+      "breakBall5": 0,
+      "breakBall6": 1,
+      "breakBall7": 1,
+      "breakBall8": 0,
+      "breakBall9": 0,
+      "breakFouls": 0,
+      "breakPottedBalls": 7,
+      "breakPottedTracked": 4,
+      "breaks": 4,
+      "dryBreaks": 0,
+      "failedSafetyEscapes": 0,
+      "foulPenaltyPoints14": 0,
+      "foulPottedBalls": 0,
+      "fouls": 0,
+      "ghostAces": 0,
+      "ghostBIHRunouts": 0,
+      "ghostBreakFouls": 0,
+      "ghostCleanRunouts": 0,
+      "ghostDryBreaks": 0,
+      "ghostFailedRacks": 0,
+      "ghostSessions": 0,
+      "ghostSoftBreaks": 0,
+      "highRun14": 0,
+      "innings14": 0,
+      "jumpShotAttempts": 0,
+      "jumpShotSuccessful": 0,
+      "lagWins": 0,
+      "matchOnlyMissBadPosition": 0,
+      "matchOnlyMissPot": 0,
+      "matchOnlyMisses": 3,
+      "missBall1": 0,
+      "missBall10": 0,
+      "missBall2": 1,
+      "missBall3": 0,
+      "missBall4": 0,
+      "missBall5": 1,
+      "missBall6": 0,
+      "missBall7": 0,
+      "missBall8": 0,
+      "missBall9": 1,
+      "misses": 0,
+      "nineBallCaroms": 0,
+      "nineBallCombos": 0,
+      "openingBreakFouls14": 0,
+      "pushOuts": 1,
+      "pushOutsReturned": 1,
+      "regularPottedBalls": 48,
+      "resafes": 1,
+      "runouts": 1,
+      "safeties": 5,
+      "safetyEscapes": 3,
+      "softBreaks": 0,
+      "softDryBreaks": 0,
+      "successfulSafeties": 3,
+      "successfulSafetyEscapes": 3,
+      "tenBallCaroms": 0,
+      "tenBallCombos": 0,
+      "threeFoulLosses": 0,
+      "threeFoulPenalties14": 0,
+      "trackedSafeties": 5,
+      "twoWayAttempts": 0,
+      "twoWayPotSuccess": 0,
+      "twoWaySafetySuccess": 0,
+      "twoWaySuccessful": 0
+    },
+    {
+      "accidentalSafeties": 0,
+      "aces": 0,
+      "bankShotAttempts": 0,
+      "bankShotSuccessful": 0,
+      "breakAndRun": 0,
+      "breakBall1": 0,
+      "breakBall10": 0,
+      "breakBall2": 0,
+      "breakBall3": 0,
+      "breakBall4": 1,
+      "breakBall5": 0,
+      "breakBall6": 0,
+      "breakBall7": 0,
+      "breakBall8": 0,
+      "breakBall9": 0,
+      "breakFouls": 0,
+      "breakPottedBalls": 1,
+      "breakPottedTracked": 4,
+      "breaks": 4,
+      "dryBreaks": 3,
+      "failedSafetyEscapes": 2,
+      "foulPenaltyPoints14": 0,
+      "foulPottedBalls": 0,
+      "fouls": 2,
+      "ghostAces": 0,
+      "ghostBIHRunouts": 0,
+      "ghostBreakFouls": 0,
+      "ghostCleanRunouts": 0,
+      "ghostDryBreaks": 0,
+      "ghostFailedRacks": 0,
+      "ghostSessions": 0,
+      "ghostSoftBreaks": 0,
+      "highRun14": 0,
+      "innings14": 0,
+      "jumpShotAttempts": 1,
+      "jumpShotSuccessful": 0,
+      "lagWins": 1,
+      "matchOnlyMissBadPosition": 0,
+      "matchOnlyMissPot": 0,
+      "matchOnlyMisses": 2,
+      "missBall1": 1,
+      "missBall10": 0,
+      "missBall2": 0,
+      "missBall3": 1,
+      "missBall4": 0,
+      "missBall5": 0,
+      "missBall6": 0,
+      "missBall7": 0,
+      "missBall8": 0,
+      "missBall9": 0,
+      "misses": 0,
+      "nineBallCaroms": 0,
+      "nineBallCombos": 0,
+      "openingBreakFouls14": 0,
+      "pushOuts": 0,
+      "pushOutsReturned": 0,
+      "regularPottedBalls": 12,
+      "resafes": 0,
+      "runouts": 0,
+      "safeties": 3,
+      "safetyEscapes": 3,
+      "softBreaks": 0,
+      "softDryBreaks": 0,
+      "successfulSafeties": 3,
+      "successfulSafetyEscapes": 1,
+      "tenBallCaroms": 0,
+      "tenBallCombos": 0,
+      "threeFoulLosses": 0,
+      "threeFoulPenalties14": 0,
+      "trackedSafeties": 3,
+      "twoWayAttempts": 0,
+      "twoWayPotSuccess": 0,
+      "twoWaySafetySuccess": 0,
+      "twoWaySuccessful": 0
+    }
+  ],
+  "detailedPlay": {
+    "coverage": "complete",
+    "inning": {
+      "id": 32,
+      "rack": 8,
+      "safeInference": true,
+      "side": 0,
+      "startBalls": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9
+      ]
+    },
+    "nextInning": 32,
+    "records": [
+      {
+        "ballCount": 0,
+        "id": "bc79e40e-80fc-45c3-b0db-ca0ec63079a7",
+        "inning": 2,
+        "kind": "break",
+        "pottedCount": 0,
+        "rack": 1,
+        "result": "dry_break",
+        "side": 1,
+        "sideId": "df600b07-1899-401c-91bd-962717e3a050",
+        "strokeCount": 1
+      },
+      {
+        "id": "e86d1640-9c6c-4d77-9097-84ad19333f5d",
+        "inning": 3,
+        "kind": "safety",
+        "rack": 1,
+        "side": 0,
+        "sideId": "efbf5977-f3ea-4c43-a2e6-94cef082228e",
+        "success": true
+      },
+      {
+        "foul": true,
+        "id": "fd97251a-2d5c-4811-b53a-f93defe21904",
+        "inning": 4,
+        "kind": "escape",
+        "legacyOrigin": false,
+        "pottedCount": 0,
+        "rack": 1,
+        "safetyId": "e86d1640-9c6c-4d77-9097-84ad19333f5d",
+        "side": 1,
+        "sideId": "df600b07-1899-401c-91bd-962717e3a050",
+        "success": false
+      },
+      {
+        "balls": [
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7
+        ],
+        "entry": "sequential_batch",
+        "id": "53ed185f-d3ec-4368-9829-a7608a50ccbc",
+        "inning": 5,
+        "kind": "pot",
+        "pottedCount": 7,
+        "rack": 1,
+        "side": 0,
+        "sideId": "efbf5977-f3ea-4c43-a2e6-94cef082228e"
+      },
+      {
+        "balls": [
+          8
+        ],
+        "id": "38ff2b2e-6750-4e1f-898d-5fcb7aaae7e2",
+        "inning": 5,
+        "kind": "pot",
+        "pottedCount": 1,
+        "rack": 1,
+        "side": 0,
+        "sideId": "efbf5977-f3ea-4c43-a2e6-94cef082228e",
+        "strokeCount": 1
+      },
+      {
+        "balls": [
+          9
+        ],
+        "entry": "sequential_batch",
+        "id": "e633a04a-8db3-4d1a-aeca-d1537bc14f1b",
+        "inning": 5,
+        "kind": "pot",
+        "pottedCount": 1,
+        "rack": 1,
+        "side": 0,
+        "sideId": "efbf5977-f3ea-4c43-a2e6-94cef082228e"
+      },
+      {
+        "ballCount": 4,
+        "ballNumbersKnown": true,
+        "balls": [
+          1,
+          4,
+          6,
+          7
+        ],
+        "foul": false,
+        "id": "ec95f685-551a-4634-a2f9-c63a45a98852",
+        "inning": 6,
+        "kind": "break",
+        "pottedCount": 4,
+        "rack": 2,
+        "result": "break_ok",
+        "side": 0,
+        "sideId": "efbf5977-f3ea-4c43-a2e6-94cef082228e",
+        "strokeCount": 1
+      },
+      {
+        "balls": [
+          2,
+          3,
+          5,
+          8
+        ],
+        "entry": "sequential_batch",
+        "id": "07b46657-02c5-4b86-a315-55729e3ff97e",
+        "inning": 6,
+        "kind": "pot",
+        "pottedCount": 4,
+        "rack": 2,
+        "side": 0,
+        "sideId": "efbf5977-f3ea-4c43-a2e6-94cef082228e"
+      },
+      {
+        "ball": 9,
+        "id": "7f96c57a-26e6-4df5-a2f1-b6d2683d01c8",
+        "inning": 6,
+        "kind": "miss",
+        "rack": 2,
+        "side": 0,
+        "sideId": "efbf5977-f3ea-4c43-a2e6-94cef082228e",
+        "strokeCount": 1
+      },
+      {
+        "balls": [
+          9
+        ],
+        "entry": "sequential_batch",
+        "id": "ddf9dab5-aad3-4d7a-8af7-27e73c57d63b",
+        "inning": 7,
+        "kind": "pot",
+        "pottedCount": 1,
+        "rack": 2,
+        "side": 1,
+        "sideId": "df600b07-1899-401c-91bd-962717e3a050"
+      },
+      {
+        "ballCount": 0,
+        "id": "567bcea9-58e8-40ed-8f68-245054ad7da0",
+        "inning": 8,
+        "kind": "break",
+        "pottedCount": 0,
+        "rack": 3,
+        "result": "dry_break",
+        "side": 1,
+        "sideId": "df600b07-1899-401c-91bd-962717e3a050",
+        "strokeCount": 1
+      },
+      {
+        "id": "9277a326-3ece-4db3-a78a-7211b8121a39",
+        "inning": 11,
+        "kind": "safety",
+        "rack": 3,
+        "side": 0,
+        "sideId": "efbf5977-f3ea-4c43-a2e6-94cef082228e",
+        "success": false
+      },
+      {
+        "ball": 1,
+        "id": "5ccd523c-0d9c-4667-838a-73f22269e12a",
+        "inning": 12,
+        "kind": "miss",
+        "rack": 3,
+        "side": 1,
+        "sideId": "df600b07-1899-401c-91bd-962717e3a050",
+        "strokeCount": 1
+      },
+      {
+        "balls": [
+          1
+        ],
+        "id": "a5055fa6-93de-4208-b784-254f3899c981",
+        "inning": 13,
+        "kind": "pot",
+        "pottedCount": 1,
+        "rack": 3,
+        "side": 0,
+        "sideId": "efbf5977-f3ea-4c43-a2e6-94cef082228e",
+        "strokeCount": 1
+      },
+      {
+        "ball": 2,
+        "id": "940e9dc3-c354-4749-9920-d727d20b93ac",
+        "inning": 13,
+        "kind": "miss",
+        "rack": 3,
+        "side": 0,
+        "sideId": "efbf5977-f3ea-4c43-a2e6-94cef082228e",
+        "strokeCount": 1,
+        "tag": {
+          "success": false,
+          "type": "bank"
+        }
+      },
+      {
+        "balls": [
+          2
+        ],
+        "id": "d153528e-bf65-4bd9-b3b1-bbd6ffa75f6e",
+        "inning": 14,
+        "kind": "pot",
+        "pottedCount": 1,
+        "rack": 3,
+        "side": 1,
+        "sideId": "df600b07-1899-401c-91bd-962717e3a050",
+        "strokeCount": 1
+      },
+      {
+        "balls": [
+          7
+        ],
+        "id": "bc3edbd0-7a90-4ad4-8801-5bd2294af1e8",
+        "inning": 14,
+        "kind": "pot",
+        "pottedCount": 1,
+        "rack": 3,
+        "shotType": "combo",
+        "side": 1,
+        "sideId": "df600b07-1899-401c-91bd-962717e3a050",
+        "strokeCount": 1
+      },
+      {
+        "balls": [
+          3
+        ],
+        "id": "e1f1ab13-3d4e-4c50-aad8-b9830efa7323",
+        "inning": 14,
+        "kind": "pot",
+        "pottedCount": 1,
+        "rack": 3,
+        "side": 1,
+        "sideId": "df600b07-1899-401c-91bd-962717e3a050",
+        "strokeCount": 1
+      },
+      {
+        "balls": [
+          9
+        ],
+        "id": "eab00f7e-aee7-4b7d-851d-0776669afccf",
+        "inning": 14,
+        "kind": "pot",
+        "pottedCount": 1,
+        "rack": 3,
+        "shotType": "combo",
+        "side": 1,
+        "sideId": "df600b07-1899-401c-91bd-962717e3a050",
+        "strokeCount": 1
+      },
+      {
+        "ballCount": 1,
+        "ballNumbersKnown": true,
+        "balls": [
+          1
+        ],
+        "foul": false,
+        "id": "ff15f2a1-7082-4ade-a980-d3cf80806cc8",
+        "inning": 15,
+        "kind": "break",
+        "pottedCount": 1,
+        "rack": 4,
+        "result": "break_ok",
+        "side": 0,
+        "sideId": "efbf5977-f3ea-4c43-a2e6-94cef082228e",
+        "strokeCount": 1
+      },
+      {
+        "balls": [
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8
+        ],
+        "entry": "sequential_batch",
+        "id": "303296e0-1b8b-4953-98bc-7914ba167642",
+        "inning": 15,
+        "kind": "pot",
+        "pottedCount": 7,
+        "rack": 4,
+        "side": 0,
+        "sideId": "efbf5977-f3ea-4c43-a2e6-94cef082228e"
+      },
+      {
+        "balls": [
+          9
+        ],
+        "entry": "sequential_batch",
+        "id": "fe3061f5-5390-4765-8856-a4c6636aa9f0",
+        "inning": 15,
+        "kind": "pot",
+        "pottedCount": 1,
+        "rack": 4,
+        "side": 0,
+        "sideId": "efbf5977-f3ea-4c43-a2e6-94cef082228e"
+      },
+      {
+        "ballCount": 0,
+        "id": "c197ef85-9814-470a-9c4d-a3314093fd33",
+        "inning": 16,
+        "kind": "break",
+        "pottedCount": 0,
+        "rack": 5,
+        "result": "dry_break",
+        "side": 1,
+        "sideId": "df600b07-1899-401c-91bd-962717e3a050",
+        "strokeCount": 1
+      },
+      {
+        "balls": [
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9
+        ],
+        "entry": "sequential_batch",
+        "id": "11f14576-a326-4bf4-9167-4f62375e6f55",
+        "inning": 17,
+        "kind": "pot",
+        "pottedCount": 9,
+        "rack": 5,
+        "side": 0,
+        "sideId": "efbf5977-f3ea-4c43-a2e6-94cef082228e"
+      },
+      {
+        "ballCount": 1,
+        "ballNumbersKnown": true,
+        "balls": [
+          1
+        ],
+        "foul": false,
+        "id": "1773e9cc-5a8a-4170-9495-e4656c69cb1f",
+        "inning": 18,
+        "kind": "break",
+        "pottedCount": 1,
+        "rack": 6,
+        "result": "break_ok",
+        "side": 0,
+        "sideId": "efbf5977-f3ea-4c43-a2e6-94cef082228e",
+        "strokeCount": 1
+      },
+      {
+        "id": "ffd3889c-48e5-4892-a43b-f3a3ca616137",
+        "inning": 18,
+        "kind": "safety",
+        "rack": 6,
+        "side": 0,
+        "sideId": "efbf5977-f3ea-4c43-a2e6-94cef082228e",
+        "success": true
+      },
+      {
+        "foul": true,
+        "id": "4ec1e86f-067e-464e-81d0-88456a40da74",
+        "inning": 19,
+        "kind": "escape",
+        "legacyOrigin": false,
+        "pottedCount": 0,
+        "rack": 6,
+        "safetyId": "ffd3889c-48e5-4892-a43b-f3a3ca616137",
+        "side": 1,
+        "sideId": "df600b07-1899-401c-91bd-962717e3a050",
+        "strokeCount": 1,
+        "success": false,
+        "tag": {
+          "success": false,
+          "type": "jump"
+        }
+      },
+      {
+        "balls": [
+          2,
+          3,
+          4
+        ],
+        "entry": "sequential_batch",
+        "id": "8975affc-7ecb-4486-a214-7c42a1910662",
+        "inning": 20,
+        "kind": "pot",
+        "pottedCount": 3,
+        "rack": 6,
+        "side": 0,
+        "sideId": "efbf5977-f3ea-4c43-a2e6-94cef082228e"
+      },
+      {
+        "ball": 5,
+        "id": "a9e52615-3cb0-47c7-b6bb-37f7c4c3cb71",
+        "inning": 20,
+        "kind": "miss",
+        "rack": 6,
+        "side": 0,
+        "sideId": "efbf5977-f3ea-4c43-a2e6-94cef082228e",
+        "strokeCount": 1
+      },
+      {
+        "id": "9836289b-8844-4c0f-a734-0d800037b7fd",
+        "inning": 21,
+        "kind": "safety",
+        "rack": 6,
+        "side": 1,
+        "sideId": "df600b07-1899-401c-91bd-962717e3a050",
+        "success": true
+      },
+      {
+        "foul": false,
+        "id": "61ebd7c6-8a2e-4afb-ac6a-650d94a2ab0d",
+        "inning": 22,
+        "kind": "escape",
+        "legacyOrigin": false,
+        "pottedCount": 0,
+        "rack": 6,
+        "safetyId": "9836289b-8844-4c0f-a734-0d800037b7fd",
+        "side": 0,
+        "sideId": "efbf5977-f3ea-4c43-a2e6-94cef082228e",
+        "success": true
+      },
+      {
+        "balls": [
+          5,
+          6,
+          7,
+          8,
+          9
+        ],
+        "entry": "sequential_batch",
+        "id": "a25e0d8f-ae5d-4374-bde7-f9f888fafa5e",
+        "inning": 23,
+        "kind": "pot",
+        "pottedCount": 5,
+        "rack": 6,
+        "side": 1,
+        "sideId": "df600b07-1899-401c-91bd-962717e3a050"
+      },
+      {
+        "ballCount": 1,
+        "ballNumbersKnown": true,
+        "balls": [
+          4
+        ],
+        "foul": false,
+        "id": "0229bc64-9832-450c-9b7e-d5bbee1d6d05",
+        "inning": 24,
+        "kind": "break",
+        "pottedCount": 1,
+        "rack": 7,
+        "result": "break_ok",
+        "side": 1,
+        "sideId": "df600b07-1899-401c-91bd-962717e3a050",
+        "strokeCount": 1
+      },
+      {
+        "id": "bcdf8bcf-3bb1-4c7d-8444-13dda2e0fc3b",
+        "inning": 24,
+        "kind": "safety",
+        "rack": 7,
+        "side": 1,
+        "sideId": "df600b07-1899-401c-91bd-962717e3a050",
+        "success": true
+      },
+      {
+        "foul": false,
+        "id": "b86a2382-b491-44b4-a73b-8b8d509949e7",
+        "inning": 25,
+        "kind": "escape",
+        "legacyOrigin": false,
+        "pottedCount": 0,
+        "rack": 7,
+        "safetyId": "bcdf8bcf-3bb1-4c7d-8444-13dda2e0fc3b",
+        "side": 0,
+        "sideId": "efbf5977-f3ea-4c43-a2e6-94cef082228e",
+        "success": true
+      },
+      {
+        "id": "7c97e9e7-9531-4f36-ab2b-39edc486aa97",
+        "inning": 26,
+        "kind": "safety",
+        "rack": 7,
+        "side": 1,
+        "sideId": "df600b07-1899-401c-91bd-962717e3a050",
+        "success": true
+      },
+      {
+        "foul": false,
+        "id": "7c8a352e-5888-4c4a-99db-8e09c0e89367",
+        "inning": 27,
+        "kind": "escape",
+        "legacyOrigin": false,
+        "pottedCount": 0,
+        "rack": 7,
+        "safetyId": "7c97e9e7-9531-4f36-ab2b-39edc486aa97",
+        "side": 0,
+        "sideId": "efbf5977-f3ea-4c43-a2e6-94cef082228e",
+        "success": true
+      },
+      {
+        "id": "2c73738a-62f3-4561-9db0-47a9dc93ddfe",
+        "inning": 27,
+        "kind": "safety",
+        "rack": 7,
+        "side": 0,
+        "sideId": "efbf5977-f3ea-4c43-a2e6-94cef082228e",
+        "success": true
+      },
+      {
+        "foul": false,
+        "id": "88d352df-d06b-4bc0-9b36-3bf9f7f06d5c",
+        "inning": 28,
+        "kind": "escape",
+        "legacyOrigin": false,
+        "pottedCount": 0,
+        "rack": 7,
+        "safetyId": "2c73738a-62f3-4561-9db0-47a9dc93ddfe",
+        "side": 1,
+        "sideId": "df600b07-1899-401c-91bd-962717e3a050",
+        "success": true
+      },
+      {
+        "id": "25ff9f85-cb70-436a-a826-3943639123d5",
+        "inning": 29,
+        "kind": "safety",
+        "rack": 7,
+        "side": 0,
+        "sideId": "efbf5977-f3ea-4c43-a2e6-94cef082228e",
+        "success": false
+      },
+      {
+        "balls": [
+          1
+        ],
+        "id": "8cda7ffb-4dd0-4938-9e18-6aabfc43c393",
+        "inning": 30,
+        "kind": "pot",
+        "pottedCount": 1,
+        "rack": 7,
+        "side": 1,
+        "sideId": "df600b07-1899-401c-91bd-962717e3a050",
+        "strokeCount": 1
+      },
+      {
+        "balls": [
+          2
+        ],
+        "id": "f57db5eb-1342-4d3b-a07a-293f619d014b",
+        "inning": 30,
+        "kind": "pot",
+        "pottedCount": 1,
+        "rack": 7,
+        "side": 1,
+        "sideId": "df600b07-1899-401c-91bd-962717e3a050",
+        "strokeCount": 1
+      },
+      {
+        "ball": 3,
+        "id": "68df659e-f2be-43f7-8a93-84b26f45d47e",
+        "inning": 30,
+        "kind": "miss",
+        "rack": 7,
+        "side": 1,
+        "sideId": "df600b07-1899-401c-91bd-962717e3a050",
+        "strokeCount": 1
+      },
+      {
+        "balls": [
+          3,
+          5,
+          6,
+          7,
+          8,
+          9
+        ],
+        "entry": "sequential_batch",
+        "id": "3e226658-f0dd-47f1-a086-bf36121d8d6a",
+        "inning": 31,
+        "kind": "pot",
+        "pottedCount": 6,
+        "rack": 7,
+        "side": 0,
+        "sideId": "efbf5977-f3ea-4c43-a2e6-94cef082228e"
+      },
+      {
+        "ballCount": 1,
+        "ballNumbersKnown": true,
+        "balls": [
+          1
+        ],
+        "foul": false,
+        "id": "484b7e3b-f14b-4372-9cbb-11631064ca5e",
+        "inning": 32,
+        "kind": "break",
+        "pottedCount": 1,
+        "rack": 8,
+        "result": "break_ok",
+        "side": 0,
+        "sideId": "efbf5977-f3ea-4c43-a2e6-94cef082228e",
+        "strokeCount": 1
+      },
+      {
+        "balls": [
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9
+        ],
+        "entry": "sequential_batch",
+        "id": "5701a46b-a9a9-4786-a958-986d10942322",
+        "inning": 32,
+        "kind": "pot",
+        "pottedCount": 8,
+        "rack": 8,
+        "side": 0,
+        "sideId": "efbf5977-f3ea-4c43-a2e6-94cef082228e"
+      }
+    ],
+    "tableKnown": true,
+    "version": 1
+  },
+  "breakMode": "alternate",
+  "isBreakShot": false,
+  "breaker": 0,
+  "lagWinner": 1,
+  "federalCupLink": {
+    "block": 2,
+    "fixtureNo": 9,
+    "lineupA": [
+      "fc-ef1400d4-fcb4-4926-985e-1e8d2a823f14",
+      "fc-b43ebda0-4628-4217-8b5f-cdf1747038e2"
+    ],
+    "lineupB": [
+      "fc-35818099-c4c1-4e03-8165-4b1bd5f7fe94",
+      "fc-d37a2dab-8117-48fd-bd8f-e237f49e9803"
+    ],
+    "lineupParticipants": [
+      [
+        {
+          "id": "fc-ef1400d4-fcb4-4926-985e-1e8d2a823f14",
+          "name": "Mark Szabo",
+          "team": "a",
+          "year": 2026
+        },
+        {
+          "id": "fc-b43ebda0-4628-4217-8b5f-cdf1747038e2",
+          "name": "Jakub Koniar",
+          "team": "a",
+          "year": 2026
+        }
+      ],
+      [
+        {
+          "id": "fc-35818099-c4c1-4e03-8165-4b1bd5f7fe94",
+          "name": "Tom Kurz",
+          "team": "b",
+          "year": 2026
+        },
+        {
+          "id": "fc-d37a2dab-8117-48fd-bd8f-e237f49e9803",
+          "name": "Jan Meisner",
+          "team": "b",
+          "year": 2026
+        }
+      ]
+    ],
+    "rosterA": [
+      "Jakub Koniar",
+      "Kristián Mrva",
+      "Daniel Lang",
+      "Timothei Furko",
+      "Mark Szabo"
+    ],
+    "rosterB": [
+      "Jan Meisner",
+      "Matouš Vlk",
+      "Tom Kurz",
+      "Jaroslav Tichý",
+      "Ladislav Hajšman"
+    ],
+    "rosterParticipants": [
+      [
+        {
+          "id": "fc-b43ebda0-4628-4217-8b5f-cdf1747038e2",
+          "name": "Jakub Koniar",
+          "team": "a",
+          "year": 2026
+        },
+        {
+          "id": "fc-92475cf5-2de5-45e4-adef-94b60f11ecae",
+          "name": "Kristián Mrva",
+          "team": "a",
+          "year": 2026
+        },
+        {
+          "id": "fc-14afdd89-14a3-473b-ae1c-1aae5d711496",
+          "name": "Daniel Lang",
+          "team": "a",
+          "year": 2026
+        },
+        {
+          "id": "fc-cde0010c-75af-4f4a-8b18-f3cff6cbfe4c",
+          "name": "Timothei Furko",
+          "team": "a",
+          "year": 2026
+        },
+        {
+          "id": "fc-ef1400d4-fcb4-4926-985e-1e8d2a823f14",
+          "name": "Mark Szabo",
+          "team": "a",
+          "year": 2026
+        }
+      ],
+      [
+        {
+          "id": "fc-d37a2dab-8117-48fd-bd8f-e237f49e9803",
+          "name": "Jan Meisner",
+          "team": "b",
+          "year": 2026
+        },
+        {
+          "id": "fc-93258549-c0ef-4370-ac4b-cc059db90465",
+          "name": "Matouš Vlk",
+          "team": "b",
+          "year": 2026
+        },
+        {
+          "id": "fc-35818099-c4c1-4e03-8165-4b1bd5f7fe94",
+          "name": "Tom Kurz",
+          "team": "b",
+          "year": 2026
+        },
+        {
+          "id": "fc-f0327cdb-18e5-4d4d-a582-a5b601a822f7",
+          "name": "Jaroslav Tichý",
+          "team": "b",
+          "year": 2026
+        },
+        {
+          "id": "fc-b24c5aa5-0932-4d14-ae7c-777ac9ac7308",
+          "name": "Ladislav Hajšman",
+          "team": "b",
+          "year": 2026
+        }
+      ]
+    ],
+    "teamAName": "Slovensko",
+    "teamBName": "Česko",
+    "type": "doubles",
+    "year": 2026
+  }
+}
