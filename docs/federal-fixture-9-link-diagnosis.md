@@ -72,6 +72,8 @@ ETag jednoho zápasu neřeší atomicky současné propojení jiného zápasu s 
 - Celá Node sada **210 PASS / 2 FAIL / 1 SKIP (213)**: pouze dlouhodobá `preview-match-reload-recovery.test.cjs:50,106`. Skip je volitelný test soukromého exportu bez environment cesty; s dodaným exportem samostatně PASS. CI není plně zelené.
 - Aplikační HTML/assety/výpočty neměněny, verze se nezvyšuje. Žádný produkční zápis, merge ani deployment.
 
+Připraveno v [draft PR #34](https://github.com/bcrybarna-oss/BC-Rybarna-Scoreboard/pull/34), testovaný commit `8890f24cf13f1ee0033e04609efdddd887ceff61`. [GitHub CI 40118428244](https://github.com/bcrybarna-oss/BC-Rybarna-Scoreboard/actions/runs/40118428244): Release version and revision **success**, Node **210/213 PASS, 2 FAIL, 1 SKIP**; log potvrzuje výhradně `preview-match-reload-recovery.test.cjs:50,106`. Testy i produkční HTML jsou proti main v těchto dvou příčinách nezměněné. Následný zápis výsledku CI mění pouze dokumentaci.
+
 Screenshoty jsou **izolovaný návrh opravy**, nikoli již opravená produkce:
 
 ![Desktop](screenshots/federal-fixture-9-link-desktop.png)
