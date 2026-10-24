@@ -10302,8 +10302,6 @@ $('useClock').addEventListener('change',e=>$('clockSettings').classList.toggle('
     const names=entries.map((e,i)=>type==='team'?reps[i]:identified[i]?e.owner.name:reps[i]);
     const cell=(value,style=0)=>({value,style}),header=row=>row.map(v=>cell(v,1));
     const specs=[['Pot percentage','pottingSuccess'],['Missed pots','missedPots'],['Fouls','fouls'],['Successful breaks','breakSuccess'],['Dry/soft breaks','drySoftBreaks'],['Foul breaks','foulBreaks'],['Break and runs','cleanRuns'],['Break and win','ownBreakWins'],['Break and lose','ownBreakLosses']];
-    const noteText={unknown_attempts:'Some potting attempts were not recorded; only evidenced attempts are included.',unknown_intent:'The intent of one or more actions is unknown. Fouls are not automatically misses.',unknown_pots:'Some ball counts were not recorded.',legacy_coverage:'The match does not have complete evidence from the start.',incomplete_rack_history:'Some completed rack evidence is missing or does not agree with the score.',incomplete_attribution:'Some rack statistics cannot be assigned to a stable player identity.',missing_counter:'A required source counter is missing.',missing_rack_counter:'A required counter is missing from one or more racks.',zero_denominator:'No attempts are recorded; 0 / 0 is not a zero success percentage.'};
-    const notes=[header(['Entity','Metric','Status','Explanation','Evidence']),['Both sides','Scope','This match only','Only this saved match is included. Team columns are representation totals; pair columns are pair totals, not individual player contributions.',''],['Both sides','Break and runs','App rules','Own-break rack completion under app rules; runouts and aces are excluded. Eligibility is retained after an unplayed return of the breaker\'s own push out or soft break.','']];
     const main=[[cell('PUSHOUT FEDERAL CUP '+result.year,2),cell('',2),cell('',2)],header(['Match #'+result.fixtureNo+' · '+type.toUpperCase(),String(m.discipline||'Unknown discipline'),'Final score '+m.scores[0]+' : '+m.scores[1]]),[cell('This match only',5),cell(identified.every(Boolean)?entity:'Side totals',5),cell('',5)],[],header(['Metric',...names])];
     for(const [label,key]of specs){
       const values=entries.map((e,i)=>{
@@ -10311,18 +10309,14 @@ $('useClock').addEventListener('change',e=>$('clockSettings').classList.toggle('
         const metric=key==='breakSuccess'||key==='ownBreakWins'?federalMetric('count',source.numerator,null,source.coverage,source.reasons,source.components):source;
         const displayed=federalReportMetric(metric),text=displayed.text;
         let value=text==='—'?'—':metric.kind==='percent'&&text.includes('%')?Number(text.replace(/\s|%/g,'').replace(',','.'))/100:metric.kind==='count'&&Number.isFinite(metric.count)?metric.count:text;
-        const explanation=metric.coverage==='complete'?(text==='0 / 0'?'No recorded attempts; no percentage is defined.':'Complete source evidence.'):(metric.coverage==='unknown'?'No reliable value is available. ': 'Only available recorded evidence is included; the value is not a complete match total. ')+metric.reasons.map(r=>noteText[r]||'Source evidence requires review: '+r.replace(/_/g,' ')+'.').join(' ');
-        notes.push([names[i],label,metric.coverage,explanation,'numerator='+String(metric.numerator)+'; denominator='+String(metric.denominator)+'; count='+String(metric.count)+(metric.reasons.length?'; reasons='+metric.reasons.join(', '):'')]);
         return cell(value,typeof value==='number'&&metric.kind==='percent'?4:3);
       });
       main.push([cell(label,5),...values]);
     }
-    result.unattributed.forEach(u=>notes.push(['Unattributed','Identity','partial','Some source evidence cannot be assigned to a verified player. No team total is assigned to an individual.',u.reason]));
-    identified.forEach((known,i)=>{if(!known)notes.push([reps[i],'Identity','unknown','These are side totals; a stable individual or pair identity is unavailable.','ambiguous_identity']);});
     const metadata=[header(['Field','Value']),['Tournament','Pushout Federal Cup'],['Year',result.year],['Match number',result.fixtureNo],['Match type',type],['Discipline',String(m.discipline||'—')],['Match ID',m.id],['Started at (UTC)',m.startedAt||'—'],['Completed at (UTC)',m.endedAt],['Final score',m.scores[0]+' : '+m.scores[1]],['Scope','This match only'],['Entity type',identified.every(Boolean)?entity:'Side totals (identity unavailable)'],['Calculation API version',result.version],['Export schema','pushout-match-v1']];
     names.forEach((name,i)=>metadata.push(['Side '+(i+1),name],['Representation '+(i+1),reps[i]],['Opponent '+(i+1),names[1-i]],['Score '+(i+1),m.scores[i]]));
     const safe=s=>String(s).normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9]+/gi,'-').replace(/^-|-$/g,'').toLowerCase().slice(0,65)||'unknown';
-    return {filename:'pushout-federal-cup-'+result.year+'-match-'+result.fixtureNo+'-'+type+'-'+safe(names[0])+'-vs-'+safe(names[1])+'.xlsx',sheets:[{name:'Pushout',widths:[34,38,38],freeze:5,merges:['A1:C1'],rows:main},{name:'Metadata',widths:[30,95],freeze:1,rows:metadata},{name:'Data notes',widths:[30,26,20,100,72],freeze:1,rows:notes}]};
+    return {filename:'pushout-federal-cup-'+result.year+'-match-'+result.fixtureNo+'-'+type+'-'+safe(names[0])+'-vs-'+safe(names[1])+'.xlsx',sheets:[{name:'Pushout',widths:[34,38,38],freeze:5,merges:['A1:C1'],rows:main},{name:'Metadata',widths:[30,95],freeze:1,rows:metadata}]};
   }
 
   function detailedCounterActive(){

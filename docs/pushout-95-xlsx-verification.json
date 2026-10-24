@@ -4,59 +4,53 @@
     "typed": true,
     "sheets": [
       "Pushout",
-      "Metadata",
-      "Data notes"
+      "Metadata"
     ],
-    "sha256": "702d64df2829cb703dc6e8b51bfa41194c50df7cec33a58175eef0b05c2fcde5"
+    "sha256": "9b5515e404180e59a134b1281a9823ad697c4beb3d615984e8232c8869b5902a"
   },
   {
     "file": "doubles-mobile.xlsx",
     "typed": true,
     "sheets": [
       "Pushout",
-      "Metadata",
-      "Data notes"
+      "Metadata"
     ],
-    "sha256": "702d64df2829cb703dc6e8b51bfa41194c50df7cec33a58175eef0b05c2fcde5"
+    "sha256": "9b5515e404180e59a134b1281a9823ad697c4beb3d615984e8232c8869b5902a"
   },
   {
     "file": "singles-desktop.xlsx",
     "typed": true,
     "sheets": [
       "Pushout",
-      "Metadata",
-      "Data notes"
+      "Metadata"
     ],
-    "sha256": "9d03c2f5cbc5a1f16ed8514c778f1fb19469ef5ede3944e9a3dca24198f67f90"
+    "sha256": "06432dc82294f37866ac3671169b59f8ba0a4cf3592c4dcae2d9ee0ace8cf815"
   },
   {
     "file": "singles-mobile.xlsx",
     "typed": true,
     "sheets": [
       "Pushout",
-      "Metadata",
-      "Data notes"
+      "Metadata"
     ],
-    "sha256": "9d03c2f5cbc5a1f16ed8514c778f1fb19469ef5ede3944e9a3dca24198f67f90"
+    "sha256": "06432dc82294f37866ac3671169b59f8ba0a4cf3592c4dcae2d9ee0ace8cf815"
   },
   {
     "file": "team-desktop.xlsx",
     "typed": true,
     "sheets": [
       "Pushout",
-      "Metadata",
-      "Data notes"
+      "Metadata"
     ],
-    "sha256": "342fce8c68c6768bc3e8edf7def88f1f2ebbecb992dcdc5d3eda17b4c532f80f"
+    "sha256": "941b8da2570aaa353b158868554b76ce9d41a235814cdf8f4d7ee1fa0a0b9fe3"
   },
   {
     "file": "team-mobile.xlsx",
     "typed": true,
     "sheets": [
       "Pushout",
-      "Metadata",
-      "Data notes"
+      "Metadata"
     ],
-    "sha256": "342fce8c68c6768bc3e8edf7def88f1f2ebbecb992dcdc5d3eda17b4c532f80f"
+    "sha256": "941b8da2570aaa353b158868554b76ce9d41a235814cdf8f4d7ee1fa0a0b9fe3"
   }
 ]

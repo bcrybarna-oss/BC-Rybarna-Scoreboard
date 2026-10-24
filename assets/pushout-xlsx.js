@@ -1,4 +1,4 @@
-/* Small, dependency-free OOXML serializer for the three-sheet Pushout export.
+/* Small, dependency-free OOXML serializer for the two-sheet Pushout export.
  * Values only: strings are inlineStr (never formulas), numbers retain numeric types.
  * ZIP method 0 avoids a network library, async compression or platform dependency. */
 (function(root){
@@ -23,7 +23,7 @@
   function sheetXml(sheet){
     const ncol=sheet.widths.length;
     const col=i=>{let v='';for(i++;i;i=Math.floor((i-1)/26))v=String.fromCharCode(65+(i-1)%26)+v;return v;};
-    const rows=sheet.rows.map((row,r)=>'<row r="'+(r+1)+'" ht="'+(r===0?32:sheet.name==='Data notes'&&r>2?60:28)+'" customHeight="1">'+row.map((cell,c)=>{
+    const rows=sheet.rows.map((row,r)=>'<row r="'+(r+1)+'" ht="'+(r===0?32:28)+'" customHeight="1">'+row.map((cell,c)=>{
       const value=cell&&typeof cell==='object'?cell.value:cell,style=cell&&typeof cell==='object'?cell.style:0,ref=col(c)+(r+1);
       return typeof value==='number'&&Number.isFinite(value)?'<c r="'+ref+'" s="'+style+'" t="n"><v>'+value+'</v></c>':'<c r="'+ref+'" s="'+style+'" t="inlineStr"><is><t xml:space="preserve">'+xml(String(value??'').slice(0,32767))+'</t></is></c>';
     }).join('')+'</row>').join('');
@@ -31,7 +31,7 @@
     return declaration+'<worksheet xmlns="'+ns+'"><dimension ref="A1:'+col(ncol-1)+sheet.rows.length+'"/><sheetViews><sheetView workbookViewId="0" showGridLines="0"><pane ySplit="'+sheet.freeze+'" topLeftCell="A'+(sheet.freeze+1)+'" activePane="bottomLeft" state="frozen"/></sheetView></sheetViews><cols>'+sheet.widths.map((w,c)=>'<col min="'+(c+1)+'" max="'+(c+1)+'" width="'+w+'" customWidth="1"/>').join('')+'</cols><sheetData>'+rows+'</sheetData>'+(merges?'<mergeCells count="'+sheet.merges.length+'">'+merges+'</mergeCells>':'')+'<pageMargins left="0.25" right="0.25" top="0.4" bottom="0.4" header="0.2" footer="0.2"/><pageSetup orientation="landscape" paperSize="9" fitToWidth="1" fitToHeight="0"/></worksheet>';
   }
   function write(model){
-    if(!Array.isArray(model.sheets)||model.sheets.length!==3||model.sheets.map(s=>s.name).join('|')!=='Pushout|Metadata|Data notes')throw Error('Invalid Pushout workbook');
+    if(!Array.isArray(model.sheets)||model.sheets.length!==2||model.sheets.map(s=>s.name).join('|')!=='Pushout|Metadata')throw Error('Invalid Pushout workbook');
     const files={};
     files['[Content_Types].xml']=declaration+'<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/><Override PartName="/xl/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml"/>'+model.sheets.map((s,i)=>'<Override PartName="/xl/worksheets/sheet'+(i+1)+'.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/>').join('')+'</Types>';
     files['_rels/.rels']=declaration+'<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="xl/workbook.xml"/></Relationships>';

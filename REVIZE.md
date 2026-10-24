@@ -1,5 +1,13 @@
 # Revize aplikace Poolčítadlo
 
+## Dominik – finální dvoulistový Pushout export (v4.51.95 RC)
+Zadavatel: Dominik
+Datum: 24. 10. 2026
+Změny: Ve stejném PR #33/kandidátu95 odstraněn celý list Data notes a jeho exportní konstrukce, bez přesunu poznámek. Zůstávají pouze Pushout a Metadata. Interní coverage/reasons/unattributed, sportovní výpočty a všechny hodnoty/formátování zbylých listů zachovány. Aktualizované testy a skutečně stažená ukázka, místní předchozí soubor zachován ve výstupním archivu.
+Testy:9/9 cílených testů PASS;6Singles/Doubles/Team desktop/mobil XLSX přesně2listy, ZIP/openpyxl validace a kontrolní Singles9metrik PASS. sheet1.xml/sheet2.xml/styles.xml přesně stejné jako před úpravou. Node207/209 pouze dvě známé preview-match-reload-recovery:50,106, bez nové regrese; CI není plně zelené.
+Nasazení: Schváleno zadavatelem, před merge čeká finální GitHub CI a porovnání známých selhání s aktuálním main. Zatím produkce94, finální výsledek bude zaznamenán po skutečném nasazení.
+Omezení: Žádné produkční zápisy/migrace. Skutečná přihlášená relace není dostupná v připojených browserech; produkční kontrola musí transparentně odlišit veřejný web a izolovaná místní data.
+
 ## Dominik – export pro Pushout ze společného API (v4.51.95 RC)
 Zadavatel: Dominik
 Datum: 24. 10. 2026
