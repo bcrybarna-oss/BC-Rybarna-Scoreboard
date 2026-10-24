@@ -1,0 +1,158 @@
+{
+  "matchId": "3d4c35e6-e336-49d5-a9b3-9955cec59c3d",
+  "source": "actual post-link export, surviving events and snapshots",
+  "rows": [
+    {
+      "rack": 1,
+      "breaker": 1,
+      "winner": 0,
+      "source": "surviving_history",
+      "breakRecordId": "bc79e40e-80fc-45c3-b0db-ca0ec63079a7",
+      "winningRecordId": "e633a04a-8db3-4d1a-aeca-d1537bc14f1b",
+      "beforeEventId": "65b7a316-65c5-439d-9f9d-99ee1ca0a810",
+      "terminalSnapshotEventId": "4b8bd1c2-c900-40bc-8390-2cde244f3338",
+      "scoreEventId": "98163445-ee1e-44d0-a55f-e5a85e78eb26",
+      "scoreBefore": [
+        0,
+        0
+      ],
+      "scoreAfter": [
+        1,
+        0
+      ]
+    },
+    {
+      "rack": 2,
+      "breaker": 0,
+      "winner": 1,
+      "source": "surviving_history",
+      "breakRecordId": "ec95f685-551a-4634-a2f9-c63a45a98852",
+      "winningRecordId": "ddf9dab5-aad3-4d7a-8af7-27e73c57d63b",
+      "beforeEventId": "d500c6b5-a088-46ad-8cad-a309d44b4431",
+      "terminalSnapshotEventId": "1be0244c-d993-4254-924d-dd84d7e229a7",
+      "scoreEventId": "0fe1afdb-1842-4cb6-8bd8-804327b2d18f",
+      "scoreBefore": [
+        1,
+        0
+      ],
+      "scoreAfter": [
+        1,
+        1
+      ]
+    },
+    {
+      "rack": 3,
+      "breaker": 1,
+      "winner": 1,
+      "source": "surviving_history",
+      "breakRecordId": "567bcea9-58e8-40ed-8f68-245054ad7da0",
+      "winningRecordId": "eab00f7e-aee7-4b7d-851d-0776669afccf",
+      "beforeEventId": "c1c6b77e-b28e-47b5-9b68-fea3408a0f39",
+      "terminalSnapshotEventId": "17821719-bafa-4b73-9a94-f2eb57e56b3d",
+      "scoreEventId": "680a9b48-6ca9-4143-9176-9e90751f032c",
+      "scoreBefore": [
+        1,
+        1
+      ],
+      "scoreAfter": [
+        1,
+        2
+      ]
+    },
+    {
+      "rack": 4,
+      "breaker": 0,
+      "winner": 0,
+      "source": "surviving_history",
+      "breakRecordId": "ff15f2a1-7082-4ade-a980-d3cf80806cc8",
+      "winningRecordId": "fe3061f5-5390-4765-8856-a4c6636aa9f0",
+      "beforeEventId": "e3db49d9-58c4-473d-9afa-27ab25807f06",
+      "terminalSnapshotEventId": "fbe3eac6-35e2-4418-8260-0f7a670fa39c",
+      "scoreEventId": "06d114e3-367e-4be8-b94d-38bbef3277e4",
+      "scoreBefore": [
+        1,
+        2
+      ],
+      "scoreAfter": [
+        2,
+        2
+      ]
+    },
+    {
+      "rack": 5,
+      "breaker": 1,
+      "winner": 0,
+      "source": "surviving_history",
+      "breakRecordId": "c197ef85-9814-470a-9c4d-a3314093fd33",
+      "winningRecordId": "11f14576-a326-4bf4-9167-4f62375e6f55",
+      "beforeEventId": "4fab6eb8-a721-4f17-a66d-e4cebd04d3c0",
+      "terminalSnapshotEventId": "7e84932d-4245-4ff2-bef1-789d764fc4b3",
+      "scoreEventId": "7bdfa56f-2ac9-429a-9665-8800136ef82c",
+      "scoreBefore": [
+        2,
+        2
+      ],
+      "scoreAfter": [
+        3,
+        2
+      ]
+    },
+    {
+      "rack": 6,
+      "breaker": 0,
+      "winner": 1,
+      "source": "surviving_history",
+      "breakRecordId": "1773e9cc-5a8a-4170-9495-e4656c69cb1f",
+      "winningRecordId": "a25e0d8f-ae5d-4374-bde7-f9f888fafa5e",
+      "beforeEventId": "806bd662-eb1e-4779-b2f4-68049ae90b29",
+      "terminalSnapshotEventId": "8220e52f-4933-4239-832a-72df0b2259b7",
+      "scoreEventId": "faa3c8bf-0e2d-437a-be7e-bfe8d607c80b",
+      "scoreBefore": [
+        3,
+        2
+      ],
+      "scoreAfter": [
+        3,
+        3
+      ]
+    },
+    {
+      "rack": 7,
+      "breaker": 1,
+      "winner": 0,
+      "source": "surviving_history",
+      "breakRecordId": "0229bc64-9832-450c-9b7e-d5bbee1d6d05",
+      "winningRecordId": "3e226658-f0dd-47f1-a086-bf36121d8d6a",
+      "beforeEventId": "8bcb78c2-cefe-42a9-b7fe-9e3bfd72d370",
+      "terminalSnapshotEventId": "3b8b0b38-817c-41ec-a2cc-f4a322b15767",
+      "scoreEventId": "c1af65ee-99e3-465b-8368-c4673d8aa655",
+      "scoreBefore": [
+        3,
+        3
+      ],
+      "scoreAfter": [
+        4,
+        3
+      ]
+    },
+    {
+      "rack": 8,
+      "breaker": 0,
+      "winner": 0,
+      "source": "surviving_history",
+      "breakRecordId": "484b7e3b-f14b-4372-9cbb-11631064ca5e",
+      "winningRecordId": "5701a46b-a9a9-4786-a958-986d10942322",
+      "beforeEventId": "d04a96c4-30a4-410d-aa11-b315b0751edb",
+      "terminalSnapshotEventId": "7abb1b3c-9e8c-4c90-8a38-bc1debf46477",
+      "scoreEventId": "b0add8a6-e55d-4a62-a597-e97ccb3d5cd9",
+      "scoreBefore": [
+        4,
+        3
+      ],
+      "scoreAfter": [
+        5,
+        3
+      ]
+    }
+  ]
+}

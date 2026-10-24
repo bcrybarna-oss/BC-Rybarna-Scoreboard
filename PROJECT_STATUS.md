@@ -6,6 +6,8 @@ Aktualizace: 24. 10. 2026. Zadavatel aktuální revize: **Dominik**.
 
 Aktuální verze: **v4.51.96 RC** (připravený kandidát v PR #34, nesloučeno a nenasazeno). Produkce: **v4.51.95 RC**.
 
+- **Doplněná rekonstrukce racků #9 – Dominik,24.10.2026:** všech osm skutečných breaker/winner párů doloženo aktuálními break/game-ball záznamy, přeživšími událostmi skóre a odpovídajícími prefixovými undo snapshoty. SharedAPI nyní bez zápisu vrací SK2/4 aCZ1/4 vlastních breaků vyhraných,2/3 prohraných; Pushout používá stejné údaje. Kanonické racky mají přednost, žádné sčítání snapshotů/odhad ze skóre. Neúplná či konfliktní historie zůstává unknown. Poty48/12 aúspěšnost94/86 % nezměněny. Cílené14/14, plná sada225/227 pouze dvě známé chyby, desktop/mobil skutečné PNG/PDF/XLSX PASS. [Tabulka důkazů a omezení](docs/federal-fixture-9-rack-reconstruction.md). Kandidát96/PR34, neslučovat/nenasazovat. Následující první diagnóza je zachovaná historie před rekonstrukcí.
+
 - **Diagnostika statistik #9 – Dominik,24.10.2026:** uživatel doplnil schválenou vazbu; nový export proti původnímu i BEFORE záloze mění pouze federalCupLink, herní data shodná. Prokázáno přeskočení46původních strků bez evidenceVersion2. Čistý čtecí adaptér společného API obnovuje doložené hodnoty SK48/51=94 % a48 koulí, CZ12/14=86 % a12 koulí; nezmění ledger ani vazbu, zachovává partial a neznámé rackové výsledky. Neznámá evidence se nevydává za0. Regrese na main selže, cílené69/69 PASS, celá sada219/221 pouze známé dvě chyby. Skutečný export v izolovaném browseru:13metrik, A2/páry, desktop/mobil PNG/PDF/XLSX a nezávislé kontroly PASS,0Firebase/0zápisů/0JS chyb. **Neslučovat/nenasazovat.** [Diagnóza a artefakty](docs/federal-fixture-9-statistics-diagnosis.md).
 
 

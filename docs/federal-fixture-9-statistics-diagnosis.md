@@ -2,6 +2,8 @@
 
 Zadavatel: Dominik. Datum: 24. 10. 2026. Kandidát v4.51.96 RC, PR #34. **Nesloučeno, nenasazeno.** Produkce zůstává v4.51.95 RC.
 
+> Doplnění po úplné analýze událostí: všech osm racků lze doložit přeživší historií a undo snapshoty. Aktuální oprava vrací vlastní break výhry SK2/4 a CZ1/4, prohry2/3. Níže uvedená původní neznámá hodnota je historie první diagnózy; nová [rekonstrukce a tabulka důkazů](federal-fixture-9-rack-reconstruction.md) ji zpřesňuje. Artefakty již obsahují aktualizovaný výsledek.
+
 ## Skutečné záznamy a integrita
 
 Zápas `3d4c35e6-e336-49d5-a9b3-9955cec59c3d`, Doubles #9, Mark Szabo + Jakub Koniar proti Tom Kurz + Jan Meisner, 5:3.

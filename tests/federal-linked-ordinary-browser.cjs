@@ -30,7 +30,7 @@ const libs={'html2canvas.min.js':fs.readFileSync(path.join(libDir,'html2canvas.m
   const original=fs.readFileSync(file),data=JSON.parse(original),m=Object.values(data.matches).find(m=>m.id==='3d4c35e6-e336-49d5-a9b3-9955cec59c3d');assert.ok(m);assert.deepEqual(m.scores,[5,3]);
   const cfg=data.federalCup2026,before=JSON.stringify(m);
   await p.evaluate(({c,m})=>reportTest.load(c,[m]),{c:cfg,m});
-  const expected={breakSuccess:['100 %','25 %'],breakBallAverage:['1,8','0,3'],aces:['0','0'],ownBreakWins:['—','—'],cleanRuns:['2','0'],pottedBalls:['48','12'],pottingSuccess:['94 %','86 %'],safetySuccess:['60 %','100 %'],escapeSuccess:['100 %','33 %'],resafes:['1','0'],fouls:['0','2'],jumpShots:['0 / 0','0 / 1'],bankShots:['0 / 1','0 / 0']};
+  const expected={breakSuccess:['100 %','25 %'],breakBallAverage:['1,8','0,3'],aces:['0','0'],ownBreakWins:['2 / 4','1 / 4'],cleanRuns:['2','0'],pottedBalls:['48','12'],pottingSuccess:['94 %','86 %'],safetySuccess:['60 %','100 %'],escapeSuccess:['100 %','33 %'],resafes:['1','0'],fouls:['0','2'],jumpShots:['0 / 0','0 / 1'],bankShots:['0 / 1','0 / 0']};
   const snapshots=[];
   for(const mode of ['desktop','mobile']){
    await p.setViewportSize(mode==='desktop'?{width:2042,height:1280}:{width:390,height:844});
@@ -45,7 +45,7 @@ const libs={'html2canvas.min.js':fs.readFileSync(path.join(libDir,'html2canvas.m
    const waiting=p.waitForEvent('download');await row.locator('[data-fc-pushout]').click();const d=await waiting;assert.equal(await d.failure(),null);assert.match(d.suggestedFilename(),/match-9-doubles-mark-szabo-jakub-koniar-vs-tom-kurz-jan-meisner/);
    await d.saveAs(path.join(out,'Pushout-'+mode+'.xlsx'));await p.waitForFunction(()=>[...document.querySelectorAll('[data-fc-pushout]')].every(b=>!b.disabled));
    const model=await p.evaluate(m=>reportTest.pushout(m),m);assert.deepEqual(model.sheets.map(s=>s.name),['Pushout','Metadata']);
-   assert.deepEqual(model.sheets[0].rows.slice(5).map(r=>r.map(c=>c.value)),[['Pot percentage',.94,.86],['Missed pots',3,2],['Fouls',0,2],['Successful breaks',4,1],['Dry/soft breaks',0,3],['Foul breaks',0,0],['Break and runs',2,0],['Break and win','—','—'],['Break and lose','—','—']]);
+   assert.deepEqual(model.sheets[0].rows.slice(5).map(r=>r.map(c=>c.value)),[['Pot percentage',.94,.86],['Missed pots',3,2],['Fouls',0,2],['Successful breaks',4,1],['Dry/soft breaks',0,3],['Foul breaks',0,0],['Break and runs',2,0],['Break and win',2,1],['Break and lose',2,3]]);
    assert.equal(await p.evaluate(()=>JSON.stringify(reportTest.data.matches[0])),before);snapshots.push({mode,all13Metrics:expected,pushoutRows:model.sheets[0].rows.slice(5).map(r=>r.map(c=>c.value))});
   }
   // The representation report uses the same recovered pair contributions, while

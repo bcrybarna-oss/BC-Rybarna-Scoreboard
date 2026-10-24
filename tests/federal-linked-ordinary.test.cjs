@@ -45,3 +45,37 @@ test('three actual backups: current record differs ONLY by approved link; new re
  for(const k of Object.keys(sample))assert.deepEqual(now[k],sample[k],k);const before=canonical(now),r=calc(now);assert.equal(r.sides[0].metrics.pottedBalls.count,48);assert.equal(r.sides[1].metrics.pottingSuccess.denominator,14);assert.equal(canonical(now),before);
  for(const [i,p]of files.entries())assert.equal(crypto.createHash('sha256').update(fs.readFileSync(p)).digest('hex'),crypto.createHash('sha256').update(buffers[i]).digest('hex'));
 });
+
+const history=require('./fixtures/federal-linked-doubles-history.json');
+const historyRows=m=>copy(c.federalStatsHistoricalRacks(m));
+test('real #9 surviving history proves all eight actual breakers and rack winners, immutable after Firebase roundtrip',()=>{
+ const before=canonical(history),rows=historyRows(history),r=calc(history);
+ assert.deepEqual(rows.map(x=>[x.rack,x.breaker,x.winner]),[[1,1,0],[2,0,1],[3,1,1],[4,0,0],[5,1,0],[6,0,1],[7,1,0],[8,0,0]]);
+ for(const [i,w,l]of [[0,2,2],[1,1,3]]){const a=r.sides[i].metrics;assert.equal(a.ownBreakWins.numerator,w);assert.equal(a.ownBreakWins.denominator,4);assert.equal(a.ownBreakLosses.count,l);assert.equal(a.ownBreakWins.coverage,'complete');assert.equal(a.ownBreakWins.components.source,'surviving_history');}
+ assert.equal(r.sides[0].metrics.pottedBalls.count,48);assert.equal(r.sides[1].metrics.pottingSuccess.denominator,14);
+ assert.equal(canonical(history),before);assert.deepEqual(calc(roundTrip(history)),r);
+});
+test('canonical rack ledger always wins, even incomplete or conflicting; history is never appended',()=>{
+ const m=copy(history);m.federalEvidence={racks:[{id:'canonical',rack:1,breaker:0,winner:0}]};
+ assert.deepEqual(historyRows(m),[]);const r=calc(m);assert.equal(r.sides[0].metrics.ownBreakWins.numerator,1);assert.equal(r.sides[0].metrics.ownBreakWins.denominator,1);assert.notEqual(r.sides[0].metrics.ownBreakWins.coverage,'complete');
+ m.federalEvidence.racks=[];assert.deepEqual(historyRows(m),[]);
+});
+test('missing snapshot or break or legal terminal stroke never inferred from final score or pot count',()=>{
+ for(const rack of [1,3,8])for(const kind of ['snapshots','break','terminal']){const m=copy(history);
+  if(kind==='snapshots')m.events=m.events.filter(e=>!e.meta?.undoSnapshot||JSON.parse(e.meta.undoSnapshot).rackNumber!==rack);
+  else m.detailedPlay.records=m.detailedPlay.records.filter(r=>!(r.rack===rack&&(kind==='break'?r.kind==='break':r.balls?.includes(9))));
+  assert.deepEqual(historyRows(m),[],rack+kind);assert.equal(calc(m).sides[0].metrics.ownBreakWins.numerator,null);
+ }
+});
+test('returned or conflicting undo branches, duplicate events and backward scores cannot become additional played racks',()=>{
+ const variants=[m=>{m.events.push(copy(m.events.find(e=>e.meta?.undoSnapshot)));},m=>{const e=m.events.find(e=>e.meta?.undoSnapshot),s=JSON.parse(e.meta.undoSnapshot);s.breaker=0;e.meta.undoSnapshot=JSON.stringify(s);},m=>{m.events.find(e=>e.text==='Skóre 1:0').text='Skóre 0:1';},m=>{const e=m.events.find(e=>e.meta?.undoSnapshot),s=JSON.parse(e.meta.undoSnapshot);s.detailedPlay.records=[{id:'undone',rack:1,kind:'pot',side:0}];e.meta.undoSnapshot=JSON.stringify(s);}];
+ for(const change of variants){const m=copy(history);change(m);assert.deepEqual(historyRows(m),[]);}
+});
+test('manual corrections, ace/foul terminal changes, malformed snapshots and partial rack service stay unknown',()=>{
+ const variants=[m=>{m.events.splice(5,0,{id:'correction',text:'Oprava skóre −1'});},m=>{m.federalEvidence={serviceChanges:[{coverage:{racks:'partial'}}]};},m=>{m.detailedPlay.records.at(-1).kind='foul';},m=>{m.detailedPlay.records.at(-1).foul=true;},m=>{m.detailedPlay.records.at(-1).kind='break';m.detailedPlay.records.at(-1).result='ace';},m=>{m.events.find(e=>e.meta?.undoSnapshot).meta.undoSnapshot='broken';}];
+ for(const change of variants){const m=copy(history);change(m);assert.deepEqual(historyRows(m),[]);assert.equal(calc(m).sides[0].metrics.ownBreakWins.numerator,null);}
+});
+test('actual complete export carries identical surviving history, including all undo snapshots', {skip:!process.env.FC_RELINK_BACKUP},()=>{
+ const d=JSON.parse(fs.readFileSync(process.env.FC_RELINK_BACKUP)),m=Object.values(d.matches).find(m=>m.id===history.id);
+ assert.deepEqual(m.events,history.events);assert.deepEqual(historyRows(m),historyRows(history));assert.deepEqual(calc(m).sides.map(s=>[s.metrics.ownBreakWins.numerator,s.metrics.ownBreakLosses.count]),[[2,2],[1,3]]);
+});

@@ -1,5 +1,13 @@
 # Revize aplikace Poolčítadlo
 
+## Dominik – doložená historie vlastních break výher #9 (v4.51.96 RC)
+Zadavatel: Dominik
+Datum: 24. 10. 2026
+Změny: Ve stejném kandidátu96/PR34 doplněna čistá rekonstrukce všech8racků ze skutečných break/game-ball records, přeživších událostí skóre a prefixových undo snapshotů. SharedAPI aPushout vrací own break wins SK2/4,CZ1/4 a losses2/3. Kanonický ledger má přednost, snapshoty se nesčítají, neúplná/konfliktní historie zůstává unknown. Herní data ani správná vazba se nemění.
+Testy:14/14 cílených PASS, celá Node225/227 pouze známé preview-match-reload-recovery:50,106. Aktuální index a skutečný úplný export desktop/mobil všech13metrik/A2/páry/PNG/PDF/XLSX PASS; nezávislá kontrola2listů/9hodnot/1920×1080/16:9/pixelovéshody PASS,0Firebase/0zápisů/0JS chyb. CI není plně zelené.
+Nasazení: Připraveno ve stejném PR #34; neslučovat a nenasazovat. Produkce95 beze změny. Tabulka rackových důkazů docs/federal-fixture-9-rack-reconstruction.md.
+Omezení: Historický fallback je úzký na kompletní legální game-ball řetězec9/10-ball, neodhaduje esa/faulová/manuální ukončení bez kanonického důkazu. ŽiváAuth/Firebase/fyzickýiPhone/Excel/OBS neověřeny.
+
 ## Dominik – statistiky dodatečně propojeného Doubles #9 (v4.51.96 RC)
 Zadavatel: Dominik
 Datum: 24. 10. 2026

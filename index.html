@@ -9926,6 +9926,74 @@ $('useClock').addEventListener('change',e=>$('clockSettings').classList.toggle('
     if(racks.some(r=>{const n=Number(r.rack),duplicate=numbers.has(n);numbers.add(n);return !Number.isInteger(n)||n<1||duplicate||r.matchId&&r.matchId!==m.id||r.year!=null&&Number(r.year)!==Number(m.federalCupLink?.year);}))return false;
     return federalRackScoresAgree({...m,federalTeam:null,federalEvidence:{racks}});
   }
+  // Read surviving history only, never sum undo snapshots as played racks.
+  // This deliberately narrow fallback requires a complete legal 9/10-ball chain.
+  function federalStatsHistoricalRacks(m){
+    if(m.federalTeam||Object.hasOwn(m.federalEvidence||{},'racks')||federalStatsRows(m.federalEvidence?.serviceChanges).some(s=>s.coverage?.racks==='partial')||m.status!=='complete'||
+      !['9-ball','10-ball'].includes(m.discipline)||m.ghostMode||m.winnerTableMode)return [];
+    const validScore=s=>Array.isArray(s)&&s.length===2&&s.every(n=>Number.isInteger(n)&&n>=0);
+    if(!validScore(m.scores))return [];
+    const total=m.scores[0]+m.scores[1],records=federalStatsRows(m.detailedPlay?.records),events=federalStatsRows(m.events);
+    if(!total||m.rackNumber!==total||!records.length)return [];
+    // Firebase drops null properties and empty collections, including inside old ledgers.
+    const cloud=v=>{
+      if(v==null)return null;
+      if(Array.isArray(v)){const a=v.map(cloud);return a.some(x=>x!==null)?a:null;}
+      if(typeof v==='object'){const a=Object.keys(v).sort().map(k=>[k,cloud(v[k])]).filter(([,x])=>x!==null);return a.length?Object.fromEntries(a):null;}
+      return v;
+    };
+    const signature=r=>JSON.stringify(cloud(r)),ids=new Set(),groups=new Map();
+    let lastRack=1;
+    for(const r of records){
+      if(!r.id||ids.has(r.id)||!Number.isInteger(r.rack)||r.rack<lastRack||r.rack>total||
+        ![0,1].includes(r.side)||r.sideId!==m.playerIds?.[r.side]||
+        r.evidenceVersion!=null&&![1,2].includes(r.evidenceVersion)||
+        ['table_correction','turn_correction'].includes(r.kind))return [];
+      ids.add(r.id);lastRack=r.rack;
+      if(!groups.has(r.rack))groups.set(r.rack,[]);groups.get(r.rack).push(r);
+    }
+    const snapshots=new Map(),scoreEvents=new Map(),eventIds=new Set();
+    let currentRack=0,lastPrefix=0;
+    for(const [index,e]of events.entries()){
+      if(!e.id||eventIds.has(e.id))return [];eventIds.add(e.id);
+      // Score service changes are not evidence of a played rack.
+      if(/oprava skóre|korekce skóre|turnajové skóre/i.test(e.text||''))return [];
+      if(e.meta?.undoSnapshot){
+        let s;try{s=JSON.parse(e.meta.undoSnapshot);}catch{return [];}
+        const rows=federalStatsRows(s?.detailedPlay?.records),rack=s?.rackNumber;
+        if(!Number.isInteger(rack)||rack<currentRack||rack>total||!validScore(s.scores)||
+          rows.length<lastPrefix||rows.length>records.length||
+          rows.some((r,i)=>signature(r)!==signature(records[i])))return [];
+        currentRack=rack;lastPrefix=rows.length;
+        if(!snapshots.has(rack))snapshots.set(rack,[]);
+        snapshots.get(rack).push({eventId:e.id,index,state:s,prefix:rows.length});
+      }
+      const score=/^Skóre (\d+):(\d+)$/.exec(e.text||'');
+      if(score){if(!currentRack||scoreEvents.has(currentRack))return [];scoreEvents.set(currentRack,{eventId:e.id,index,scores:[Number(score[1]),Number(score[2])]});}
+    }
+    const result=[];let before=[0,0],offset=0;
+    for(let rack=1;rack<=total;rack++){
+      const rows=groups.get(rack)||[],breaks=rows.filter(r=>r.kind==='break'),snaps=snapshots.get(rack)||[],score=scoreEvents.get(rack);
+      const first=snaps[0],last=snaps.at(-1),terminal=rows.at(-1),gameBall=m.discipline==='9-ball'?9:10;
+      if(breaks.length!==1||rows[0]!==breaks[0]||!first||!last||!score||
+        !first.state.isBreakShot||first.prefix!==offset||first.state.turn!==breaks[0].side||
+        snaps.some(s=>s.state.breaker!==breaks[0].side||s.state.scores.some((n,i)=>n!==before[i]))||
+        last.prefix!==offset+rows.length-1||last.state.turn!==terminal.side||score.index<=last.index)return [];
+      // A retained legal game-ball stroke AND a one-point score transition are required.
+      // Ace, foul or manually awarded endings without this proof stay unknown.
+      if(terminal.kind!=='pot'||terminal.foul===true||!terminal.balls?.includes(gameBall)||
+        rows.slice(0,-1).some(r=>r.balls?.includes(gameBall)))return [];
+      const delta=score.scores.map((n,i)=>n-before[i]),winner=terminal.side;
+      if(delta[winner]!==1||delta[1-winner]!==0||rack<total&&
+        snapshots.get(rack+1)?.[0]?.index<=score.index)return [];
+      result.push({rack,breaker:breaks[0].side,winner,source:'surviving_history',
+        breakRecordId:breaks[0].id,winningRecordId:terminal.id,
+        beforeEventId:first.eventId,terminalSnapshotEventId:last.eventId,scoreEventId:score.eventId,
+        scoreBefore:before.slice(),scoreAfter:score.scores.slice()});
+      before=score.scores;offset+=rows.length;
+    }
+    return before.every((n,i)=>n===m.scores[i])?result:[];
+  }
   function federalStatsRecordSignature(value){
     return Array.isArray(value)?JSON.stringify(value.map(federalStatsRecordSignature)):
       value&&typeof value==='object'?JSON.stringify(Object.keys(value).sort().map(k=>[k,federalStatsRecordSignature(value[k])])):JSON.stringify(value);
@@ -10099,9 +10167,11 @@ $('useClock').addEventListener('change',e=>$('clockSettings').classList.toggle('
     if(!fresh)rackReasons.push('legacy_racks');
     if(service('racks'))rackReasons.push('score_correction_racks');
     if(!federalStatsRacksComplete(m))rackReasons.push('incomplete_rack_history');
-    const own=racks.filter(r=>r.breaker===side),ownWins=own.filter(r=>r.winner===side).length;
-    metrics.ownBreakWins=federalMetric('ratio',fresh||racks.length?ownWins:null,fresh||racks.length?own.length:null,
-      rackReasons.length?(racks.length?'partial':'unknown'):'complete',rackReasons);
+    const historical=!racks.length?federalStatsHistoricalRacks(m):[],ownRacks=historical.length?historical:racks;
+    const own=ownRacks.filter(r=>r.breaker===side),ownWins=own.filter(r=>r.winner===side).length;
+    metrics.ownBreakWins=federalMetric('ratio',fresh||ownRacks.length?ownWins:null,fresh||ownRacks.length?own.length:null,
+      historical.length?'complete':rackReasons.length?(racks.length?'partial':'unknown'):'complete',
+      historical.length?[]:rackReasons,historical.length?{source:'surviving_history',racks:historical}:{});
     const ownMetric=metrics.ownBreakWins;
     metrics.ownBreakLosses=federalMetric('count',ownMetric.numerator===null||ownMetric.denominator===null?null:ownMetric.denominator-ownMetric.numerator,null,ownMetric.coverage,ownMetric.reasons);
     for(const [name,key,flag]of [['aces','aces','ace'],['cleanRuns','breakAndRun','breakAndRun']]){

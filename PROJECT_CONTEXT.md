@@ -1,5 +1,8 @@
 # Poolčítadlo – společný kontext projektu
 
+Kandidát96/PR34 – doplnění rackové historie: při chybějícím kanonickém ledgeru lze ownBreakWins/ownBreakLosses doložit úplným surviving_history řetězcem explicitníbreak+legálnígameball+jednobodovéskóre+přeživšíprefixovésnapshoty. Žádné sčítání snapshotů, ukládání/migrace nebo odhad vítězů z celkového skóre. Existující kanonické racky mají vždy přednost; neúplný/konfliktní řetězec či nepodložené faulové/eso/manuální ukončení zůstane unknown. Skutečný #9 tak prokazuje2/4 proti1/4 a prohry2/3, detaily docs/federal-fixture-9-rack-reconstruction.md. Dřívější konstatování nedostupných rackových výsledků níže je historie první diagnózy před úplným prozkoumáním událostí.
+
+
 Kandidát v4.51.96 RC / PR #34: shared FC API čte původní explicitní detailedPlay z běžného počítadla i po pozdějším doplnění federalCupLink. Čistý adaptér nepřepisuje data/verzi evidence/fromStart; zachovává partial, deduplikaci, neznámé hodnoty a párové vlastnictví. sequential_batch a strokeCount dokládají pokusy, samotný počet koulí ne. Chybějící rackový ledger nelze nahradit odhadem výher při vlastním breaku. Skutečné před/po zálohy #9 potvrzují změnu pouze vazby a oprava výpočtu dává48/51 proti12/14. Produkční opravu vazby provedl uživatel; aplikace96 zatím není sloučena ani nasazena. Viz docs/federal-fixture-9-statistics-diagnosis.md.
 
 
