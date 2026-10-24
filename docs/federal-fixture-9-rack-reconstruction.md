@@ -41,3 +41,8 @@ Každý řádek níže je ověřen současně: aktuálním detailedPlay zázname
 [A1 PNG](screenshots/federal-96-linked-doubles-A1.png) · [desktop dialog](screenshots/federal-96-linked-doubles-desktop.png) · [mobil dialog](screenshots/federal-96-linked-doubles-mobile.png) · [PDF](examples/federal-96-linked-doubles.pdf) · [Pushout XLSX](examples/federal-96-linked-doubles.xlsx)
 
 Produkce v4.51.95 RC zůstává beze změny. Živá Auth/Firebase relace, fyzický iPhone/Excel/OBS neověřeny.
+
+
+## Finální CI rekonstrukce
+
+Commit `ee428999a2d525296b50d63c1baaf25642dfbc58` pushnut do draft PR #34. [CI40129989648](https://github.com/bcrybarna-oss/BC-Rybarna-Scoreboard/actions/runs/40129989648): **Release version and revision success**, Node **222PASS/2FAIL/3SKIP ze227**. Log potvrzuje pouze známé preview-match-reload-recovery.test.cjs:50/:106. Tři skipy potřebují místní soukromé exporty, lokálně225PASS/2FAIL/0SKIP. Cílené API/integrita/reporty75/75PASS. Následující dokumentační commit nemění otestovaný kód. Nic nesloučeno ani nenasazeno.

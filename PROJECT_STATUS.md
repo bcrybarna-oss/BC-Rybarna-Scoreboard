@@ -12,6 +12,13 @@ Aktuální verze: **v4.51.96 RC** (připravený kandidát v PR #34, nesloučeno 
 
 
 
+
+
+## Finální CI rekonstrukce
+
+Commit `ee428999a2d525296b50d63c1baaf25642dfbc58` pushnut do draft PR #34. [CI40129989648](https://github.com/bcrybarna-oss/BC-Rybarna-Scoreboard/actions/runs/40129989648): **Release version and revision success**, Node **222PASS/2FAIL/3SKIP ze227**. Log potvrzuje pouze známé preview-match-reload-recovery.test.cjs:50/:106. Tři skipy potřebují místní soukromé exporty, lokálně225PASS/2FAIL/0SKIP. Cílené API/integrita/reporty75/75PASS. Následující dokumentační commit nemění otestovaný kód. Nic nesloučeno ani nenasazeno.
+
+
 ### Ověřený commit a GitHub CI
 
 Oprava pushnuta jako `33719159e2c08cc270c30cc1cadd62e36992579c` do existujícího draft PR #34. [CI40127936545](https://github.com/bcrybarna-oss/BC-Rybarna-Scoreboard/actions/runs/40127936545): Release version and revision **success**; Node **217 PASS / 2 FAIL / 2 SKIP ze221**. Log obou selhání ukazuje pouze známé preview-match-reload-recovery.test.cjs:50/:106. Dva skipy jsou soukromé exportní kontroly, které lokálně prošly. CI není plně zelené. Celý stávající federal-evidence-browser také PASS (stabilní identity, sekvenční/multipot, foul/MISS/escape/Resafe, B&R, Team/páry, UNDO, mockAuth/reload/resume/PUT/GET;0JS chyb). Následný dokumentační commit nemění otestovaný aplikační kód. Nic nesloučeno ani nenasazeno.
