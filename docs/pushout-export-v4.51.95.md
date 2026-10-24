@@ -1,5 +1,7 @@
 # Export pro Pushout – v4.51.95 RC
 
+**Nasazeno24.10.2026 jako finální dvoulistová v4.51.95 RC.** [Skutečný deployment a bezpečné veřejné downloady](deployment-v4.51.95.md). Následující přípravné poznámky popisují vývoj kandidáta; aktuální XLSX má jen Pushout/Metadata, poznámky nikam nepřesunuty.
+
 Zadavatel: Dominik. Datum: 24. 10. 2026. Kandidát z origin/main fd40f0e (produkce94). Neslučovat ani nenasazovat.
 
 ## Implementace

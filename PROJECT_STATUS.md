@@ -4,7 +4,11 @@ Aktualizace: 24. 10. 2026. Zadavatel aktuální revize: **Dominik**.
 
 ## Verze a nasazení
 
-Aktuální verze: **v4.51.95 RC** (kandidát exportu Pushout; nesloučeno a nenasazeno, produkce zůstává v4.51.94 RC).
+Aktuální verze: **v4.51.95 RC** (nasazeno a v níže uvedeném rozsahu ověřeno).
+
+- **PRODUKCE v4.51.95 RC – Dominik,24.10.2026:** schválené PR #33 sloučeno merge **48706bd65d383e31b80c67a589fddc4de68e1ce0**, [Pages40074836634](https://github.com/bcrybarna-oss/BC-Rybarna-Scoreboard/actions/runs/40074836634) success. Veřejné index/overlay/13assetů HTTP200 přesné SHA256/verze95/navigace/desktop/mobil/0JS chyb a0zápisů PASS. Na neupravené produkční URL s izolovanou offline kopií uloženého Singles#3 reálně kliknuto EXPORT PRO PUSHOUT a staženy desktop/mobil XLSX, přesně2listy Pushout/Metadata, všech9hodnot správně a XML/styly obou listů byteově stejné jako před odebráním Data notes. Poznámky nepřesunuty, interní diagnostika zachována. FinálníPR/mainrelease success, Node207/209 pouze dvě známé chyby shodné s aktuálním předmerge main; CI není plně zelené. Produkční zápasy/export neměněny, žádná migrace. Skutečné Auth/Firebase/OBS a fyzickýiOS/Excel neověřeny. [Deployment report](docs/deployment-v4.51.95.md), [evidence](docs/deployment-v4.51.95-verification.json).
+
+Historie přípravy95 před schváleným nasazením:
 
 - **Finální úprava95 – Dominik,24.10.2026:** list Data notes odstraněn bez přesunu poznámek. Export má pouze Pushout/Metadata; interní diagnostika, všechny hodnoty a formátování obou listů beze změny (XML a styles byteově stejné).6skutečných desktop/mobil XLSX a9metrik Singles PASS, Node207/209 pouze známé dvě chyby. Nasazení schváleno, čeká finální CI.
 

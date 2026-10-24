@@ -1,5 +1,13 @@
 # Revize aplikace Poolčítadlo
 
+## Dominik – ověřené nasazení dvoulistového exportu Pushout (v4.51.95 RC)
+Zadavatel: Dominik
+Datum: 24. 10. 2026
+Změny: Po schváleném odstranění Data notes a finální kontrole sloučeno PR #33 merge48706bd65d383e31b80c67a589fddc4de68e1ce0 se zachováním historie. Nasazen XLSX pouze Pushout/Metadata bez přesunu poznámek; diagnostika/výpočty/hodnoty/formátování zachovány. Dokumentace skutečného výsledku bez další změny aplikace/verze.
+Testy: Release gate a finálníPR/mainrelease success; Node207/209 pouze preview-match-reload-recovery:50,106, stejné assertiony jako aktuální předmerge main. Žádná nová regrese, CI není plně zelené. Pages40074836634 success. Veřejné HTML/13assetů HTTP200 přesné SHA256, verze95 a bezpečný desktop/mobil smoke PASS. Na neupravené produkční URL s lokální offline kopií uloženého Singles skutečné2downloady XLSX PASS: pouze2listy,9schválených hodnot a původní XML/styly beze změny,0JS chyb/0Firebase požadavků/0zápisů. Předmerge6XLSX a9/9cílených testů PASS, původní JSON nezměněn.
+Nasazení: Nasazeno a v uvedeném rozsahu ověřeno24.10.2026 09:39CEST na https://bcrybarna-oss.github.io/BC-Rybarna-Scoreboard/ v4.51.95 RC. Automatické Pages nebylo ručně opakováno. Podrobnosti docs/deployment-v4.51.95.md.
+Omezení: Skutečná produkční Auth/Firebase relace neověřena, v dostupných browserech žádné přihlášení. Produkční URL testována s izolovanou místní kopií zápasu a blokovaným Firebase, nikoli jako skutečná cloudová relace. Fyzický iPhone/Safari a Microsoft Excel neověřeny. Produkční zápasy neměněny ani nemigrovány.
+
 ## Dominik – finální dvoulistový Pushout export (v4.51.95 RC)
 Zadavatel: Dominik
 Datum: 24. 10. 2026

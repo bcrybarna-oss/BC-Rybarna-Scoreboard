@@ -1,0 +1,192 @@
+{
+  "sha": "48706bd65d383e31b80c67a589fddc4de68e1ce0",
+  "version": "v4.51.95 RC",
+  "verifiedAt": "2026-10-24T07:38:52.542Z",
+  "files": {
+    "index.html": {
+      "status": 200,
+      "sha256": "e62ef40acedc1b907406b6289ae0583ac05d78ccc713e396b5f93edfcfb81c92",
+      "bytes": 1687604,
+      "etag": "W/\"6adc6040-19c034\""
+    },
+    "overlay.html": {
+      "status": 200,
+      "sha256": "5386ad8b552ecc1544a698302f6f9f399b5e14080e1148e0c8af6b4380c85592",
+      "bytes": 20884,
+      "etag": "W/\"6adc6040-5194\""
+    },
+    "assets/pushout-xlsx.js": {
+      "status": 200,
+      "sha256": "5e4436656444c3f87b2c8550414b49070eb7d8974455e321425388bc639ae874",
+      "bytes": 7977,
+      "etag": "W/\"6adc6040-1f29\""
+    },
+    "assets/federal-report-billiards.webp": {
+      "status": 200,
+      "sha256": "2a8d73c1b0a5ecd07597b993f0da5ed22b7c30bba6023448b8069d154bf3e228",
+      "bytes": 74790,
+      "etag": "\"6adc6040-12426\""
+    },
+    "assets/federal-report-pool-logo.png": {
+      "status": 200,
+      "sha256": "c28fd81775d4013e2b58716d6f8ef1a92691f4d5d4c0b8b2ba1b0d3a3a12c593",
+      "bytes": 220520,
+      "etag": "\"6adc6040-35d68\""
+    },
+    "assets/pushout-sports-logo-yellow.png": {
+      "status": 200,
+      "sha256": "049c2b4648a2e6106c5c41459c346689915256f62330ee17129b4484fc8314ff",
+      "bytes": 44487,
+      "etag": "\"6adc6040-adc7\""
+    },
+    "bc-rybarna-logo.png": {
+      "status": 200,
+      "sha256": "5ad8dccc37f3426e189916f5e5bce61fa922f82d8757283832ac01d224f1f083",
+      "bytes": 131525,
+      "etag": "\"6adc6040-201c5\""
+    },
+    "assets/poolcitadlo-logo.webp": {
+      "status": 200,
+      "sha256": "7f9caff46b1924186ef7d6a42b6b9079ee9ace9e7875d8f688e9fdc83bd488db",
+      "bytes": 27896,
+      "etag": "\"6adc6040-6cf8\""
+    },
+    "assets/federal-cup/flag-sk-flat.svg": {
+      "status": 200,
+      "sha256": "659b2c072f05d05e8b5d38caa878626459ac652c6dc02359094b423a4ae1d6ee",
+      "bytes": 1543,
+      "etag": "W/\"6adc6040-607\""
+    },
+    "assets/federal-cup/flag-cz-flat.svg": {
+      "status": 200,
+      "sha256": "172aa188241c3f5fbd95d7881095d65e2b681f105fb867923709cc09a5dcc3a0",
+      "bytes": 222,
+      "etag": "\"6adc6040-de\""
+    },
+    "assets/federal-cup/flag-sk-cloth.svg": {
+      "status": 200,
+      "sha256": "cf8cc9a9fec2f76db4ba3cf6f66c303488cb7ad738aba6dc8afe7535a7a968e7",
+      "bytes": 3230,
+      "etag": "W/\"6adc6040-c9e\""
+    },
+    "assets/federal-cup/flag-cz-cloth.svg": {
+      "status": 200,
+      "sha256": "e83808ab2c0c8a5a6b2dde63c44c8e22416ca0a38c00b468136643baca2064e8",
+      "bytes": 1910,
+      "etag": "W/\"6adc6040-776\""
+    },
+    "assets/federal-cup/flag-sk-cloth.png": {
+      "status": 200,
+      "sha256": "27faf3b6b76a07b4793ddadb3f549d104ef5c91256c300ad3d24d4dd25a9111a",
+      "bytes": 717340,
+      "etag": "\"6adc6040-af21c\""
+    },
+    "assets/federal-cup/flag-cz-cloth.png": {
+      "status": 200,
+      "sha256": "e6485509db399555689fe7b9e23aa1e9e70b27a28e3ca8f1ac2ad38c505cc7fb",
+      "bytes": 641363,
+      "etag": "\"6adc6040-9c953\""
+    },
+    "assets/federal-cup/gold-trophy.png": {
+      "status": 200,
+      "sha256": "d4c8ec993c1e20d16508e3f96aade23dc217593597ed3649ca7bc777f85c29c7",
+      "bytes": 1854457,
+      "etag": "\"6adc6040-1c4bf9\""
+    }
+  },
+  "normalAndFreshUrlsMatch": true,
+  "screens": [
+    "setup",
+    "home",
+    "players",
+    "about",
+    "federal-cup-2026",
+    "setup",
+    "home"
+  ],
+  "available": {
+    "A1": 0,
+    "A2": 1,
+    "B": 0
+  },
+  "publicA2Exports": [
+    {
+      "format": "Png",
+      "bytes": 1451040
+    },
+    {
+      "format": "Pdf",
+      "bytes": 855692
+    }
+  ],
+  "pageErrors": [],
+  "consoleErrors": [],
+  "blocked": [],
+  "writeAttempts": 0,
+  "limits": "Public unmodified HTML; no matches created, no roster/results edited, no Firebase requests allowed, no real login. Empty offline A2 exported; actual saved A1/B/statistics need production auth. Functional match/lineup scenarios are separate isolated tests.",
+  "pr": 33,
+  "mergeCommit": "48706bd65d383e31b80c67a589fddc4de68e1ce0",
+  "pagesRun": 40074836634,
+  "mainCiRun": 40074836849,
+  "premergePrRun": 40074465426,
+  "premergeMainRun": 39999398781,
+  "releaseGate": "success",
+  "node": {
+    "total": 209,
+    "passed": 207,
+    "failed": 2,
+    "knownFailures": [
+      "preview-match-reload-recovery.test.cjs:50",
+      "preview-match-reload-recovery.test.cjs:106"
+    ]
+  },
+  "publicOriginPushout": {
+    "sha": "48706bd65d383e31b80c67a589fddc4de68e1ce0",
+    "version": "v4.51.95 RC",
+    "verifiedAt": "2026-10-24T07:39:41.887Z",
+    "htmlUnmodified": true,
+    "origin": "https://bcrybarna-oss.github.io/BC-Rybarna-Scoreboard/",
+    "context": "Isolated fresh browser, local offline copy of the user-supplied saved Singles #3; no real production Auth or cloud match access.",
+    "matchId": "a9f06904-00a5-4518-a81a-eae5a9425a35",
+    "downloads": [
+      {
+        "mode": "desktop",
+        "filename": "pushout-federal-cup-2026-match-3-singles-daniel-lang-vs-tom-kurz.xlsx",
+        "bytes": 13355,
+        "sha256": "06432dc82294f37866ac3671169b59f8ba0a4cf3592c4dcae2d9ee0ace8cf815"
+      },
+      {
+        "mode": "mobile",
+        "filename": "pushout-federal-cup-2026-match-3-singles-daniel-lang-vs-tom-kurz.xlsx",
+        "bytes": 13355,
+        "sha256": "06432dc82294f37866ac3671169b59f8ba0a4cf3592c4dcae2d9ee0ace8cf815"
+      }
+    ],
+    "pageErrors": [],
+    "consoleErrors": [],
+    "blocked": [],
+    "writeAttempts": 0
+  },
+  "xlsx": [
+    {
+      "mode": "desktop",
+      "sheets": [
+        "Pushout",
+        "Metadata"
+      ],
+      "allNineMetricsCorrect": true,
+      "remainingSheetXmlAndStylesUnchanged": true,
+      "sha256": "06432dc82294f37866ac3671169b59f8ba0a4cf3592c4dcae2d9ee0ace8cf815"
+    },
+    {
+      "mode": "mobile",
+      "sheets": [
+        "Pushout",
+        "Metadata"
+      ],
+      "allNineMetricsCorrect": true,
+      "remainingSheetXmlAndStylesUnchanged": true,
+      "sha256": "06432dc82294f37866ac3671169b59f8ba0a4cf3592c4dcae2d9ee0ace8cf815"
+    }
+  ]
+}
