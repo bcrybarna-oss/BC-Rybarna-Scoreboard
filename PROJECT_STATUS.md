@@ -8,6 +8,13 @@ Aktuální verze: **v4.51.96 RC** (připravený kandidát v PR #34, nesloučeno 
 
 - **Diagnostika statistik #9 – Dominik,24.10.2026:** uživatel doplnil schválenou vazbu; nový export proti původnímu i BEFORE záloze mění pouze federalCupLink, herní data shodná. Prokázáno přeskočení46původních strků bez evidenceVersion2. Čistý čtecí adaptér společného API obnovuje doložené hodnoty SK48/51=94 % a48 koulí, CZ12/14=86 % a12 koulí; nezmění ledger ani vazbu, zachovává partial a neznámé rackové výsledky. Neznámá evidence se nevydává za0. Regrese na main selže, cílené69/69 PASS, celá sada219/221 pouze známé dvě chyby. Skutečný export v izolovaném browseru:13metrik, A2/páry, desktop/mobil PNG/PDF/XLSX a nezávislé kontroly PASS,0Firebase/0zápisů/0JS chyb. **Neslučovat/nenasazovat.** [Diagnóza a artefakty](docs/federal-fixture-9-statistics-diagnosis.md).
 
+
+
+### Ověřený commit a GitHub CI
+
+Oprava pushnuta jako `33719159e2c08cc270c30cc1cadd62e36992579c` do existujícího draft PR #34. [CI40127936545](https://github.com/bcrybarna-oss/BC-Rybarna-Scoreboard/actions/runs/40127936545): Release version and revision **success**; Node **217 PASS / 2 FAIL / 2 SKIP ze221**. Log obou selhání ukazuje pouze známé preview-match-reload-recovery.test.cjs:50/:106. Dva skipy jsou soukromé exportní kontroly, které lokálně prošly. CI není plně zelené. Celý stávající federal-evidence-browser také PASS (stabilní identity, sekvenční/multipot, foul/MISS/escape/Resafe, B&R, Team/páry, UNDO, mockAuth/reload/resume/PUT/GET;0JS chyb). Následný dokumentační commit nemění otestovaný aplikační kód. Nic nesloučeno ani nenasazeno.
+
+
 Následuje historie přípravy před ručním doplněním vazby uživatelem; starší formulace „dosud neprovedeno“ označují tehdejší stav.
 
 - **Funkční test konzolového pomocníka #9 – Dominik, 24.10.2026:** přímo nezměněný federal-fixture-9-console.js SHA256 `5bb814728874343d8538c3962ac750cef7267d7a98c2cdd0b406262f9059c384` prošel15/15 izolovanými Chrome/Firebase-mock scénáři. Skutečné debug()/paused scope/instalace/undebug()/resume, GET záloha/diff bez zápisu, přesný If-Match PUT pouze vazby, blokace změn zápasu/nominace/duplicit, HTTP412 bez retry, ztracená odpověď po úspěchu rozlišena verify, bezpečný rollback a blokace pozdějších změn/oprávnění PASS. Realistická RTDB serializace a všechny původní/schválené kanonické hashe doloženy. **0 skutečných produkčních požadavků/zápisů**, schválená cílená oprava stále neprovedena. PR34 neslučovat/nenasazovat. [Výsledky a hashe](docs/federal-fixture-9-console-verification.md), [ruční postup](docs/federal-fixture-9-manual-console.md). ETag nezamyká nominaci/jiné zápasy: při ručním provedení musí trvat klid administrátorů. Dvě známé Node CI chyby zůstávají oddělené od této plně úspěšné cílené sady.

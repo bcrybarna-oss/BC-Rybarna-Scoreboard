@@ -5,7 +5,7 @@ Zadavatel: Dominik
 Datum: 24. 10. 2026
 Změny: Čtecí kompatibilita explicitních původních strků běžného počítadla ve společném FC API místo přeskočení evidence bez v2 markeru. Skutečný zápas #9 vrací SK48/51 a48 koulí, CZ12/14 a12 koulí; report i Pushout používají stejné API. Neznámý údaj není falešná nula. Uložená data ani správná vazba se nemění, žádná migrace nebo odhad racků. Aktivní verze96.
 Testy: Regrese selže na origin/main (0 místo48), oprava PASS; cílené69/69, celá Node219/221 pouze dvě známé preview-match-reload-recovery:50,106. Browser skutečného exportu všech13metrik/A2/páry/desktop/mobil/PNG/PDF/XLSX PASS; nezávislá kontrola2listů/9hodnot/1920×1080/16:9 a shodyPDFpixelů PASS. Tři zálohy dokazují změnu pouze federalCupLink; soubory neměněny,0Firebase/0zápisů/0JSchyb. CI není plně zelené.
-Nasazení: Připraveno v existujícím PR #34, neslučovat a nenasazovat. Produkce v4.51.95 RC beze změny. Diagnóza docs/federal-fixture-9-statistics-diagnosis.md.
+Nasazení: Otestováno a pushnuto jako33719159e2c08cc270c30cc1cadd62e36992579c v existujícím draft PR #34. CI40127936545 release success, Node217PASS/2známéFAIL/2soukroméSKIP ze221; celý federal-evidence-browser PASS. Následná dokumentace nemění aplikační kód. Neslučovat a nenasazovat. Produkce v4.51.95 RC beze změny. Diagnóza docs/federal-fixture-9-statistics-diagnosis.md.
 Omezení: Výhry/prohry při vlastním rozstřelu oprávněně neznámé bez ledgeru výsledků racků. Interní partial/legacy zachováno. Živá Auth/Firebase relace, fyzický iPhone/Excel/OBS neověřeny.
 
 ## Dominik – izolované funkční testy jednorázové opravy vazby #9 (v4.51.95 RC)

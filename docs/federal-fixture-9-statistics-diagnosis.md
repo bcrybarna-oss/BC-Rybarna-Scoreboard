@@ -54,3 +54,8 @@ Artefakty: [A1 PNG](screenshots/federal-96-linked-doubles-A1.png), [desktop dial
 ## Omezení
 
 Ověřeno nad dodanými skutečnými exporty v izolovaném prostředí, nikoli živou přihlášenou Firebase relací. Nenasazeno; produkční report se touto přípravou nezmění. Fyzický iPhone, Excel a OBS neověřeny. Dřívější testy doplnění vazby ověřovaly integritu a zobrazení dvojic/skóre, ale neodhalily již před opravou nulový výpočet; nové testy jej přímo pokrývají. Chybějící racková evidence se neopravuje odhadem.
+
+
+### Ověřený commit a GitHub CI
+
+Oprava pushnuta jako `33719159e2c08cc270c30cc1cadd62e36992579c` do existujícího draft PR #34. [CI40127936545](https://github.com/bcrybarna-oss/BC-Rybarna-Scoreboard/actions/runs/40127936545): Release version and revision **success**; Node **217 PASS / 2 FAIL / 2 SKIP ze221**. Log obou selhání ukazuje pouze známé preview-match-reload-recovery.test.cjs:50/:106. Dva skipy jsou soukromé exportní kontroly, které lokálně prošly. CI není plně zelené. Celý stávající federal-evidence-browser také PASS (stabilní identity, sekvenční/multipot, foul/MISS/escape/Resafe, B&R, Team/páry, UNDO, mockAuth/reload/resume/PUT/GET;0JS chyb). Následný dokumentační commit nemění otestovaný aplikační kód. Nic nesloučeno ani nenasazeno.
