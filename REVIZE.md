@@ -1,5 +1,13 @@
 # Revize aplikace Poolčítadlo
 
+## Dominik – diagnostika chybějící vazby Doubles #9 (v4.51.95 RC)
+Zadavatel: Dominik
+Datum: 24. 10. 2026
+Změny: Nad skutečným exportem identifikován matchId3d4c35e6-e336-49d5-a9b3-9955cec59c3d, dokončeno5:3, bez federalCupLink/federalEvidence. Připraven offline návrh doplnění pouze vazby na2026/#9/doubles se schvalovaným snapshotem nominace, soukromá záloha a rollback; žádný produkční vykonavatel. Doplněny cílené testy uložení/načtení/reloadu Doubles a dokumentace. Aplikace ani výpočetní logika se nemění, nejde o nové vydání.
+Testy: Cílené Node65/65 PASS; celá sada210PASS/2FAIL/1SKIP ze213, pouze známé preview-match-reload-recovery:50,106. Volitelný test skutečného soukromého exportu při zadání cesty PASS. Browser izolovaně propojení #9, 5:3, týmové6:2→7:2, správné výsledky účastníků a reportA1 desktop/mobil, zachování ostatních polí a rollback PASS. Standardní Doubles secure mockPUT/GET a reload zachovává vazbu. Původní export nezměněn. CI není plně zelené.
+Nasazení: Žádné. Produkce95 beze změny; návrh nápravy není aplikován. Neslučovat ani nenasazovat. Podrobnosti docs/federal-fixture-9-link-diagnosis.md.
+Omezení: Živá produkční Auth/Firebase relace neověřena; skutečná data doložena dodaným exportem. Prokázána chybějící vazba, nikoli konkrétní cesta uživatele před založením. Nominace k doplnění je aktuální ze zálohy, nikoli dokázaný historický snapshot. Chybějící racky/evidence se nevyrábějí. Produkční zápis vyžaduje samostatné schválení, čerstvý GET/zálohu/kontrolu souběhu a podmíněný zápis s ETag.
+
 ## Dominik – ověřené nasazení dvoulistového exportu Pushout (v4.51.95 RC)
 Zadavatel: Dominik
 Datum: 24. 10. 2026
