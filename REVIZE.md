@@ -1,5 +1,21 @@
 # Revize aplikace Poolčítadlo
 
+## Dominik – finální exportní regrese před vydáním97 (v4.51.97 RC)
+Zadavatel: Dominik
+Datum: 26. 10. 2026
+Změny: Po schválení nasazení aktualizován starý federal-report-exports-browser podle již schválené absence informačních popisků. Zachováno ověření vlajek: místo zastaralého hledání inline SVGpath ověřuje správné externí flatSVG, počet a rozměry900×600. Původní path assertion selhává stejně na aktuálním main96. Ostatní kontroly zachovány, aplikace/verze beze změny.
+Testy: Kompletní exportní browser PASS:A1/A2/B aSingles/Doubles/Team,1920×1080/16:9,previewparita,mobilDPR3byteověshodný,dlouhá jména/skóre/partial,chybalibrary/duplicitníexport/cancel,0Firebase/0zápisů/0JSchyb. ČekáfinálníCI tohoto commitu a následné schválené sloučení.
+Nasazení: Nasazení97 schváleno zadavatelem; před merge čeká finálníCI. Produkce96 beze změny, produkčnídata se nemění ani nemigrují.
+Omezení: Zachovány limity výkonového kandidáta:jednorázovýreportB~5s a40MBarchiv mimo kapacitu localStorage. Zátěž/plná cache budou po nasazení ověřeny izolovaně na publikovanémkódu.
+
+## Dominik – cílená oprava naměřeného zpomalování (v4.51.97 RC)
+Zadavatel: Dominik
+Datum: 26. 10. 2026
+Změny: Runtime evidence aplikované cloudové revize při plné localStorage brání opakovaným merge/backup/render stejného stavu; bez persistovaného markeru bez dat. Oddělen levný sdílený výběrFCfixture od společných výpočtů, přehled nekalkuluje sezónu aA1jen svůj zápas. Souběžné čtení stejné větve zápasů/relace sdílí jednupromise, retry a změnaidentity bezpečné. Metriky/uloženádata/picker/modularizace/FirebaseRules beze změny. Aktivníverze97.
+Testy: Skutečný40MBexport/184zápasů/26hráčů v izolovanémChrome. Stejný scénář před/po:FC4840→830ms,A110055→932ms,domů3263→60ms,maxlongtask7925→2670ms,651→1FCvýpočet,GETmatches12→5a2→1souběh. Quota regrese na původním kódu3aplikace místo1, oprava5/5PASS. KompletníreportData skutečnéhoexportu deep-equal;Node230/232 pouze známé dvě chyby,CI není plně zelené.60přechodovýsoak sA1/A2/B bezchyb/timeouts,heap~58MB/DOM/listenerystabilní;reportBmax5,116s zůstává. AktuálníA1/A2/BPNG/PDF,skutečný#9PNG/PDF/XLSX aAuth/cloud/reload/undo browserregrese PASS. Zastaralýexportnítestselhává stejně na96kvůli odstraněnémupopisku, neskrýván. CI40376836361 release success,Node227PASS/2známéFAIL/3soukroméSKIP ze232.
+Nasazení: Otestováno a pushnuto b020dd339fe387db8f9ff924335abb66b016820d na větvi fix/app-performance-diagnostics v draftPR35; následná dokumentace nemění aplikačníkód. Nesloučeno a nenasazeno. Produkce96 beze změny. Diagnostika docs/performance-diagnostics-v4.51.97.md.
+Omezení: Neprokázán neomezený leak. Zbývají jednotlivé dlouhéúlohy/statistiky a nemožnost uložit40MBdo localStorage. Reálná mobilní síť/fyzickýiPhone/hodinovýběh neověřeny.0produkčníchpožadavků/zápisů. Plošnámodularizace aoprava výběruhráčů odloženy.
+
 ## Dominik – ověřené nasazení statistik a racků #9 (v4.51.96 RC)
 Zadavatel: Dominik
 Datum: 24. 10. 2026
