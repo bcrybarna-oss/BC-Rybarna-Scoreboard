@@ -1,10 +1,14 @@
 # Aktuální stav Poolčítadla
 
-Aktualizace: 24. 10. 2026. Zadavatel aktuální revize: **Dominik**.
+Aktualizace: 26. 10. 2026. Zadavatel aktuální revize: **Dominik**.
 
 ## Verze a nasazení
 
-Aktuální verze: **v4.51.96 RC** — nasazeno a v níže uvedeném rozsahu ověřeno24.10.2026.
+Aktuální verze: **v4.51.97 RC** (připravený výkonový kandidát, nesloučeno a nenasazeno). Produkce: **v4.51.96 RC**.
+
+- **Výkon – Dominik,26.10.2026:** nad posledním40MBexportem/184zápasy potvrzena opakovaná cloudová revize při quota chybě, zbytečné celosezónní výpočty v FC přehledu/A1 a souběžné40MBGETmatches. Cílené opravy runtime revize bez nebezpečného persistovaného timestampu, levný sdílený výběr fixture a právě běžící sdílené čtení ve stejné relaci. Beze změny metrik/dat/FirebaseRules; picker a modularizace odloženy. Před/po stejný scénář:FCmedián4840→830ms,A110055→932ms,domůnakonci3263→60ms,maxlongtask7925→2670ms. CPUtlak poklesl, neomezený DOM/timer/listener leak neprokázán.5/5novýchtestů,Node230/232 pouze známé dvě chyby. Delší60přechodovýsoak:heap~58MB/DOM8836/listenery1110stabilní,0chyb/timeouts; zbývajícíreportBmaxlongtask5,116s. AktuálníA1/A2/Bdesktop/mobilPNG/PDF,skutečný#9PNG/PDF/XLSXaevidence/Auth/reload/undo browserregrese PASS. Zastaralýexportnítest očekává odstraněnýpopisek a selhává stejně už na96, vykázán samostatně. ČekáfinálníCI. [Diagnostika](docs/performance-diagnostics-v4.51.97.md). **Neslučovat a nenasazovat.**
+
+Následuje historie nasazené96 a starších revizí.
 
 - **PRODUKCE96 – Dominik:** schválené PR34 sloučeno merge3e095d702cb0838aaf4a4aa674540234426209f4, Pages40130394877 success. Veřejné index/overlay/13assetů HTTP200 a přesnáSHA256/verze96/navigace/desktop/mobil/0JS chyb PASS. Na neupravené produkční URL s izolovanou offline kopií skutečného #9 staženy PNG/PDF/XLSX desktop/mobil:SK48koulí/94 %/ownbreak2/4/lose2,CZ12/86 %/1/4/lose3. PNG1920×1080,PDF16:9/pixelyshodné,XLSX2listy/9správnýchmetrik PASS. Standardní FC#1–8 výsledky a metriky stran95/96 stejné; jeden neznámý osobní Team příspěvek správněunknown místo falešné0. FinálníPR/mainrelease success,Node222/227 pouze dvě známé chyby shodné s aktuálním předmerge main a3soukroméSKIP;CI není plně zelené. Žádné produkční zápisy/migrace/helper. ŽiváAuth/Firebase#9/OBS/iPhone/Excel neověřeny. [Deployment report](docs/deployment-v4.51.96.md).
 

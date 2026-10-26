@@ -2603,7 +2603,7 @@ html[data-theme="light"] #leagueSchedule .history-item .muted{
           <span class="by">by</span>
           <span class="club">BC Rybárna</span>
         </div>
-        <small class="modern-brand-version">v4.51.96 RC</small>
+        <small class="modern-brand-version">v4.51.97 RC</small>
       </div>
     </div>
     <div class="nav">
@@ -3217,7 +3217,7 @@ html[data-theme="light"] #leagueSchedule .history-item .muted{
         </div>
         <div class="subpanel" style="min-width:210px;text-align:center;margin:0">
           <div class="muted" style="font-size:10px;font-weight:950;letter-spacing:1px">AKTUÁLNÍ VERZE</div>
-          <div style="font-size:22px;font-weight:950;color:var(--gold2);margin-top:5px">v4.51.96 RC</div>
+          <div style="font-size:22px;font-weight:950;color:var(--gold2);margin-top:5px">v4.51.97 RC</div>
         </div>
       </div>
     </div>
@@ -5975,7 +5975,7 @@ html[data-theme="light"] #leagueSchedule .history-item .muted{
       </div>
 
       <div id="groupPlayoffSeedStatus" class="muted" style="margin-top:12px;min-height:20px"></div>
-      <div class="muted" style="margin-top:4px;font-size:11px">RC v4.51.96</div>
+      <div class="muted" style="margin-top:4px;font-size:11px">RC v4.51.97</div>
       <div class="modal-actions">
         <button id="groupPlayoffSeedApplyBtn" class="btn primary big" type="button">NASADIT DO PLAY-OFF</button>
         <button id="groupPlayoffSeedCancelBtn" class="btn">ZRUŠIT</button>
@@ -7006,8 +7006,11 @@ html[data-theme="light"] #leagueSchedule .history-item .muted{
     try{updateLoggedInUserBadge();}catch(e){}
   }
 
+  // Applied in this tab even if the full offline cache cannot fit in localStorage.
+  // Do not persist the marker without the corresponding data: reload must retry.
+  let cloudRuntimeDataTs=0;
   function localCloudTimestamp(){
-    try{return Number(localStorage.getItem(CLOUD_LOCAL_TS_KEY)||0);}catch(e){return 0;}
+    try{return Math.max(cloudRuntimeDataTs,Number(localStorage.getItem(CLOUD_LOCAL_TS_KEY)||0));}catch(e){return cloudRuntimeDataTs;}
   }
 
   function writeLocalWithoutCloudSync(newData,cloudTs){
@@ -7016,6 +7019,7 @@ html[data-theme="light"] #leagueSchedule .history-item .muted{
     data.currentMatch=null;
     match=activeBefore;
     saveDeviceActiveMatch(match);
+    cloudRuntimeDataTs=Number(cloudTs||Date.now());
     try{
       localStorage.setItem(DB_KEY,JSON.stringify(data));
       localStorage.setItem(CLOUD_LOCAL_TS_KEY,String(cloudTs||Date.now()));
@@ -7160,7 +7164,7 @@ html[data-theme="light"] #leagueSchedule .history-item .muted{
     const btn=$('submitReportBtn');if(btn)btn.disabled=true;
     try{
       const id=uid(),p=currentUserPlayerId?data.players?.[currentUserPlayerId]:null;
-      const report={id,createdByUid:cloudUid,createdByPlayerId:currentUserPlayerId||'',createdByName:p?playerSelectionLabel(p):(cloudUserEmail||'Uživatel'),email:cloudUserEmail||'',type,area,description,appVersion:'v4.51.96 RC',createdAt:new Date().toISOString(),updatedAt:new Date().toISOString(),status:'new',adminNote:''};
+      const report={id,createdByUid:cloudUid,createdByPlayerId:currentUserPlayerId||'',createdByName:p?playerSelectionLabel(p):(cloudUserEmail||'Uživatel'),email:cloudUserEmail||'',type,area,description,appVersion:'v4.51.97 RC',createdAt:new Date().toISOString(),updatedAt:new Date().toISOString(),status:'new',adminNote:''};
       await reportRequest(id,'PUT',report);
       try{
         await writeReportUserMirror(report);
@@ -7884,11 +7888,22 @@ html[data-theme="light"] #leagueSchedule .history-item .muted{
     return changed;
   }
 
-  async function loadSecureMatches(){
+  let secureMatchesLoad=null,secureMatchesLoadUid=null;
+  function loadSecureMatches(){
+    if(secureMatchesLoad&&secureMatchesLoadUid===cloudUid)return secureMatchesLoad;
+    const pending=readSecureMatches().finally(()=>{
+      if(secureMatchesLoad===pending){secureMatchesLoad=null;secureMatchesLoadUid=null;}
+    });
+    secureMatchesLoad=pending;secureMatchesLoadUid=cloudUid;
+    return pending;
+  }
+  async function readSecureMatches(){
     if(!await ensureCloudToken()) throw new Error('NO_AUTH');
+    const requestUid=cloudUid;
     const r=await fetch(cloudUrl('matches')+'&t='+Date.now(),{cache:'no-store'});
     if(!r.ok) throw new Error('MATCHES_READ_'+r.status);
     const raw=await r.json()||{};
+    if(cloudUid!==requestUid)throw new Error('MATCHES_IDENTITY_CHANGED');
     data.matches=Object.values(raw).filter(Boolean);
     const compatibilityRepaired=applyKnownHistoricalMatchMetadataRepairs(data.matches);
     data.matches.forEach(m=>{
@@ -10325,17 +10340,23 @@ $('useClock').addEventListener('change',e=>$('clockSettings').classList.toggle('
     }
     return out;
   }
-  function federalCalculateSeason(matches,config={},year=2026){
+  function federalFixtureSources(matches,config={},year=2026){
     year=Number(year);if(!Number.isInteger(year))throw Error('Invalid Federal Cup year');
     const fixtures=new Map(),duplicates=[],matchIds=new Set();
     const ordered=federalStatsRows(matches).filter(m=>Number(m.federalCupLink?.year)===year&&Number.isInteger(Number(m.federalCupLink?.fixtureNo))&&Number(m.federalCupLink.fixtureNo)>=1&&Number(m.federalCupLink.fixtureNo)<=21&&m.endedAt&&!['incomplete','playing','active'].includes(m.status))
       .sort((a,b)=>(Date.parse(b.endedAt)||0)-(Date.parse(a.endedAt)||0)||String(a.id).localeCompare(String(b.id)));
-    for(const m of ordered){const n=Number(m.federalCupLink.fixtureNo);if(m.id&&matchIds.has(m.id)){duplicates.push({fixtureNo:n,ignoredMatchId:m.id,reason:'duplicate_match_id'});continue;}if(m.id)matchIds.add(m.id);if(fixtures.has(n)){duplicates.push({fixtureNo:n,ignoredMatchId:m.id||null});continue;}fixtures.set(n,{m,result:federalCalculateMatch(m),source:'detailed'});}
+    for(const m of ordered){const n=Number(m.federalCupLink.fixtureNo);if(m.id&&matchIds.has(m.id)){duplicates.push({fixtureNo:n,ignoredMatchId:m.id,reason:'duplicate_match_id'});continue;}if(m.id)matchIds.add(m.id);if(fixtures.has(n)){duplicates.push({fixtureNo:n,ignoredMatchId:m.id||null});continue;}fixtures.set(n,{m,source:'detailed'});}
     if(Number(config.year)===year)for(const n of [1,5,10]){
       const r=config.teamResults?.[n];if(fixtures.has(n)||!r?.done||r.a==null||r.b==null||!Number.isFinite(Number(r.a))||!Number.isFinite(Number(r.b))||Number(r.a)===Number(r.b))continue;
-      const m={id:null,federalCupLink:{year,fixtureNo:n,type:'team'},endedAt:r.updatedAt||null};fixtures.set(n,{m,result:federalCalculateMatch(m),source:'manual'});
+      const m={id:null,federalCupLink:{year,fixtureNo:n,type:'team'},endedAt:r.updatedAt||null};fixtures.set(n,{m,source:'manual'});
     }
-    const selected=[...fixtures.values()].sort((a,b)=>a.result.fixtureNo-b.result.fixtureNo),teams=[[],[]],people=new Map(),pairs=new Map();
+    return {entries:[...fixtures.values()].sort((a,b)=>Number(a.m.federalCupLink.fixtureNo)-Number(b.m.federalCupLink.fixtureNo)),duplicates};
+  }
+  function federalCalculateSeason(matches,config={},year=2026){
+    year=Number(year);if(!Number.isInteger(year))throw Error('Invalid Federal Cup year');
+    const sources=federalFixtureSources(matches,config,year),duplicates=sources.duplicates;
+    const selected=sources.entries.map(s=>({...s,result:federalCalculateMatch(s.m)})),teams=[[],[]],people=new Map(),pairs=new Map();
+
     const add=(map,entry,source)=>{const list=map.get(entry.owner.id)||[];list.push({entry,source});map.set(entry.owner.id,list);};
     for(const s of selected){for(const side of [0,1])teams[side].push(s.result.sides[side]);for(const e of Object.values(s.result.individuals))add(people,e,s);for(const e of Object.values(s.result.pairs))add(pairs,e,s);}
     const combine=map=>Object.fromEntries([...map].sort(([a],[b])=>a.localeCompare(b)).map(([id,list])=>{
@@ -10354,10 +10375,12 @@ $('useClock').addEventListener('change',e=>$('clockSettings').classList.toggle('
     if(!Array.isArray(scores)||scores.length!==2||!scores.every(n=>(typeof n==='number'||typeof n==='string'&&n.trim()!=='')&&Number.isInteger(Number(n))&&Number(n)>=0)||Number(scores[0])===Number(scores[1]))return null;
     return Number(scores[0])>Number(scores[1])?0:1;
   }
-  function federalReportData(matches,config,year=Number(config?.year)){
-    const all=federalCalculateSeason(matches,config,year),rows=federalStatsRows(matches).slice().sort((a,b)=>(Date.parse(b.endedAt)||0)-(Date.parse(a.endedAt)||0)||String(a.id).localeCompare(String(b.id))),selected=[],excluded=[],series=[0,0],people=Object.create(null),issues=[[],[]],resultIssues=[];
+  // Fixture/result selection is cheap metadata work. Statistics are calculated
+  // only when a report actually needs them, never just to paint navigation.
+  function federalReportSelection(matches,config,year=Number(config?.year)){
+    const all=federalFixtureSources(matches,config,year),selected=[],excluded=[],series=[0,0],people=Object.create(null),issues=[[],[]],resultIssues=[];
     let decided=false;
-    const candidates=all.fixtures.map(f=>({f,m:f.source==='detailed'?rows.find(m=>m.id===f.matchId&&Number(m.federalCupLink?.fixtureNo)===f.fixtureNo&&Number(m.federalCupLink?.year)===year&&m.endedAt&&!['incomplete','playing','active'].includes(m.status)):null}));
+    const candidates=all.entries.map(s=>({f:{fixtureNo:Number(s.m.federalCupLink.fixtureNo),matchId:s.m.id||null,source:s.source},m:s.source==='detailed'?s.m:null}));
     for(const source of candidates){
       const {f,m}=source,manual=config?.teamResults?.[f.fixtureNo],scores=m?.scores||[manual?.a,manual?.b];
       const winner=federalReportWinner(scores);
@@ -10381,10 +10404,15 @@ $('useClock').addEventListener('change',e=>$('clockSettings').classList.toggle('
         }
       }
     }
-    const keys=new Set(selected.map(s=>s.f.fixtureNo)),filteredConfig={...config,teamResults:Object.fromEntries(Object.entries(config?.teamResults||{}).filter(([n])=>keys.has(Number(n))))};
-    const season=federalCalculateSeason(rows.filter(m=>selected.some(s=>s.m===m)),filteredConfig,year);
-    return {year,season,series,decided,resultIssues,selected:selected.map(s=>s.f),excluded,people,issues,duplicates:all.duplicates};
+    return {year,series,decided,resultIssues,selected:selected.map(s=>s.f),excluded,people,issues,duplicates:all.duplicates};
   }
+  function federalReportData(matches,config,year=Number(config?.year)){
+    const report=federalReportSelection(matches,config,year),keys=new Set(report.selected.map(s=>s.fixtureNo));
+    const filteredConfig={...config,teamResults:Object.fromEntries(Object.entries(config?.teamResults||{}).filter(([n])=>keys.has(Number(n))))};
+    const selected=federalFixtureSources(matches,config,year).entries.filter(s=>s.source==='detailed'&&keys.has(Number(s.m.federalCupLink.fixtureNo))).map(s=>s.m);
+    return {...report,season:federalCalculateSeason(selected,filteredConfig,year)};
+  }
+
   function federalReportResults(report,id,side){
     const p=report.people[id],reasons=[...(report.issues[side]||[])];
     if(p?.conflict||p&&p.side!==side)reasons.push('Konflikt identity nebo reprezentace');
@@ -30199,7 +30227,7 @@ function renderStats(){
     if(!Number.isInteger(year))content=unavailable('Konfigurace neobsahuje platný ročník. Data jiného ročníku se nepoužijí.');
     else if(!order)content=unavailable('Konfigurace ročníku neobsahuje platnou hostitelskou reprezentaci. Pořadí týmů neodhadujeme.');
     else{
-      const report=federalReportData(data.matches,conf,year),kind=button.dataset.fcReport;
+      const kind=button.dataset.fcReport,report=kind==='match'?federalReportSelection(data.matches,conf,year):federalReportData(data.matches,conf,year);
       if(kind==='team'){
         context='Herní údaje: kanonická evidence a společné API 13 metrik. Herní statistiky zahrnují dokončené hodnocené zápasy; ruční výsledky nedokládají herní výkon. Zdroje: '+report.selected.map(s=>'#'+s.fixtureNo+' '+(s.m?.federalCupLink?.type||s.source)+' · ID '+(s.matchId||'bez detailu')).join(', ');
         const side=button.dataset.rep?REPORT_REPS.findIndex(r=>r.id===button.dataset.rep):null;
@@ -30308,8 +30336,8 @@ function renderStats(){
   function renderFederalCupViewer(){
     if(!$('fc26ViewerScoreboard'))return;
     const conf=cfg();
-    const reportYear=Number(conf.year),reportData=Number.isInteger(reportYear)?federalReportData(data.matches,conf,reportYear):null;
-    const reportSources=Number.isInteger(reportYear)?federalCalculateSeason(data.matches,conf,reportYear).fixtures:[];
+    const reportYear=Number(conf.year),reportData=Number.isInteger(reportYear)?federalReportSelection(data.matches,conf,reportYear):null;
+    const reportSources=reportData?[...reportData.selected,...reportData.excluded]:[];
     const admin=canEdit();
     $('fc26ViewerEditor').classList.toggle('hidden',!admin);
     $('fc26ViewerNotice').textContent=cloudAuthenticated

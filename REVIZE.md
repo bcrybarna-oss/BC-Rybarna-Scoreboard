@@ -1,5 +1,13 @@
 # Revize aplikace Poolčítadlo
 
+## Dominik – cílená oprava naměřeného zpomalování (v4.51.97 RC)
+Zadavatel: Dominik
+Datum: 26. 10. 2026
+Změny: Runtime evidence aplikované cloudové revize při plné localStorage brání opakovaným merge/backup/render stejného stavu; bez persistovaného markeru bez dat. Oddělen levný sdílený výběrFCfixture od společných výpočtů, přehled nekalkuluje sezónu aA1jen svůj zápas. Souběžné čtení stejné větve zápasů/relace sdílí jednupromise, retry a změnaidentity bezpečné. Metriky/uloženádata/picker/modularizace/FirebaseRules beze změny. Aktivníverze97.
+Testy: Skutečný40MBexport/184zápasů/26hráčů v izolovanémChrome. Stejný scénář před/po:FC4840→830ms,A110055→932ms,domů3263→60ms,maxlongtask7925→2670ms,651→1FCvýpočet,GETmatches12→5a2→1souběh. Quota regrese na původním kódu3aplikace místo1, oprava5/5PASS. KompletníreportData skutečnéhoexportu deep-equal;Node230/232 pouze známé dvě chyby,CI není plně zelené.60přechodovýsoak sA1/A2/B bezchyb/timeouts,heap~58MB/DOM/listenerystabilní;reportBmax5,116s zůstává. AktuálníA1/A2/BPNG/PDF,skutečný#9PNG/PDF/XLSX aAuth/cloud/reload/undo browserregrese PASS. Zastaralýexportnítestselhává stejně na96kvůli odstraněnémupopisku, neskrýván. ČekáCI.
+Nasazení: Připraveno na větvi fix/app-performance-diagnostics, nesloučeno a nenasazeno. Produkce96 beze změny. Diagnostika docs/performance-diagnostics-v4.51.97.md.
+Omezení: Neprokázán neomezený leak. Zbývají jednotlivé dlouhéúlohy/statistiky a nemožnost uložit40MBdo localStorage. Reálná mobilní síť/fyzickýiPhone/hodinovýběh neověřeny.0produkčníchpožadavků/zápisů. Plošnámodularizace aoprava výběruhráčů odloženy.
+
 ## Dominik – ověřené nasazení statistik a racků #9 (v4.51.96 RC)
 Zadavatel: Dominik
 Datum: 24. 10. 2026

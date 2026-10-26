@@ -1,0 +1,1172 @@
+{
+  "before-light": {
+    "cycles": 3,
+    "snapshots": [
+      {
+        "label": "loaded",
+        "Documents": 3,
+        "JSEventListeners": 456,
+        "Nodes": 9267,
+        "LayoutCount": 3,
+        "TaskDuration": 1.039306,
+        "JSHeapUsedSize": 53443292,
+        "JSHeapTotalSize": 55185408,
+        "dom": 2966,
+        "intervals": [
+          5000,
+          1000,
+          30000,
+          25000,
+          30000,
+          5000
+        ],
+        "pendingTimeouts": 0,
+        "longTasks": 2,
+        "maxLongTask": 3947,
+        "counts": {
+          "matches": 184,
+          "players": 26
+        }
+      },
+      {
+        "label": "cycle-1",
+        "Documents": 3,
+        "JSEventListeners": 1034,
+        "Nodes": 23233,
+        "LayoutCount": 45,
+        "TaskDuration": 21.132386,
+        "JSHeapUsedSize": 57303752,
+        "JSHeapTotalSize": 58912768,
+        "dom": 8401,
+        "intervals": [
+          5000,
+          1000,
+          30000,
+          25000,
+          30000,
+          5000,
+          2500
+        ],
+        "pendingTimeouts": 0,
+        "longTasks": 16,
+        "maxLongTask": 3947,
+        "counts": {
+          "matches": 184,
+          "players": 26
+        }
+      },
+      {
+        "label": "cycle-2",
+        "Documents": 3,
+        "JSEventListeners": 1110,
+        "Nodes": 24642,
+        "LayoutCount": 54,
+        "TaskDuration": 49.437139,
+        "JSHeapUsedSize": 57458284,
+        "JSHeapTotalSize": 58650624,
+        "dom": 8836,
+        "intervals": [
+          5000,
+          1000,
+          30000,
+          25000,
+          30000,
+          5000,
+          2500
+        ],
+        "pendingTimeouts": 0,
+        "longTasks": 29,
+        "maxLongTask": 7925,
+        "counts": {
+          "matches": 184,
+          "players": 26
+        }
+      },
+      {
+        "label": "cycle-3",
+        "Documents": 3,
+        "JSEventListeners": 1110,
+        "Nodes": 25116,
+        "LayoutCount": 64,
+        "TaskDuration": 95.481827,
+        "JSHeapUsedSize": 112291592,
+        "JSHeapTotalSize": 130818048,
+        "dom": 8836,
+        "intervals": [
+          5000,
+          1000,
+          30000,
+          25000,
+          30000,
+          5000,
+          2500
+        ],
+        "pendingTimeouts": 1,
+        "longTasks": 47,
+        "maxLongTask": 7925,
+        "counts": {
+          "matches": 184,
+          "players": 26
+        }
+      },
+      {
+        "label": "final",
+        "Documents": 3,
+        "JSEventListeners": 1110,
+        "Nodes": 24624,
+        "LayoutCount": 66,
+        "TaskDuration": 103.271096,
+        "JSHeapUsedSize": 57775332,
+        "JSHeapTotalSize": 60223488,
+        "dom": 8836,
+        "intervals": [
+          5000,
+          1000,
+          30000,
+          25000,
+          30000,
+          5000
+        ],
+        "pendingTimeouts": 0,
+        "longTasks": 48,
+        "maxLongTask": 7925,
+        "counts": {
+          "matches": 184,
+          "players": 26
+        }
+      }
+    ],
+    "steps": {
+      "home": {
+        "n": 3,
+        "median": 109,
+        "max": 3263,
+        "first": 109,
+        "last": 3263
+      },
+      "results": {
+        "n": 3,
+        "median": 45,
+        "max": 7351,
+        "first": 45,
+        "last": 7351
+      },
+      "history": {
+        "n": 3,
+        "median": 1374,
+        "max": 1388,
+        "first": 1388,
+        "last": 776
+      },
+      "stats": {
+        "n": 3,
+        "median": 1856,
+        "max": 1869,
+        "first": 1869,
+        "last": 1723
+      },
+      "federal-cup-2026": {
+        "n": 3,
+        "median": 4840,
+        "max": 5103,
+        "first": 5103,
+        "last": 3803
+      },
+      "report-open-close": {
+        "n": 1,
+        "median": 10055,
+        "max": 10055,
+        "first": 10055,
+        "last": 10055
+      },
+      "cloud-poll": {
+        "n": 3,
+        "median": 14145,
+        "max": 20658,
+        "first": 4,
+        "last": 20658
+      }
+    },
+    "calls": {
+      "completedRealMatchFacts": {
+        "n": 1542,
+        "totalMs": 1016,
+        "maxMs": 8
+      },
+      "playerAggregate": {
+        "n": 1135,
+        "totalMs": 1189,
+        "maxMs": 6
+      },
+      "renderHistory": {
+        "n": 10,
+        "totalMs": 1051,
+        "maxMs": 137
+      },
+      "loadSecureMatches": {
+        "n": 12,
+        "totalMs": 79156,
+        "maxMs": 10848
+      },
+      "pollCloudData": {
+        "n": 29,
+        "totalMs": 95572,
+        "maxMs": 16049
+      },
+      "renderStats": {
+        "n": 10,
+        "totalMs": 477,
+        "maxMs": 67
+      },
+      "federalCalculateMatch": {
+        "n": 651,
+        "totalMs": 44127,
+        "maxMs": 300
+      },
+      "federalCalculateSeason": {
+        "n": 50,
+        "totalMs": 44048,
+        "maxMs": 996
+      },
+      "federalReportData": {
+        "n": 17,
+        "totalMs": 30273,
+        "maxMs": 1927
+      },
+      "cloneForBackup": {
+        "n": 7,
+        "totalMs": 5028,
+        "maxMs": 966
+      },
+      "saveSafetyBackup": {
+        "n": 7,
+        "totalMs": 9360,
+        "maxMs": 1606
+      },
+      "normalizeDataObject": {
+        "n": 28,
+        "totalMs": 17,
+        "maxMs": 2
+      },
+      "mergeDataObjects": {
+        "n": 7,
+        "totalMs": 9640,
+        "maxMs": 1698
+      },
+      "writeLocalWithoutCloudSync": {
+        "n": 7,
+        "totalMs": 2903,
+        "maxMs": 465
+      },
+      "refreshPlayerList": {
+        "n": 7,
+        "totalMs": 12,
+        "maxMs": 3
+      },
+      "renderPlayers": {
+        "n": 7,
+        "totalMs": 487,
+        "maxMs": 92
+      },
+      "renderTournament": {
+        "n": 7,
+        "totalMs": 2956,
+        "maxMs": 465
+      },
+      "refreshViewsAfterCloudLoad": {
+        "n": 7,
+        "totalMs": 26247,
+        "maxMs": 4192
+      }
+    },
+    "requests": {
+      "/players.json": {
+        "n": 3,
+        "maxOverlap": 1
+      },
+      "/matches.json": {
+        "n": 12,
+        "maxOverlap": 2
+      },
+      "/tournaments.json": {
+        "n": 6,
+        "maxOverlap": 2
+      },
+      "/appData.json": {
+        "n": 11,
+        "maxOverlap": 1
+      },
+      "/stream/liveMatches.json": {
+        "n": 6,
+        "maxOverlap": 1
+      },
+      "/presence.json": {
+        "n": 3,
+        "maxOverlap": 1
+      }
+    },
+    "longTasks": {
+      "n": 48,
+      "max": 7925,
+      "total": 102651
+    },
+    "storageErrors": 42,
+    "interactionFailures": [],
+    "errors": [],
+    "backupBytes": 40385164,
+    "backupSha256": "2afd2e5c48d3babf198d41809dd9fedbf8b188a28dd8e6056a0f27db69afdc6e",
+    "sourceSha256": "ca8945081eec51ea780b1c1e0d0a5715153f46800cd9a5e9ff30dba98671f00a"
+  },
+  "after-light": {
+    "cycles": 3,
+    "snapshots": [
+      {
+        "label": "loaded",
+        "Documents": 3,
+        "JSEventListeners": 456,
+        "Nodes": 9267,
+        "LayoutCount": 3,
+        "TaskDuration": 0.628982,
+        "JSHeapUsedSize": 53432116,
+        "JSHeapTotalSize": 54923264,
+        "dom": 2966,
+        "intervals": [
+          5000,
+          1000,
+          30000,
+          25000,
+          30000,
+          5000
+        ],
+        "pendingTimeouts": 0,
+        "longTasks": 3,
+        "maxLongTask": 2206,
+        "counts": {
+          "matches": 184,
+          "players": 26
+        }
+      },
+      {
+        "label": "cycle-1",
+        "Documents": 3,
+        "JSEventListeners": 1034,
+        "Nodes": 23144,
+        "LayoutCount": 44,
+        "TaskDuration": 4.856514,
+        "JSHeapUsedSize": 57021284,
+        "JSHeapTotalSize": 59961344,
+        "dom": 8401,
+        "intervals": [
+          5000,
+          1000,
+          30000,
+          25000,
+          30000,
+          5000,
+          2500
+        ],
+        "pendingTimeouts": 0,
+        "longTasks": 12,
+        "maxLongTask": 2206,
+        "counts": {
+          "matches": 184,
+          "players": 26
+        }
+      },
+      {
+        "label": "cycle-2",
+        "Documents": 3,
+        "JSEventListeners": 1034,
+        "Nodes": 23233,
+        "LayoutCount": 51,
+        "TaskDuration": 8.249159,
+        "JSHeapUsedSize": 57034708,
+        "JSHeapTotalSize": 58388480,
+        "dom": 8401,
+        "intervals": [
+          5000,
+          1000,
+          30000,
+          25000,
+          30000,
+          5000,
+          2500
+        ],
+        "pendingTimeouts": 0,
+        "longTasks": 19,
+        "maxLongTask": 2206,
+        "counts": {
+          "matches": 184,
+          "players": 26
+        }
+      },
+      {
+        "label": "cycle-3",
+        "Documents": 3,
+        "JSEventListeners": 1110,
+        "Nodes": 24624,
+        "LayoutCount": 60,
+        "TaskDuration": 13.900702,
+        "JSHeapUsedSize": 57209508,
+        "JSHeapTotalSize": 58126336,
+        "dom": 8836,
+        "intervals": [
+          5000,
+          1000,
+          30000,
+          25000,
+          30000,
+          5000,
+          2500
+        ],
+        "pendingTimeouts": 0,
+        "longTasks": 25,
+        "maxLongTask": 2670,
+        "counts": {
+          "matches": 184,
+          "players": 26
+        }
+      },
+      {
+        "label": "final",
+        "Documents": 3,
+        "JSEventListeners": 1110,
+        "Nodes": 24624,
+        "LayoutCount": 60,
+        "TaskDuration": 13.948669,
+        "JSHeapUsedSize": 57209892,
+        "JSHeapTotalSize": 57864192,
+        "dom": 8836,
+        "intervals": [
+          5000,
+          1000,
+          30000,
+          25000,
+          30000,
+          5000
+        ],
+        "pendingTimeouts": 0,
+        "longTasks": 25,
+        "maxLongTask": 2670,
+        "counts": {
+          "matches": 184,
+          "players": 26
+        }
+      }
+    ],
+    "steps": {
+      "home": {
+        "n": 3,
+        "median": 61,
+        "max": 67,
+        "first": 61,
+        "last": 60
+      },
+      "results": {
+        "n": 3,
+        "median": 41,
+        "max": 41,
+        "first": 41,
+        "last": 41
+      },
+      "history": {
+        "n": 3,
+        "median": 137,
+        "max": 394,
+        "first": 394,
+        "last": 119
+      },
+      "stats": {
+        "n": 3,
+        "median": 1368,
+        "max": 2772,
+        "first": 1125,
+        "last": 2772
+      },
+      "federal-cup-2026": {
+        "n": 3,
+        "median": 830,
+        "max": 875,
+        "first": 875,
+        "last": 686
+      },
+      "report-open-close": {
+        "n": 1,
+        "median": 932,
+        "max": 932,
+        "first": 932,
+        "last": 932
+      },
+      "cloud-poll": {
+        "n": 3,
+        "median": 988,
+        "max": 1790,
+        "first": 166,
+        "last": 1790
+      }
+    },
+    "calls": {
+      "completedRealMatchFacts": {
+        "n": 755,
+        "totalMs": 260,
+        "maxMs": 4
+      },
+      "playerAggregate": {
+        "n": 673,
+        "totalMs": 347,
+        "maxMs": 5
+      },
+      "renderHistory": {
+        "n": 4,
+        "totalMs": 203,
+        "maxMs": 68
+      },
+      "renderStats": {
+        "n": 4,
+        "totalMs": 108,
+        "maxMs": 32
+      },
+      "loadSecureMatches": {
+        "n": 9,
+        "totalMs": 20559,
+        "maxMs": 4089
+      },
+      "federalFixtureSources": {
+        "n": 8,
+        "totalMs": 2,
+        "maxMs": 1
+      },
+      "federalReportSelection": {
+        "n": 8,
+        "totalMs": 4,
+        "maxMs": 2
+      },
+      "pollCloudData": {
+        "n": 13,
+        "totalMs": 10150,
+        "maxMs": 2890
+      },
+      "federalCalculateMatch": {
+        "n": 1,
+        "totalMs": 141,
+        "maxMs": 141
+      },
+      "cloneForBackup": {
+        "n": 1,
+        "totalMs": 435,
+        "maxMs": 435
+      },
+      "saveSafetyBackup": {
+        "n": 1,
+        "totalMs": 728,
+        "maxMs": 728
+      },
+      "normalizeDataObject": {
+        "n": 4,
+        "totalMs": 1,
+        "maxMs": 1
+      },
+      "mergeDataObjects": {
+        "n": 1,
+        "totalMs": 919,
+        "maxMs": 919
+      },
+      "writeLocalWithoutCloudSync": {
+        "n": 1,
+        "totalMs": 290,
+        "maxMs": 290
+      },
+      "refreshPlayerList": {
+        "n": 1,
+        "totalMs": 1,
+        "maxMs": 1
+      },
+      "renderPlayers": {
+        "n": 1,
+        "totalMs": 39,
+        "maxMs": 39
+      },
+      "renderTournament": {
+        "n": 1,
+        "totalMs": 311,
+        "maxMs": 311
+      },
+      "refreshViewsAfterCloudLoad": {
+        "n": 1,
+        "totalMs": 732,
+        "maxMs": 732
+      }
+    },
+    "requests": {
+      "/players.json": {
+        "n": 3,
+        "maxOverlap": 1
+      },
+      "/matches.json": {
+        "n": 5,
+        "maxOverlap": 1
+      },
+      "/tournaments.json": {
+        "n": 6,
+        "maxOverlap": 2
+      },
+      "/appData.json": {
+        "n": 7,
+        "maxOverlap": 1
+      },
+      "/stream/liveMatches.json": {
+        "n": 2,
+        "maxOverlap": 1
+      }
+    },
+    "longTasks": {
+      "n": 25,
+      "max": 2670,
+      "total": 13729
+    },
+    "storageErrors": 17,
+    "interactionFailures": [],
+    "errors": [],
+    "backupBytes": 40385164,
+    "backupSha256": "2afd2e5c48d3babf198d41809dd9fedbf8b188a28dd8e6056a0f27db69afdc6e",
+    "sourceSha256": "f9d5db84562f4371438f127acdd602377060b26b236e68e016db32cb801b2215"
+  },
+  "afterSoak": {
+    "cycles": 12,
+    "steps": [
+      {
+        "cycle": 0,
+        "operation": "home",
+        "wallMs": 95
+      },
+      {
+        "cycle": 0,
+        "operation": "results",
+        "wallMs": 48
+      },
+      {
+        "cycle": 0,
+        "operation": "history",
+        "wallMs": 717
+      },
+      {
+        "cycle": 0,
+        "operation": "stats",
+        "wallMs": 1768
+      },
+      {
+        "cycle": 0,
+        "operation": "federal-cup-2026",
+        "wallMs": 1476
+      },
+      {
+        "cycle": 0,
+        "operation": "report-open-close-match",
+        "wallMs": 2168
+      },
+      {
+        "cycle": 0,
+        "operation": "cloud-poll",
+        "wallMs": 179
+      },
+      {
+        "cycle": 1,
+        "operation": "home",
+        "wallMs": 82
+      },
+      {
+        "cycle": 1,
+        "operation": "results",
+        "wallMs": 40
+      },
+      {
+        "cycle": 1,
+        "operation": "history",
+        "wallMs": 766
+      },
+      {
+        "cycle": 1,
+        "operation": "stats",
+        "wallMs": 1748
+      },
+      {
+        "cycle": 1,
+        "operation": "federal-cup-2026",
+        "wallMs": 1443
+      },
+      {
+        "cycle": 1,
+        "operation": "cloud-poll",
+        "wallMs": 8141
+      },
+      {
+        "cycle": 2,
+        "operation": "home",
+        "wallMs": 143
+      },
+      {
+        "cycle": 2,
+        "operation": "results",
+        "wallMs": 73
+      },
+      {
+        "cycle": 2,
+        "operation": "history",
+        "wallMs": 732
+      },
+      {
+        "cycle": 2,
+        "operation": "stats",
+        "wallMs": 1837
+      },
+      {
+        "cycle": 2,
+        "operation": "federal-cup-2026",
+        "wallMs": 1368
+      },
+      {
+        "cycle": 2,
+        "operation": "cloud-poll",
+        "wallMs": 3300
+      },
+      {
+        "cycle": 3,
+        "operation": "home",
+        "wallMs": 92
+      },
+      {
+        "cycle": 3,
+        "operation": "results",
+        "wallMs": 41
+      },
+      {
+        "cycle": 3,
+        "operation": "history",
+        "wallMs": 757
+      },
+      {
+        "cycle": 3,
+        "operation": "stats",
+        "wallMs": 1770
+      },
+      {
+        "cycle": 3,
+        "operation": "federal-cup-2026",
+        "wallMs": 1416
+      },
+      {
+        "cycle": 3,
+        "operation": "report-open-close-team",
+        "wallMs": 2666
+      },
+      {
+        "cycle": 3,
+        "operation": "cloud-poll",
+        "wallMs": 3
+      },
+      {
+        "cycle": 4,
+        "operation": "home",
+        "wallMs": 72
+      },
+      {
+        "cycle": 4,
+        "operation": "results",
+        "wallMs": 49
+      },
+      {
+        "cycle": 4,
+        "operation": "history",
+        "wallMs": 754
+      },
+      {
+        "cycle": 4,
+        "operation": "stats",
+        "wallMs": 1758
+      },
+      {
+        "cycle": 4,
+        "operation": "federal-cup-2026",
+        "wallMs": 1428
+      },
+      {
+        "cycle": 4,
+        "operation": "cloud-poll",
+        "wallMs": 1965
+      },
+      {
+        "cycle": 5,
+        "operation": "home",
+        "wallMs": 623
+      },
+      {
+        "cycle": 5,
+        "operation": "results",
+        "wallMs": 710
+      },
+      {
+        "cycle": 5,
+        "operation": "history",
+        "wallMs": 901
+      },
+      {
+        "cycle": 5,
+        "operation": "stats",
+        "wallMs": 1604
+      },
+      {
+        "cycle": 5,
+        "operation": "federal-cup-2026",
+        "wallMs": 1422
+      },
+      {
+        "cycle": 5,
+        "operation": "cloud-poll",
+        "wallMs": 7297
+      },
+      {
+        "cycle": 6,
+        "operation": "home",
+        "wallMs": 84
+      },
+      {
+        "cycle": 6,
+        "operation": "results",
+        "wallMs": 65
+      },
+      {
+        "cycle": 6,
+        "operation": "history",
+        "wallMs": 720
+      },
+      {
+        "cycle": 6,
+        "operation": "stats",
+        "wallMs": 1755
+      },
+      {
+        "cycle": 6,
+        "operation": "federal-cup-2026",
+        "wallMs": 1378
+      },
+      {
+        "cycle": 6,
+        "operation": "report-open-close-player",
+        "wallMs": 6091
+      },
+      {
+        "cycle": 6,
+        "operation": "cloud-poll",
+        "wallMs": 5
+      },
+      {
+        "cycle": 7,
+        "operation": "home",
+        "wallMs": 81
+      },
+      {
+        "cycle": 7,
+        "operation": "results",
+        "wallMs": 41
+      },
+      {
+        "cycle": 7,
+        "operation": "history",
+        "wallMs": 775
+      },
+      {
+        "cycle": 7,
+        "operation": "stats",
+        "wallMs": 1734
+      },
+      {
+        "cycle": 7,
+        "operation": "federal-cup-2026",
+        "wallMs": 1393
+      },
+      {
+        "cycle": 7,
+        "operation": "cloud-poll",
+        "wallMs": 7975
+      },
+      {
+        "cycle": 8,
+        "operation": "home",
+        "wallMs": 138
+      },
+      {
+        "cycle": 8,
+        "operation": "results",
+        "wallMs": 66
+      },
+      {
+        "cycle": 8,
+        "operation": "history",
+        "wallMs": 699
+      },
+      {
+        "cycle": 8,
+        "operation": "stats",
+        "wallMs": 1789
+      },
+      {
+        "cycle": 8,
+        "operation": "federal-cup-2026",
+        "wallMs": 1328
+      },
+      {
+        "cycle": 8,
+        "operation": "cloud-poll",
+        "wallMs": 3161
+      },
+      {
+        "cycle": 9,
+        "operation": "home",
+        "wallMs": 72
+      },
+      {
+        "cycle": 9,
+        "operation": "results",
+        "wallMs": 40
+      },
+      {
+        "cycle": 9,
+        "operation": "history",
+        "wallMs": 752
+      },
+      {
+        "cycle": 9,
+        "operation": "stats",
+        "wallMs": 1695
+      },
+      {
+        "cycle": 9,
+        "operation": "federal-cup-2026",
+        "wallMs": 1414
+      },
+      {
+        "cycle": 9,
+        "operation": "report-open-close-match",
+        "wallMs": 1875
+      },
+      {
+        "cycle": 9,
+        "operation": "cloud-poll",
+        "wallMs": 165
+      },
+      {
+        "cycle": 10,
+        "operation": "home",
+        "wallMs": 82
+      },
+      {
+        "cycle": 10,
+        "operation": "results",
+        "wallMs": 46
+      },
+      {
+        "cycle": 10,
+        "operation": "history",
+        "wallMs": 731
+      },
+      {
+        "cycle": 10,
+        "operation": "stats",
+        "wallMs": 1747
+      },
+      {
+        "cycle": 10,
+        "operation": "federal-cup-2026",
+        "wallMs": 1361
+      },
+      {
+        "cycle": 10,
+        "operation": "cloud-poll",
+        "wallMs": 8723
+      },
+      {
+        "cycle": 11,
+        "operation": "home",
+        "wallMs": 109
+      },
+      {
+        "cycle": 11,
+        "operation": "results",
+        "wallMs": 57
+      },
+      {
+        "cycle": 11,
+        "operation": "history",
+        "wallMs": 760
+      },
+      {
+        "cycle": 11,
+        "operation": "stats",
+        "wallMs": 1716
+      },
+      {
+        "cycle": 11,
+        "operation": "federal-cup-2026",
+        "wallMs": 1322
+      },
+      {
+        "cycle": 11,
+        "operation": "cloud-poll",
+        "wallMs": 3524
+      }
+    ],
+    "snapshots": [
+      {
+        "label": "loaded",
+        "Documents": 3,
+        "JSEventListeners": 456,
+        "Nodes": 9267,
+        "LayoutCount": 2,
+        "TaskDuration": 0.983237,
+        "JSHeapUsedSize": 53435836,
+        "JSHeapTotalSize": 54398976,
+        "dom": 2966,
+        "intervals": [
+          5000,
+          1000,
+          30000,
+          25000,
+          30000,
+          5000
+        ],
+        "pendingTimeouts": 0,
+        "longTasks": 3,
+        "maxLongTask": 3867,
+        "counts": {
+          "matches": 184,
+          "players": 26
+        }
+      },
+      {
+        "label": "cycle-1",
+        "Documents": 3,
+        "JSEventListeners": 1034,
+        "Nodes": 23147,
+        "LayoutCount": 44,
+        "TaskDuration": 7.927745,
+        "JSHeapUsedSize": 57026756,
+        "JSHeapTotalSize": 60485632,
+        "dom": 8401,
+        "intervals": [
+          5000,
+          1000,
+          30000,
+          25000,
+          30000,
+          5000,
+          2500
+        ],
+        "pendingTimeouts": 0,
+        "longTasks": 14,
+        "maxLongTask": 3867,
+        "counts": {
+          "matches": 184,
+          "players": 26
+        }
+      },
+      {
+        "label": "cycle-7",
+        "Documents": 3,
+        "JSEventListeners": 1110,
+        "Nodes": 24619,
+        "LayoutCount": 143,
+        "TaskDuration": 56.168395,
+        "JSHeapUsedSize": 57800832,
+        "JSHeapTotalSize": 59437056,
+        "dom": 8836,
+        "intervals": [
+          5000,
+          1000,
+          30000,
+          25000,
+          30000,
+          5000,
+          2500
+        ],
+        "pendingTimeouts": 0,
+        "longTasks": 72,
+        "maxLongTask": 4889,
+        "counts": {
+          "matches": 184,
+          "players": 26
+        }
+      },
+      {
+        "label": "cycle-12",
+        "Documents": 3,
+        "JSEventListeners": 1110,
+        "Nodes": 24627,
+        "LayoutCount": 216,
+        "TaskDuration": 95.774112,
+        "JSHeapUsedSize": 57972120,
+        "JSHeapTotalSize": 58912768,
+        "dom": 8836,
+        "intervals": [
+          5000,
+          1000,
+          30000,
+          25000,
+          30000,
+          5000,
+          2500
+        ],
+        "pendingTimeouts": 0,
+        "longTasks": 117,
+        "maxLongTask": 5116,
+        "counts": {
+          "matches": 184,
+          "players": 26
+        }
+      },
+      {
+        "label": "final",
+        "Documents": 3,
+        "JSEventListeners": 1110,
+        "Nodes": 24624,
+        "LayoutCount": 230,
+        "TaskDuration": 97.495943,
+        "JSHeapUsedSize": 57976080,
+        "JSHeapTotalSize": 59437056,
+        "dom": 8836,
+        "intervals": [
+          5000,
+          1000,
+          30000,
+          25000,
+          30000,
+          5000
+        ],
+        "pendingTimeouts": 0,
+        "longTasks": 119,
+        "maxLongTask": 5116,
+        "counts": {
+          "matches": 184,
+          "players": 26
+        }
+      }
+    ],
+    "interactionFailures": [],
+    "pageErrors": [],
+    "scripts": [
+      "assets/pushout-xlsx.js",
+      "https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js",
+      "https://cdn.jsdelivr.net/npm/jspdf@2.5.2/dist/jspdf.umd.min.js"
+    ],
+    "longestTaskMs": 5116,
+    "refreshes": 4,
+    "sourceSha256": "f9d5db84562f4371438f127acdd602377060b26b236e68e016db32cb801b2215",
+    "backupSha256": "2afd2e5c48d3babf198d41809dd9fedbf8b188a28dd8e6056a0f27db69afdc6e",
+    "allRequestsIntercepted": true
+  },
+  "apiEquivalence": {
+    "allReportDataIdentical": true,
+    "beforeMs": 5594,
+    "afterMs": 3046,
+    "fixtures": 13
+  }
+}
