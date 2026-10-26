@@ -26,7 +26,7 @@ const overlayHtml=overlaySource.replace('</script>','window.overlayIsolationTest
   const c=await browser.newContext({serviceWorkers:'block'});
   await c.addInitScript(value=>{window.testNow=value;Date.now=()=>window.testNow;},now);
   c.on('page',p=>{p.on('pageerror',e=>errors.push(e.message));p.on('dialog',d=>d.dismiss());});
-  await c.route('**/*',async route=>{
+  await c.route('**/*',async route=>{if(require('./helpers/federal-statistics.cjs').serve(route))return;
    const r=route.request(),u=new URL(r.url()),key=u.pathname;
    if(u.origin===origin){if(key==='/')return route.fulfill({contentType:'text/html',body:html});if(key==='/overlay.html')return route.fulfill({contentType:'text/html',body:overlayHtml});return route.abort();}
    if(!key.endsWith('.json'))return route.abort();

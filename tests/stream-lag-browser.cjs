@@ -19,7 +19,7 @@ assert.ok(html.includes('window.streamTest='));
  const browser=await chromium.launch({channel:'chrome',headless:true});
  const context=await browser.newContext({serviceWorkers:'block'});
  const store=new Map(),writes=[],errors=[];
- await context.route('**/*',async route=>{
+ await context.route('**/*',async route=>{if(require('./helpers/federal-statistics.cjs').serve(route))return;
   const req=route.request(),u=new URL(req.url());
   if(u.origin==='http://stream-isolated.local')return route.fulfill({contentType:'text/html',body:u.pathname==='/overlay.html'?fs.readFileSync(path.join(root,'overlay.html'),'utf8'):html});
   if(u.hostname==='identitytoolkit.googleapis.com')return route.fulfill({contentType:'application/json',body:JSON.stringify(u.pathname.includes('accounts:lookup')?{users:[{localId:'isolated-stream',email:'bcrybarna@gmail.com',emailVerified:true}]}:{localId:'isolated-stream',email:'bcrybarna@gmail.com',idToken:'mock-token',refreshToken:'mock-refresh',expiresIn:'3600'})});

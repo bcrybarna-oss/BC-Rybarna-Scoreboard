@@ -22,7 +22,7 @@ test('existing/conflicting associations, duplicate IDs/fixture and changed nomin
 test('actual backup: exact source hash, no duplicate and only link changes selection 6:2 to 7:2', {skip:!process.env.FC_FIXTURE9_BACKUP},()=>{
  const bytes=fs.readFileSync(process.env.FC_FIXTURE9_BACKUP);assert.equal(digest(bytes),SOURCE_SHA256);
  const d=JSON.parse(bytes),original=JSON.stringify(d),p=plan(d),html=fs.readFileSync(path.join(__dirname,'../index.html'),'utf8');
- const a=html.indexOf('  function federalRackScoresAgree('),b=html.indexOf('\n  }',a)+4,c={};vm.createContext(c);vm.runInContext(html.slice(a,b)+html.slice(html.indexOf('  // Federal Cup calculation contract v1.'),html.indexOf('  function detailedCounterActive()')),c);
+ const c=require('../assets/js/federal-statistics.js');
  const before=copy(c.federalReportData(d.matches,d.federalCup2026,2026)),after=copy(c.federalReportData(d.matches.map(m=>m.id===MATCH_ID?p.after:m),d.federalCup2026,2026));
  assert.deepEqual(before.series,[6,2]);assert.deepEqual(after.series,[7,2]);assert.deepEqual(after.duplicates,[]);
  assert.deepEqual(after.selected.filter(f=>f.fixtureNo===9),[{fixtureNo:9,matchId:MATCH_ID,source:'detailed'}]);

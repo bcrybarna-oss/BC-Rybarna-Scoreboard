@@ -1,10 +1,11 @@
 'use strict';
 const test=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs'),path=require('node:path'),vm=require('node:vm');
 const h=fs.readFileSync(path.join(__dirname,'../index.html'),'utf8'),{taggedReference}=require('./fixtures/federal-tags.cjs');
-function api(){const a=h.indexOf('  function federalRackScoresAgree('),b=h.indexOf('\n  }',a)+4,c={};vm.createContext(c);vm.runInContext(h.slice(a,b)+h.slice(h.indexOf('  // Federal Cup calculation contract v1.'),h.indexOf('  function detailedCounterActive()')),c);return c;}
+function api(){return require('./helpers/federal-statistics.cjs').instrumented();}
+
 const copy=x=>JSON.parse(JSON.stringify(x));
 test('fixture and report selection does not calculate shot metrics, and full report calculates each selected match once',()=>{
- const c=api(),m=taggedReference('singles','perf-match'),cfg={year:2026,reportHost:'SK'},original=c.federalCalculateMatch;let count=0;c.federalCalculateMatch=(...args)=>{count++;return original(...args);};
+ const c=api(),m=taggedReference('singles','perf-match'),cfg={year:2026,reportHost:'SK'},original=c.federalCalculateMatch;let count=0;c.__observe=(name)=>{if(name==='federalCalculateMatch')count++;};
  const before=JSON.stringify(m),selection=copy(c.federalReportSelection([m],cfg));assert.equal(count,0);assert.equal(selection.selected.length,1);assert.equal(selection.selected[0].matchId,m.id);
  const report=copy(c.federalReportData([m],cfg));assert.equal(count,1);assert.deepEqual(report.selected,selection.selected);assert.deepEqual(report.series,selection.series);assert.equal(JSON.stringify(m),before);
 });

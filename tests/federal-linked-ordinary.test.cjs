@@ -1,8 +1,7 @@
 'use strict';
 const test=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs'),path=require('node:path'),vm=require('node:vm'),crypto=require('node:crypto'),{execFileSync}=require('node:child_process');
 const sample=require('./fixtures/federal-linked-ordinary-doubles.json'),{canonical,roundTrip}=require('./helpers/firebase-json.cjs'),copy=x=>JSON.parse(JSON.stringify(x));
-const root=path.join(__dirname,'..'),html=process.env.FC_LEGACY_BASELINE?execFileSync('git',['show','origin/main:index.html'],{cwd:root,encoding:'utf8',maxBuffer:10*1024*1024}):fs.readFileSync(path.join(root,'index.html'),'utf8');
-const a=html.indexOf('  function federalRackScoresAgree('),b=html.indexOf('\n  }',a)+4,c={};vm.createContext(c);vm.runInContext(html.slice(a,b)+html.slice(html.indexOf('  // Federal Cup calculation contract v1.'),html.indexOf('  function detailedCounterActive()')),c);
+const root=path.join(__dirname,'..'),c=require('./helpers/federal-statistics.cjs').load(process.env.FC_LEGACY_BASELINE?'origin/main':undefined);
 const calc=m=>copy(c.federalCalculateMatch(m)),metric=(m,key)=>calc(m).sides[0].metrics[key],format=m=>c.federalReportMetric(m).text;
 function withRecords(records){const m=copy(sample);m.detailedPlay.records=records;return m;}
 const pot=(id,n=1,extra={})=>({id,kind:'pot',side:0,pottedCount:n,strokeCount:1,...extra});

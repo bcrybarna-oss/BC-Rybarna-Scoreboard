@@ -1,5 +1,14 @@
 # Revize aplikace Poolčítadlo
 
+## Dominik – produkční modul výpočtů Federal Cupu (v4.51.98 RC)
+
+Zadavatel: Dominik
+Datum: 26. 10. 2026
+Změny: Kandidát odděluje 24 stávajících čistých FC funkcí včetně reportových modelů a Pushout modelu do jediného produkčně načítaného assets/js/federal-statistics.js. Původní těla odstraněna z index.html; explicitní pořadí načtení a chyba při nedostupném modulu, bez starého fallbacku. Přímé importy v testech i offline diagnostice; browserové mocky načítají stejný asset. Výpočty, exportní šablony, cloud/cache a opravy výkonu97 neměněny; overlay pouze synchronizuje číslo vydání.
+Testy: Porovnání čtyř skutečných exportů, ročních dat, osobních Team metrik a byteově shodných XLSX PASS. Lokálně Node232PASS/2známéFAIL ze234 včetně soukromých vstupů. A1/A2/B PNG/PDF, skutečné Singles3 a Doubles9, desktop/mobil XLSX a explicitní chyba chybějícího modulu PASS. Podrobná evidence a další měření: docs/federal-modularization-stage-1.md.
+Nasazení: Implementace e98cca11a35ed03f33ee2f6b2c39ec2058582b90 pushnuta do draft PR36. CI40394034617 release PASS,Node229PASS/2známéFAIL/3soukroméSKIP ze234; obě chyby potvrzeny také na aktuálním main a4604c3.13funkčních browserových sad a60přechodový soak před/po PASS;6BPNG byteověshodných. Dokumentační pokračování nemění aplikaci. Nesloučeno a nenasazeno, produkce v4.51.97 RC. Žádná změna produkčních dat ani migrace.
+Omezení: Dvě známá selhání test-modular jsou oddělená: nesoulad kontraktu odpojení zápasu při čekání na identitu a zastaralý regex volání obnovy po přihlášení. Není dokončována stará modularizace ani optimalizováno jsPDF; archiv se stále nevejde do localStorage, jednorázové blokování reportu B přetrvává.
+
 ## Dominik – ověřené nasazení výkonové opravy (v4.51.97 RC)
 Zadavatel: Dominik
 Datum: 26. 10. 2026

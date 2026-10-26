@@ -1,10 +1,7 @@
 'use strict';
 const test=require('node:test'),assert=require('node:assert/strict'),fs=require('fs'),vm=require('vm'),path=require('path');
 const {reference,counters,copy}=require('./fixtures/federal-calculation.cjs');
-const html=process.env.FC_PUSH_SOURCE_REF?require('node:child_process').execFileSync('git',['show',process.env.FC_PUSH_SOURCE_REF+':index.html'],{encoding:'utf8',maxBuffer:8e6}):fs.readFileSync(path.join(__dirname,'../index.html'),'utf8');
-const start=html.indexOf('  // Federal Cup calculation contract v1.'),end=html.indexOf('  function detailedCounterActive()',start);
-assert.ok(start>0&&end>start);const rackStart=html.indexOf('  function federalRackScoresAgree('),rackEnd=html.indexOf('\n  }',rackStart)+4;
-const ctx={};vm.createContext(ctx);vm.runInContext(html.slice(rackStart,rackEnd)+'\n'+html.slice(start,end),ctx);
+const ctx=require('./helpers/federal-statistics.cjs').load(process.env.FC_PUSH_SOURCE_REF);
 const calculate=m=>copy(ctx.federalCalculateMatch(copy(m))),season=(ms,c={},y=2026)=>copy(ctx.federalCalculateSeason(copy(ms),copy(c),y));
 function metric(m,side,key){return calculate(m).sides[side].metrics[key];}
 test('push-out counts are excluded by kind, without converting absent physical counts into zero',()=>{

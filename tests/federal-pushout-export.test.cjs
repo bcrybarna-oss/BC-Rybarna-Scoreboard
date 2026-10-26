@@ -1,7 +1,7 @@
 'use strict';
 const test=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs'),vm=require('node:vm'),path=require('node:path');
 const {reference,copy}=require('./fixtures/federal-calculation.cjs');
-const h=fs.readFileSync(path.join(__dirname,'../index.html'),'utf8'),a=h.indexOf('  function federalRackScoresAgree('),b=h.indexOf('\n  }',a)+4,ctx={};vm.createContext(ctx);vm.runInContext(h.slice(a,b)+h.slice(h.indexOf('  // Federal Cup calculation contract v1.'),h.indexOf('  function detailedCounterActive()')),ctx);
+const ctx=require('../assets/js/federal-statistics.js');
 const calculate=m=>copy(ctx.federalCalculateMatch(copy(m))),model=m=>copy(ctx.federalPushoutModel(copy(m))),writer=require('../assets/pushout-xlsx.js');
 function unzip(bytes){const files={},b=Buffer.from(bytes);let p=0;while(b.readUInt32LE(p)===0x04034b50){const n=b.readUInt16LE(p+26),x=b.readUInt16LE(p+28),size=b.readUInt32LE(p+18),start=p+30+n+x;files[b.subarray(p+30,p+30+n).toString()]=b.subarray(start,start+size).toString();p=start+size;}return files;}
 test('Pushout derives missed attempts and break categories in the shared API without altering original metrics',()=>{const r=calculate(reference()),a=r.sides[0].metrics,b=r.sides[1].metrics;assert.deepEqual([a.missedPots.count,b.missedPots.count],[2,2]);for(const [i,dry,foul]of [[0,1,1],[1,2,1]]){const x=r.sides[i].metrics;assert.equal(x.drySoftBreaks.count,dry);assert.equal(x.foulBreaks.count,foul);assert.equal(x.breakSuccess.numerator+dry+foul,x.breakSuccess.denominator);assert.equal(x.ownBreakLosses.count,x.ownBreakWins.denominator-x.ownBreakWins.numerator);assert.equal(x.cleanRuns.count,1);}});

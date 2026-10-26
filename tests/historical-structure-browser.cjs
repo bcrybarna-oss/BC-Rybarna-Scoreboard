@@ -67,7 +67,7 @@ function firebase(x){if(x==null)return null;if(typeof x!=='object')return x;cons
  const browser=await chromium.launch({channel:process.env.FC_BROWSER_CHANNEL||'chrome',headless:true});
  try{
  const context=await browser.newContext({serviceWorkers:'block'}),db={},versions={},writes=[],errors=[];let mode='',readCount=0,answer=true;const confirmations=[];
- await context.route('**/*',async route=>{
+ await context.route('**/*',async route=>{if(require('./helpers/federal-statistics.cjs').serve(route))return;
   const request=route.request(),u=new URL(request.url());if(u.href==='https://historical-isolated.local/')return route.fulfill({contentType:'text/html',body:html});
   const m=u.pathname.match(/^\/tournaments(?:\/([^/]+))?\.json$/);
   if(!m)return route.abort();

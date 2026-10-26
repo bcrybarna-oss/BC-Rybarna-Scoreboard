@@ -1,10 +1,7 @@
 'use strict';
 const test=require('node:test'),assert=require('node:assert/strict'),fs=require('fs'),vm=require('vm'),path=require('path');
 const {reference,counters,copy}=require('./fixtures/federal-calculation.cjs');
-const html=fs.readFileSync(path.join(__dirname,'../index.html'),'utf8');
-const start=html.indexOf('  // Federal Cup calculation contract v1.'),end=html.indexOf('  function detailedCounterActive()',start);
-assert.ok(start>0&&end>start);const rackStart=html.indexOf('  function federalRackScoresAgree('),rackEnd=html.indexOf('\n  }',rackStart)+4;
-const ctx={};vm.createContext(ctx);vm.runInContext(html.slice(rackStart,rackEnd)+'\n'+html.slice(start,end),ctx);
+const ctx=require('./helpers/federal-statistics.cjs').load(undefined);
 const calculate=m=>copy(ctx.federalCalculateMatch(copy(m))),season=(ms,c={},y=2026)=>copy(ctx.federalCalculateSeason(copy(ms),copy(c),y));
 function metric(m,side,key){return calculate(m).sides[side].metrics[key];}
 test('independent eight-rack reference: original 11 metrics unchanged in the 13-metric contract, both sides, exact fractions',()=>{

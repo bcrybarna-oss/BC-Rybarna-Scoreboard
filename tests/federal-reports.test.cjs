@@ -2,7 +2,8 @@
 const test=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs'),path=require('node:path'),vm=require('node:vm');
 const {taggedReference}=require('./fixtures/federal-tags.cjs');
 const copy=x=>JSON.parse(JSON.stringify(x)),html=fs.readFileSync(path.join(__dirname,'../index.html'),'utf8');
-const a=html.indexOf('  function federalRackScoresAgree('),b=html.indexOf('\n  }',a)+4,ctx={fetch(){throw Error('No network');},localStorage:{setItem(){throw Error('No writes');}}};vm.createContext(ctx);vm.runInContext(html.slice(a,b)+html.slice(html.indexOf('  // Federal Cup calculation contract v1.'),html.indexOf('  function detailedCounterActive()')),ctx);
+const ctx=require('../assets/js/federal-statistics.js');
+
 function fixture(type='singles',id=type){const m=taggedReference(type,id);m.federalCupLink.rosterParticipants=[0,1].map(side=>Array.from({length:5},(_,i)=>({id:(side?'b':'a')+(i+1),name:(side?'CZ':'SK')+(i+1),team:side?'b':'a',year:2026})));return m;}
 const config={year:2026,reportHost:'SK',teamResults:{}};
 const data=(ms,c=config)=>copy(ctx.federalReportData(ms,c,Number(c.year))),results=(r,id='a1',side=0)=>copy(ctx.federalReportResults(r,id,side)),format=x=>copy(ctx.federalReportMetric(x));

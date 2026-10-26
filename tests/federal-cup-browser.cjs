@@ -39,7 +39,7 @@ assert.ok(html.includes('window.fcTest='));
  const browser=await chromium.launch({headless:true,channel:process.env.FC_BROWSER_CHANNEL||'chrome'});
  const context=await browser.newContext({serviceWorkers:'block'});
  let external=0;const mock={};const writes=[];
- await context.route('**/*',async route=>{
+ await context.route('**/*',async route=>{if(require('./helpers/federal-statistics.cjs').serve(route))return;
    const request=route.request(),url=request.url();
    if(url==='http://fc-isolated.local/')return route.fulfill({contentType:'text/html',body:html});
    external++;

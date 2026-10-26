@@ -26,7 +26,7 @@ assert.ok(html.includes('window.pdfTest='));
  const browser=await chromium.launch({channel:process.env.FC_BROWSER_CHANNEL||'chrome',headless:true});
  try{
  const context=await browser.newContext({acceptDownloads:true,serviceWorkers:'block'});let blocked=0;
- await context.route('**/*',async route=>{
+ await context.route('**/*',async route=>{if(require('./helpers/federal-statistics.cjs').serve(route))return;
   const u=route.request().url();if(u==='https://pdf-isolated.local/')return route.fulfill({contentType:'text/html',body:html});
   const lib=Object.keys(libs).find(k=>u===('https://cdn.jsdelivr.net/npm/'+(k==='html2canvas.min.js'?'html2canvas@1.4.1/dist/':'jspdf@2.5.2/dist/')+k));
   if(lib)return route.fulfill({contentType:'application/javascript',body:libs[lib]});

@@ -1,11 +1,7 @@
 'use strict';
 const test=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs'),path=require('node:path'),vm=require('node:vm'),{execFileSync}=require('node:child_process');
 const {sample,clone}=require('./fixtures/federal-review-reference.cjs');
-const root=path.join(__dirname,'..');
-const html=process.env.FC_SOURCE_REF?execFileSync('git',['show',process.env.FC_SOURCE_REF+':index.html'],{cwd:root,encoding:'utf8',maxBuffer:8e6}):fs.readFileSync(path.join(root,'index.html'),'utf8');
-const a=html.indexOf('  function federalRackScoresAgree('),b=html.indexOf('\n  }',a)+4;
-const ctx={fetch(){throw Error('No network')},localStorage:{setItem(){throw Error('No storage')}}};vm.createContext(ctx);
-vm.runInContext(html.slice(a,b)+html.slice(html.indexOf('  // Federal Cup calculation contract v1.'),html.indexOf('  function detailedCounterActive()')),ctx);
+const ctx=require('./helpers/federal-statistics.cjs').load(process.env.FC_SOURCE_REF);
 const calc=m=>clone(ctx.federalCalculateMatch(m)),season=ms=>clone(ctx.federalCalculateSeason(ms,{year:2026},2026));
 test('P1 Team partial canonical history stays partial in personal and annual attack, independent fouls stay complete',()=>{
  const m=sample();m.detailedPlay.coverage='partial';const r=calc(m),x=r.individuals.red.metrics;
