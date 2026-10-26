@@ -1,5 +1,8 @@
 # Poolčítadlo – společný kontext projektu
 
+Produkce v4.51.97 RC / PR35 nasazena26.10.2026 merge6a57a98e53795a29925b2ce1601fa6903aaddd82, Pages40379170626success. Výkonovéopravy aktivní,produkčnídata bezezměny/migrace. Veřejnýweb/hash/navigace/desktop/mobil aA1/A2/B/PNG/PDF/XLSX soddělenou offline kopiídat PASS. PublikovanéHTML izolovaně plnácache/sdílenéčtení:2novérevizeaplikovanéjen2×,max1souběžnýGETmatches;35přechodů/0chyb. Starýexportnítest aktualizován a celýPASS,mainreleasePASS,Nodejen2známéFAIL+3soukroméSKIP. ZachoványlimityreportB~5s a40MBmimocache; živýcloud/Auth/iOS/hodinovýběh/OBS neověřeny. Viz docs/deployment-v4.51.97.md. Níže následuje historie přípravy přednasazením.
+
+
 Kandidát97 – výkon26.10.2026:40MBexport překračuje localStorage; cloudový aplikovaný timestamp musí být také v paměti stránky, zatímco persistovaný marker lze posunout jen spolu s úspěšnou cache. Jinak poll2,5s opakuje stejný nákladný merge/render. FCvýběr nejnovějšíchfixture/pravidel série je samostatný levný společný krok, statistiky se počítají až v reportech (A1jen svůj zápas). SouběžnéloadSecureMatches pro stejnou relaci sdílí právě běžícíPromise, žádná trvalá cache. Bez změny sportovníchvýpočtů, cloudovýchdat aFirebaseRules; produkčnícore nenačítátest-modular, plošnýpřesun modulů není k opravě nutný. Naměřené limity aověření viz docs/performance-diagnostics-v4.51.97.md. Nesloučeno/nenasazeno, produkce96.
 
 

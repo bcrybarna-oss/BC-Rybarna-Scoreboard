@@ -4,7 +4,11 @@ Aktualizace: 26. 10. 2026. Zadavatel aktuální revize: **Dominik**.
 
 ## Verze a nasazení
 
-Aktuální verze: **v4.51.97 RC** (nasazení schváleno, finální kontrola před sloučením PR35). Produkce: **v4.51.96 RC**.
+Aktuální verze: **v4.51.97 RC** — nasazeno a v uvedeném rozsahu ověřeno26.10.2026.
+
+- **PRODUKCE97 – Dominik:** PR35 sloučeno merge6a57a98e53795a29925b2ce1601fa6903aaddd82, Pages40379170626success. FinálníPR/mainreleasePASS,Node227PASS/2známéFAIL/3soukroméSKIP ze232; shoda chyb saktuálním předmerge main doložena. Aktualizovaný starší exportnítest celýPASS včetně všechpůvodních kontrol aaktuálníchSVGvlajek/absencepopisků. VeřejnéHTML/13assetů přesnéSHA256/verze97,navigaceúvod/výsledky/FederalCup/desktop/mobil/0JSchyb PASS. Na veřejnéURL sizolovanou offline kopií2skutečnýchzápasů A1/A2/B,6PNG/6PDF/2XLSX PASS; není to přihlášený cloud. PřesněpublikovanéHTML izolovaně:5/5cílenýchregresí,35přechodů/40MB/184zápasů/41quotaerrors,2novérevize→2aplikace,max1souběžnýGETmatches,0JS/interactionchyb. Produkčnídata bezezměny/migrace. LimityB~5s a40MBmimocachezachovány. [Deploymentreport](docs/deployment-v4.51.97.md).
+
+Následuje zachovaná historie přípravy97 před schváleným nasazením; starší pokyny neslučovat/nenasazovat už byly nahrazeny schválením zadavatele.
 
 - **Finální exportní regrese97 – Dominik,26.10.2026:** podle schválení změněno zastaralé očekávání informačního popisku na jeho absenci. Kontrola vlajek zachována pro schválené externíSVG; inlinepath assertion byl rovněž prokazatelně zastaralý na main96. Celý starší exportní test nyní PASS se všemi dalšími kontrolamiA1/A2/B,PNG/PDF,mobil,partial,chyby/duplicitníexport/cancel,0Firebase/0zápisů/0JSchyb. ČekáCI právě této hlavy; pak schválený merge/Pages a oddělené veřejné/izolované ověření.
 

@@ -1,0 +1,345 @@
+{
+  "version": "v4.51.97 RC",
+  "mergeCommit": "6a57a98e53795a29925b2ce1601fa6903aaddd82",
+  "approvedHead": "7e48b40731a08786ec9fba37639add428cd0d3a9",
+  "beforeMain": "442b706c841d852e5ba1e7eb82378d7f07aca6bc",
+  "pagesRun": 40379170626,
+  "preMergeCI": 40378962502,
+  "mainCI": 40379170846,
+  "ci": {
+    "release": "success",
+    "tests": 232,
+    "pass": 227,
+    "knownFailures": 2,
+    "privateFileSkips": 3,
+    "sameAsCurrentBeforeMain": true
+  },
+  "updatedExportBrowser": "PASS all retained checks; notice absence and decoded external flat SVG flags",
+  "publicSmoke": {
+    "sha": "6a57a98e53795a29925b2ce1601fa6903aaddd82",
+    "version": "v4.51.97 RC",
+    "verifiedAt": "2026-10-26T18:40:56.253Z",
+    "files": {
+      "index.html": {
+        "status": 200,
+        "sha256": "e9884f67ef28b39957d8143bce67bc96bf578692e65b5e0927f0294d0cca26ad",
+        "bytes": 1696943,
+        "etag": "W/\"6adf9dd0-19e4af\""
+      },
+      "overlay.html": {
+        "status": 200,
+        "sha256": "5857e616ed03f3a128e49dc9578a59725b74636266f62215299d785ce10cab77",
+        "bytes": 20884,
+        "etag": "W/\"6adf9dd0-5194\""
+      },
+      "assets/pushout-xlsx.js": {
+        "status": 200,
+        "sha256": "5e4436656444c3f87b2c8550414b49070eb7d8974455e321425388bc639ae874",
+        "bytes": 7977,
+        "etag": "W/\"6adf9dd0-1f29\""
+      },
+      "assets/federal-report-billiards.webp": {
+        "status": 200,
+        "sha256": "2a8d73c1b0a5ecd07597b993f0da5ed22b7c30bba6023448b8069d154bf3e228",
+        "bytes": 74790,
+        "etag": "\"6adf9dd0-12426\""
+      },
+      "assets/federal-report-pool-logo.png": {
+        "status": 200,
+        "sha256": "c28fd81775d4013e2b58716d6f8ef1a92691f4d5d4c0b8b2ba1b0d3a3a12c593",
+        "bytes": 220520,
+        "etag": "\"6adf9dd0-35d68\""
+      },
+      "assets/pushout-sports-logo-yellow.png": {
+        "status": 200,
+        "sha256": "049c2b4648a2e6106c5c41459c346689915256f62330ee17129b4484fc8314ff",
+        "bytes": 44487,
+        "etag": "\"6adf9dd0-adc7\""
+      },
+      "bc-rybarna-logo.png": {
+        "status": 200,
+        "sha256": "5ad8dccc37f3426e189916f5e5bce61fa922f82d8757283832ac01d224f1f083",
+        "bytes": 131525,
+        "etag": "\"6adf9dd0-201c5\""
+      },
+      "assets/poolcitadlo-logo.webp": {
+        "status": 200,
+        "sha256": "7f9caff46b1924186ef7d6a42b6b9079ee9ace9e7875d8f688e9fdc83bd488db",
+        "bytes": 27896,
+        "etag": "\"6adf9dd0-6cf8\""
+      },
+      "assets/federal-cup/flag-sk-flat.svg": {
+        "status": 200,
+        "sha256": "659b2c072f05d05e8b5d38caa878626459ac652c6dc02359094b423a4ae1d6ee",
+        "bytes": 1543,
+        "etag": "W/\"6adf9dd0-607\""
+      },
+      "assets/federal-cup/flag-cz-flat.svg": {
+        "status": 200,
+        "sha256": "172aa188241c3f5fbd95d7881095d65e2b681f105fb867923709cc09a5dcc3a0",
+        "bytes": 222,
+        "etag": "\"6adf9dd0-de\""
+      },
+      "assets/federal-cup/flag-sk-cloth.svg": {
+        "status": 200,
+        "sha256": "cf8cc9a9fec2f76db4ba3cf6f66c303488cb7ad738aba6dc8afe7535a7a968e7",
+        "bytes": 3230,
+        "etag": "W/\"6adf9dd0-c9e\""
+      },
+      "assets/federal-cup/flag-cz-cloth.svg": {
+        "status": 200,
+        "sha256": "e83808ab2c0c8a5a6b2dde63c44c8e22416ca0a38c00b468136643baca2064e8",
+        "bytes": 1910,
+        "etag": "W/\"6adf9dd0-776\""
+      },
+      "assets/federal-cup/flag-sk-cloth.png": {
+        "status": 200,
+        "sha256": "27faf3b6b76a07b4793ddadb3f549d104ef5c91256c300ad3d24d4dd25a9111a",
+        "bytes": 717340,
+        "etag": "\"6adf9dd0-af21c\""
+      },
+      "assets/federal-cup/flag-cz-cloth.png": {
+        "status": 200,
+        "sha256": "e6485509db399555689fe7b9e23aa1e9e70b27a28e3ca8f1ac2ad38c505cc7fb",
+        "bytes": 641363,
+        "etag": "\"6adf9dd0-9c953\""
+      },
+      "assets/federal-cup/gold-trophy.png": {
+        "status": 200,
+        "sha256": "d4c8ec993c1e20d16508e3f96aade23dc217593597ed3649ca7bc777f85c29c7",
+        "bytes": 1854457,
+        "etag": "\"6adf9dd0-1c4bf9\""
+      }
+    },
+    "normalAndFreshUrlsMatch": true,
+    "screens": [
+      "setup",
+      "home",
+      "results",
+      "players",
+      "about",
+      "federal-cup-2026",
+      "setup",
+      "home"
+    ],
+    "available": {
+      "A1": 0,
+      "A2": 1,
+      "B": 0
+    },
+    "publicA2Exports": [
+      {
+        "format": "Png",
+        "file": "C:\\Users\\mencl\\Documents\\ChatGPT\\Poolčítadlo\\work\\release97-production\\public-empty-A2.png",
+        "bytes": 1451040
+      },
+      {
+        "format": "Pdf",
+        "file": "C:\\Users\\mencl\\Documents\\ChatGPT\\Poolčítadlo\\work\\release97-production\\public-empty-A2.pdf",
+        "bytes": 855692
+      }
+    ],
+    "pageErrors": [],
+    "consoleErrors": [],
+    "blocked": [],
+    "writeAttempts": 0,
+    "limits": "Public unmodified HTML; no matches created, no roster/results edited, no Firebase requests allowed, no real login. Empty offline A2 exported; actual saved A1/B/statistics need production auth. Functional match/lineup scenarios are separate isolated tests."
+  },
+  "publicUrlOfflineCopyReports": {
+    "sha": "6a57a98e53795a29925b2ce1601fa6903aaddd82",
+    "version": "v4.51.97 RC",
+    "verifiedAt": "2026-10-26T18:39:26.681Z",
+    "htmlUnmodified": true,
+    "origin": "https://bcrybarna-oss.github.io/BC-Rybarna-Scoreboard/",
+    "context": "Isolated fresh browser, local offline copy of the user-supplied saved Doubles #9; no real production Auth or cloud match access. The offline subset contains saved Doubles #9 and Singles #3 for A1/A2/B checks.",
+    "matchId": "3d4c35e6-e336-49d5-a9b3-9955cec59c3d",
+    "downloads": [
+      {
+        "mode": "desktop",
+        "filename": "pushout-federal-cup-2026-match-9-doubles-mark-szabo-jakub-koniar-vs-tom-kurz-jan-meisner.xlsx",
+        "bytes": 13427,
+        "sha256": "43f9798a1bebd622fdc1d6ef539ffdb396b3326e9e4d66104ef17149c40cea58"
+      },
+      {
+        "mode": "mobile",
+        "filename": "pushout-federal-cup-2026-match-9-doubles-mark-szabo-jakub-koniar-vs-tom-kurz-jan-meisner.xlsx",
+        "bytes": 13427,
+        "sha256": "43f9798a1bebd622fdc1d6ef539ffdb396b3326e9e4d66104ef17149c40cea58"
+      }
+    ],
+    "pageErrors": [],
+    "consoleErrors": [],
+    "blocked": [],
+    "writeAttempts": 0
+  },
+  "downloadValidation": {
+    "reports": [
+      {
+        "type": "A1",
+        "mode": "desktop",
+        "png": [
+          1920,
+          1080
+        ],
+        "pdf": "16:9, pixels identical to PNG"
+      },
+      {
+        "type": "A2",
+        "mode": "desktop",
+        "png": [
+          1920,
+          1080
+        ],
+        "pdf": "16:9, pixels identical to PNG"
+      },
+      {
+        "type": "B",
+        "mode": "desktop",
+        "png": [
+          1920,
+          1080
+        ],
+        "pdf": "16:9, pixels identical to PNG"
+      },
+      {
+        "type": "A1",
+        "mode": "mobile",
+        "png": [
+          1920,
+          1080
+        ],
+        "pdf": "16:9, pixels identical to PNG"
+      },
+      {
+        "type": "A2",
+        "mode": "mobile",
+        "png": [
+          1920,
+          1080
+        ],
+        "pdf": "16:9, pixels identical to PNG"
+      },
+      {
+        "type": "B",
+        "mode": "mobile",
+        "png": [
+          1920,
+          1080
+        ],
+        "pdf": "16:9, pixels identical to PNG"
+      }
+    ],
+    "xlsx": [
+      {
+        "mode": "desktop",
+        "sheets": [
+          "Pushout",
+          "Metadata"
+        ],
+        "metrics": 9,
+        "numericFormatsCorrect": true
+      },
+      {
+        "mode": "mobile",
+        "sheets": [
+          "Pushout",
+          "Metadata"
+        ],
+        "metrics": 9,
+        "numericFormatsCorrect": true
+      }
+    ]
+  },
+  "publishedCodeRegressions": {
+    "tests": 5,
+    "pass": 5,
+    "sourceSha256": "e9884f67ef28b39957d8143bce67bc96bf578692e65b5e0927f0294d0cca26ad",
+    "scenarios": [
+      "fixture selection without metric calculations",
+      "latest/manual/partial/clinch",
+      "quota revision applied once without unsafe persisted marker",
+      "new revisions and failure retries",
+      "concurrent reads share one request and reject old identity"
+    ]
+  },
+  "publishedCodeIsolatedLoad": {
+    "sourceSha256": "e9884f67ef28b39957d8143bce67bc96bf578692e65b5e0927f0294d0cca26ad",
+    "backupSha256": "2afd2e5c48d3babf198d41809dd9fedbf8b188a28dd8e6056a0f27db69afdc6e",
+    "backupBytes": 40385164,
+    "cycles": 7,
+    "navigationTransitions": 35,
+    "newCloudRevisions": 2,
+    "fullApplications": 2,
+    "storageQuotaErrors": 41,
+    "matchesReads": 14,
+    "maxConcurrentMatchesReads": 1,
+    "heapAfterGC": [
+      {
+        "label": "loaded",
+        "bytes": 53431984,
+        "DOM": 2966,
+        "listeners": 456,
+        "intervals": 6
+      },
+      {
+        "label": "cycle-1",
+        "bytes": 57024652,
+        "DOM": 8401,
+        "listeners": 1034,
+        "intervals": 7
+      },
+      {
+        "label": "cycle-4",
+        "bytes": 57453136,
+        "DOM": 8836,
+        "listeners": 1110,
+        "intervals": 7
+      },
+      {
+        "label": "cycle-7",
+        "bytes": 57888160,
+        "DOM": 8836,
+        "listeners": 1110,
+        "intervals": 7
+      },
+      {
+        "label": "final",
+        "bytes": 57919128,
+        "DOM": 8836,
+        "listeners": 1110,
+        "intervals": 6
+      }
+    ],
+    "reports": [
+      {
+        "cycle": 0,
+        "operation": "report-open-close-match",
+        "wallMs": 1409
+      },
+      {
+        "cycle": 3,
+        "operation": "report-open-close-team",
+        "wallMs": 2815
+      },
+      {
+        "cycle": 6,
+        "operation": "report-open-close-player",
+        "wallMs": 2261
+      }
+    ],
+    "longestTaskMs": 3033,
+    "pageErrors": [],
+    "interactionFailures": [],
+    "blockedMockWriteAttempts": 1,
+    "productionRequests": 0,
+    "productionWrites": 0
+  },
+  "productionWrites": 0,
+  "productionMigration": false,
+  "limits": [
+    "B report can still block once around five seconds",
+    "40MB archive cannot fully fit localStorage",
+    "live authenticated production Firebase not verified",
+    "physical iPhone/Safari and actual OBS not verified"
+  ]
+}

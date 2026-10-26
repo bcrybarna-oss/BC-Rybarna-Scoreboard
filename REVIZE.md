@@ -1,5 +1,13 @@
 # Revize aplikace Poolčítadlo
 
+## Dominik – ověřené nasazení výkonové opravy (v4.51.97 RC)
+Zadavatel: Dominik
+Datum: 26. 10. 2026
+Změny: Po schválení a finálníCI PR35 sloučeno merge6a57a98e53795a29925b2ce1601fa6903aaddd82 se zachováním historie. Nasazena runtime revize při plnécache, levnývýběrFCfixture a sdílení právěběžícíhočtenízápasů. Staršíexportnítest aktualizován na absenci schváleněodstraněnýchpopisků a externíSVGvlajky; ostatní kontroly zachovány. Dokumentace skutečného nasazení bez změny aplikace/verze/dat.
+Testy: Releasegate/finálníPR/mainreleasePASS;Node227/232 pouze známépreview-match-reload-recovery:50,106 shodné saktuálním předmerge main a3soukroméSKIP. Celý exportníbrowserPASS. Pages40379170626success; veřejnéHTML/13assetů přesnáSHA256/verze97/navigace/desktop/mobil/0JSchybPASS. Na produkčníURL sizolovanými kopiemi A1/A2/B a6PNG/6PDF/2XLSX PASS. PřesněpublikovanéHTML izolovaně5/5regresí a35přechodů/40MB/184zápasů:41quotaerrors,2novérevizeaplikoványjen2×,souběžnýGETmatchesmax1,heap~58MB/DOM/listenerystabilní/0JSchyb. CI není plně zelené.
+Nasazení: Nasazeno a vuvedenémrozsahu ověřeno26.10.2026 na https://bcrybarna-oss.github.io/BC-Rybarna-Scoreboard/ v4.51.97 RC. Bez ručního rerunuPages. Viz docs/deployment-v4.51.97.md.
+Omezení: ReportB může jednorázově blokovat~5s,40MBarchiv se stále nevejde do localStorage. ŽiváprodukčníAuth/Firebase/fyzickýiPhone/hodinovýběh/OBS/Excelneověřeny. Produkčnídata bezezměny amigrace; všechny zátěžové zápisy pouzezachyceny vmocku,žádnéprodukčnípožadavky.
+
 ## Dominik – finální exportní regrese před vydáním97 (v4.51.97 RC)
 Zadavatel: Dominik
 Datum: 26. 10. 2026
