@@ -84,7 +84,13 @@ Dvě série v pořadí před→po a po→před, dohromady šest vzorků každé 
 
 PNG medián je asi o57 ms/4,4 % vyšší, rozsahy se výrazně překrývají (před1175–1954 ms, po991–1854 ms). Nebyla zachycena systematická nová zátěž nebo významné celkové zpomalení; toto není statistická záruka pro všechny telefony. Časy nejsou důkazem zrychlení díky modularizaci. Šest výsledných B PNG před/po je byteově identických; skutečné PDF exporty vznikly v obou verzích a jejich rozměry ověřuje exportní sada. Dominantní práce PDF dál zůstává v addImage. Původní jednorázové blokování B ani kapacita archivu se touto extrakcí neřeší.
 
-Opakované stream-controls a stream-isolation PASS: jednoduché/rozšířené počítadlo, volitelný stream, všechny režimy, mobil/rotace/320px, reload/resume, dvě UID, stejný účet/jiný zápas,21svýpadek, stará URL a podmíněné412. Podrobný counter, nominace/reload/rename a dvouklientové FC konflikty7/7 rovněž PASS. Celkem13různých funkčních browserových sad bez nových selhání; všechny síťové operace zachyceny mockem. Finální GitHub CI bude doplněno po pushi této hlavy.
+Opakované stream-controls a stream-isolation PASS: jednoduché/rozšířené počítadlo, volitelný stream, všechny režimy, mobil/rotace/320px, reload/resume, dvě UID, stejný účet/jiný zápas,21svýpadek, stará URL a podmíněné412. Podrobný counter, nominace/reload/rename a dvouklientové FC konflikty7/7 rovněž PASS. Celkem13různých funkčních browserových sad bez nových selhání; všechny síťové operace zachyceny mockem.
+
+## PR a ověřené GitHub CI
+
+Implementační commit `e98cca11a35ed03f33ee2f6b2c39ec2058582b90` je v [draft PR #36](https://github.com/bcrybarna-oss/BC-Rybarna-Scoreboard/pull/36), větev `refactor/federal-statistics-module`. [CI40394034617](https://github.com/bcrybarna-oss/BC-Rybarna-Scoreboard/actions/runs/40394034617): **Release version and revision PASS**, Node **229 PASS / 2 FAIL / 3 SKIP ze234**. Tři soukromé testy bez lokálních exportů jsou přeskočeny; lokálně s nimi232 PASS/2 FAIL/0 SKIP. Z logu ověřeny pouze známé preview chyby na :50 a :106, žádná nová Node regrese.
+
+Porovnáno s [CI aktuálního main40380876396](https://github.com/bcrybarna-oss/BC-Rybarna-Scoreboard/actions/runs/40380876396), commit `a4604c3456b7bc0eef512296f2615262970fdc34`:227 PASS/2 stejné FAIL/3 SKIP ze232, release PASS. Dotčený starý core i jeho recovery test zůstaly byteově nezměněné proti main. Následující čistě dokumentační pokračování zaznamenává ověření; aplikační a testovací kód je stejný jako na implementačním commitu. **Nesloučeno a nenasazeno.**
 
 ## Dvě známé chyby zůstávají rozlišené
 

@@ -455,5 +455,43 @@
         ]
       }
     ]
+  },
+  "ci": {
+    "implementationCommit": "e98cca11a35ed03f33ee2f6b2c39ec2058582b90",
+    "pullRequest": 36,
+    "run": 40394034617,
+    "release": "success",
+    "node": {
+      "pass": 229,
+      "fail": 2,
+      "skip": 3,
+      "total": 234
+    },
+    "localNode": {
+      "pass": 232,
+      "fail": 2,
+      "skip": 0,
+      "total": 234
+    },
+    "baselineRun": 40380876396,
+    "baselineCommit": "a4604c3456b7bc0eef512296f2615262970fdc34",
+    "baselineNode": {
+      "pass": 227,
+      "fail": 2,
+      "skip": 3,
+      "total": 232
+    },
+    "knownFailures": [
+      {
+        "file": "preview-match-reload-recovery.test.cjs",
+        "line": 50,
+        "cause": "Preview identity-wait contract differs: retain vs detach active match pointer without deleting storage"
+      },
+      {
+        "file": "preview-match-reload-recovery.test.cjs",
+        "line": 106,
+        "cause": "Stale source-shape regex: restoration result is assigned for tournament fallback; both login calls remain"
+      }
+    ]
   }
 }
