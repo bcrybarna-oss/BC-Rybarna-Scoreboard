@@ -1168,5 +1168,18 @@
     "beforeMs": 5594,
     "afterMs": 3046,
     "fixtures": 13
+  },
+  "githubCI": {
+    "commit": "b020dd339fe387db8f9ff924335abb66b016820d",
+    "pullRequest": 35,
+    "run": 40376836361,
+    "release": "success",
+    "node": {
+      "total": 232,
+      "pass": 227,
+      "knownFailures": 2,
+      "privateFileSkips": 3
+    },
+    "productionUnchanged": true
   }
 }

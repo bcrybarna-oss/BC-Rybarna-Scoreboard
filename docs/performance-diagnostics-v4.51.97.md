@@ -72,3 +72,8 @@ Nové cílené regrese:levný výběr bez kalkulace,1výpočet na zdroj při rep
 Stále existuje měřitelná jednotlivá úloha2,67s ve srovnávacím běhu a5,116s při reportuB v delším běhu, zejména běžné statistiky/velké cloudové změny; oprava neznamená nulové blokování všech operací.40MBcelá databáze se nadále nevejde do localStorage, nelze tvrdit úplnou offline perzistenci. Přesun velkého archivu doIndexedDB nebo samostatné workerové výpočty by byly další návrh, nikoli součást tohoto cíleného zásahu. Bez měření je nepřidávat. Síť byla simulovaná, nikoli skutečné mobilní připojení; několik hodin běhu a fyzický iPhone nebyly ověřeny. Další vhodný krok je dobrovolný lokální performance trace na konkrétním postiženém telefonu (bez exportu auth/dat), pokud se potíže po případném schváleném vydání vrátí.
 
 [Strojové měření před/po](performance-v4.51.97-measurements.json). Syrové CPUprofily a privátní exporty zůstávají pouze lokálně voutput/performance; doPR nejdou. Nic není sloučeno ani nasazeno.
+
+
+## Git a finální CI
+
+Otestovaná aplikace pushnuta jako `b020dd339fe387db8f9ff924335abb66b016820d` do [draft PR #35](https://github.com/bcrybarna-oss/BC-Rybarna-Scoreboard/pull/35). [CI40376836361](https://github.com/bcrybarna-oss/BC-Rybarna-Scoreboard/actions/runs/40376836361): Release version and revision **success**, Node **227PASS/2FAIL/3SKIP ze232**. Log obou chyb potvrzuje jen známé preview-match-reload-recovery.test.cjs:50/:106. Tři soukromé exportní testy přeskočeny bez místních souborů, lokálně230PASS/2FAIL/0SKIP. Žádná nová Node regrese. Zastaralý samostatný browserový test popsaný výše zůstává transparentně oddělen. Následný dokumentační commit nemění otestované HTML. **Nesloučeno a nenasazeno.**
