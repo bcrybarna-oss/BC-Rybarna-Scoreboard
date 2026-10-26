@@ -1,5 +1,14 @@
 # Revize aplikace Poolčítadlo
 
+## Dominik – produkční modul výpočtů Federal Cupu (v4.51.98 RC)
+
+Zadavatel: Dominik
+Datum: 26. 10. 2026
+Změny: Kandidát odděluje 24 stávajících čistých FC funkcí včetně reportových modelů a Pushout modelu do jediného produkčně načítaného assets/js/federal-statistics.js. Původní těla odstraněna z index.html; explicitní pořadí načtení a chyba při nedostupném modulu, bez starého fallbacku. Přímé importy v testech i offline diagnostice; browserové mocky načítají stejný asset. Výpočty, exportní šablony, cloud/cache a opravy výkonu97 neměněny; overlay pouze synchronizuje číslo vydání.
+Testy: Porovnání čtyř skutečných exportů, ročních dat, osobních Team metrik a byteově shodných XLSX PASS. Lokálně Node232PASS/2známéFAIL ze234 včetně soukromých vstupů. A1/A2/B PNG/PDF, skutečné Singles3 a Doubles9, desktop/mobil XLSX a explicitní chyba chybějícího modulu PASS. Podrobná evidence a další měření: docs/federal-modularization-stage-1.md.
+Nasazení: Příprava samostatného PR; nesloučeno a nenasazeno. Produkce zůstává v4.51.97 RC. Žádná změna produkčních dat ani migrace.
+Omezení: Dvě známá selhání test-modular jsou oddělená: nesoulad kontraktu odpojení zápasu při čekání na identitu a zastaralý regex volání obnovy po přihlášení. Není dokončována stará modularizace ani optimalizováno jsPDF; archiv se stále nevejde do localStorage, jednorázové blokování reportu B přetrvává.
+
 ## Dominik – ověřené nasazení výkonové opravy (v4.51.97 RC)
 Zadavatel: Dominik
 Datum: 26. 10. 2026

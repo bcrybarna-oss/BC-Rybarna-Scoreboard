@@ -41,7 +41,7 @@ async function client(label){
  const ctx=await browser.newContext({serviceWorkers:'block',acceptDownloads:true});
  await ctx.addInitScript(()=>{window.setInterval=()=>0;});
  const cors={'Access-Control-Allow-Origin':origin,'Access-Control-Allow-Headers':'content-type,if-match,x-firebase-etag','Access-Control-Allow-Methods':'GET,PUT,OPTIONS','Access-Control-Expose-Headers':'ETag'};
- await ctx.route('**/*',async route=>{
+ await ctx.route('**/*',async route=>{if(require('./helpers/federal-statistics.cjs').serve(route))return;
   const q=route.request(),u=new URL(q.url());
   if(q.url()===appUrl)return route.fulfill({contentType:'text/html',body:html});
   if(u.hostname===dbHost){

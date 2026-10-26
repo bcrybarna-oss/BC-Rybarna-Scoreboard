@@ -4,7 +4,9 @@ Aktualizace: 26. 10. 2026. Zadavatel aktuální revize: **Dominik**.
 
 ## Verze a nasazení
 
-Aktuální verze: **v4.51.97 RC** — nasazeno a v uvedeném rozsahu ověřeno26.10.2026.
+Aktuální verze: **v4.51.98 RC** — kandidát první etapy modularizace, nesloučeno a nenasazeno. Produkce zůstává **v4.51.97 RC**.
+
+- **Modularizace1 – Dominik,26.10.2026:** jediný produkční modul FC výpočtů a reportových modelů,24původních těl odstraněno z inline core; žádný fallback ani druhý algoritmus. Přímé importy testů/diagnostiky a stejný asset v browserových mockech. Zachovány opravy97, data a exportní šablony. Čtyři skutečné exporty před/po PASS včetně osobních Team, skutečného#9 a31byteově shodných Pushout XLSX. Node232PASS/2známéFAIL/0SKIP ze234;13funkčních browserových sad PASS.60přechodů před/po bez chyb, stejné1110listenery/6–7intervalů/max1souběžnéGETmatches/4aplikace4novýchrevizí. Bodděleně6vzorků/verzi v opačném pořadí,6PNGbyteověshodných; významná systematická nová zátěž nezachycena, PDFaBlimitypřetrvávají. CIčekápo pushi. [Rozsah, ověření, měření a návrat](docs/federal-modularization-stage-1.md). **Neslučovat a nenasazovat.**
 
 - **PRODUKCE97 – Dominik:** PR35 sloučeno merge6a57a98e53795a29925b2ce1601fa6903aaddd82, Pages40379170626success. FinálníPR/mainreleasePASS,Node227PASS/2známéFAIL/3soukroméSKIP ze232; shoda chyb saktuálním předmerge main doložena. Aktualizovaný starší exportnítest celýPASS včetně všechpůvodních kontrol aaktuálníchSVGvlajek/absencepopisků. VeřejnéHTML/13assetů přesnéSHA256/verze97,navigaceúvod/výsledky/FederalCup/desktop/mobil/0JSchyb PASS. Na veřejnéURL sizolovanou offline kopií2skutečnýchzápasů A1/A2/B,6PNG/6PDF/2XLSX PASS; není to přihlášený cloud. PřesněpublikovanéHTML izolovaně:5/5cílenýchregresí,35přechodů/40MB/184zápasů/41quotaerrors,2novérevize→2aplikace,max1souběžnýGETmatches,0JS/interactionchyb. Produkčnídata bezezměny/migrace. LimityB~5s a40MBmimocachezachovány. [Deploymentreport](docs/deployment-v4.51.97.md).
 

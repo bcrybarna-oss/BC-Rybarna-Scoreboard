@@ -19,7 +19,7 @@ assert.ok(html.includes('window.releaseTest='));
  const browser=await chromium.launch({channel:'chrome',headless:true});
  try{
   const context=await browser.newContext({serviceWorkers:'block'});let remoteWrites=0;
-  await context.route('**/*',route=>{const r=route.request();if(!['GET','HEAD'].includes(r.method()))remoteWrites++;return r.url()==='https://release-isolated.local/'?route.fulfill({contentType:'text/html',body:html}):route.abort();});
+  await context.route('**/*',route=>{if(require('./helpers/federal-statistics.cjs').serve(route))return;const r=route.request();if(!['GET','HEAD'].includes(r.method()))remoteWrites++;return r.url()==='https://release-isolated.local/'?route.fulfill({contentType:'text/html',body:html}):route.abort();});
   const page=await context.newPage(),errors=[];page.on('pageerror',e=>errors.push(e.message));
   await page.goto('https://release-isolated.local/');await page.locator('#cloudLoginModal.show').waitFor();await page.evaluate(()=>releaseTest.setup());
   assert.equal((await page.locator('.modern-brand-version').textContent()).trim(),'v4.51.93 RC');

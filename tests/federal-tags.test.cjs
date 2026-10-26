@@ -1,8 +1,7 @@
 'use strict';
 const test=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs'),path=require('node:path'),vm=require('node:vm');
 const {taggedReference}=require('./fixtures/federal-tags.cjs'),{reference,copy}=require('./fixtures/federal-calculation.cjs');
-const html=fs.readFileSync(path.join(__dirname,'../index.html'),'utf8'),a=html.indexOf('  function federalRackScoresAgree('),b=html.indexOf('\n  }',a)+4;
-const ctx={fetch(){throw Error('No network')},localStorage:{setItem(){throw Error('No writes')}}};vm.createContext(ctx);vm.runInContext(html.slice(a,b)+html.slice(html.indexOf('  // Federal Cup calculation contract v1.'),html.indexOf('  function detailedCounterActive()')),ctx);
+const ctx=require('../assets/js/federal-statistics.js');
 const calc=m=>copy(ctx.federalCalculateMatch(m)),season=ms=>copy(ctx.federalCalculateSeason(ms,{year:2026},2026));
 test('tagged actions remain attributes with additive Pushout fields; original metrics unchanged',()=>{
  const m=taggedReference(),base=calc(reference()),r=calc(m);

@@ -1,0 +1,459 @@
+{
+  "baseline": "a4604c3456b7bc0eef512296f2615262970fdc34",
+  "version": "v4.51.98 RC",
+  "note": "Local isolated Chrome, actual 40 MB backup. No production traffic. Timings are observations, not a performance guarantee.",
+  "sides": {
+    "before": {
+      "soak": {
+        "transitions": 60,
+        "reportOpens": 4,
+        "errors": 0,
+        "interactionFailures": 0,
+        "heapBytes": 57958528,
+        "dom": 8836,
+        "listeners": 1110,
+        "intervalsAfterCloudStop": 6,
+        "intervalCounts": [
+          6,
+          7
+        ],
+        "matches": 184,
+        "players": 26,
+        "maxSimultaneousMatchesReads": 1,
+        "matchesGets": 24,
+        "quotaErrors": 72,
+        "cloudRevisionApplications": 4,
+        "matchCalculations": 28,
+        "seasonCalculations": 2,
+        "maxLongTask": 3176,
+        "screenMedianMs": {
+          "home": 71,
+          "results": 48,
+          "history": 574.5,
+          "stats": 1121,
+          "federal-cup-2026": 938
+        }
+      },
+      "clean3CycleMedianMs": {
+        "home": 73,
+        "results": 47,
+        "history": 477,
+        "stats": 1188,
+        "federal-cup-2026": 1182
+      },
+      "B": {
+        "order": "first and fourth batch",
+        "samples": 6,
+        "medianMs": {
+          "calculation": 588.8500000005588,
+          "template": 3.3499999986961484,
+          "layout": 5.75,
+          "open": 608.1999999992549,
+          "throughFrames": 668.9499999992549,
+          "pngRaster": 1134.9500000001863,
+          "pngEncoding": 172.1499999994412,
+          "pdfRaster": 985.0000000009313,
+          "png": 1295.9000000003725,
+          "pdf": 7269.1500000003725,
+          "pdfAddImage": 6066.950000000186
+        },
+        "rangeMs": {
+          "calculation": [
+            195.80000000074506,
+            633.0999999996275
+          ],
+          "template": [
+            1.400000000372529,
+            4.700000001117587
+          ],
+          "layout": [
+            3.300000002607703,
+            7.400000000372529
+          ],
+          "open": [
+            264.8999999985099,
+            653.1000000014901
+          ],
+          "throughFrames": [
+            629,
+            790.9000000003725
+          ],
+          "pngRaster": [
+            1050.300000000745,
+            1481.699999999255
+          ],
+          "pngEncoding": [
+            100.29999999888241,
+            451.8999999985099
+          ],
+          "pdfRaster": [
+            758.0999999996275,
+            1202.800000000745
+          ],
+          "png": [
+            1174.5999999996275,
+            1953.9000000003725
+          ],
+          "pdf": [
+            4648.5999999996275,
+            7955.39999999851
+          ],
+          "pdfAddImage": [
+            3476.4000000003725,
+            6793.199999999255
+          ]
+        }
+      }
+    },
+    "after": {
+      "soak": {
+        "transitions": 60,
+        "reportOpens": 4,
+        "errors": 0,
+        "interactionFailures": 0,
+        "heapBytes": 57978624,
+        "dom": 8837,
+        "listeners": 1110,
+        "intervalsAfterCloudStop": 6,
+        "intervalCounts": [
+          6,
+          7
+        ],
+        "matches": 184,
+        "players": 26,
+        "maxSimultaneousMatchesReads": 1,
+        "matchesGets": 25,
+        "quotaErrors": 73,
+        "cloudRevisionApplications": 4,
+        "matchCalculations": 28,
+        "seasonCalculations": 2,
+        "maxLongTask": 3393,
+        "screenMedianMs": {
+          "home": 75,
+          "results": 46.5,
+          "history": 529,
+          "stats": 1080.5,
+          "federal-cup-2026": 851.5
+        }
+      },
+      "clean3CycleMedianMs": {
+        "home": 63,
+        "results": 32,
+        "history": 407,
+        "stats": 1177,
+        "federal-cup-2026": 895
+      },
+      "B": {
+        "order": "second and third batch",
+        "samples": 6,
+        "medianMs": {
+          "calculation": 435,
+          "template": 3.0000000009313226,
+          "layout": 3.649999998509884,
+          "open": 448.7999999988824,
+          "throughFrames": 616.9999999990687,
+          "pngRaster": 1200.4000000003725,
+          "pngEncoding": 141.59999999869615,
+          "pdfRaster": 1055.7000000001863,
+          "png": 1352.9500000001863,
+          "pdf": 6766.649999999441,
+          "pdfAddImage": 5584.6500000003725
+        },
+        "rangeMs": {
+          "calculation": [
+            166,
+            622.5999999996275
+          ],
+          "template": [
+            1.3999999985098839,
+            4.800000000745058
+          ],
+          "layout": [
+            3,
+            7.099999999627471
+          ],
+          "open": [
+            246.2999999988824,
+            639.7000000011176
+          ],
+          "throughFrames": [
+            435.3999999985099,
+            746.9000000003725
+          ],
+          "pngRaster": [
+            869.2000000011176,
+            1466.9000000003725
+          ],
+          "pngEncoding": [
+            114.19999999925494,
+            369.2000000011176
+          ],
+          "pdfRaster": [
+            803.2999999988824,
+            1169.199999999255
+          ],
+          "png": [
+            990.9000000003725,
+            1854.0999999996275
+          ],
+          "pdf": [
+            5969.5999999996275,
+            7684.200000001118
+          ],
+          "pdfAddImage": [
+            4841.799999998882,
+            6355.9000000003725
+          ]
+        }
+      }
+    }
+  },
+  "BPngParity": [
+    "9257bcccaee127e46ed939feb9f36aa2b785451bb0d4c1dd0e02754c68e9e534",
+    "9257bcccaee127e46ed939feb9f36aa2b785451bb0d4c1dd0e02754c68e9e534",
+    "9257bcccaee127e46ed939feb9f36aa2b785451bb0d4c1dd0e02754c68e9e534",
+    "9257bcccaee127e46ed939feb9f36aa2b785451bb0d4c1dd0e02754c68e9e534",
+    "9257bcccaee127e46ed939feb9f36aa2b785451bb0d4c1dd0e02754c68e9e534",
+    "9257bcccaee127e46ed939feb9f36aa2b785451bb0d4c1dd0e02754c68e9e534"
+  ],
+  "dataParity": {
+    "baseRef": "a4604c3456b7bc0eef512296f2615262970fdc34",
+    "moduleSha256": "7e1cae131f79f6bf5bdd2c417fe5b4272408c361053024a6e5f1c411a9ea7d21",
+    "bodies": [
+      {
+        "name": "federalRackScoresAgree",
+        "sha256": "882fae055085bc74f8e66b1de27447f3e054495ebdedb62e1cd59c2334332157"
+      },
+      {
+        "name": "federalMetric",
+        "sha256": "729aa991208e0120c8ca41f28a6cbcc28cc36a657b3550a9c732e5ec874ef3e9"
+      },
+      {
+        "name": "federalStatsRows",
+        "sha256": "7e792c4e2b8ef51eae8cfda12f2b119e10eb6da5e3acd4e7aedde175d5dd87bf"
+      },
+      {
+        "name": "federalStatsRackRows",
+        "sha256": "f8805aac947cdda921d3173976eb24e6d8b12c778978e8399bdd67c1d02ca9c2"
+      },
+      {
+        "name": "federalStatsRacksComplete",
+        "sha256": "b06841e0b1dee21b6c4120c4eda52cd640a604125be0920ac3a401ab1097b631"
+      },
+      {
+        "name": "federalStatsHistoricalRacks",
+        "sha256": "07e2e2c8d4ddaf961d3050a9340b31c5e99205bfb5e421f686b33732f5aa14e8"
+      },
+      {
+        "name": "federalStatsRecordSignature",
+        "sha256": "7fea9f53d2507ea708e33ee4d50acbee8ab7e23d9999a02a6923ccfeab65423a"
+      },
+      {
+        "name": "federalStatsRecordIndex",
+        "sha256": "9f508b47d92e2f8f73274cf5fcb6a82361e587907c388231b498c5628252067f"
+      },
+      {
+        "name": "federalStatsReadableShot",
+        "sha256": "787ced1315906f38ab342b934b0a5f292c50526d6b1c6a8f7d2d11e918a166c0"
+      },
+      {
+        "name": "federalStatsShotIssues",
+        "sha256": "3f3dc367f62807c44c21c15bd173f574f5121b663398e9ed7f8043e6163efdc6"
+      },
+      {
+        "name": "federalTaggedMetric",
+        "sha256": "0f0dc907d6da6261c0fb8618e1d3f917375870a0e76283d86cc8955aeb93414d"
+      },
+      {
+        "name": "federalStatsSide",
+        "sha256": "b290bb962c3a57598db977fa20f1e5d5811585ef93ed65c5a945004e165b90e5"
+      },
+      {
+        "name": "federalStatsOwner",
+        "sha256": "456b71e5dbfa9f41ab0095128147c660da6a3571322fbea05e7d1b848f4f8e7c"
+      },
+      {
+        "name": "federalCalculateMatch",
+        "sha256": "ad0a141b9f3d85493a91a2ec2554339e6755a8779a9036165efbb25710d11c42"
+      },
+      {
+        "name": "federalMergeMetrics",
+        "sha256": "df0dafd3369eb15c0fb89cf65330763eb852bc98befb94cd50740cd6c8c78034"
+      },
+      {
+        "name": "federalFixtureSources",
+        "sha256": "71e5425d205742d588fc34a39498da6b2e6a7bfca32ccb796ec887b81cb6fc70"
+      },
+      {
+        "name": "federalCalculateSeason",
+        "sha256": "a1a216fc3fa420ff65bd0cbee2f58abc8c8bd8e434f602b2eae91a9cec0d049b"
+      },
+      {
+        "name": "federalReportOrder",
+        "sha256": "d4b81e9c2acaf745d360a1ae372703511c8e7ef0784e911bf14bde57ae4307f2"
+      },
+      {
+        "name": "federalReportWinner",
+        "sha256": "882353cd92d94cd0ee143dce1949ab6c7caf9407cd36793775eca4b18d2b9311"
+      },
+      {
+        "name": "federalReportSelection",
+        "sha256": "384921e5b6c3afacc16e015d9f93d5d4d06c0e5ee1f8bb165dbcdfceac89ba85"
+      },
+      {
+        "name": "federalReportData",
+        "sha256": "bbb162df67684b37afbab6fdce47d80c918001a45dadc0aef3b62e450ea4bd3a"
+      },
+      {
+        "name": "federalReportResults",
+        "sha256": "c81b7d7b3a7d02a2c4ecc343ac6f3160eb27d6ea2f22c77f2b56f0048d326a4d"
+      },
+      {
+        "name": "federalReportMetric",
+        "sha256": "e133afeba6b041298ffac989df32429467ae5450b8c2bf9f178bd0ad7f895f62"
+      },
+      {
+        "name": "federalPushoutModel",
+        "sha256": "6cad5cd003af4966e1a3d0ff1924f700454a7d485a74836109d4e1b775f9c0bd"
+      }
+    ],
+    "backups": [
+      {
+        "file": "BC_Rybarna_Scoreboard_Backup_2026-10-23 (1).json",
+        "sha256": "7494ec7168498e43bce3bfb30f4d53556685dfc45eb130ad5816614992e83d48",
+        "matches": 171,
+        "linked": 1,
+        "pushout": 1,
+        "personalTeam": 0,
+        "checks": [
+          {
+            "id": "a9f06904-00a5-4518-a81a-eae5a9425a35",
+            "linked": true,
+            "sides": [
+              {
+                "pots": 14,
+                "percent": "93 %",
+                "ownBreak": [
+                  1,
+                  3
+                ],
+                "losses": 2
+              },
+              {
+                "pots": 38,
+                "percent": "95 %",
+                "ownBreak": [
+                  3,
+                  4
+                ],
+                "losses": 1
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "file": "BC_Rybarna_Scoreboard_Backup_2026-10-24 (1).json",
+        "sha256": "0aa18c9b610709025150ef55fd6fd177f1972612d72703635cbdd74e8b52f7eb",
+        "matches": 180,
+        "linked": 8,
+        "pushout": 8,
+        "personalTeam": 20,
+        "checks": [
+          {
+            "id": "3d4c35e6-e336-49d5-a9b3-9955cec59c3d",
+            "linked": false,
+            "sides": [
+              {
+                "pots": 48,
+                "percent": "94 %",
+                "ownBreak": [
+                  2,
+                  4
+                ],
+                "losses": 2
+              },
+              {
+                "pots": 12,
+                "percent": "86 %",
+                "ownBreak": [
+                  1,
+                  4
+                ],
+                "losses": 3
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "file": "BC_Rybarna_Scoreboard_Backup_2026-10-24 (2).json",
+        "sha256": "4701a20ed0583b503a12b29a39ba522a6a4239630c22ebc4bbdf172d97088c47",
+        "matches": 180,
+        "linked": 9,
+        "pushout": 9,
+        "personalTeam": 20,
+        "checks": [
+          {
+            "id": "3d4c35e6-e336-49d5-a9b3-9955cec59c3d",
+            "linked": true,
+            "sides": [
+              {
+                "pots": 48,
+                "percent": "94 %",
+                "ownBreak": [
+                  2,
+                  4
+                ],
+                "losses": 2
+              },
+              {
+                "pots": 12,
+                "percent": "86 %",
+                "ownBreak": [
+                  1,
+                  4
+                ],
+                "losses": 3
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "file": "BC_Rybarna_Scoreboard_Backup_2026-10-25.json",
+        "sha256": "2afd2e5c48d3babf198d41809dd9fedbf8b188a28dd8e6056a0f27db69afdc6e",
+        "matches": 184,
+        "linked": 13,
+        "pushout": 13,
+        "personalTeam": 30,
+        "checks": [
+          {
+            "id": "3d4c35e6-e336-49d5-a9b3-9955cec59c3d",
+            "linked": true,
+            "sides": [
+              {
+                "pots": 48,
+                "percent": "94 %",
+                "ownBreak": [
+                  2,
+                  4
+                ],
+                "losses": 2
+              },
+              {
+                "pots": 12,
+                "percent": "86 %",
+                "ownBreak": [
+                  1,
+                  4
+                ],
+                "losses": 3
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+}
