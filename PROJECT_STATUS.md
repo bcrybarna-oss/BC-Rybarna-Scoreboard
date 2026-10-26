@@ -4,7 +4,11 @@ Aktualizace: 26. 10. 2026. Zadavatel aktuální revize: **Dominik**.
 
 ## Verze a nasazení
 
-Aktuální verze: **v4.51.98 RC** — kandidát první etapy modularizace, nesloučeno a nenasazeno. Produkce zůstává **v4.51.97 RC**.
+Aktuální verze: **v4.51.98 RC** — nasazeno a v uvedeném rozsahu ověřeno 26. 10. 2026.
+
+- **PRODUKCE98 – Dominik:** PR36 sloučeno merge `4d7a564a7234912a5c8063cd42b2ae3fed8e166d`, [Pages40394978008](https://github.com/bcrybarna-oss/BC-Rybarna-Scoreboard/actions/runs/40394978008) success. PR/main release PASS, Node229PASS/2známéFAIL/3soukroméSKIP ze234; obě chyby jednotlivě potvrzeny také na aktuálním předmerge main. Veřejné HTML/overlay/14assetů HTTP200 a přesná SHA256, viditelná verze98 a jediný načtený modul/24funkcí/bezfallbacku, desktop/mobil/navigace/FC/0JS chyb PASS. Neupravená veřejná URL s oddělenou offline kopií #9 a novějšího Singles3: A1/A2/B,6PNG/6PDF/2XLSX, všech13metrik #9 a9Pushoutřádků PASS; navíc veřejný prázdnýA2PNG/PDF. Nezávisle všech7PDFpixelověshodnýchsPNG/FullHD/16:9 a2XLSX/2listy/číselnéhodnoty. Živá přihlášená Auth/Firebase/OBS/iPhone neověřeny; produkční data beze změny/migrace. B/PDF a40MBcache limity trvají. [Deployment report a návrat](docs/deployment-v4.51.98.md).
+
+Následuje zachovaná historie přípravy98; starší pokyny neslučovat/nenasazovat byly nahrazeny schválením a ověřeným nasazením.
 
 - **Modularizace1 – Dominik,26.10.2026:** jediný produkční modul FC výpočtů a reportových modelů,24původních těl odstraněno z inline core; žádný fallback ani druhý algoritmus. Přímé importy testů/diagnostiky a stejný asset v browserových mockech. Zachovány opravy97, data a exportní šablony. Čtyři skutečné exporty před/po PASS včetně osobních Team, skutečného#9 a31byteově shodných Pushout XLSX. Node232PASS/2známéFAIL/0SKIP ze234;13funkčních browserových sad PASS.60přechodů před/po bez chyb, stejné1110listenery/6–7intervalů/max1souběžnéGETmatches/4aplikace4novýchrevizí. Bodděleně6vzorků/verzi v opačném pořadí,6PNGbyteověshodných; významná systematická nová zátěž nezachycena, PDFaBlimitypřetrvávají. Draft PR36, implementace e98cca1, CI40394034617 releasePASS/Node229PASS/2známéFAIL/3soukroméSKIP ze234; obě chyby potvrzeny na aktuálním main. [Rozsah, ověření, měření a návrat](docs/federal-modularization-stage-1.md). **Neslučovat a nenasazovat.**
 

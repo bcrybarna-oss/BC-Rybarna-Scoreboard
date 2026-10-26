@@ -1,5 +1,15 @@
 # Revize aplikace Poolčítadlo
 
+## Dominik – ověřené nasazení modularizace (v4.51.98 RC)
+Zadavatel: Dominik
+Datum: 26. 10. 2026
+Změny: Po schválení a finální kontrole PR36 sloučeno merge4d7a564a7234912a5c8063cd42b2ae3fed8e166d se zachováním historie. Nasazen jediný produkční modul čistých FC výpočtů a reportových podkladů; původní inline těla odstraněna. Tento zápis nemění aplikační kód/verzi ani produkční data. Další etapa nezahájena.
+Testy: PR/main release PASS, Node229PASS/2známéFAIL/3soukroméSKIP ze234, obě selhání jednotlivě potvrzena na aktuálním předmerge main. Veřejné HTML/overlay/14assetů přesnéSHA256, modul právějednou/24funkcí/bezfallbacku, verze98/navigace/FC/desktop/mobil/0JS chyb PASS. Soukromé kontroly odděleně na veřejnéURL s místní kopií: A1/A2/B/6PNG/6PDF/2XLSX, #9SK48/94 %/2z4/lose2,CZ12/86 %/1z4/lose3 PASS. Včetně veřejného prázdnéhoA2 nezávisle7PDF/PNGFullHD/16:9/pixelováshoda a2XLSX/2listy/9hodnot/číselnébuňky PASS; modul/výkonovéinvarianty po nasazení7/7PASS.
+Nasazení: Pages40394978008 build/deploy/report success, skutečně publikovaná v4.51.98 RC ověřena. Žádný ruční rerun; případné automatické Pages po čistě dokumentačním pokračování publikují stejnou aplikaci. Podrobnosti docs/deployment-v4.51.98.md.
+Omezení: Živá přihlášená produkční Auth/Firebase relace, reálné OBS, fyzický iPhone/Safari a Excel neověřeny. Test soukromých dat není testem živého cloudu. Známé dvě preview chyby mají odlišné příčiny; B/PDF blokování a kapacita cache archivu přetrvávají. Žádná migrace; návrat reverzí merge podle release pravidel bez vracení dat.
+
+
+
 ## Dominik – produkční modul výpočtů Federal Cupu (v4.51.98 RC)
 
 Zadavatel: Dominik

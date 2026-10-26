@@ -1,0 +1,696 @@
+{
+  "version": "v4.51.98 RC",
+  "mergeCommit": "4d7a564a7234912a5c8063cd42b2ae3fed8e166d",
+  "approvedHead": "9e90fd9f0473f0b95c7e012c348eb7122dba8d9b",
+  "beforeMain": "a4604c3456b7bc0eef512296f2615262970fdc34",
+  "pages": {
+    "run": 40394978008,
+    "build": "success",
+    "deploy": "success",
+    "report": "success",
+    "manualRerun": false
+  },
+  "ci": {
+    "prRun": 40394356052,
+    "mainRun": 40394977492,
+    "release": "success",
+    "tests": 234,
+    "pass": 229,
+    "fail": 2,
+    "skip": 3,
+    "baselineRun": 40380876396,
+    "sameFailuresAsBeforeMain": true,
+    "knownFailures": [
+      {
+        "file": "preview-match-reload-recovery.test.cjs",
+        "line": 50,
+        "cause": "Preview identity-wait behavior differs from detach-without-delete contract"
+      },
+      {
+        "file": "preview-match-reload-recovery.test.cjs",
+        "line": 106,
+        "cause": "Stale source-shape regex: recovery return is assigned for tournament fallback"
+      }
+    ]
+  },
+  "publicVerification": {
+    "version": "v4.51.98 RC",
+    "mergeCommit": "4d7a564a7234912a5c8063cd42b2ae3fed8e166d",
+    "url": "https://bcrybarna-oss.github.io/BC-Rybarna-Scoreboard/",
+    "startedAt": "2026-10-26T20:28:16.364Z",
+    "files": {
+      "index.html": {
+        "status": 200,
+        "sha256": "37da261dca9b59e1855a95f49448b7ff9be865d8e4013ee759cc242bad193225",
+        "bytes": 1650852,
+        "etag": "W/\"6adfb69c-1930a4\""
+      },
+      "overlay.html": {
+        "status": 200,
+        "sha256": "5da9cbc8e83fd27588f3b179ec92574a8f713703fdf151025e7f7fd43824dbb9",
+        "bytes": 20884,
+        "etag": "W/\"6adfb69c-5194\""
+      },
+      "assets/pushout-xlsx.js": {
+        "status": 200,
+        "sha256": "5e4436656444c3f87b2c8550414b49070eb7d8974455e321425388bc639ae874",
+        "bytes": 7977,
+        "etag": "W/\"6adfb69c-1f29\""
+      },
+      "assets/federal-report-billiards.webp": {
+        "status": 200,
+        "sha256": "2a8d73c1b0a5ecd07597b993f0da5ed22b7c30bba6023448b8069d154bf3e228",
+        "bytes": 74790,
+        "etag": "\"6adfb69c-12426\""
+      },
+      "assets/federal-report-pool-logo.png": {
+        "status": 200,
+        "sha256": "c28fd81775d4013e2b58716d6f8ef1a92691f4d5d4c0b8b2ba1b0d3a3a12c593",
+        "bytes": 220520,
+        "etag": "\"6adfb69c-35d68\""
+      },
+      "assets/pushout-sports-logo-yellow.png": {
+        "status": 200,
+        "sha256": "049c2b4648a2e6106c5c41459c346689915256f62330ee17129b4484fc8314ff",
+        "bytes": 44487,
+        "etag": "\"6adfb69c-adc7\""
+      },
+      "bc-rybarna-logo.png": {
+        "status": 200,
+        "sha256": "5ad8dccc37f3426e189916f5e5bce61fa922f82d8757283832ac01d224f1f083",
+        "bytes": 131525,
+        "etag": "\"6adfb69c-201c5\""
+      },
+      "assets/poolcitadlo-logo.webp": {
+        "status": 200,
+        "sha256": "7f9caff46b1924186ef7d6a42b6b9079ee9ace9e7875d8f688e9fdc83bd488db",
+        "bytes": 27896,
+        "etag": "\"6adfb69c-6cf8\""
+      },
+      "assets/federal-cup/flag-sk-flat.svg": {
+        "status": 200,
+        "sha256": "659b2c072f05d05e8b5d38caa878626459ac652c6dc02359094b423a4ae1d6ee",
+        "bytes": 1543,
+        "etag": "W/\"6adfb69c-607\""
+      },
+      "assets/federal-cup/flag-cz-flat.svg": {
+        "status": 200,
+        "sha256": "172aa188241c3f5fbd95d7881095d65e2b681f105fb867923709cc09a5dcc3a0",
+        "bytes": 222,
+        "etag": "\"6adfb69c-de\""
+      },
+      "assets/federal-cup/flag-sk-cloth.svg": {
+        "status": 200,
+        "sha256": "cf8cc9a9fec2f76db4ba3cf6f66c303488cb7ad738aba6dc8afe7535a7a968e7",
+        "bytes": 3230,
+        "etag": "W/\"6adfb69c-c9e\""
+      },
+      "assets/federal-cup/flag-cz-cloth.svg": {
+        "status": 200,
+        "sha256": "e83808ab2c0c8a5a6b2dde63c44c8e22416ca0a38c00b468136643baca2064e8",
+        "bytes": 1910,
+        "etag": "W/\"6adfb69c-776\""
+      },
+      "assets/federal-cup/flag-sk-cloth.png": {
+        "status": 200,
+        "sha256": "27faf3b6b76a07b4793ddadb3f549d104ef5c91256c300ad3d24d4dd25a9111a",
+        "bytes": 717340,
+        "etag": "\"6adfb69c-af21c\""
+      },
+      "assets/federal-cup/flag-cz-cloth.png": {
+        "status": 200,
+        "sha256": "e6485509db399555689fe7b9e23aa1e9e70b27a28e3ca8f1ac2ad38c505cc7fb",
+        "bytes": 641363,
+        "etag": "\"6adfb69c-9c953\""
+      },
+      "assets/federal-cup/gold-trophy.png": {
+        "status": 200,
+        "sha256": "d4c8ec993c1e20d16508e3f96aade23dc217593597ed3649ca7bc777f85c29c7",
+        "bytes": 1854457,
+        "etag": "\"6adfb69c-1c4bf9\""
+      },
+      "assets/js/federal-statistics.js": {
+        "status": 200,
+        "sha256": "7e1cae131f79f6bf5bdd2c417fe5b4272408c361053024a6e5f1c411a9ea7d21",
+        "bytes": 48112,
+        "etag": "W/\"6adfb69c-bbf0\""
+      }
+    },
+    "public": [
+      {
+        "mode": "desktop",
+        "screens": [
+          "results",
+          "players",
+          "about",
+          "setup",
+          "federal-cup-2026"
+        ],
+        "fixtureCount": 21,
+        "moduleRequests": 1,
+        "pageErrors": [],
+        "consoleErrors": [],
+        "blocked": [],
+        "downloads": [
+          {
+            "name": "public-empty-A2.png",
+            "bytes": 1451040,
+            "sha256": "84c519d8b10536a21a417568f06d33885310c1bd8d357c4894564ab96041775a"
+          },
+          {
+            "name": "public-empty-A2.pdf",
+            "bytes": 855692,
+            "sha256": "94fbaddf3d2b6edcf492d99023f7177196f9d2cf98255b259c933e66159c25a5"
+          }
+        ],
+        "authenticated": false
+      },
+      {
+        "mode": "mobile",
+        "screens": [
+          "results",
+          "players",
+          "about",
+          "setup",
+          "federal-cup-2026"
+        ],
+        "fixtureCount": 21,
+        "moduleRequests": 1,
+        "pageErrors": [],
+        "consoleErrors": [],
+        "blocked": [],
+        "downloads": [],
+        "authenticated": false
+      }
+    ],
+    "isolated": [
+      {
+        "mode": "desktop",
+        "matchId": "3d4c35e6-e336-49d5-a9b3-9955cec59c3d",
+        "singlesId": "85109748-f185-4988-a86b-8bc914bb4e3a",
+        "sourceSha256": "2afd2e5c48d3babf198d41809dd9fedbf8b188a28dd8e6056a0f27db69afdc6e",
+        "sourceUnchanged": true,
+        "authenticated": false,
+        "scope": "Two offline copied matches on the unmodified public URL; not live Firebase verification",
+        "downloads": [
+          {
+            "name": "A1-desktop.png",
+            "bytes": 1549431,
+            "sha256": "12232cb170dc0bb6416a64b0eedf7e09d3f807008ea246c67a58fbc5b1f8bb34"
+          },
+          {
+            "name": "A1-desktop.pdf",
+            "bytes": 912434,
+            "sha256": "e79c949147ec5dc7a5c4e382d82a326bd7417e7352adbb804eca0c6a861cfb58"
+          },
+          {
+            "name": "A2-desktop.png",
+            "bytes": 1554440,
+            "sha256": "7e4167274e59b6d9828fd66f5640332107412afb7b09083bed3ad1c2f947230c"
+          },
+          {
+            "name": "A2-desktop.pdf",
+            "bytes": 907207,
+            "sha256": "24edf88543ab635aa5f17c1fde1b5cd3ca322cc9b1b2b0d783fdc6d84a5cab13"
+          },
+          {
+            "name": "B-desktop.png",
+            "bytes": 1535564,
+            "sha256": "d1477dbb7ab08c9b03399fe5f854555c1da941ba01111fe4f02558b0e553dec4"
+          },
+          {
+            "name": "B-desktop.pdf",
+            "bytes": 884098,
+            "sha256": "111433b632fc02d94faa29d78f68d8979ec99a6a78a6478b6947a1a4bab6d2d3"
+          }
+        ],
+        "xlsx": {
+          "sheets": [
+            "Pushout",
+            "Metadata"
+          ],
+          "rows": [
+            [
+              "Pot percentage",
+              0.94,
+              0.86
+            ],
+            [
+              "Missed pots",
+              3,
+              2
+            ],
+            [
+              "Fouls",
+              0,
+              2
+            ],
+            [
+              "Successful breaks",
+              4,
+              1
+            ],
+            [
+              "Dry/soft breaks",
+              0,
+              3
+            ],
+            [
+              "Foul breaks",
+              0,
+              0
+            ],
+            [
+              "Break and runs",
+              2,
+              0
+            ],
+            [
+              "Break and win",
+              2,
+              1
+            ],
+            [
+              "Break and lose",
+              2,
+              3
+            ]
+          ],
+          "bytesEqualToWriter": true
+        },
+        "metrics": {
+          "breakSuccess": [
+            "100 %",
+            "25 %"
+          ],
+          "breakBallAverage": [
+            "1,8",
+            "0,3"
+          ],
+          "aces": [
+            "0",
+            "0"
+          ],
+          "ownBreakWins": [
+            "2 / 4",
+            "1 / 4"
+          ],
+          "cleanRuns": [
+            "2",
+            "0"
+          ],
+          "pottedBalls": [
+            "48",
+            "12"
+          ],
+          "pottingSuccess": [
+            "94 %",
+            "86 %"
+          ],
+          "safetySuccess": [
+            "60 %",
+            "100 %"
+          ],
+          "escapeSuccess": [
+            "100 %",
+            "33 %"
+          ],
+          "resafes": [
+            "1",
+            "0"
+          ],
+          "fouls": [
+            "0",
+            "2"
+          ],
+          "jumpShots": [
+            "0 / 0",
+            "0 / 1"
+          ],
+          "bankShots": [
+            "0 / 1",
+            "0 / 0"
+          ]
+        },
+        "pageErrors": [],
+        "consoleErrors": [],
+        "blocked": [],
+        "moduleRequests": 1
+      },
+      {
+        "mode": "mobile",
+        "matchId": "3d4c35e6-e336-49d5-a9b3-9955cec59c3d",
+        "singlesId": "85109748-f185-4988-a86b-8bc914bb4e3a",
+        "sourceSha256": "2afd2e5c48d3babf198d41809dd9fedbf8b188a28dd8e6056a0f27db69afdc6e",
+        "sourceUnchanged": true,
+        "authenticated": false,
+        "scope": "Two offline copied matches on the unmodified public URL; not live Firebase verification",
+        "downloads": [
+          {
+            "name": "A1-mobile.png",
+            "bytes": 1517013,
+            "sha256": "ceada75df6f79f91d7c0f85aff1e7e8afcd1328fafcbbf5835c35147f0d16480"
+          },
+          {
+            "name": "A1-mobile.pdf",
+            "bytes": 903221,
+            "sha256": "7a40c94d8fb4c71603498e70fa28d46f73c8fd3de4137b62810c5b2f94373678"
+          },
+          {
+            "name": "A2-mobile.png",
+            "bytes": 1518977,
+            "sha256": "de65f4f125a0229b1f08d05ae47ff6488e8c3b9bb2ed6c9f05a82c880df015ce"
+          },
+          {
+            "name": "A2-mobile.pdf",
+            "bytes": 898132,
+            "sha256": "ba4d9a9e79c8207bdc9da8d0f49ae625ad7327866fc58792e1d4765e0b49eeff"
+          },
+          {
+            "name": "B-mobile.png",
+            "bytes": 1503729,
+            "sha256": "9385c61227953b5dcb296d028cae2af0331e993b00618495e6544d3a5bd56cfe"
+          },
+          {
+            "name": "B-mobile.pdf",
+            "bytes": 876654,
+            "sha256": "61e60e804c5dc1fb621f1d2e7620ac524b45f01b36e469da9748e145bac58cf7"
+          }
+        ],
+        "xlsx": {
+          "sheets": [
+            "Pushout",
+            "Metadata"
+          ],
+          "rows": [
+            [
+              "Pot percentage",
+              0.94,
+              0.86
+            ],
+            [
+              "Missed pots",
+              3,
+              2
+            ],
+            [
+              "Fouls",
+              0,
+              2
+            ],
+            [
+              "Successful breaks",
+              4,
+              1
+            ],
+            [
+              "Dry/soft breaks",
+              0,
+              3
+            ],
+            [
+              "Foul breaks",
+              0,
+              0
+            ],
+            [
+              "Break and runs",
+              2,
+              0
+            ],
+            [
+              "Break and win",
+              2,
+              1
+            ],
+            [
+              "Break and lose",
+              2,
+              3
+            ]
+          ],
+          "bytesEqualToWriter": true
+        },
+        "metrics": {
+          "breakSuccess": [
+            "100 %",
+            "25 %"
+          ],
+          "breakBallAverage": [
+            "1,8",
+            "0,3"
+          ],
+          "aces": [
+            "0",
+            "0"
+          ],
+          "ownBreakWins": [
+            "2 / 4",
+            "1 / 4"
+          ],
+          "cleanRuns": [
+            "2",
+            "0"
+          ],
+          "pottedBalls": [
+            "48",
+            "12"
+          ],
+          "pottingSuccess": [
+            "94 %",
+            "86 %"
+          ],
+          "safetySuccess": [
+            "60 %",
+            "100 %"
+          ],
+          "escapeSuccess": [
+            "100 %",
+            "33 %"
+          ],
+          "resafes": [
+            "1",
+            "0"
+          ],
+          "fouls": [
+            "0",
+            "2"
+          ],
+          "jumpShots": [
+            "0 / 0",
+            "0 / 1"
+          ],
+          "bankShots": [
+            "0 / 1",
+            "0 / 0"
+          ]
+        },
+        "pageErrors": [],
+        "consoleErrors": [],
+        "blocked": [],
+        "moduleRequests": 1
+      }
+    ],
+    "completedAt": "2026-10-26T20:29:16.776Z"
+  },
+  "downloads": {
+    "pdf": [
+      {
+        "file": "A1-desktop.pdf",
+        "pages": 1,
+        "ratio": 1.7777777777777777,
+        "image": [
+          1920,
+          1080
+        ],
+        "pixelsEqualToPng": true
+      },
+      {
+        "file": "A1-mobile.pdf",
+        "pages": 1,
+        "ratio": 1.7777777777777777,
+        "image": [
+          1920,
+          1080
+        ],
+        "pixelsEqualToPng": true
+      },
+      {
+        "file": "A2-desktop.pdf",
+        "pages": 1,
+        "ratio": 1.7777777777777777,
+        "image": [
+          1920,
+          1080
+        ],
+        "pixelsEqualToPng": true
+      },
+      {
+        "file": "A2-mobile.pdf",
+        "pages": 1,
+        "ratio": 1.7777777777777777,
+        "image": [
+          1920,
+          1080
+        ],
+        "pixelsEqualToPng": true
+      },
+      {
+        "file": "B-desktop.pdf",
+        "pages": 1,
+        "ratio": 1.7777777777777777,
+        "image": [
+          1920,
+          1080
+        ],
+        "pixelsEqualToPng": true
+      },
+      {
+        "file": "B-mobile.pdf",
+        "pages": 1,
+        "ratio": 1.7777777777777777,
+        "image": [
+          1920,
+          1080
+        ],
+        "pixelsEqualToPng": true
+      },
+      {
+        "file": "public-empty-A2.pdf",
+        "pages": 1,
+        "ratio": 1.7777777777777777,
+        "image": [
+          1920,
+          1080
+        ],
+        "pixelsEqualToPng": true
+      }
+    ],
+    "xlsx": [
+      {
+        "file": "Pushout-desktop.xlsx",
+        "sheets": [
+          "Pushout",
+          "Metadata"
+        ],
+        "rows": [
+          [
+            "Pot percentage",
+            0.94,
+            0.86
+          ],
+          [
+            "Missed pots",
+            3,
+            2
+          ],
+          [
+            "Fouls",
+            0,
+            2
+          ],
+          [
+            "Successful breaks",
+            4,
+            1
+          ],
+          [
+            "Dry/soft breaks",
+            0,
+            3
+          ],
+          [
+            "Foul breaks",
+            0,
+            0
+          ],
+          [
+            "Break and runs",
+            2,
+            0
+          ],
+          [
+            "Break and win",
+            2,
+            1
+          ],
+          [
+            "Break and lose",
+            2,
+            3
+          ]
+        ],
+        "numericPercentAndCountCells": true,
+        "percentFormat": "0%"
+      },
+      {
+        "file": "Pushout-mobile.xlsx",
+        "sheets": [
+          "Pushout",
+          "Metadata"
+        ],
+        "rows": [
+          [
+            "Pot percentage",
+            0.94,
+            0.86
+          ],
+          [
+            "Missed pots",
+            3,
+            2
+          ],
+          [
+            "Fouls",
+            0,
+            2
+          ],
+          [
+            "Successful breaks",
+            4,
+            1
+          ],
+          [
+            "Dry/soft breaks",
+            0,
+            3
+          ],
+          [
+            "Foul breaks",
+            0,
+            0
+          ],
+          [
+            "Break and runs",
+            2,
+            0
+          ],
+          [
+            "Break and win",
+            2,
+            1
+          ],
+          [
+            "Break and lose",
+            2,
+            3
+          ]
+        ],
+        "numericPercentAndCountCells": true,
+        "percentFormat": "0%"
+      }
+    ]
+  },
+  "postDeploymentUnitTests": {
+    "pass": 7,
+    "fail": 0
+  },
+  "productionDataChanges": 0,
+  "migrations": 0,
+  "liveAuthenticatedSessionVerified": false,
+  "limitations": [
+    "No live production Auth/Firebase verification",
+    "No physical iPhone/Safari, real OBS or Microsoft Excel",
+    "Known one-off B/PDF blocking and full archive localStorage capacity limit remain"
+  ]
+}

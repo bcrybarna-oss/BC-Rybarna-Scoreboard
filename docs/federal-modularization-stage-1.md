@@ -1,6 +1,6 @@
 # Federal Cup – první produkční etapa modularizace
 
-Zadavatel: Dominik. Datum: 26. 10. 2026. Kandidát **v4.51.98 RC**, základ main `a4604c3456b7bc0eef512296f2615262970fdc34`, produkce97. **Neslučovat a nenasazovat.**
+Zadavatel: Dominik. Datum: 26. 10. 2026. První etapa **v4.51.98 RC** je schválená, sloučená a nasazená; [skutečné nasazení a rozsah ověření](deployment-v4.51.98.md). Níže je zachovaná technická evidence přípravy ze základu main `a4604c3456b7bc0eef512296f2615262970fdc34` / produkce97. Starší formulace o draftu a zákazu nasazení popisují tehdejší stav a byly nahrazeny schválením zadavatele.
 
 ## Změna a hranice závislostí
 
@@ -107,6 +107,6 @@ Pro soukromé testy nastav FC_FIXTURE9_BACKUP na původní24.10.(1) a FC_RELINK_
 
 Profil B: tests/federal-module-b-profile.cjs, FC_B_SOURCE/FC_B_BACKUP/FC_B_OUT; měří zvlášť výpočet, template/layout, rasterizaci a download. Dlouhý běh: tests/app-performance-browser.cjs, PERF_SOURCE/PERF_BACKUP/PERF_OUT, PERF_LIGHT=1,PERF_ALL_REPORTS=1,PERF_CYCLES=12,PERF_IDLE_MS=30000. Produkční časovače běží v soak scénáři; v izolovaném B profilu jsou zastavené.
 
-Rollback je reverze celého PR včetně HTML napojení, assetu a testů podle tehdejšího release postupu. Žádné vracení databáze nebo uložených zápasů. Nespouštět současně starý a nový kalkulátor přes přepínač. Před případným vydáním znovu fetch/release gate/CI, ověřit verzi assetu a publikaci HTML+assetu. Žádný merge ani deployment není touto etapou proveden.
+Rollback je reverze celého PR včetně HTML napojení, assetu a testů podle tehdejšího release postupu. Žádné vracení databáze nebo uložených zápasů. Nespouštět současně starý a nový kalkulátor přes přepínač. Před případným vydáním znovu fetch/release gate/CI, ověřit verzi assetu a publikaci HTML+assetu. Schválený merge a skutečný deployment jsou samostatně zaznamenány v docs/deployment-v4.51.98.md.
 
 Zůstává limit40MBarchivu v localStorage, jednotlivé dlouhé úlohy B a PDF, neověřená fyzická zařízení/iPhone/OBS a produkčníAuth. Výsledky lokálního mocku se za jejich ověření nevydávají.
