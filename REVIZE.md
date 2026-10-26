@@ -1,5 +1,13 @@
 # Revize aplikace Poolčítadlo
 
+## Dominik – finální exportní regrese před vydáním97 (v4.51.97 RC)
+Zadavatel: Dominik
+Datum: 26. 10. 2026
+Změny: Po schválení nasazení aktualizován starý federal-report-exports-browser podle již schválené absence informačních popisků. Zachováno ověření vlajek: místo zastaralého hledání inline SVGpath ověřuje správné externí flatSVG, počet a rozměry900×600. Původní path assertion selhává stejně na aktuálním main96. Ostatní kontroly zachovány, aplikace/verze beze změny.
+Testy: Kompletní exportní browser PASS:A1/A2/B aSingles/Doubles/Team,1920×1080/16:9,previewparita,mobilDPR3byteověshodný,dlouhá jména/skóre/partial,chybalibrary/duplicitníexport/cancel,0Firebase/0zápisů/0JSchyb. ČekáfinálníCI tohoto commitu a následné schválené sloučení.
+Nasazení: Nasazení97 schváleno zadavatelem; před merge čeká finálníCI. Produkce96 beze změny, produkčnídata se nemění ani nemigrují.
+Omezení: Zachovány limity výkonového kandidáta:jednorázovýreportB~5s a40MBarchiv mimo kapacitu localStorage. Zátěž/plná cache budou po nasazení ověřeny izolovaně na publikovanémkódu.
+
 ## Dominik – cílená oprava naměřeného zpomalování (v4.51.97 RC)
 Zadavatel: Dominik
 Datum: 26. 10. 2026

@@ -4,7 +4,9 @@ Aktualizace: 26. 10. 2026. Zadavatel aktuální revize: **Dominik**.
 
 ## Verze a nasazení
 
-Aktuální verze: **v4.51.97 RC** (připravený výkonový kandidát, nesloučeno a nenasazeno). Produkce: **v4.51.96 RC**.
+Aktuální verze: **v4.51.97 RC** (nasazení schváleno, finální kontrola před sloučením PR35). Produkce: **v4.51.96 RC**.
+
+- **Finální exportní regrese97 – Dominik,26.10.2026:** podle schválení změněno zastaralé očekávání informačního popisku na jeho absenci. Kontrola vlajek zachována pro schválené externíSVG; inlinepath assertion byl rovněž prokazatelně zastaralý na main96. Celý starší exportní test nyní PASS se všemi dalšími kontrolamiA1/A2/B,PNG/PDF,mobil,partial,chyby/duplicitníexport/cancel,0Firebase/0zápisů/0JSchyb. ČekáCI právě této hlavy; pak schválený merge/Pages a oddělené veřejné/izolované ověření.
 
 - **Výkon – Dominik,26.10.2026:** nad posledním40MBexportem/184zápasy potvrzena opakovaná cloudová revize při quota chybě, zbytečné celosezónní výpočty v FC přehledu/A1 a souběžné40MBGETmatches. Cílené opravy runtime revize bez nebezpečného persistovaného timestampu, levný sdílený výběr fixture a právě běžící sdílené čtení ve stejné relaci. Beze změny metrik/dat/FirebaseRules; picker a modularizace odloženy. Před/po stejný scénář:FCmedián4840→830ms,A110055→932ms,domůnakonci3263→60ms,maxlongtask7925→2670ms. CPUtlak poklesl, neomezený DOM/timer/listener leak neprokázán.5/5novýchtestů,Node230/232 pouze známé dvě chyby. Delší60přechodovýsoak:heap~58MB/DOM8836/listenery1110stabilní,0chyb/timeouts; zbývajícíreportBmaxlongtask5,116s. AktuálníA1/A2/Bdesktop/mobilPNG/PDF,skutečný#9PNG/PDF/XLSXaevidence/Auth/reload/undo browserregrese PASS. Zastaralýexportnítest očekává odstraněnýpopisek a selhává stejně už na96, vykázán samostatně. Pushnuto b020dd339fe387db8f9ff924335abb66b016820d do draftPR35; CI40376836361 release success,Node227PASS/2známéFAIL/3soukroméSKIP ze232. Následná dokumentace nemění otestovanýkód. [Diagnostika](docs/performance-diagnostics-v4.51.97.md). **Neslučovat a nenasazovat.**
 

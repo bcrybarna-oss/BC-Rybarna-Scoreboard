@@ -77,3 +77,8 @@ Stále existuje měřitelná jednotlivá úloha2,67s ve srovnávacím běhu a5,1
 ## Git a finální CI
 
 Otestovaná aplikace pushnuta jako `b020dd339fe387db8f9ff924335abb66b016820d` do [draft PR #35](https://github.com/bcrybarna-oss/BC-Rybarna-Scoreboard/pull/35). [CI40376836361](https://github.com/bcrybarna-oss/BC-Rybarna-Scoreboard/actions/runs/40376836361): Release version and revision **success**, Node **227PASS/2FAIL/3SKIP ze232**. Log obou chyb potvrzuje jen známé preview-match-reload-recovery.test.cjs:50/:106. Tři soukromé exportní testy přeskočeny bez místních souborů, lokálně230PASS/2FAIL/0SKIP. Žádná nová Node regrese. Zastaralý samostatný browserový test popsaný výše zůstává transparentně oddělen. Následný dokumentační commit nemění otestované HTML. **Nesloučeno a nenasazeno.**
+
+
+## Schválená aktualizace exportní regrese před nasazením97
+
+Dne26.10.2026 zadavatel schválil vydání a aktualizaci zastaralého exportního testu. Test nyní ověřuje absenci obou odstraněných informačních textů. Při pokračování se ukázala další zastaralá kontrola inline SVGpath pro vlajky; stejná chyba potvrzena na aktuálním main96. Smysl kontroly vlajek zachován a zpřesněn: externí flatSVG, správný počet a900×600. Ostatní kontroly testu nezměněny. Celá sada nyní PASS včetně skutečných PNG/PDF A1/A2/B desktop/mobil, DPR3byteovéparity, Singles/Doubles/Team, wide skóre/longnames/partial a library-error/duplicate/cancel.0Firebase/0zápisů/0pageerrors. Starší zmínka o jeho selhání výše je historie před schválenou aktualizací. Aplikačníkód ani číslo kandidáta se tím nemění. Výsledek nasazení bude zaznamenán samostatně.
