@@ -4,9 +4,9 @@ Aktualizace: 27. 10. 2026. Zadavatel aktuální revize: **Dominik**.
 
 ## Verze a nasazení
 
-- **KANDIDÁT 100 – Jaroslav, 27.10.2026:** ZAPOMENUTÉ HESLO? v loginu, Firebase PASSWORD_RESET bez dosavadního hesla, neutrální odpověď o existenci účtu, validace a ochrana proti opakování během požadavku; bez zásahu do účtů/dat. Zrušen matoucí produkční nápis SCOREBOARD 4.0 DEV. Testy připraveny, čeká CI/PR. Živá Firebase, doručení a produkční nasazení dosud neověřeny.
+- **PRODUKCE100 – Jaroslav, 27.10.2026:** PR #38 sloučen merge `b42a9b2189a2c501f05ac70d5b6a94cb8fa3aa83`, [GitHub Pages 40575477118](https://github.com/bcrybarna-oss/BC-Rybarna-Scoreboard/actions/runs/40575477118) build/deploy success. ZAPOMENUTÉ HESLO? v loginu volá Firebase Authentication PASSWORD_RESET pouze s e-mailem, neopisuje heslo, nemění UID/role/profil ani historii. Zrušen matoucí produkční nápis SCOREBOARD 4.0 DEV. Release gate PR/main PASS, Node **244 PASS / 2 známé FAIL / 3 SKIP z 249**, všech 5 nových testů obnovy PASS; dvě preview chyby totožné s předchozí hlavní verzí, CI jako celek proto není zelené. Veřejný soubor nebylo možné nezávisle otevřít z nástroje; samotný Pages deploy success je potvrzen. Živá produkční Firebase Auth a doručení resetovacího e-mailu nebyly testovány, žádné produkční testovací zápisy ani migrace.
 
-Aktuální verze: **v4.51.100 RC** — kandidát obnovy hesla, dosud nesloučen a nenasazen. Produkce zůstává **v4.51.99 RC**.
+Aktuální verze: **v4.51.100 RC** — nasazeno na GitHub Pages 27. 10. 2026. Reálné doručení e-mailu zatím neověřeno.
 
 - **PRODUKCE99 – Dominik:** PR37 sloučen merge `b5dc71f76364d29d455303566241579e545a6dcb`, Pages40571675729 success. PR/main release PASS, Node239 PASS/2 známé FAIL/3 soukromé SKIP ze244, jednotlivě shodné s předmerge main. Veřejné HTML/overlay/15 assetů přesné SHA256, verze99/oba moduly/navigace/FC/desktop/mobil/0JS chyb PASS. A1/A2/B a6PNG/2XLSX se soukromou offline kopií na veřejné URL PASS, původní PDF regrese také; #9 má48/94 %/2z4 proti12/86 %/1z4. Publikované HTML izolovaně cloud lifecycle/start/stop/auth-stale/reconnect/sdílení PASS, 15/15 unit a mockAuth/reload/undo/PUT/GET PASS. Živá přihlášená produkční Auth/Firebase, OBS a fyzická zařízení neověřeny. Žádné změny produkčních dat ani migrace. Limity B a místní cache zůstávají. [Deployment report a návrat](docs/deployment-v4.51.99.md).
 
