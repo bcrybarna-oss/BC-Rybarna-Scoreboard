@@ -30,8 +30,11 @@ test('Všechny vložené JavaScriptové bloky mají platnou syntaxi',()=>{
   assert.ok(scripts.length>=8);
   scripts.forEach((m,i)=>assert.doesNotThrow(()=>new Function(m[1]),'script '+i));
 });
-test('Verze a základní struktura odpovídá první etapě',()=>{
-  assert.ok(html.includes('v4.51.99 RC'));
+test('Aktivní verze odpovídá release statusu a základní struktura je zachována',()=>{
+  const version=html.match(/class="modern-brand-version">(v4[.]51[.][0-9]+ RC)/)?.[1];
+  assert.ok(version,'Chybí aktivní verze Poolčítadla');
+  const status=fs.readFileSync(path.join(__dirname,'..','PROJECT_STATUS.md'),'utf8');
+  assert.ok(status.includes('Aktuální verze: **'+version+'**'),'Verze ve statusu neodpovídá aplikaci');
   assert.equal(count(/id="streamMatchTitle"/g),1);
   assert.equal(count(/id="setupMoreBtn"/g),1);
   assert.equal(count(/id="poolPlayerPickerDialog"/g),1);

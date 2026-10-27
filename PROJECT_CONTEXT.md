@@ -101,7 +101,7 @@ Poolčítadlo používá černo-zlatý design. Logo Poolčítadla funguje jako H
 
 ## Účty, role a Firebase
 
-Aplikace používá Firebase Authentication a Firebase Realtime Database.
+Aplikace používá Firebase Authentication a Firebase Realtime Database. Od v4.51.100 RC je v přihlašovacím dialogu ZAPOMENUTÉ HESLO?, které anonymně požádá Firebase Authentication o PASSWORD_RESET pro zadaný e-mail, aniž by zasahovalo do existujícího UID, hráčského profilu, historie, oprávnění či zápasů. Odpověď neodhaluje existenci účtu a chyby sítě/limitů se sdělují zvlášť.
 
 Role:
 - `player`

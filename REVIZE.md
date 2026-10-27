@@ -1,5 +1,14 @@
 # Revize aplikace Poolčítadlo
 
+## Jaroslav – obnova hesla z přihlašovací obrazovky (v4.51.100 RC)
+Zadavatel: Jaroslav
+Datum: 27. 10. 2026
+Změny: V cloudovém přihlašovacím dialogu tlačítko ZAPOMENUTÉ HESLO? bez přihlášení volá Firebase sendOobCode (PASSWORD_RESET) pouze s e-mailem. Není čteno heslo, nejsou měněny relace, role, hráči, zápasy ani UID. Neprozrazuje existenci účtu, validuje vstup, chybové a rate-limit zprávy a deaktivaci během odesílání. Matoucí titulek SCOREBOARD 4.0 DEV v produkčním přihlášení nahrazen POOLČÍTADLO · PŘIHLÁŠENÍ. Aktivní čtyři verze a overlay na 100.
+Testy: Přidány izolované Node testy v tests/password-reset.test.cjs pro UI, validaci, POST body bez hesla/tokenů, existující/neexistující e-mail, výpadek sítě a rate limit. Statické invarianty kódu prověřeny, CI release gate PASS a všech 5 nových password-reset testů PASS. Stávající smoke test s natvrdo uvedeným 99 aktualizován na porovnání aktivní verze s PROJECT_STATUS.md. Kompletní Node sada po úpravě čeká na opakování; dvě známé chyby staré preview obnovy zápasu neměněny. Živé doručení neověřeno.
+Nasazení: Kandidát ve větvi fix/forgot-password-login-20261027, ještě nesloučený/nenasazený; produkce v4.51.99 RC.
+Omezení: Žádný skutečný obnovovací e-mail při testech, nezaručuje doručení; závisí na nastavení Firebase a limitech. Žádné produkční zápisy, migrace ani mazání.
+
+
 ## Dominik – ověřené nasazení cloudového modulu (v4.51.99 RC)
 Zadavatel: Dominik
 Datum: 27. 10. 2026

@@ -4,7 +4,9 @@ Aktualizace: 27. 10. 2026. Zadavatel aktuální revize: **Dominik**.
 
 ## Verze a nasazení
 
-Aktuální verze: **v4.51.99 RC** — nasazeno a v uvedeném rozsahu ověřeno 27. 10. 2026.
+- **KANDIDÁT 100 – Jaroslav, 27.10.2026:** ZAPOMENUTÉ HESLO? v loginu, Firebase PASSWORD_RESET bez dosavadního hesla, neutrální odpověď o existenci účtu, validace a ochrana proti opakování během požadavku; bez zásahu do účtů/dat. Zrušen matoucí produkční nápis SCOREBOARD 4.0 DEV. Testy připraveny, čeká CI/PR. Živá Firebase, doručení a produkční nasazení dosud neověřeny.
+
+Aktuální verze: **v4.51.100 RC** — kandidát obnovy hesla, dosud nesloučen a nenasazen. Produkce zůstává **v4.51.99 RC**.
 
 - **PRODUKCE99 – Dominik:** PR37 sloučen merge `b5dc71f76364d29d455303566241579e545a6dcb`, Pages40571675729 success. PR/main release PASS, Node239 PASS/2 známé FAIL/3 soukromé SKIP ze244, jednotlivě shodné s předmerge main. Veřejné HTML/overlay/15 assetů přesné SHA256, verze99/oba moduly/navigace/FC/desktop/mobil/0JS chyb PASS. A1/A2/B a6PNG/2XLSX se soukromou offline kopií na veřejné URL PASS, původní PDF regrese také; #9 má48/94 %/2z4 proti12/86 %/1z4. Publikované HTML izolovaně cloud lifecycle/start/stop/auth-stale/reconnect/sdílení PASS, 15/15 unit a mockAuth/reload/undo/PUT/GET PASS. Živá přihlášená produkční Auth/Firebase, OBS a fyzická zařízení neověřeny. Žádné změny produkčních dat ani migrace. Limity B a místní cache zůstávají. [Deployment report a návrat](docs/deployment-v4.51.99.md).
 
