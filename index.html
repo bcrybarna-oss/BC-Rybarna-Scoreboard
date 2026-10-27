@@ -2605,7 +2605,7 @@ html[data-theme="light"] #leagueSchedule .history-item .muted{
           <span class="by">by</span>
           <span class="club">BC Rybárna</span>
         </div>
-        <small class="modern-brand-version">v4.51.100 RC</small>
+        <small class="modern-brand-version">v4.51.101 RC</small>
       </div>
     </div>
     <div class="nav">
@@ -3219,7 +3219,7 @@ html[data-theme="light"] #leagueSchedule .history-item .muted{
         </div>
         <div class="subpanel" style="min-width:210px;text-align:center;margin:0">
           <div class="muted" style="font-size:10px;font-weight:950;letter-spacing:1px">AKTUÁLNÍ VERZE</div>
-          <div style="font-size:22px;font-weight:950;color:var(--gold2);margin-top:5px">v4.51.100 RC</div>
+          <div style="font-size:22px;font-weight:950;color:var(--gold2);margin-top:5px">v4.51.101 RC</div>
         </div>
       </div>
     </div>
@@ -4073,7 +4073,8 @@ html[data-theme="light"] #leagueSchedule .history-item .muted{
         </div>
 
         <div class="grid three" style="margin-top:12px">
-          <div><label>Race to</label><input id="tournamentRace" type="number" min="1" value="5"></div>
+          <div><label id="tournamentRaceLabel">Race to</label><input id="tournamentRace" type="number" min="1" value="5"></div>
+          <div id="tournamentPlayoffRaceField" class="hidden"><label>Race to play-off</label><input id="tournamentPlayoffRace" type="number" min="1" placeholder="Stejné jako skupiny"><div class="muted">Prázdné = stejné jako skupiny. Hodnoty podle jednotlivých kol níže mají přednost.</div></div>
           <div><label>Systém rozstřelu</label>
             <select id="tournamentBreakMode">
               <option value="alternate">Střídavý rozstřel po 1</option>
@@ -4263,6 +4264,7 @@ html[data-theme="light"] #leagueSchedule .history-item .muted{
 
         <div style="display:flex;justify-content:flex-end;margin-top:16px">
           <button id="createTournamentBtn" class="btn primary big">ROZLOSOVAT TURNAJ</button>
+          <div id="tournamentDraftStorageWarning" class="muted" role="status"></div>
         </div>
       </div>
 
@@ -5617,6 +5619,7 @@ html[data-theme="light"] #leagueSchedule .history-item .muted{
     <h2 id="historicalStructureTitle">HISTORICKÝ TURNAJ</h2>
     <div id="historicalStructureBody"></div>
     <div id="historicalStructureMessage" role="status" class="muted" style="margin-top:12px"></div>
+    <div id="historicalDraftWarning" role="status" class="muted" style="margin-top:12px"></div>
     <div class="modal-actions"><button class="btn" type="button" onclick="document.getElementById('historicalStructureModal').classList.remove('show')">ZAVŘÍT</button></div>
   </div>
 </div>
@@ -5981,7 +5984,7 @@ html[data-theme="light"] #leagueSchedule .history-item .muted{
       </div>
 
       <div id="groupPlayoffSeedStatus" class="muted" style="margin-top:12px;min-height:20px"></div>
-      <div class="muted" style="margin-top:4px;font-size:11px">RC v4.51.100</div>
+      <div class="muted" style="margin-top:4px;font-size:11px">RC v4.51.101</div>
       <div class="modal-actions">
         <button id="groupPlayoffSeedApplyBtn" class="btn primary big" type="button">NASADIT DO PLAY-OFF</button>
         <button id="groupPlayoffSeedCancelBtn" class="btn">ZRUŠIT</button>
@@ -6621,6 +6624,7 @@ html[data-theme="light"] #leagueSchedule .history-item .muted{
   ]};
   const TOURNAMENT_CHECKIN_DRAFT_KEY='bcRybarnaTournamentCheckinDraft_v1';
   let tournamentCheckinDraftRestored=false;
+  const TOURNAMENT_PHASE_FIELDS=['tournamentName','tournamentFormat','tournamentSeedingMode','tournamentDiscipline','tournamentPlayoffDiscipline','tournamentRace','tournamentPlayoffRace','tournamentGroupCount','tournamentAdvanceCount','tournamentVariableRace','raceStageGroups','raceStage32','raceStage16','raceStage8','raceStage4','raceStage2','raceStageBronze'];
   let guestAssignContext=null;
 
   // Jeden trvale používaný audio kontext.
@@ -7182,7 +7186,7 @@ html[data-theme="light"] #leagueSchedule .history-item .muted{
     const btn=$('submitReportBtn');if(btn)btn.disabled=true;
     try{
       const id=uid(),p=currentUserPlayerId?data.players?.[currentUserPlayerId]:null;
-      const report={id,createdByUid:cloudUid,createdByPlayerId:currentUserPlayerId||'',createdByName:p?playerSelectionLabel(p):(cloudUserEmail||'Uživatel'),email:cloudUserEmail||'',type,area,description,appVersion:'v4.51.100 RC',createdAt:new Date().toISOString(),updatedAt:new Date().toISOString(),status:'new',adminNote:''};
+      const report={id,createdByUid:cloudUid,createdByPlayerId:currentUserPlayerId||'',createdByName:p?playerSelectionLabel(p):(cloudUserEmail||'Uživatel'),email:cloudUserEmail||'',type,area,description,appVersion:'v4.51.101 RC',createdAt:new Date().toISOString(),updatedAt:new Date().toISOString(),status:'new',adminNote:''};
       await reportRequest(id,'PUT',report);
       try{
         await writeReportUserMirror(report);
@@ -15575,6 +15579,7 @@ $('liveScoreClose').onclick=()=>{
     return tournamentAllCheckinIds().filter(id=>tournamentCheckin[id]?.paid===true);
   }
 
+  function tournamentPhaseFormSnapshot(){return Object.fromEntries(TOURNAMENT_PHASE_FIELDS.filter(id=>$(id)).map(id=>[id,$(id).type==='checkbox'?$(id).checked:$(id).value]));}
   function saveTournamentCheckinDraft(){
     try{
       localStorage.setItem(TOURNAMENT_CHECKIN_DRAFT_KEY,JSON.stringify({
@@ -15586,9 +15591,11 @@ $('liveScoreClose').onclick=()=>{
         prizeMoney:tournamentPrizeMoney,
         drawNumbers:tournamentDrawNumbers,
         manualSeedOrder:manualTournamentSeedOrder,
-        handicapEnabled:tournamentHandicapEnabled()
+        handicapEnabled:tournamentHandicapEnabled(),
+        phaseSetup:tournamentPhaseFormSnapshot()
       }));
-    }catch(e){}
+      $('tournamentDraftStorageWarning').textContent='';
+    }catch(e){$('tournamentDraftStorageWarning').textContent='Příprava je pouze v paměti této stránky. Místní úložiště je plné nebo nedostupné; po obnovení nebo zavření stránky se neuložené změny neobnoví.';}
   }
 
   function clearTournamentCheckinDraft(){
@@ -15600,6 +15607,12 @@ $('liveScoreClose').onclick=()=>{
       const raw=localStorage.getItem(TOURNAMENT_CHECKIN_DRAFT_KEY);
       if(!raw)return;
       const d=JSON.parse(raw);
+      for(const [id,state] of Object.entries(d.phaseSetup||{})){
+        const el=$(id);if(!TOURNAMENT_PHASE_FIELDS.includes(id)||!el)continue;
+        if(el.type==='checkbox')el.checked=state===true;else el.value=String(state);
+      }
+      if(d.phaseSetup?.tournamentPlayoffDiscipline)$('tournamentPlayoffDiscipline').dataset.touched='1';
+      $('tournamentVariableRaceFields')?.classList.toggle('hidden',!$('tournamentVariableRace')?.checked);
       if(Array.isArray(d.playerIds)) tournamentSelectedPlayerIds=[...d.playerIds];
       if(Array.isArray(d.guestDrafts)){
         tournamentGuestDrafts=d.guestDrafts
@@ -16344,7 +16357,9 @@ $('liveScoreClose').onclick=()=>{
   }
 
   function tournamentRaceForMatch(t,m){
-    const base=Math.max(1,Number(t?.raceTo||1));
+    const hybrid=['groups_sko','groups_dko'].includes(t?.format);
+    const phaseRace=hybrid&&!tournamentMatchIsGroupMatch(t,m)?t.playoffRaceTo:null;
+    const base=Math.max(1,Number(phaseRace||t?.raceTo||1));
     if(!t?.variableRaceEnabled || !t?.raceByStage)return base;
     const stage=tournamentStageForMatch(t,m);
     const n=stage?Number(t.raceByStage[stage]||0):0;
@@ -20558,6 +20573,9 @@ function renderTournamentDetail(){
     const hasGroups=['groups','groups_sko','groups_dko'].includes(config.format);
     if(hasGroups && (!Number.isInteger(count)||count<1||count>Math.floor(order.length/2)))throw Error('Každá skupina musí mít alespoň dva hráče.');
     if(config.format.startsWith('groups_') && (!Number.isInteger(advance)||advance<1||advance>Math.floor(order.length/count)))throw Error('Neplatný počet postupujících.');
+    const hybrid=['groups_sko','groups_dko'].includes(config.format);
+    const playoffDiscipline=config.playoffDiscipline||config.discipline,playoffRaceTo=Number(config.playoffRaceTo==null||config.playoffRaceTo===''?config.raceTo:config.playoffRaceTo);
+    if(hybrid&&(!['8-ball','9-ball','10-ball','14.1'].includes(playoffDiscipline)||!Number.isInteger(playoffRaceTo)||playoffRaceTo<1))throw Error('Neplatná disciplína nebo Race to play-off.');
     const guests=Object.fromEntries(Object.entries(config.guests||{}).map(([id,g])=>[id,{...g,preserveGuest:true}]));
     const args=[config.name,order,config.discipline,Number(config.raceTo),'alternate'];
     if(!['8-ball','9-ball','10-ball','14.1'].includes(config.discipline)||!Number.isInteger(args[3])||args[3]<1)throw Error('Neplatná disciplína nebo Race to.');
@@ -20567,6 +20585,7 @@ function renderTournamentDetail(){
     else if(config.format==='dko')t=generateDKOTournament(...args,guests,1,'manual',!!config.thirdPlace);
     else if(config.format.startsWith('groups_'))t=generateHybridTournament(...args,count,advance,config.format==='groups_dko'?'dko':'sko',guests,1,'manual',!!config.thirdPlace);
     else throw Error('Nepodporovaný formát.');
+    if(hybrid){t.groupDiscipline=config.discipline;t.playoffDiscipline=playoffDiscipline;t.playoffRaceTo=playoffRaceTo;}
     t.historicalEditMode=true;t.historicalDate=config.date;t.createdAt=config.date+'T12:00:00.000Z';
     t.managerUids={...(series.managerUids||{})};if(series.createdByUid)t.managerUids[series.createdByUid]=true;
     t.seriesPlacementTieBreak=seriesPlacementTieBreakMode(series);
@@ -20687,20 +20706,32 @@ function renderTournamentDetail(){
   let historicalActiveId=null,historicalBuildDraft=null,historicalUiBusy=false;
   const historicalDraftKey=DB_KEY+'_historical_structure_setup';
   const historicalOptions=(ids,t,selected='',blank=false)=>(blank?'<option value="">Vyber hráče</option>':'')+ids.map(id=>`<option value="${esc(id)}" ${id===selected?'selected':''}>${esc(tournamentPlayerName(id,t))}</option>`).join('');
-  function historicalSaveDraft(){localStorage.setItem(historicalDraftKey,JSON.stringify(historicalBuildDraft));}
+  let historicalDraftVolatile=false;
+  function historicalDraftStorageStatus(){
+    $('historicalDraftWarning').textContent=historicalDraftVolatile?'Příprava je pouze v paměti této stránky. Místní úložiště je plné nebo nedostupné. Můžeš pokračovat a uložit turnaj do cloudu; po obnovení nebo zavření stránky se neuložená příprava neobnoví.':'';
+  }
+  function historicalSaveDraft(){
+    try{localStorage.setItem(historicalDraftKey,JSON.stringify(historicalBuildDraft));historicalDraftVolatile=false;}
+    catch(e){historicalDraftVolatile=true;}
+    historicalDraftStorageStatus();return !historicalDraftVolatile;
+  }
   window.openHistoricalStructureSetup=function(seriesId){
     const s=(data.tournamentSeries||[]).find(x=>x.id===seriesId);if(!s||!canManageSeries(s))return;
     historicalActiveId=null;
-    try{historicalBuildDraft=JSON.parse(localStorage.getItem(historicalDraftKey)||'null');}catch(e){historicalBuildDraft=null;}
-    if(historicalBuildDraft?.seriesId===seriesId && historicalBuildDraft.config){historicalRenderSeedSetup();}
+    if(historicalBuildDraft?.seriesId!==seriesId){
+      try{historicalBuildDraft=JSON.parse(localStorage.getItem(historicalDraftKey)||'null');historicalDraftVolatile=false;}catch(e){historicalBuildDraft=null;historicalDraftVolatile=true;}
+    }
+    if(historicalBuildDraft?.seriesId===seriesId && historicalBuildDraft.config && historicalBuildDraft.stage!=='config'){historicalRenderSeedSetup();}
     else{
-      historicalBuildDraft={seriesId};
+      if(historicalBuildDraft?.seriesId!==seriesId)historicalBuildDraft={seriesId};
       $('historicalStructureBody').innerHTML=`<div class="grid two">
         <div><label>Název</label><input id="hsName" value="${esc($('seriesHistoricalName_'+seriesId)?.value||'')}"></div>
         <div><label>Historické datum</label><input id="hsDate" type="date" value="${esc($('seriesHistoricalDate_'+seriesId)?.value||'')}"></div>
         <div><label>Formát</label><select id="hsFormat"><option value="groups">Skupiny</option><option value="sko">SKO</option><option value="dko">DKO</option><option value="groups_sko">Skupiny → SKO</option><option value="groups_dko">Skupiny → DKO</option></select></div>
-        <div><label>Disciplína</label><select id="hsDiscipline"><option>9-ball</option><option>8-ball</option><option>10-ball</option><option>14.1</option></select></div>
-        <div><label>Race to / cílové skóre</label><input id="hsRace" type="number" min="1" value="5"></div>
+        <div><label id="hsDisciplineLabel">Disciplína</label><select id="hsDiscipline"><option>9-ball</option><option>8-ball</option><option>10-ball</option><option>14.1</option></select></div>
+        <div><label id="hsRaceLabel">Race to / cílové skóre</label><input id="hsRace" type="number" min="1" value="5"></div>
+        <div id="hsPlayoffDisciplineField" class="hidden"><label>Disciplína play-off</label><select id="hsPlayoffDiscipline"><option value="">Stejná jako skupiny</option><option>9-ball</option><option>8-ball</option><option>10-ball</option><option>14.1</option></select></div>
+        <div id="hsPlayoffRaceField" class="hidden"><label>Race to play-off</label><input id="hsPlayoffRace" type="number" min="1" placeholder="Stejné jako skupiny"></div>
         <div><label>Počet skupin</label><input id="hsGroups" type="number" min="1" value="1"></div>
         <div><label>Postupujících z každé skupiny</label><input id="hsAdvance" type="number" min="1" value="2"></div>
         <div><label>Při shodě bodů rozhoduje</label><select id="hsTie">${$('tournamentGroupAdvanceTieRule').innerHTML}</select></div>
@@ -20709,9 +20740,31 @@ function renderTournamentDetail(){
       <h3>Hráči</h3><div class="grid two">${Object.values(data.players||{}).filter(p=>p && p.active!==false && p.hiddenFromPlayers!==true).sort((a,b)=>playerSelectionLabel(a).localeCompare(playerSelectionLabel(b),'cs')).map(p=>`<label><input class="hsPlayer" type="checkbox" value="${esc(p.id)}" style="width:auto"> ${esc(playerSelectionLabel(p))}</label>`).join('')}</div>
       <label>Další hosté – jedno jméno na řádek (bez vytváření účtu)</label><textarea id="hsGuests" rows="4"></textarea>
       <button class="btn primary" data-historical-action onclick="historicalPrepareSeedSetup()">PŘIPRAVIT RUČNÍ NASAZENÍ</button>`;
+      if(!historicalBuildDraft.form&&historicalBuildDraft.config){const c=historicalBuildDraft.config;historicalBuildDraft.form={hsName:c.name,hsDate:c.date,hsFormat:c.format,hsDiscipline:c.discipline,hsRace:String(c.raceTo),hsPlayoffDiscipline:c.playoffDiscipline||'',hsPlayoffRace:c.playoffRaceTo==null?'':String(c.playoffRaceTo),hsGroups:String(c.groupCount),hsAdvance:String(c.advance),hsTie:c.tieRule||'points',hsPenalties:!!c.penalties,hsThird:!!c.thirdPlace,hsGuests:Object.values(c.guests||{}).map(g=>g.name).join('\n')};historicalBuildDraft.selectedPlayers=c.playerIds;}
+      for(const [id,state] of Object.entries(historicalBuildDraft.form||{})){
+        const el=$(id);if(!el||!el.closest('#historicalStructureBody'))continue;
+        if(el.type==='checkbox')el.checked=state===true;else el.value=state;
+      }
+      for(const el of document.querySelectorAll('.hsPlayer'))el.checked=(historicalBuildDraft.selectedPlayers||[]).includes(el.value);
+      historicalPhaseFields();
     }
-    $('historicalStructureMessage').textContent='';$('historicalStructureModal').classList.add('show');
+    historicalDraftStorageStatus();$('historicalStructureMessage').textContent='';$('historicalStructureModal').classList.add('show');
   };
+  function historicalPhaseFields(){
+    const hybrid=['groups_sko','groups_dko'].includes($('hsFormat')?.value);
+    for(const id of ['hsPlayoffDisciplineField','hsPlayoffRaceField'])$(id)?.classList.toggle('hidden',!hybrid);
+    if($('hsDisciplineLabel'))$('hsDisciplineLabel').textContent=hybrid?'Disciplína skupin':'Disciplína';
+    if($('hsRaceLabel'))$('hsRaceLabel').textContent=hybrid?'Race to skupin':'Race to / cílové skóre';
+  }
+  function historicalCaptureForm(){
+    if(!$('hsName')||!historicalBuildDraft)return;
+    historicalBuildDraft.stage='config';historicalBuildDraft.form={};
+    for(const el of $('historicalStructureBody').querySelectorAll('input[id],select[id],textarea[id]'))historicalBuildDraft.form[el.id]=el.type==='checkbox'?el.checked:el.value;
+    historicalBuildDraft.selectedPlayers=[...document.querySelectorAll('.hsPlayer:checked')].map(el=>el.value);
+    historicalPhaseFields();historicalSaveDraft();
+  }
+  $('historicalStructureBody').addEventListener('input',historicalCaptureForm);
+  $('historicalStructureBody').addEventListener('change',historicalCaptureForm);
   window.historicalPrepareSeedSetup=function(){
     try{
       const playerIds=[...document.querySelectorAll('.hsPlayer:checked')].map(el=>el.value),guests={},seen=new Set(playerIds.map(id=>normalizeSeriesHistoricalName(tournamentPlayerName(id))));
@@ -20719,7 +20772,8 @@ function renderTournamentDetail(){
       if(playerIds.length<2)throw Error('Vyber alespoň dva hráče.');
       const config={name:$('hsName').value.trim(),date:$('hsDate').value,format:$('hsFormat').value,discipline:$('hsDiscipline').value,raceTo:Number($('hsRace').value),groupCount:Number($('hsGroups').value),advance:Number($('hsAdvance').value),tieRule:$('hsTie').value,penalties:$('hsPenalties').checked,thirdPlace:$('hsThird').checked,playerIds,guests};
       if(!config.name||!config.date)throw Error('Vyplň název a historické datum.');
-      historicalBuildDraft.config=config;historicalBuildDraft.order=playerIds.map(()=> '');historicalSaveDraft();historicalRenderSeedSetup();
+      config.playoffDiscipline=$('hsPlayoffDiscipline').value||config.discipline;config.playoffRaceTo=Number($('hsPlayoffRace').value||config.raceTo);
+      historicalCaptureForm();historicalBuildDraft.stage='seed';historicalBuildDraft.config=config;historicalBuildDraft.order=historicalBuildDraft.order?.length===playerIds.length&&historicalBuildDraft.order.every(id=>!id||playerIds.includes(id))?historicalBuildDraft.order:playerIds.map(()=> '');historicalSaveDraft();historicalRenderSeedSetup();
     }catch(e){$('historicalStructureMessage').textContent=e.message;}
   };
   function historicalRenderSeedSetup(){
@@ -20730,7 +20784,7 @@ function renderTournamentDetail(){
     $('historicalStructureBody').innerHTML=`<strong>${esc(c.name)} • ${esc(c.date)}</strong><p>Ručně vyber všechny pozice. Skupiny se plní po blocích, pavouk po dvojicích. Volné losy řeší původní turnajový generátor.</p>`+layout.map(g=>`<h3>${esc(grouped?'Skupina '+g.label:g.label)}</h3><div class="grid two">${g.ids.map(()=>{const i=index++;return `<label>Pozice ${i+1}<select class="hsSeed" data-index="${i}" onchange="historicalSeedChanged(this)">${historicalOptions(c.playerIds,t,d.order[i],true)}</select></label>`;}).join('')}</div>`).join('')+`<div style="margin-top:14px"><button class="btn primary" data-historical-action onclick="historicalCreateFromSetup()">VYTVOŘIT ZÁPASY A ULOŽIT ROZPRACOVANÝ TURNAJ</button><button class="btn" onclick="historicalResetSetup()">ZMĚNIT NASTAVENÍ</button></div>`;
   }
   window.historicalSeedChanged=function(el){historicalBuildDraft.order[Number(el.dataset.index)]=el.value;historicalSaveDraft();};
-  window.historicalResetSetup=function(){const sid=historicalBuildDraft.seriesId;localStorage.removeItem(historicalDraftKey);historicalBuildDraft=null;openHistoricalStructureSetup(sid);};
+  window.historicalResetSetup=function(){historicalBuildDraft.stage='config';historicalSaveDraft();openHistoricalStructureSetup(historicalBuildDraft.seriesId);};
   async function historicalUiAction(action){
     if(historicalUiBusy)return;historicalUiBusy=true;$('historicalStructureMessage').textContent='Ukládám…';
     document.querySelectorAll('[data-historical-action]').forEach(b=>b.disabled=true);
@@ -20745,11 +20799,11 @@ function renderTournamentDetail(){
     // A global administrator outside the series' organizer list uses the
     // existing protected series-link workflow, rather than trusting a draft flag.
     if(t.createdByUid!==s.createdByUid&&s.managerUids?.[t.createdByUid]!==true){s.tournamentIds=s.tournamentIds||[];addTournamentToSeries(s.id,t.id);}
-    try{localStorage.removeItem(historicalDraftKey);}catch(e){}historicalBuildDraft=null;openHistoricalStructure(t.id);renderSeriesModal();
+    try{localStorage.removeItem(historicalDraftKey);}catch(e){}historicalBuildDraft=null;historicalDraftVolatile=false;historicalDraftStorageStatus();openHistoricalStructure(t.id);renderSeriesModal();
   });};
   window.openHistoricalStructure=function(id){
     const t=data.tournaments.find(t=>t.id===id);if(!t?.historicalStructure)return;
-    historicalActiveId=id;historicalRenderStructure(t);$('historicalStructureMessage').textContent='';$('historicalStructureModal').classList.add('show');
+    historicalActiveId=id;historicalRenderStructure(t);$('historicalDraftWarning').textContent='';$('historicalStructureMessage').textContent='';$('historicalStructureModal').classList.add('show');
   };
   function historicalRenderStructure(t){
     const model=t.historicalStructure,editable=historicalCanManage(t),slots=historicalStructureSlots(t),complete=t.status==='complete';
@@ -22810,6 +22864,8 @@ function renderTournamentDetail(){
     const groupMode=['groups','groups_sko','groups_dko'].includes(tournamentFormatValue);
     $('tournamentGroupCountField').classList.toggle('hidden',!groupMode || tournamentFormatValue==='groups');
     const hybridGroupMode=['groups_sko','groups_dko'].includes(tournamentFormatValue);
+    $('tournamentPlayoffRaceField').classList.toggle('hidden',!hybridGroupMode);
+    $('tournamentRaceLabel').textContent=hybridGroupMode?'Race to skupin':'Race to';
     if($('tournamentPlayoffDisciplineField'))$('tournamentPlayoffDisciplineField').classList.toggle('hidden',!hybridGroupMode);
     if($('tournamentDisciplineLabel'))$('tournamentDisciplineLabel').textContent=groupMode?'Disciplína skupin':'Disciplína';
     if($('tournamentAdvanceField'))$('tournamentAdvanceField').classList.toggle('hidden',!hybridGroupMode);
@@ -22862,6 +22918,8 @@ function renderTournamentDetail(){
   $('tournamentFormat').addEventListener('change',()=>{
     const f=$('tournamentFormat').value;
     const groupMode=['groups_sko','groups_dko'].includes(f);
+    $('tournamentPlayoffRaceField').classList.toggle('hidden',!groupMode);
+    $('tournamentRaceLabel').textContent=groupMode?'Race to skupin':'Race to';
     const swissMode=f==='swiss';
     $('tournamentGroupCountField').classList.toggle('hidden',!groupMode);
     $('tournamentSwissRoundsField')?.classList.toggle('hidden',!swissMode);
@@ -22882,6 +22940,7 @@ function renderTournamentDetail(){
       updateTournamentNineBallBreakRuleVisibility();
     });
   }
+  for(const event of ['input','change'])$('screen-tournament').addEventListener(event,e=>{if(TOURNAMENT_PHASE_FIELDS.includes(e.target.id))saveTournamentCheckinDraft();});
   if($('tournamentDiscipline')){
     $('tournamentDiscipline').addEventListener('change',()=>{
       updateTournamentNineBallBreakRuleVisibility();
@@ -23381,11 +23440,14 @@ $('createTournamentBtn').onclick=async()=>{
       ? ($('tournamentPlayoffDiscipline')?.value||discipline)
       : discipline;
     const raceTo=Math.max(1,parseInt($('tournamentRace').value||'5',10)),breakMode=$('tournamentBreakMode').value;
+    const playoffRaceTo=Number($('tournamentPlayoffRace').value||raceTo);
+    if(['groups_sko','groups_dko'].includes(format)&&(!Number.isInteger(playoffRaceTo)||playoffRaceTo<1)){toast('Vyplň platné Race to play-off.');return;}
     const handicapTournament=!!$('tournamentHandicapEnabled')?.checked;
     if(handicapTournament){
-      const stageVals=[$('tournamentRace')?.value,$('raceGroup')?.value,$('raceLast32')?.value,$('raceLast16')?.value,$('raceLast8')?.value,$('raceSemifinal')?.value,$('raceFinal')?.value]
+      const stageVals=[$('tournamentRace')?.value,...($('tournamentVariableRace')?.checked?Object.values(tournamentRaceStageSettingsFromForm()||{}):[])]
         .map(v=>Number(v||0)).filter(v=>Number.isFinite(v)&&v>0);
       const minRace=stageVals.length?Math.min(...stageVals):raceTo;
+      if(['groups_sko','groups_dko'].includes(format))stageVals.push(playoffRaceTo);
       const invalid=ids.find(id=>tournamentPlayerHandicap(id)>=minRace);
       if(invalid){toast('Handicap hráče '+tournamentPlayerName(invalid)+' musí být nižší než nejnižší Race to ('+minRace+').');return;}
     }
@@ -23448,6 +23510,7 @@ $('createTournamentBtn').onclick=async()=>{
     if(['groups_sko','groups_dko'].includes(format)){
       t.groupDiscipline=discipline;
       t.playoffDiscipline=playoffDiscipline;
+      t.playoffRaceTo=playoffRaceTo;
       // t.discipline zůstává kvůli zpětné kompatibilitě disciplínou skupin.
       t.discipline=discipline;
     }
