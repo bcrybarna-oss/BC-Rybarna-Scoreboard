@@ -1,5 +1,15 @@
 # Revize aplikace Poolčítadlo
 
+## Dominik – životnost automatických cloudových obnov (v4.51.99 RC)
+Zadavatel: Dominik
+Datum: 27. 10. 2026
+Změny: Samostatný produkční assets/js/cloud-refresh.js vlastní automatické čtení appData, interval/úvodní timeout, visibility a pagehide, jednu promise a abort/generaci relace. Původní pollingové tělo a flagy odstraněny, adaptéry delegují. Clear identity/offline/logout ruší prostředky; opožděná odpověď ani token z tohoto pollu neobnoví ukončenou relaci. Oprávnění/cache/matches loader, FC výpočty, PNG/XLSX i PDF ovládání/závislosti beze změny. Mapování ostatních vlastníků a úzká hranice v docs/cloud-refresh-stage-2.md.
+Testy: Na98reprodukovány3timeouty/3GET a použití pozdní odpovědi/tokenu po logoutu;99má1timeout/1GET a0pozdních aplikací.15/15cílenýchunitPASS; plná lokální sada242PASS/2známéFAIL/0SKIP ze244. Oba60přechodovéběhy/184zápasů:0JS/interakčníchchyb,7intervalůběhem/6po,2vlastněnélisteneryodstraněny,max1GETmatches,4aplikace4revizí; realcachequota. BrowserAuth/reload/undo, A1/A2/BPNG, PushoutXLSX, desktop/mobil a streamUID+matchId PASS. Původní PDF regrese taképrošla, PDFse neoptimalizuje/neodstraňuje.
+Nasazení: Pushnuto e25246818cbcc13283397863de3bae8fa6b63b90 do draft PR37. CI40569555577 release PASS/Node239PASS/2známéFAIL/3soukroméSKIP ze244; logy shodných dvou chyb ověřeny proti aktuálnímu main484d266/CI40397173141. Dokumentační pokračování nemění aplikaci ani testy. Nesloučeno a nenasazeno, produkce v4.51.98 RC. Žádné produkční zápisy ani migrace.
+Omezení: Vyřešen pouze automatický appData poll; další služby a explicitní počáteční merge/upload mají vlastní životnost. Dvě známé preview chyby:50rozpor kontraktu identity,106zastaralýregex, nezměněny. ŽiváAuth/OBS/fyzickýmobil neověřeny, B/PDF a40MBcache limity trvají.
+
+
+
 ## Dominik – ověřené nasazení modularizace (v4.51.98 RC)
 Zadavatel: Dominik
 Datum: 26. 10. 2026

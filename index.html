@@ -1043,6 +1043,7 @@
   </div>
 
 <script src="assets/js/federal-statistics.js?v=4.51.98"></script>
+<script src="assets/js/cloud-refresh.js?v=4.51.99"></script>
 <script src="assets/pushout-xlsx.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.2/dist/jspdf.umd.min.js"></script>
@@ -2604,7 +2605,7 @@ html[data-theme="light"] #leagueSchedule .history-item .muted{
           <span class="by">by</span>
           <span class="club">BC Rybárna</span>
         </div>
-        <small class="modern-brand-version">v4.51.98 RC</small>
+        <small class="modern-brand-version">v4.51.99 RC</small>
       </div>
     </div>
     <div class="nav">
@@ -3218,7 +3219,7 @@ html[data-theme="light"] #leagueSchedule .history-item .muted{
         </div>
         <div class="subpanel" style="min-width:210px;text-align:center;margin:0">
           <div class="muted" style="font-size:10px;font-weight:950;letter-spacing:1px">AKTUÁLNÍ VERZE</div>
-          <div style="font-size:22px;font-weight:950;color:var(--gold2);margin-top:5px">v4.51.98 RC</div>
+          <div style="font-size:22px;font-weight:950;color:var(--gold2);margin-top:5px">v4.51.99 RC</div>
         </div>
       </div>
     </div>
@@ -5976,7 +5977,7 @@ html[data-theme="light"] #leagueSchedule .history-item .muted{
       </div>
 
       <div id="groupPlayoffSeedStatus" class="muted" style="margin-top:12px;min-height:20px"></div>
-      <div class="muted" style="margin-top:4px;font-size:11px">RC v4.51.98</div>
+      <div class="muted" style="margin-top:4px;font-size:11px">RC v4.51.99</div>
       <div class="modal-actions">
         <button id="groupPlayoffSeedApplyBtn" class="btn primary big" type="button">NASADIT DO PLAY-OFF</button>
         <button id="groupPlayoffSeedCancelBtn" class="btn">ZRUŠIT</button>
@@ -6066,6 +6067,11 @@ html[data-theme="light"] #leagueSchedule .history-item .muted{
     document.body.prepend(error);
     throw new Error('FEDERAL_STATISTICS_MODULE_UNAVAILABLE');
   }
+  if(!window.CloudRefresh){
+    const error=document.createElement('div');error.id='cloudRefreshLoadError';error.setAttribute('role','alert');
+    error.textContent='Nepodařilo se načíst cloudové obnovy. Obnovte stránku.';document.body.prepend(error);
+    throw new Error('CLOUD_REFRESH_MODULE_UNAVAILABLE');
+  }
   let {federalRackScoresAgree,federalMetric,federalStatsRows,federalStatsRackRows,federalStatsRacksComplete,federalStatsHistoricalRacks,federalStatsRecordSignature,federalStatsRecordIndex,federalStatsReadableShot,federalStatsShotIssues,federalTaggedMetric,federalStatsSide,federalStatsOwner,federalCalculateMatch,federalMergeMetrics,federalFixtureSources,federalCalculateSeason,federalReportOrder,federalReportWinner,federalReportSelection,federalReportData,federalReportResults,federalReportMetric,federalPushoutModel}=window.FederalStatistics;
   const $ = id => document.getElementById(id);
   const nowTime = () => new Date().toLocaleTimeString('cs-CZ',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
@@ -6115,8 +6121,7 @@ html[data-theme="light"] #leagueSchedule .history-item .muted{
   let cloudAuthenticated=false;
   let cloudSyncTimer=null;
   let cloudSyncInProgress=false;
-  let cloudPollTimer=null;
-  let cloudPollInProgress=false;
+  let cloudAutoSync=null;
   let cloudApplyingRemote=false;
   let cloudLastError='';
   const CLOUD_POLL_MS=2500;
@@ -7173,7 +7178,7 @@ html[data-theme="light"] #leagueSchedule .history-item .muted{
     const btn=$('submitReportBtn');if(btn)btn.disabled=true;
     try{
       const id=uid(),p=currentUserPlayerId?data.players?.[currentUserPlayerId]:null;
-      const report={id,createdByUid:cloudUid,createdByPlayerId:currentUserPlayerId||'',createdByName:p?playerSelectionLabel(p):(cloudUserEmail||'Uživatel'),email:cloudUserEmail||'',type,area,description,appVersion:'v4.51.98 RC',createdAt:new Date().toISOString(),updatedAt:new Date().toISOString(),status:'new',adminNote:''};
+      const report={id,createdByUid:cloudUid,createdByPlayerId:currentUserPlayerId||'',createdByName:p?playerSelectionLabel(p):(cloudUserEmail||'Uživatel'),email:cloudUserEmail||'',type,area,description,appVersion:'v4.51.99 RC',createdAt:new Date().toISOString(),updatedAt:new Date().toISOString(),status:'new',adminNote:''};
       await reportRequest(id,'PUT',report);
       try{
         await writeReportUserMirror(report);
@@ -7566,7 +7571,7 @@ html[data-theme="light"] #leagueSchedule .history-item .muted{
   }
 
 
-  async function firebaseRefreshAuth(refreshToken){
+  async function firebaseRefreshAuth(refreshToken,refreshRequest=null){
     if(!refreshToken) return false;
     const body='grant_type=refresh_token&refresh_token='+encodeURIComponent(refreshToken);
     const r=await fetch(
@@ -7574,11 +7579,13 @@ html[data-theme="light"] #leagueSchedule .history-item .muted{
       {
         method:'POST',
         headers:{'Content-Type':'application/x-www-form-urlencoded'},
-        body
+        body,
+        signal:refreshRequest?.signal
       }
     );
     const j=await r.json();
     if(!r.ok) throw new Error((j.error&&j.error.message)||'REFRESH_FAILED');
+    if(refreshRequest&&!refreshRequest.current())return false;
 
     cloudIdToken=j.id_token;
     cloudRefreshToken=j.refresh_token||refreshToken;
@@ -8564,6 +8571,7 @@ html[data-theme="light"] #leagueSchedule .history-item .muted{
   }
 
   function clearRuntimeCloudIdentity(){
+    cloudAutoSync?.stop();
     cloudAuthenticated=false;
     cloudIdToken='';
     cloudTokenExpiresAt=0;
@@ -8578,7 +8586,7 @@ html[data-theme="light"] #leagueSchedule .history-item .muted{
     try{updateLoggedInUserBadge();}catch(e){}
   }
 
-  async function ensureCloudToken(){
+  async function ensureCloudToken(refreshRequest=null){
     if(cloudAuthenticated && cloudIdToken && Date.now()<cloudTokenExpiresAt) return true;
 
     let refresh=cloudRefreshToken;
@@ -8590,9 +8598,10 @@ html[data-theme="light"] #leagueSchedule .history-item .muted{
     if(!refresh) return false;
 
     try{
-      await firebaseRefreshAuth(refresh);
-      return true;
+      await firebaseRefreshAuth(refresh,refreshRequest);
+      return !refreshRequest||refreshRequest.current();
     }catch(e){
+      if(refreshRequest&&!refreshRequest.current())return false;
       cloudRefreshToken='';
       try{
         localStorage.removeItem(CLOUD_REFRESH_KEY);
@@ -8690,61 +8699,44 @@ html[data-theme="light"] #leagueSchedule .history-item .muted{
     cloudSyncTimer=setTimeout(uploadCloudData,450);
   }
 
-  async function pollCloudData(){
-    if(cloudPollInProgress || cloudSyncInProgress || cloudApplyingRemote) return;
-    if(!document.hidden && await ensureCloudToken()){
-      cloudPollInProgress=true;
+  // Session-owned /appData auto-refresh. No second polling implementation.
+  cloudAutoSync=window.CloudRefresh.create({
+    identity:()=>cloudAuthenticated?cloudUid:null,
+    authorize:request=>ensureCloudToken(request),
+    hidden:()=>document.hidden,
+    blocked:()=>cloudSyncInProgress||cloudApplyingRemote,
+    fetch:(...args)=>fetch(...args),
+    url:()=>cloudUrl('appData')+'&t='+Date.now(),
+    localRevision:localCloudTimestamp,
+    intervalMs:CLOUD_POLL_MS,initialDelayMs:700,
+    visibilityTarget:document,pageTarget:window,
+    apply(cloud,cloudTs){
+      saveSafetyBackup('before cloud download');
+      cloudApplyingRemote=true;
       try{
-        const r=await fetch(cloudUrl('appData')+'&t='+Date.now(),{cache:'no-store'});
-        if(!r.ok) throw new Error('CLOUD_READ_'+r.status);
-        const cloud=await r.json();
-        if(!cloud || !cloud.data) return;
-
-        const cloudTs=Number(cloud.updatedAt||0);
-        const localTs=localCloudTimestamp();
-
-        // Jiný telefon/PC uložil novější stav -> automaticky ho převezmeme.
-        // Pokud máme čerstvější lokální změnu čekající na upload, nepřepisujeme ji.
-        if(cloudTs>localTs+500){
-          saveSafetyBackup('before cloud download');
-          cloudApplyingRemote=true;
-          try{
-            const remoteAppData=JSON.parse(JSON.stringify(cloud.data));
-            delete remoteAppData.players;
-            delete remoteAppData.matches;
-            delete remoteAppData.deletedMatchIds;
-            delete remoteAppData.tournaments;
-            delete remoteAppData.leagues;
-              const merged=mergeDataObjects(data,remoteAppData,true);
-            writeLocalWithoutCloudSync(merged,cloudTs);
-            refreshViewsAfterCloudLoad();
-          }finally{
-            cloudApplyingRemote=false;
-          }
-          setCloudStatus('ONLINE • AUTO',true);
-        }else{
-          setCloudStatus('ONLINE • AUTO',true);
-        }
-        cloudLastError='';
-      }catch(e){
-        cloudLastError=String(e.message||e);
-        console.warn('Cloud auto sync:',e);
-      }finally{
-        cloudPollInProgress=false;
-      }
-    }
-  }
-
+        const remoteAppData=JSON.parse(JSON.stringify(cloud.data));
+        delete remoteAppData.players;
+        delete remoteAppData.matches;
+        delete remoteAppData.deletedMatchIds;
+        delete remoteAppData.tournaments;
+        delete remoteAppData.leagues;
+        const merged=mergeDataObjects(data,remoteAppData,true);
+        writeLocalWithoutCloudSync(merged,cloudTs);
+        refreshViewsAfterCloudLoad();
+      }finally{cloudApplyingRemote=false;}
+    },
+    success(){cloudLastError='';setCloudStatus('ONLINE • AUTO',true);},
+    error(error){cloudLastError=String(error.message||error);console.warn('Cloud auto sync:',error);}
+  });
+  function pollCloudData(){return cloudAutoSync.refresh();}
   function startCloudAutoSync(){
-    if(cloudPollTimer) clearInterval(cloudPollTimer);
-    cloudPollTimer=setInterval(pollCloudData,CLOUD_POLL_MS);
-    setTimeout(pollCloudData,700);
+    cloudAutoSync.start();
     setCloudStatus('ONLINE • AUTO',true);
   }
 
+  // Secure-list refresh is a separate app-owned job, outside this module's /appData scope.
   document.addEventListener('visibilitychange',()=>{
     if(!document.hidden && cloudAuthenticated){
-      pollCloudData();
       Promise.all([loadSecureMatches(),loadSecureTournaments()])
         .then(()=>{try{renderHistory();renderStats();renderPlayers();renderTournament();}catch(e){}})
         .catch(()=>{});
@@ -9000,10 +8992,6 @@ html[data-theme="light"] #leagueSchedule .history-item .muted{
     cloudRefreshToken='';
     clearRuntimeCloudIdentity();
 
-    if(cloudPollTimer){
-      clearInterval(cloudPollTimer);
-      cloudPollTimer=null;
-    }
 
     try{
       localStorage.removeItem(CLOUD_REFRESH_KEY);
