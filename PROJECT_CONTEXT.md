@@ -1,6 +1,6 @@
-# Priorita: oprava zakládání turnajů – kandidát v4.51.101 RC
+# Priorita: oprava zakládání turnajů – v4.51.101 RC
 
-Dominik, 27.10.2026: další modularizace pozastavena. Historická příprava používá paměťový návrh i při chybě localStorage; UI výslovně označí omezenou obnovu. Oddělené formuláře/klíče historických a běžných turnajů a FC zachovány. Hybridy sdílejí existující resolver disciplíny a race-to, nové playoffRaceTo je pouze základ play-off, proměnlivá kola mají přednost; staré turnaje bez pole beze změny. Žádná migrace, Firebase Rules nebo výpočetní změny FC; produkce100. Kandidát101 neslučovat/nenasazovat. Viz docs/tournament-setup-v4.51.101.md. Níže zachovaný stav předchozího nasazení.
+Dominik, 27.10.2026: další modularizace pozastavena. Historická příprava používá paměťový návrh i při chybě localStorage; UI výslovně označí omezenou obnovu. Oddělené formuláře/klíče historických a běžných turnajů a FC zachovány. Hybridy sdílejí existující resolver disciplíny a race-to, nové playoffRaceTo je pouze základ play-off, proměnlivá kola mají přednost; staré turnaje bez pole beze změny. Žádná migrace, Firebase Rules nebo výpočetní změny FC; Nasazeno 27.10.2026 merge93f87324c18aa3694afb46694623ff7e3b2c10c6 / PR40, Pages40580177141success. Veřejný web a běžný formulář ověřeny; soukromá historická správa/kvóta/vytváření zápasů odděleně na publikovaném kódu s mockem. Obnova hesla100 zachována. Produkční data beze změny/migrace. Podrobné nasazení, omezení a návrat viz docs/deployment-v4.51.101.md. Viz docs/tournament-setup-v4.51.101.md. Níže zachovaný stav předchozího nasazení.
 
 # Druhá etapa modularizace – v4.51.99 RC
 

@@ -1,6 +1,6 @@
 # Zakládání turnajů – diagnostika a oprava v4.51.101 RC
 
-Zadavatel: Dominik. Datum: 27. 10. 2026. Základ `d560fb7b8d40ca40ca30a7d0ae48410cb391e914` / produkce v4.51.100 RC. Kandidát nové opravy; neslučovat a nenasazovat. Další modularizace pozastavena.
+Zadavatel: Dominik. Datum: 27. 10. 2026. Základ `d560fb7b8d40ca40ca30a7d0ae48410cb391e914` / produkce v4.51.100 RC. Následně schváleno, sloučeno PR40 a nasazeno; [skutečné nasazení a rozsah ověření](deployment-v4.51.101.md). Níže je zachovaná evidence přípravy. Další modularizace pozastavena.
 
 ## Podklad a izolace
 

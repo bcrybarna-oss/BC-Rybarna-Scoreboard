@@ -1,0 +1,302 @@
+{
+  "version": "v4.51.101 RC",
+  "merge": "93f87324c18aa3694afb46694623ff7e3b2c10c6",
+  "approvedHead": "38fe26a342cf9ccf557ef179b09a29b31dc34639",
+  "beforeMain": "d560fb7b8d40ca40ca30a7d0ae48410cb391e914",
+  "pages": {
+    "run": 40580177141,
+    "build": "success",
+    "deploy": "success",
+    "report": "success",
+    "manualRerun": false
+  },
+  "ci": {
+    "prRun": 40578528533,
+    "mainRun": 40580177314,
+    "baselineRun": 40576067328,
+    "release": "success",
+    "pass": 247,
+    "fail": 2,
+    "skip": 3,
+    "total": 252,
+    "knownFailuresIdentical": true,
+    "knownFailures": [
+      {
+        "file": "preview-match-reload-recovery.test.cjs",
+        "line": 50,
+        "cause": "Identity-wait preview contract mismatch"
+      },
+      {
+        "file": "preview-match-reload-recovery.test.cjs",
+        "line": 106,
+        "cause": "Stale standalone-call regex"
+      }
+    ]
+  },
+  "public": {
+    "version": "v4.51.101 RC",
+    "merge": "93f87324c18aa3694afb46694623ff7e3b2c10c6",
+    "url": "https://bcrybarna-oss.github.io/BC-Rybarna-Scoreboard/",
+    "files": {
+      "index.html": {
+        "status": 200,
+        "sha256": "1cf46f54be99c7b3072ee1f3dce8713239ca3bfd20168d39a403d1e74b239b59",
+        "bytes": 1660494
+      },
+      "overlay.html": {
+        "status": 200,
+        "sha256": "d396b364f52dc615f9ca6897402502e5fd03bf60597a4c2c425806ee1d03b11c",
+        "bytes": 20885
+      },
+      "assets/pushout-xlsx.js": {
+        "status": 200,
+        "sha256": "5e4436656444c3f87b2c8550414b49070eb7d8974455e321425388bc639ae874",
+        "bytes": 7977
+      },
+      "assets/federal-report-billiards.webp": {
+        "status": 200,
+        "sha256": "2a8d73c1b0a5ecd07597b993f0da5ed22b7c30bba6023448b8069d154bf3e228",
+        "bytes": 74790
+      },
+      "assets/federal-report-pool-logo.png": {
+        "status": 200,
+        "sha256": "c28fd81775d4013e2b58716d6f8ef1a92691f4d5d4c0b8b2ba1b0d3a3a12c593",
+        "bytes": 220520
+      },
+      "assets/pushout-sports-logo-yellow.png": {
+        "status": 200,
+        "sha256": "049c2b4648a2e6106c5c41459c346689915256f62330ee17129b4484fc8314ff",
+        "bytes": 44487
+      },
+      "bc-rybarna-logo.png": {
+        "status": 200,
+        "sha256": "5ad8dccc37f3426e189916f5e5bce61fa922f82d8757283832ac01d224f1f083",
+        "bytes": 131525
+      },
+      "assets/poolcitadlo-logo.webp": {
+        "status": 200,
+        "sha256": "7f9caff46b1924186ef7d6a42b6b9079ee9ace9e7875d8f688e9fdc83bd488db",
+        "bytes": 27896
+      },
+      "assets/federal-cup/flag-sk-flat.svg": {
+        "status": 200,
+        "sha256": "659b2c072f05d05e8b5d38caa878626459ac652c6dc02359094b423a4ae1d6ee",
+        "bytes": 1543
+      },
+      "assets/federal-cup/flag-cz-flat.svg": {
+        "status": 200,
+        "sha256": "172aa188241c3f5fbd95d7881095d65e2b681f105fb867923709cc09a5dcc3a0",
+        "bytes": 222
+      },
+      "assets/federal-cup/flag-sk-cloth.svg": {
+        "status": 200,
+        "sha256": "cf8cc9a9fec2f76db4ba3cf6f66c303488cb7ad738aba6dc8afe7535a7a968e7",
+        "bytes": 3230
+      },
+      "assets/federal-cup/flag-cz-cloth.svg": {
+        "status": 200,
+        "sha256": "e83808ab2c0c8a5a6b2dde63c44c8e22416ca0a38c00b468136643baca2064e8",
+        "bytes": 1910
+      },
+      "assets/federal-cup/flag-sk-cloth.png": {
+        "status": 200,
+        "sha256": "27faf3b6b76a07b4793ddadb3f549d104ef5c91256c300ad3d24d4dd25a9111a",
+        "bytes": 717340
+      },
+      "assets/federal-cup/flag-cz-cloth.png": {
+        "status": 200,
+        "sha256": "e6485509db399555689fe7b9e23aa1e9e70b27a28e3ca8f1ac2ad38c505cc7fb",
+        "bytes": 641363
+      },
+      "assets/federal-cup/gold-trophy.png": {
+        "status": 200,
+        "sha256": "d4c8ec993c1e20d16508e3f96aade23dc217593597ed3649ca7bc777f85c29c7",
+        "bytes": 1854457
+      },
+      "assets/js/federal-statistics.js": {
+        "status": 200,
+        "sha256": "7e1cae131f79f6bf5bdd2c417fe5b4272408c361053024a6e5f1c411a9ea7d21",
+        "bytes": 48112
+      },
+      "assets/js/cloud-refresh.js": {
+        "status": 200,
+        "sha256": "ac53937d949b561a52b379c32f468bc2e927ad3a78e2295184a231dcf6da98b7",
+        "bytes": 3453
+      }
+    },
+    "clients": [
+      {
+        "mode": "desktop",
+        "authenticated": false,
+        "screens": [
+          "home",
+          "results",
+          "tournament",
+          "federal-cup-2026"
+        ],
+        "ordinaryFields": {
+          "groups": {
+            "discipline": "8-ball",
+            "race": 3
+          },
+          "playoff": {
+            "discipline": "10-ball",
+            "race": 7
+          }
+        },
+        "fixtureCount": 21,
+        "modulesLoaded": 2,
+        "passwordResetControlAndLocalValidation": true,
+        "errors": [],
+        "consoleErrors": [],
+        "blocked": [],
+        "historicalForm": "Requires authorized series management; tested separately in isolated environment"
+      },
+      {
+        "mode": "mobile",
+        "authenticated": false,
+        "screens": [
+          "home",
+          "results",
+          "tournament",
+          "federal-cup-2026"
+        ],
+        "ordinaryFields": {
+          "groups": {
+            "discipline": "8-ball",
+            "race": 3
+          },
+          "playoff": {
+            "discipline": "10-ball",
+            "race": 7
+          }
+        },
+        "fixtureCount": 21,
+        "modulesLoaded": 2,
+        "passwordResetControlAndLocalValidation": true,
+        "errors": [],
+        "consoleErrors": [],
+        "blocked": [],
+        "historicalForm": "Requires authorized series management; tested separately in isolated environment"
+      }
+    ],
+    "passwordReset": {
+      "sameFunctionAsVersion100": true,
+      "sha256": "68239d6f690b44b59c8207b67169256c4b5a975ca52b56f0647a2971e3edfada"
+    }
+  },
+  "isolated": {
+    "archive": {
+      "bytes": 40913440,
+      "sha256": "49908fbcd66113315e524e6e61a4fc3a889654bb0e9420d309b843d4181a4d5d",
+      "matches": 189,
+      "players": 26
+    },
+    "clients": [
+      {
+        "mobile": false,
+        "format": "groups_sko",
+        "archiveQuota": true,
+        "playedGroup": {
+          "discipline": "8-ball",
+          "target": 3,
+          "federalCupLink": null
+        },
+        "playedPlayoff": {
+          "discipline": "10-ball",
+          "target": 7,
+          "federalCupLink": null
+        },
+        "federalConfigurationUnchanged": true,
+        "pageErrors": [],
+        "mockWriteCount": 11,
+        "maxDraftBytes": 1142
+      },
+      {
+        "mobile": true,
+        "format": "groups_dko",
+        "archiveQuota": true,
+        "playedGroup": {
+          "discipline": "8-ball",
+          "target": 3,
+          "federalCupLink": null
+        },
+        "playedPlayoff": {
+          "discipline": "10-ball",
+          "target": 7,
+          "federalCupLink": null
+        },
+        "federalConfigurationUnchanged": true,
+        "pageErrors": [],
+        "mockWriteCount": 11,
+        "maxDraftBytes": 1142
+      }
+    ]
+  },
+  "quotaReload": {
+    "archive": {
+      "bytes": 40913440,
+      "sha256": "49908fbcd66113315e524e6e61a4fc3a889654bb0e9420d309b843d4181a4d5d",
+      "matches": 189,
+      "players": 26
+    },
+    "clients": [
+      {
+        "mobile": false,
+        "format": "groups_sko",
+        "archiveQuota": true,
+        "playedGroup": {
+          "discipline": "8-ball",
+          "target": 3,
+          "federalCupLink": null
+        },
+        "playedPlayoff": {
+          "discipline": "10-ball",
+          "target": 7,
+          "federalCupLink": null
+        },
+        "federalConfigurationUnchanged": true,
+        "quotaReload": {
+          "warning": "Příprava je pouze v paměti této stránky. Místní úložiště je plné nebo nedostupné. Můžeš pokračovat a uložit turnaj do cloudu; po obnovení nebo zavření stránky se neuložená příprava neobnoví.",
+          "memoryPreservedBeforeReload": true,
+          "unsavedDraftAbsentAfterReload": true
+        },
+        "pageErrors": [],
+        "mockWriteCount": 12,
+        "maxDraftBytes": 1142
+      },
+      {
+        "mobile": true,
+        "format": "groups_dko",
+        "archiveQuota": true,
+        "playedGroup": {
+          "discipline": "8-ball",
+          "target": 3,
+          "federalCupLink": null
+        },
+        "playedPlayoff": {
+          "discipline": "10-ball",
+          "target": 7,
+          "federalCupLink": null
+        },
+        "federalConfigurationUnchanged": true,
+        "quotaReload": {
+          "warning": "Příprava je pouze v paměti této stránky. Místní úložiště je plné nebo nedostupné. Můžeš pokračovat a uložit turnaj do cloudu; po obnovení nebo zavření stránky se neuložená příprava neobnoví.",
+          "memoryPreservedBeforeReload": true,
+          "unsavedDraftAbsentAfterReload": true
+        },
+        "pageErrors": [],
+        "mockWriteCount": 12,
+        "maxDraftBytes": 1142
+      }
+    ]
+  },
+  "preMergeTargetUnit": {
+    "pass": 8,
+    "fail": 0
+  },
+  "productionDataWrites": 0,
+  "migrations": 0,
+  "liveAuthenticatedProductionSession": false,
+  "physicalPhoneVerified": false
+}

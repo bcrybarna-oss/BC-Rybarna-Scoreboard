@@ -1,5 +1,15 @@
 # Revize aplikace Poolčítadlo
 
+## Dominik – ověřené nasazení opravy turnajové přípravy (v4.51.101 RC)
+Zadavatel: Dominik
+Datum: 27. 10. 2026
+Změny: Po schválení PR40 sloučeno se zachováním historie, merge93f87324c18aa3694afb46694623ff7e3b2c10c6. Oprava paměťové přípravy při kvótě a nezávislých turnajových fází nasazena; Jaroslavova obnova hesla100 zachována. Tento dokumentační zápis nemění aplikaci/verzi; další modularizace pozastavena, bez migrací nebo produkčních zápisů.
+Testy: Finální PR/main release PASS, Node247 PASS/2 známé FAIL/3 soukromé SKIP ze252; obě chyby jednotlivě porovnány s aktuálním předmerge main. 8/8 předmergecílenýchunit PASS. Veřejné index/overlay/15assetů přesnéSHA256, verze101/moduly/navigace/běžnýformulář/FC21/desktop/mobil/0JS chyb PASS. Publikovaná obnova hesla přesně shodná100, pouze místní validace prázdného e-mailu bez odeslání. Historický/běžný formulář, plná kvóta, paměťové nasazení, cloudPUT/GET/reload a skutečně vytvořené skupiny8-ball3/play-off10-ball7 ověřeny izolovaně na publikovaném HTML. Výslovně ověřeno zachování zcela neuloženého návrhu předreloadem a jeho skutečná ztráta poreloadu podle varování, desktop/mobil. KonfiguraceFC shodná.
+Nasazení: Pages40580177141 build/deploy/report success, skutečně publikovaná v4.51.101 RC ověřena. Žádný ruční rerun; případné automatické Pages po dokumentaci publikují stejnou aplikaci. Viz docs/deployment-v4.51.101.md.
+Omezení: Živá přihlášená produkčníAuth a historická správa série, doručení resetovacího e-mailu, fyzický mobil/OBS neověřeny. JSON neprokazuje původní neuloženou přípravu nebo kapacitu zařízení; celý archiv se nadále nevejde do místní cache. Při plné kvótě neuložený návrh nepřežije reload/zavření, UI to říká. Nová regrese nezjištěna, rollback nebyl potřeba; návrat reverzí kódu bez vracení dat podle release pravidel.
+
+
+
 ## Dominik – bezpečná příprava turnajů a nezávislé fáze (v4.51.101 RC)
 Zadavatel: Dominik
 Datum: 27. 10. 2026
