@@ -1,6 +1,6 @@
 # Životnost cloudových obnov – první celek druhé etapy
 
-Zadavatel: Dominik. Datum: 27. 10. 2026. Základ main `484d2661fa1c51ce9cd8f9a4834cc62e34339532`, nasazená verze98. Kandidát **v4.51.99 RC**, samostatné PR, **neslučovat a nenasazovat**. Produkční data se nemění.
+Zadavatel: Dominik. Datum: 27. 10. 2026. Základ main `484d2661fa1c51ce9cd8f9a4834cc62e34339532`, nasazená verze98. Vydání **v4.51.99 RC** bylo následně schváleno, PR37 sloučeno a nasazeno. [Skutečné nasazení a rozsah ověření](deployment-v4.51.99.md). Níže je zachovaná evidence přípravy; tehdejší pokyny neslučovat/nenasazovat byly nahrazeny schválením zadavatele. Produkční data se nemění.
 
 ## Mapa dosavadních vlastníků ve verzi98
 

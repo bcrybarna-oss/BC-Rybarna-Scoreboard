@@ -1,5 +1,15 @@
 # Revize aplikace Poolčítadlo
 
+## Dominik – ověřené nasazení cloudového modulu (v4.51.99 RC)
+Zadavatel: Dominik
+Datum: 27. 10. 2026
+Změny: Po schválení sloučen PR37 merge b5dc71f76364d29d455303566241579e545a6dcb. Produkční modul vlastní automatické appData obnovy a úklid prostředků relace. Dokumentační pokračování nemění aplikaci/verzi. Další etapa nezahájena; bez produkčních zápisů nebo migrace.
+Testy: PR/main release PASS; Node239 PASS/2 známé FAIL/3 soukromé SKIP ze244, obě chyby jednotlivě shodné s aktuálním předmerge main. Veřejné HTML/overlay/15 assetů přesná SHA256, verze99/moduly/navigace/desktop/mobil/FC/0JS chyb PASS. Na veřejné URL oddělené offline kopie A1/A2/B,6PNG/2XLSX a původní PDF exporty PASS; zachovány metriky #9. Publikované HTML izolovaně lifecycle/reconnect/stale response/token/logout/souběžné obnovy PASS, 15/15 unit a dialogový mockAuth/reload/undo/PUT/GET PASS.
+Nasazení: Pages40571675729 build/deploy/report success, skutečně publikovaná v4.51.99 RC ověřena. Žádný ruční rerun; případné automatické Pages po dokumentačním pokračování mají stejnou aplikaci. Viz docs/deployment-v4.51.99.md.
+Omezení: Živá přihlášená produkční Auth/Firebase, reálné OBS, fyzický iPhone/Safari a Excel neověřeny. Limity reportu B a celé archivní cache trvají; ostatní služby mimo úzkou hranici modulu. Dvě preview chyby nejsou odstraněny a CI není plně zelené. Nová regrese nenalezena, rollback nebyl potřeba; návrat reverzí kódu podle release pravidel bez vracení dat.
+
+
+
 ## Dominik – životnost automatických cloudových obnov (v4.51.99 RC)
 Zadavatel: Dominik
 Datum: 27. 10. 2026

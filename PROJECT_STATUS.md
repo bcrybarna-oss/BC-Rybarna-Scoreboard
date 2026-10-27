@@ -4,7 +4,11 @@ Aktualizace: 27. 10. 2026. Zadavatel aktuální revize: **Dominik**.
 
 ## Verze a nasazení
 
-Aktuální verze: **v4.51.99 RC** — kandidát druhé etapy modularizace, nesloučeno a nenasazeno. Produkce zůstává **v4.51.98 RC**.
+Aktuální verze: **v4.51.99 RC** — nasazeno a v uvedeném rozsahu ověřeno 27. 10. 2026.
+
+- **PRODUKCE99 – Dominik:** PR37 sloučen merge `b5dc71f76364d29d455303566241579e545a6dcb`, Pages40571675729 success. PR/main release PASS, Node239 PASS/2 známé FAIL/3 soukromé SKIP ze244, jednotlivě shodné s předmerge main. Veřejné HTML/overlay/15 assetů přesné SHA256, verze99/oba moduly/navigace/FC/desktop/mobil/0JS chyb PASS. A1/A2/B a6PNG/2XLSX se soukromou offline kopií na veřejné URL PASS, původní PDF regrese také; #9 má48/94 %/2z4 proti12/86 %/1z4. Publikované HTML izolovaně cloud lifecycle/start/stop/auth-stale/reconnect/sdílení PASS, 15/15 unit a mockAuth/reload/undo/PUT/GET PASS. Živá přihlášená produkční Auth/Firebase, OBS a fyzická zařízení neověřeny. Žádné změny produkčních dat ani migrace. Limity B a místní cache zůstávají. [Deployment report a návrat](docs/deployment-v4.51.99.md).
+
+Následuje zachovaná historie přípravy99; tehdejší zákaz sloučení/nasazení byl nahrazen výslovným schválením a ověřeným nasazením.
 
 - **Cloud lifecycle – Dominik,27.10.2026:** vybraná malá část je automatické čtení appData přihlášené relace. Produkční modul vlastní start/stop/dispose,1interval/1timeout/2uklízenélistenery a sdílený request; původní pollingové tělo odstraněno. Potvrzené závady98:3úvodnítimeouty,3souběžnéGET,pozdníaplikace a tokenrevival po logoutu;99zabraňuje všem těmto případům. Cache97/matches/permissions,PNG/Pushout aPDFUI/závislosti zachovány.15/15unit;lokálně242PASS/2známéFAIL ze244. Dlouhý60přechodovýscénář před/po0chyb,7/6intervalů,listener1110→1112přirelaci→1110postop,max1GETmatches/appData,4aplikace4novýchrevizí. [Mapa, hranice, důkazy a návrat](docs/cloud-refresh-stage-2.md). Draft PR37, implementace e252468; CI40569555577 releasePASS/Node239PASS/2známéFAIL/3soukroméSKIP ze244, stejné dvě chyby jako aktuální main484d266. **Neslučovat a nenasazovat.**
 
