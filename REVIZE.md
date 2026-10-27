@@ -1,5 +1,14 @@
 # Revize aplikace Poolčítadlo
 
+## Dominik – bezpečná příprava turnajů a nezávislé fáze (v4.51.100 RC)
+Zadavatel: Dominik
+Datum: 27. 10. 2026
+Změny: Neošetřená kvóta historického návrhu už neblokuje ruční nasazení ani cloudové uložení. Při neúspěchu se zachová paměťová příprava a výslovné upozornění na nemožnost obnovy po reloadu/zavření; žádné mazání archivu nebo záloh. Změna nastavení zachová hráče a formulář. Historické hybridní turnaje mají samostatnou disciplínu a race-to play-off; běžné hybridy mají přímo viditelné race-to obou fází a ukládanou konfiguraci přípravy. Společný resolver zachovává výjimky podle kol a legacy fallback; handicap bere v úvahu play-off. Federal Cup i cloudové moduly beze změny, další modularizace pozastavena.
+Testy: Původní produkční HTML s aktuálním 40 913 440B exportem: skutečná kvóta archivu a simulované vyčerpání prostoru reprodukují blokaci 432B návrhu; historická pole chybí, běžná původní pole jsou dostupná. Desktop SKO/mobil DKO, výběr, nasazení, návrat do formuláře, cloud PUT/GET/reload a skutečné zápasy 8-ball/3 proti play-off10-ball/7 PASS. Původní historická a FC lineup sada PASS; 3 nové unit PASS. Node245 PASS/2 známé FAIL/0 SKIP ze247. Podrobnosti docs/tournament-setup-v4.51.100.md.
+Nasazení: Kandidát samostatného opravného PR, nesloučeno a nenasazeno. Produkce zůstává v4.51.99 RC; žádné produkční zápisy ani migrace.
+Omezení: JSON nedokládá původní neuloženou přípravu ani přesné zaplnění uživatelova úložiště. Fyzický mobil a produkční Auth neověřeny; testy všech zápisů pouze mock. Nedostatečná místní kapacita pro celý archiv trvá. Dvě známá preview selhání zůstávají odděleně popsaná, testy nevypnuty.
+
+
 ## Dominik – ověřené nasazení cloudového modulu (v4.51.99 RC)
 Zadavatel: Dominik
 Datum: 27. 10. 2026

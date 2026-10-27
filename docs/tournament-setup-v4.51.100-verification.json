@@ -1,0 +1,117 @@
+{
+  "version": "v4.51.100 RC",
+  "base": "04e4dccb2547ad350db87fb9bc09ef25b381e055",
+  "archive": {
+    "bytes": 40913440,
+    "sha256": "49908fbcd66113315e524e6e61a4fc3a889654bb0e9420d309b843d4181a4d5d",
+    "matches": 189,
+    "players": 26
+  },
+  "productionWrites": 0,
+  "archiveUnchanged": true,
+  "before": [
+    {
+      "mobile": false,
+      "archiveQuota": true,
+      "advanced": 0,
+      "hasHistoricalPhases": 0,
+      "ordinaryExistingControls": {
+        "playoffDiscipline": true,
+        "groupRace": true,
+        "finalRace": true
+      },
+      "storage": [
+        {
+          "key": "bc_rybarna_scoreboard_v1_historical_structure_setup",
+          "bytes": 432,
+          "utf16Bytes": 964
+        }
+      ]
+    },
+    {
+      "mobile": true,
+      "archiveQuota": true,
+      "advanced": 0,
+      "hasHistoricalPhases": 0,
+      "ordinaryExistingControls": {
+        "playoffDiscipline": true,
+        "groupRace": true,
+        "finalRace": true
+      },
+      "storage": [
+        {
+          "key": "bc_rybarna_scoreboard_v1_historical_structure_setup",
+          "bytes": 432,
+          "utf16Bytes": 964
+        }
+      ]
+    }
+  ],
+  "after": [
+    {
+      "mobile": false,
+      "format": "groups_sko",
+      "archiveQuota": true,
+      "playedGroup": {
+        "discipline": "8-ball",
+        "target": 3,
+        "federalCupLink": null
+      },
+      "playedPlayoff": {
+        "discipline": "10-ball",
+        "target": 7,
+        "federalCupLink": null
+      },
+      "federalConfigurationUnchanged": true,
+      "maxDraftBytes": 1142,
+      "maxDraftUtf16Bytes": 2382,
+      "mockRequestsWriting": 11,
+      "pageErrors": []
+    },
+    {
+      "mobile": true,
+      "format": "groups_dko",
+      "archiveQuota": true,
+      "playedGroup": {
+        "discipline": "8-ball",
+        "target": 3,
+        "federalCupLink": null
+      },
+      "playedPlayoff": {
+        "discipline": "10-ball",
+        "target": 7,
+        "federalCupLink": null
+      },
+      "federalConfigurationUnchanged": true,
+      "maxDraftBytes": 1142,
+      "maxDraftUtf16Bytes": 2382,
+      "mockRequestsWriting": 11,
+      "pageErrors": []
+    }
+  ],
+  "tests": {
+    "node": {
+      "pass": 245,
+      "fail": 2,
+      "skip": 0,
+      "total": 247
+    },
+    "newUnit": 3,
+    "historicalBrowser": "PASS",
+    "federalLineupBrowser": "PASS",
+    "realProductionAuth": false,
+    "physicalPhone": false,
+    "knownFailures": [
+      {
+        "file": "preview-match-reload-recovery.test.cjs",
+        "line": 50,
+        "cause": "Identity-wait preview contract mismatch"
+      },
+      {
+        "file": "preview-match-reload-recovery.test.cjs",
+        "line": 106,
+        "cause": "Stale standalone-call source regex"
+      }
+    ]
+  }
+}
