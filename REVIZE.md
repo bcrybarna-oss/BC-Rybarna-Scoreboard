@@ -1,12 +1,23 @@
 # Revize aplikace Poolčítadlo
 
-## Dominik – bezpečná příprava turnajů a nezávislé fáze (v4.51.100 RC)
+## Dominik – bezpečná příprava turnajů a nezávislé fáze (v4.51.101 RC)
 Zadavatel: Dominik
 Datum: 27. 10. 2026
 Změny: Neošetřená kvóta historického návrhu už neblokuje ruční nasazení ani cloudové uložení. Při neúspěchu se zachová paměťová příprava a výslovné upozornění na nemožnost obnovy po reloadu/zavření; žádné mazání archivu nebo záloh. Změna nastavení zachová hráče a formulář. Historické hybridní turnaje mají samostatnou disciplínu a race-to play-off; běžné hybridy mají přímo viditelné race-to obou fází a ukládanou konfiguraci přípravy. Společný resolver zachovává výjimky podle kol a legacy fallback; handicap bere v úvahu play-off. Federal Cup i cloudové moduly beze změny, další modularizace pozastavena.
-Testy: Původní produkční HTML s aktuálním 40 913 440B exportem: skutečná kvóta archivu a simulované vyčerpání prostoru reprodukují blokaci 432B návrhu; historická pole chybí, běžná původní pole jsou dostupná. Desktop SKO/mobil DKO, výběr, nasazení, návrat do formuláře, cloud PUT/GET/reload a skutečné zápasy 8-ball/3 proti play-off10-ball/7 PASS. Původní historická a FC lineup sada PASS; 3 nové unit PASS. Node245 PASS/2 známé FAIL/0 SKIP ze247. Podrobnosti docs/tournament-setup-v4.51.100.md.
-Nasazení: Kandidát samostatného opravného PR, nesloučeno a nenasazeno. Produkce zůstává v4.51.99 RC; žádné produkční zápisy ani migrace.
+Testy: Původní produkční HTML s aktuálním 40 913 440B exportem: skutečná kvóta archivu a simulované vyčerpání prostoru reprodukují blokaci 432B návrhu; historická pole chybí, běžná původní pole jsou dostupná. Desktop SKO/mobil DKO, výběr, nasazení, návrat do formuláře, cloud PUT/GET/reload a skutečné zápasy 8-ball/3 proti play-off10-ball/7 PASS. Původní historická a FC lineup sada PASS; 3 nové unit PASS. Node250 PASS/2 známé FAIL/0 SKIP ze252. Podrobnosti docs/tournament-setup-v4.51.101.md.
+Nasazení: Kandidát samostatného opravného PR, nesloučeno a nenasazeno. Produkce zůstává v4.51.100 RC; žádné produkční zápisy ani migrace.
 Omezení: JSON nedokládá původní neuloženou přípravu ani přesné zaplnění uživatelova úložiště. Fyzický mobil a produkční Auth neověřeny; testy všech zápisů pouze mock. Nedostatečná místní kapacita pro celý archiv trvá. Dvě známá preview selhání zůstávají odděleně popsaná, testy nevypnuty.
+
+
+
+
+## Jaroslav – obnova hesla z přihlašovací obrazovky (v4.51.100 RC)
+Zadavatel: Jaroslav
+Datum: 27. 10. 2026
+Změny: V cloudovém přihlašovacím dialogu tlačítko ZAPOMENUTÉ HESLO? bez přihlášení volá Firebase sendOobCode (PASSWORD_RESET) pouze s e-mailem. Není čteno heslo, nejsou měněny relace, role, hráči, zápasy ani UID. Neprozrazuje existenci účtu, validuje vstup, chybové a rate-limit zprávy a deaktivaci během odesílání. Matoucí titulek SCOREBOARD 4.0 DEV v produkčním přihlášení nahrazen POOLČÍTADLO · PŘIHLÁŠENÍ. Aktivní čtyři verze a overlay na 100.
+Testy: Přidány izolované Node testy v tests/password-reset.test.cjs pro UI, validaci, POST body bez hesla/tokenů, existující/neexistující e-mail, výpadek sítě a rate limit. Statické invarianty kódu prověřeny, CI release gate PASS a všech 5 nových password-reset testů PASS. Stávající smoke test s natvrdo uvedeným 99 aktualizován na porovnání aktivní verze s PROJECT_STATUS.md. Celá Node sada v PR a na main: 244 PASS / 2 známé FAIL / 3 SKIP z 249; dvě chyby staré preview obnovy zápasu jsou totožné se známým předchozím main. Kontrola release PR i main PASS. Živé doručení neověřeno.
+Nasazení: PR #38 sloučen 27. 10. 2026 merge `b42a9b2189a2c501f05ac70d5b6a94cb8fa3aa83`. [Pages 40575477118](https://github.com/bcrybarna-oss/BC-Rybarna-Scoreboard/actions/runs/40575477118) build/deploy/report success, nasazení v4.51.100 RC. Přímé veřejné načtení HTML v nástroji nedostupné; nebyla provedena produkční Auth ani test doručení e-mailu. Dokumentační pokračování nemění aplikaci ani verzi.
+Omezení: Žádný skutečný obnovovací e-mail při testech, nezaručuje doručení; závisí na nastavení Firebase a limitech. Žádné produkční zápisy, migrace ani mazání.
 
 
 ## Dominik – ověřené nasazení cloudového modulu (v4.51.99 RC)

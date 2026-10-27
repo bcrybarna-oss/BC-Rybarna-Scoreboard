@@ -1,6 +1,6 @@
-# Priorita: oprava zakládání turnajů – kandidát v4.51.100 RC
+# Priorita: oprava zakládání turnajů – kandidát v4.51.101 RC
 
-Dominik, 27.10.2026: další modularizace pozastavena. Historická příprava používá paměťový návrh i při chybě localStorage; UI výslovně označí omezenou obnovu. Oddělené formuláře/klíče historických a běžných turnajů a FC zachovány. Hybridy sdílejí existující resolver disciplíny a race-to, nové playoffRaceTo je pouze základ play-off, proměnlivá kola mají přednost; staré turnaje bez pole beze změny. Žádná migrace, Firebase Rules nebo výpočetní změny FC; produkce99. Kandidát100 neslučovat/nenasazovat. Viz docs/tournament-setup-v4.51.100.md. Níže zachovaný stav předchozího nasazení.
+Dominik, 27.10.2026: další modularizace pozastavena. Historická příprava používá paměťový návrh i při chybě localStorage; UI výslovně označí omezenou obnovu. Oddělené formuláře/klíče historických a běžných turnajů a FC zachovány. Hybridy sdílejí existující resolver disciplíny a race-to, nové playoffRaceTo je pouze základ play-off, proměnlivá kola mají přednost; staré turnaje bez pole beze změny. Žádná migrace, Firebase Rules nebo výpočetní změny FC; produkce100. Kandidát101 neslučovat/nenasazovat. Viz docs/tournament-setup-v4.51.101.md. Níže zachovaný stav předchozího nasazení.
 
 # Druhá etapa modularizace – v4.51.99 RC
 
@@ -105,7 +105,7 @@ Poolčítadlo používá černo-zlatý design. Logo Poolčítadla funguje jako H
 
 ## Účty, role a Firebase
 
-Aplikace používá Firebase Authentication a Firebase Realtime Database.
+Aplikace používá Firebase Authentication a Firebase Realtime Database. Od v4.51.100 RC je v přihlašovacím dialogu ZAPOMENUTÉ HESLO?, které anonymně požádá Firebase Authentication o PASSWORD_RESET pro zadaný e-mail, aniž by zasahovalo do existujícího UID, hráčského profilu, historie, oprávnění či zápasů. Odpověď neodhaluje existenci účtu a chyby sítě/limitů se sdělují zvlášť.
 
 Role:
 - `player`

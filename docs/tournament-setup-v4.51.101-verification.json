@@ -1,6 +1,6 @@
 {
-  "version": "v4.51.100 RC",
-  "base": "04e4dccb2547ad350db87fb9bc09ef25b381e055",
+  "version": "v4.51.101 RC",
+  "base": "d560fb7b8d40ca40ca30a7d0ae48410cb391e914",
   "archive": {
     "bytes": 40913440,
     "sha256": "49908fbcd66113315e524e6e61a4fc3a889654bb0e9420d309b843d4181a4d5d",
@@ -91,10 +91,10 @@
   ],
   "tests": {
     "node": {
-      "pass": 245,
+      "pass": 250,
       "fail": 2,
       "skip": 0,
-      "total": 247
+      "total": 252
     },
     "newUnit": 3,
     "historicalBrowser": "PASS",

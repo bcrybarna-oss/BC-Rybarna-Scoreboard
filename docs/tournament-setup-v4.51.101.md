@@ -1,6 +1,6 @@
-# Zakládání turnajů – diagnostika a oprava v4.51.100 RC
+# Zakládání turnajů – diagnostika a oprava v4.51.101 RC
 
-Zadavatel: Dominik. Datum: 27. 10. 2026. Základ `04e4dccb2547ad350db87fb9bc09ef25b381e055` / produkce v4.51.99 RC. Kandidát nové opravy; neslučovat a nenasazovat. Další modularizace pozastavena.
+Zadavatel: Dominik. Datum: 27. 10. 2026. Základ `d560fb7b8d40ca40ca30a7d0ae48410cb391e914` / produkce v4.51.100 RC. Kandidát nové opravy; neslučovat a nenasazovat. Další modularizace pozastavena.
 
 ## Podklad a izolace
 
@@ -37,7 +37,7 @@ Nevhodné sdílení jako příčina těchto závad nebylo doloženo. Konfigurace
 
 `tests/tournament-setup-browser.cjs` používá skutečné produkční HTML a aktuální export. Režim TOURNAMENT_BASELINE s původním HTML prokázal blokaci a chybějící historická pole i existující běžné ovládání. Opravený běh: desktop Skupiny → SKO a mobil Skupiny → DKO, ruční výběr a nasazení, změna nastavení, zavření/otevření, obnovení přípravy běžného turnaje po reloadu, zápisy a čtení mocku včetně ztráty prázdných uzlů, plná kvóta, skutečný skupinový zápas 8-ball/3 a play-off 10-ball/7, FC konfigurace/program PASS; 0 pageerrors.
 
-Nové jednotkové testy importují těla produkčních resolverů a ukládání; nezávisle ověřují fáze, přednost kol, legacy fallback, známé pořadí hráčů, výslovnou volatilitu a zotavení úložiště. Původní kompletní historical-structure-browser PASS včetně pravomocí, ETag412, ztraceného potvrzení, korekcí, všech formátů, bodování sérií a parity s běžným turnajem. Plná lokální Node sada se soukromými vstupy: 245 PASS / 2 známé FAIL / 0 SKIP ze 247. Finální GitHub CI bude uvedeno v PR.
+Nové jednotkové testy importují těla produkčních resolverů a ukládání; nezávisle ověřují fáze, přednost kol, legacy fallback, známé pořadí hráčů, výslovnou volatilitu a zotavení úložiště. Původní kompletní historical-structure-browser PASS včetně pravomocí, ETag412, ztraceného potvrzení, korekcí, všech formátů, bodování sérií a parity s běžným turnajem. Plná lokální Node sada se soukromými vstupy: 250 PASS / 2 známé FAIL / 0 SKIP ze 252. Finální GitHub CI bude uvedeno v PR.
 
 Známá selhání preview-match-reload-recovery zůstávají: řádek 50 je rozpor kontraktu při čekání na identitu, řádek 106 zastaralý regex tvaru volání. Nejsou vypnuta ani upravena. Testy se zápisy běží pouze v mocku. Skutečné soukromé neuložené nastavení a fyzický mobil nebyly k dispozici. Obnova neuložené přípravy po zavření/reloadu při plné kvótě není zaručená a UI to výslovně uvádí. Plná archivní cache zůstává samostatným omezením.
 

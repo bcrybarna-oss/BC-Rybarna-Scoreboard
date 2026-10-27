@@ -2605,7 +2605,7 @@ html[data-theme="light"] #leagueSchedule .history-item .muted{
           <span class="by">by</span>
           <span class="club">BC Rybárna</span>
         </div>
-        <small class="modern-brand-version">v4.51.100 RC</small>
+        <small class="modern-brand-version">v4.51.101 RC</small>
       </div>
     </div>
     <div class="nav">
@@ -3219,7 +3219,7 @@ html[data-theme="light"] #leagueSchedule .history-item .muted{
         </div>
         <div class="subpanel" style="min-width:210px;text-align:center;margin:0">
           <div class="muted" style="font-size:10px;font-weight:950;letter-spacing:1px">AKTUÁLNÍ VERZE</div>
-          <div style="font-size:22px;font-weight:950;color:var(--gold2);margin-top:5px">v4.51.100 RC</div>
+          <div style="font-size:22px;font-weight:950;color:var(--gold2);margin-top:5px">v4.51.101 RC</div>
         </div>
       </div>
     </div>
@@ -5534,7 +5534,7 @@ html[data-theme="light"] #leagueSchedule .history-item .muted{
 
 <div id="cloudLoginModal" class="modal">
   <div class="modal-card" style="max-width:560px">
-    <h2>☁ SCOREBOARD 4.0 DEV</h2>
+    <h2>☁ POOLČÍTADLO · PŘIHLÁŠENÍ</h2>
     <p class="muted">
       Přihlas se vlastním účtem. Účet se propojí s tvým hráčským profilem a později také s klubem.
     </p>
@@ -5549,6 +5549,10 @@ html[data-theme="light"] #leagueSchedule .history-item .muted{
       <input id="cloudPassword" type="password" autocomplete="current-password" placeholder="Heslo">
     </div>
 
+    <div style="margin-top:10px;text-align:right">
+      <button id="cloudResetPasswordBtn" type="button" class="btn" style="padding:9px 12px">ZAPOMENUTÉ HESLO?</button>
+    </div>
+    <div id="cloudResetPasswordMessage" class="muted" role="status" aria-live="polite" style="margin-top:8px"></div>
     <div id="cloudLoginMessage" class="muted" style="margin-top:12px;font-weight:800"></div>
       <div class="muted" style="margin-top:8px">Nemáš účet? Zvol <strong>VYTVOŘIT NOVÝ ÚČET</strong>.</div>
 
@@ -5980,7 +5984,7 @@ html[data-theme="light"] #leagueSchedule .history-item .muted{
       </div>
 
       <div id="groupPlayoffSeedStatus" class="muted" style="margin-top:12px;min-height:20px"></div>
-      <div class="muted" style="margin-top:4px;font-size:11px">RC v4.51.100</div>
+      <div class="muted" style="margin-top:4px;font-size:11px">RC v4.51.101</div>
       <div class="modal-actions">
         <button id="groupPlayoffSeedApplyBtn" class="btn primary big" type="button">NASADIT DO PLAY-OFF</button>
         <button id="groupPlayoffSeedCancelBtn" class="btn">ZRUŠIT</button>
@@ -7182,7 +7186,7 @@ html[data-theme="light"] #leagueSchedule .history-item .muted{
     const btn=$('submitReportBtn');if(btn)btn.disabled=true;
     try{
       const id=uid(),p=currentUserPlayerId?data.players?.[currentUserPlayerId]:null;
-      const report={id,createdByUid:cloudUid,createdByPlayerId:currentUserPlayerId||'',createdByName:p?playerSelectionLabel(p):(cloudUserEmail||'Uživatel'),email:cloudUserEmail||'',type,area,description,appVersion:'v4.51.100 RC',createdAt:new Date().toISOString(),updatedAt:new Date().toISOString(),status:'new',adminNote:''};
+      const report={id,createdByUid:cloudUid,createdByPlayerId:currentUserPlayerId||'',createdByName:p?playerSelectionLabel(p):(cloudUserEmail||'Uživatel'),email:cloudUserEmail||'',type,area,description,appVersion:'v4.51.101 RC',createdAt:new Date().toISOString(),updatedAt:new Date().toISOString(),status:'new',adminNote:''};
       await reportRequest(id,'PUT',report);
       try{
         await writeReportUserMirror(report);
@@ -8790,6 +8794,49 @@ html[data-theme="light"] #leagueSchedule .history-item .muted{
     return true;
   }
 
+  async function cloudRequestPasswordReset(){
+    const email=$('cloudEmail').value.trim();
+    const message=$('cloudResetPasswordMessage');
+    const button=$('cloudResetPasswordBtn');
+    if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){
+      message.textContent='Nejdřív vyplň platný e-mail svého účtu.';
+      return;
+    }
+    button.disabled=true;
+    $('cloudLoginMessage').textContent='';
+    message.textContent='Odesílám žádost o obnovu hesla…';
+    try{
+      const response=await fetch(
+        'https://identitytoolkit.googleapis.com/v1/accounts:sendOobCode?key='+encodeURIComponent(FIREBASE_API_KEY),
+        {
+          method:'POST',
+          headers:{'Content-Type':'application/json'},
+          body:JSON.stringify({requestType:'PASSWORD_RESET',email})
+        }
+      );
+      if(!response.ok){
+        const result=await response.json().catch(()=>({}));
+        const code=String((result.error&&result.error.message)||('HTTP_'+response.status));
+        // Informace o existenci e-mailu je vždy neveřejná.
+        if(!code.includes('EMAIL_NOT_FOUND')) throw new Error(code);
+      }
+      message.textContent='Pokud je e-mail registrovaný, přijde na něj odkaz pro nastavení nového hesla. Zkontroluj také spam.';
+    }catch(error){
+      const code=String(error&&error.message?error.message:error||'');
+      if(code.includes('TOO_MANY_ATTEMPTS') || code.includes('QUOTA_EXCEEDED')){
+        message.textContent='Bylo odesláno příliš mnoho žádostí. Zkus to později.';
+      }else if(code.includes('INVALID_EMAIL')){
+        message.textContent='Zkontroluj správnost e-mailové adresy.';
+      }else if(code.includes('Failed to fetch') || code.includes('NETWORK')){
+        message.textContent='Nelze se spojit s Firebase. Zkontroluj internet a zkus to znovu.';
+      }else{
+        message.textContent='Žádost se nepodařilo odeslat. Zkus to později.';
+      }
+    }finally{
+      button.disabled=false;
+    }
+  }
+
   async function cloudLoginFromModal(){
     const email=$('cloudEmail').value.trim();
     const password=$('cloudPassword').value;
@@ -9029,6 +9076,7 @@ html[data-theme="light"] #leagueSchedule .history-item .muted{
     }
   };
 
+  $('cloudResetPasswordBtn').onclick=cloudRequestPasswordReset;
   $('cloudLoginBtn').onclick=cloudLoginFromModal;
   $('cloudPassword').addEventListener('keydown',e=>{if(e.key==='Enter')cloudLoginFromModal();});
 
