@@ -1023,5 +1023,43 @@
         "remainingPlayers": 26
       }
     }
+  },
+  "ci": {
+    "implementationCommit": "e25246818cbcc13283397863de3bae8fa6b63b90",
+    "pullRequest": 37,
+    "run": 40569555577,
+    "release": "success",
+    "node": {
+      "pass": 239,
+      "fail": 2,
+      "skip": 3,
+      "total": 244
+    },
+    "localNode": {
+      "pass": 242,
+      "fail": 2,
+      "skip": 0,
+      "total": 244
+    },
+    "mainCommit": "484d2661fa1c51ce9cd8f9a4834cc62e34339532",
+    "mainRun": 40397173141,
+    "mainNode": {
+      "pass": 229,
+      "fail": 2,
+      "skip": 3,
+      "total": 234
+    },
+    "knownFailures": [
+      {
+        "file": "preview-match-reload-recovery.test.cjs",
+        "line": 50,
+        "cause": "Actual preview identity-wait contract disagreement: retaining versus detaching the active pointer without deleting storage"
+      },
+      {
+        "file": "preview-match-reload-recovery.test.cjs",
+        "line": 106,
+        "cause": "Stale source-shape regex: recovery result is assigned for tournament fallback; both login calls remain"
+      }
+    ]
   }
 }

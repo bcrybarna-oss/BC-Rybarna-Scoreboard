@@ -109,7 +109,9 @@ Browserové sady PASS: bootstrap obou modulů včetně404/bezfallbacku desktop/m
 
 Kontrolní Singles3 zůstává93 %/14 proti95 %/38; Doubles9 SK48/94 %/ownbreak2/4/lose2,CZ12/86 %/1/4/lose3. Jde o izolované kopie skutečných dat, nikoliv živou přihlášenou produkční relaci.
 
-Finální GitHub CI a PR budou doplněny po pushi. Dvě známá selhání preview obnovy zůstávají odlišená: :50 je rozpor kontraktu odpojení při čekání na identitu, :106 zastaralý regex volání obnovy. Nejde o souhrnně kosmetické chyby a nic z jejich kódu se v této fázi nemění.
+Implementace `e25246818cbcc13283397863de3bae8fa6b63b90` je v [draft PR #37](https://github.com/bcrybarna-oss/BC-Rybarna-Scoreboard/pull/37), větev refactor/cloud-refresh-lifecycle. [GitHub CI40569555577](https://github.com/bcrybarna-oss/BC-Rybarna-Scoreboard/actions/runs/40569555577): **Release version and revision PASS**, Node **239 PASS / 2 FAIL / 3 SKIP ze244**. Tři soukromé vstupy v CI nejsou; lokálně s nimi242 PASS/2 FAIL/0 SKIP. Logy porovnány s aktuálním main484d266 ([CI40397173141](https://github.com/bcrybarna-oss/BC-Rybarna-Scoreboard/actions/runs/40397173141):229 PASS/2 stejné FAIL/3 SKIP ze234). Test i preview core jsou vůči main nezměněné; žádná nová Node regrese.
+
+Dvě známá selhání preview obnovy zůstávají odlišená: :50 je skutečný rozpor kontraktu odpojení při čekání na identitu, :106 zastaralý regex volání obnovy. Nejde o souhrnně kosmetické chyby a nic z jejich kódu se v této fázi nemění. CI není plně zelené. Následné dokumentační pokračování zaznamenává tento výsledek, aplikační a testovací kód zůstává stejný. **Nesloučeno a nenasazeno.**
 
 ## Rizika a návrat
 
