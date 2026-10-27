@@ -1,0 +1,1027 @@
+{
+  "version": "v4.51.99 RC",
+  "base": "484d2661fa1c51ce9cd8f9a4834cc62e34339532",
+  "moduleSha256": "ac53937d949b561a52b379c32f468bc2e927ad3a78e2295184a231dcf6da98b7",
+  "unchanged": {
+    "localCloudTimestamp": "8373edcd705305a999ac6c329f644f07e6224639b6f2d399d50612790d6f030a",
+    "writeLocalWithoutCloudSync": "c48b0b197115349fcc00924ffeef43fc72f5491937b9958a62acdd1aa20a0836",
+    "loadSecureMatches": "69096329b80cf96b6784655004d1afb41e64c4bb0ee5771a3d49e072062675ce",
+    "readSecureMatches": "c269655228a94c22589b6a29ee41f19aec2ab0f5c46f4afebadeb2d362b4bfa9",
+    "canWriteGlobalAppData": "cc9628fd87accd50ef5f40c387c7297a666321bd7472f7218ff1fcaedc910105",
+    "uploadCloudData": "fdd07e7e51f1dbd134d396ce596fbbb324afca7821aab6b2291fda9a2f79f9a3",
+    "initialCloudMerge": "c9911242fdcae649df90a24d8aecc77c08f87543192b311c7c538bfd1f733c5a",
+    "createFederalReportCanvas": "d8daa952146c07dde533371cbc39b18dc6dbdce64b83cd8674ca3ee499caeafd",
+    "exportFederalReport": "b28c7b6181da7d462d763f9836269878b5b29eb07e7f074bdfa04f95cf6f7b7e",
+    "reportComparison": "cf879d7330812d6f1f29fe361bee8977f0d4bcb2c512300c42ae42b5286ead20",
+    "reportPlayer": "1a5fde1c529960ee2efb73caddf369c467db19efdc30a811f17897f7ba015be8",
+    "assets/js/federal-statistics.js": "7e1cae131f79f6bf5bdd2c417fe5b4272408c361053024a6e5f1c411a9ea7d21",
+    "assets/pushout-xlsx.js": "5e4436656444c3f87b2c8550414b49070eb7d8974455e321425388bc639ae874"
+  },
+  "comparison": {
+    "before": {
+      "lifecycle": {
+        "baseline": true,
+        "sourceSha256": "37da261dca9b59e1855a95f49448b7ff9be865d8e4013ee759cc242bad193225",
+        "backupSha256": "2afd2e5c48d3babf198d41809dd9fedbf8b188a28dd8e6056a0f27db69afdc6e",
+        "backupBytes": 40385164,
+        "scope": "Only /appData 2500ms interval and 700ms warm-up use a controllable clock. Other background timers paused to attribute requests. Full real-timer navigation measured separately.",
+        "cases": {
+          "repeatedStart": {
+            "authenticated": true,
+            "uid": "A",
+            "applied": 0,
+            "screen": "screen-home",
+            "controller": null,
+            "dbMatches": 184,
+            "players": 26,
+            "intervals": 1,
+            "timeouts": 3
+          },
+          "concurrentReads": 3,
+          "sameRevisionAppliedAgain": false,
+          "sharedMatches": 1,
+          "navigation": {
+            "transitions": 24,
+            "resources": [
+              {
+                "intervals": 1,
+                "timeouts": 3,
+                "controller": null
+              },
+              {
+                "intervals": 1,
+                "timeouts": 3,
+                "controller": null
+              },
+              {
+                "intervals": 1,
+                "timeouts": 3,
+                "controller": null
+              },
+              {
+                "intervals": 1,
+                "timeouts": 3,
+                "controller": null
+              },
+              {
+                "intervals": 1,
+                "timeouts": 3,
+                "controller": null
+              },
+              {
+                "intervals": 1,
+                "timeouts": 3,
+                "controller": null
+              }
+            ]
+          },
+          "leaveScreen": {
+            "active": "screen-home",
+            "validSharedRevisionAppliedOnce": true
+          },
+          "lateAfterLogout": {
+            "authenticated": false,
+            "uid": "",
+            "applied": 3,
+            "screen": "screen-home",
+            "controller": null,
+            "dbMatches": 184,
+            "players": 26,
+            "intervals": 0,
+            "timeouts": 3,
+            "appliedAfterLogout": 1
+          },
+          "sessionCycles": [
+            {
+              "on": {
+                "intervals": 1,
+                "timeouts": 5
+              },
+              "off": {
+                "intervals": 0,
+                "timeouts": 5
+              }
+            },
+            {
+              "on": {
+                "intervals": 1,
+                "timeouts": 7
+              },
+              "off": {
+                "intervals": 0,
+                "timeouts": 7
+              }
+            },
+            {
+              "on": {
+                "intervals": 1,
+                "timeouts": 9
+              },
+              "off": {
+                "intervals": 0,
+                "timeouts": 9
+              }
+            },
+            {
+              "on": {
+                "intervals": 1,
+                "timeouts": 11
+              },
+              "off": {
+                "intervals": 0,
+                "timeouts": 11
+              }
+            },
+            {
+              "on": {
+                "intervals": 1,
+                "timeouts": 13
+              },
+              "off": {
+                "intervals": 0,
+                "timeouts": 13
+              }
+            },
+            {
+              "on": {
+                "intervals": 1,
+                "timeouts": 15
+              },
+              "off": {
+                "intervals": 0,
+                "timeouts": 15
+              }
+            }
+          ],
+          "recovery": {
+            "offlineRequests": 1,
+            "reconnectedAppliedOnce": true,
+            "viaScheduledInterval": true
+          },
+          "lateToken": {
+            "authenticated": true,
+            "uid": "",
+            "applied": 4,
+            "screen": "screen-home",
+            "controller": null,
+            "dbMatches": 184,
+            "players": 26,
+            "intervals": 1,
+            "timeouts": 2
+          }
+        },
+        "requests": [
+          {
+            "phase": "concurrent",
+            "kind": "/appData.json",
+            "method": "GET"
+          },
+          {
+            "phase": "concurrent",
+            "kind": "/appData.json",
+            "method": "GET"
+          },
+          {
+            "phase": "concurrent",
+            "kind": "/appData.json",
+            "method": "GET"
+          },
+          {
+            "phase": "same-revision",
+            "kind": "/appData.json",
+            "method": "GET"
+          },
+          {
+            "phase": "matches",
+            "kind": "/matches.json",
+            "method": "GET"
+          },
+          {
+            "phase": "navigation",
+            "kind": "/players.json",
+            "method": "GET"
+          },
+          {
+            "phase": "navigation",
+            "kind": "/matches.json",
+            "method": "GET"
+          },
+          {
+            "phase": "navigation",
+            "kind": "/tournaments.json",
+            "method": "GET"
+          },
+          {
+            "phase": "navigation",
+            "kind": "/tournaments.json",
+            "method": "GET"
+          },
+          {
+            "phase": "navigation",
+            "kind": "/appData.json",
+            "method": "GET"
+          },
+          {
+            "phase": "navigation",
+            "kind": "/players.json",
+            "method": "GET"
+          },
+          {
+            "phase": "navigation",
+            "kind": "/matches.json",
+            "method": "GET"
+          },
+          {
+            "phase": "navigation",
+            "kind": "/tournaments.json",
+            "method": "GET"
+          },
+          {
+            "phase": "navigation",
+            "kind": "/tournaments.json",
+            "method": "GET"
+          },
+          {
+            "phase": "navigation",
+            "kind": "/appData.json",
+            "method": "GET"
+          },
+          {
+            "phase": "navigation",
+            "kind": "/players.json",
+            "method": "GET"
+          },
+          {
+            "phase": "navigation",
+            "kind": "/matches.json",
+            "method": "GET"
+          },
+          {
+            "phase": "navigation",
+            "kind": "/tournaments.json",
+            "method": "GET"
+          },
+          {
+            "phase": "navigation",
+            "kind": "/tournaments.json",
+            "method": "GET"
+          },
+          {
+            "phase": "navigation",
+            "kind": "/appData.json",
+            "method": "GET"
+          },
+          {
+            "phase": "navigation",
+            "kind": "/players.json",
+            "method": "GET"
+          },
+          {
+            "phase": "navigation",
+            "kind": "/matches.json",
+            "method": "GET"
+          },
+          {
+            "phase": "navigation",
+            "kind": "/tournaments.json",
+            "method": "GET"
+          },
+          {
+            "phase": "navigation",
+            "kind": "/tournaments.json",
+            "method": "GET"
+          },
+          {
+            "phase": "navigation",
+            "kind": "/appData.json",
+            "method": "GET"
+          },
+          {
+            "phase": "navigation",
+            "kind": "/players.json",
+            "method": "GET"
+          },
+          {
+            "phase": "navigation",
+            "kind": "/matches.json",
+            "method": "GET"
+          },
+          {
+            "phase": "navigation",
+            "kind": "/tournaments.json",
+            "method": "GET"
+          },
+          {
+            "phase": "navigation",
+            "kind": "/tournaments.json",
+            "method": "GET"
+          },
+          {
+            "phase": "navigation",
+            "kind": "/appData.json",
+            "method": "GET"
+          },
+          {
+            "phase": "navigation",
+            "kind": "/players.json",
+            "method": "GET"
+          },
+          {
+            "phase": "navigation",
+            "kind": "/matches.json",
+            "method": "GET"
+          },
+          {
+            "phase": "navigation",
+            "kind": "/tournaments.json",
+            "method": "GET"
+          },
+          {
+            "phase": "navigation",
+            "kind": "/tournaments.json",
+            "method": "GET"
+          },
+          {
+            "phase": "navigation",
+            "kind": "/appData.json",
+            "method": "GET"
+          },
+          {
+            "phase": "leave-screen",
+            "kind": "/appData.json",
+            "method": "GET"
+          },
+          {
+            "phase": "leave-screen",
+            "kind": "/players.json",
+            "method": "GET"
+          },
+          {
+            "phase": "leave-screen",
+            "kind": "/matches.json",
+            "method": "GET"
+          },
+          {
+            "phase": "leave-screen",
+            "kind": "/tournaments.json",
+            "method": "GET"
+          },
+          {
+            "phase": "logout-pending",
+            "kind": "/appData.json",
+            "method": "GET"
+          },
+          {
+            "phase": "offline",
+            "kind": "/appData.json",
+            "method": "GET"
+          },
+          {
+            "phase": "reconnected",
+            "kind": "/appData.json",
+            "method": "GET"
+          },
+          {
+            "phase": "auth-late",
+            "kind": "token",
+            "method": "POST"
+          },
+          {
+            "phase": "auth-late",
+            "kind": "/appData.json",
+            "method": "GET"
+          }
+        ],
+        "maxConcurrentMatches": 1,
+        "pageErrors": [],
+        "writes": [],
+        "final": {
+          "authenticated": false,
+          "uid": "",
+          "applied": 4,
+          "screen": "screen-home",
+          "controller": null,
+          "dbMatches": 184,
+          "players": 26,
+          "intervals": 0,
+          "timeouts": 2
+        }
+      },
+      "soak": {
+        "backupSha256": "2afd2e5c48d3babf198d41809dd9fedbf8b188a28dd8e6056a0f27db69afdc6e",
+        "bytes": 40385164,
+        "cycles": 12,
+        "transitions": 60,
+        "reportOpens": 4,
+        "intervalCounts": [
+          6,
+          7
+        ],
+        "snapshots": [
+          {
+            "label": "loaded",
+            "heapBytes": 53420528,
+            "dom": 2966,
+            "listeners": 456,
+            "intervals": 6
+          },
+          {
+            "label": "cycle-1",
+            "heapBytes": 57081124,
+            "dom": 8402,
+            "listeners": 1034,
+            "intervals": 7
+          },
+          {
+            "label": "cycle-7",
+            "heapBytes": 57819612,
+            "dom": 8837,
+            "listeners": 1110,
+            "intervals": 7
+          },
+          {
+            "label": "cycle-12",
+            "heapBytes": 57891548,
+            "dom": 8837,
+            "listeners": 1110,
+            "intervals": 7
+          },
+          {
+            "label": "final",
+            "heapBytes": 57936940,
+            "dom": 8837,
+            "listeners": 1110,
+            "intervals": 6
+          }
+        ],
+        "sameRevisionApplications": 4,
+        "maxConcurrentMatches": 1,
+        "maxConcurrentAppData": 1,
+        "requestCounts": {
+          "/players.json": 12,
+          "/matches.json": 15,
+          "/tournaments.json": 24,
+          "/stream/liveMatches.json": 4,
+          "/appData.json": 31,
+          "/presence.json": 3
+        },
+        "calculationCalls": {
+          "matches": 28,
+          "season": 2
+        },
+        "pollCalls": 49,
+        "quotaErrors": 63,
+        "abortedMockWrites": 3,
+        "maxLongTask": 1437,
+        "mediansMs": {
+          "home": 600.5,
+          "results": 35.5,
+          "history": 62.5,
+          "stats": 211.5,
+          "federal-cup-2026": 590.5,
+          "cloud-poll": 162.5
+        },
+        "pageErrors": [],
+        "interactionFailures": [],
+        "remainingMatches": 184,
+        "remainingPlayers": 26
+      }
+    },
+    "after": {
+      "lifecycle": {
+        "baseline": false,
+        "sourceSha256": "9d20461df3dd2998d42ed8b15b534b9f8bde07a2f80997c2f4c38179150505eb",
+        "backupSha256": "2afd2e5c48d3babf198d41809dd9fedbf8b188a28dd8e6056a0f27db69afdc6e",
+        "backupBytes": 40385164,
+        "scope": "Only /appData 2500ms interval and 700ms warm-up use a controllable clock. Other background timers paused to attribute requests. Full real-timer navigation measured separately.",
+        "cases": {
+          "repeatedStart": {
+            "authenticated": true,
+            "uid": "A",
+            "applied": 0,
+            "screen": "screen-home",
+            "controller": {
+              "active": true,
+              "disposed": false,
+              "pending": false,
+              "intervals": 1,
+              "timeouts": 1,
+              "listeners": 2
+            },
+            "dbMatches": 184,
+            "players": 26,
+            "intervals": 1,
+            "timeouts": 1
+          },
+          "concurrentReads": 1,
+          "sameRevisionAppliedAgain": false,
+          "sharedMatches": 1,
+          "navigation": {
+            "transitions": 24,
+            "resources": [
+              {
+                "intervals": 1,
+                "timeouts": 1,
+                "controller": {
+                  "active": true,
+                  "disposed": false,
+                  "pending": true,
+                  "intervals": 1,
+                  "timeouts": 1,
+                  "listeners": 2
+                }
+              },
+              {
+                "intervals": 1,
+                "timeouts": 1,
+                "controller": {
+                  "active": true,
+                  "disposed": false,
+                  "pending": true,
+                  "intervals": 1,
+                  "timeouts": 1,
+                  "listeners": 2
+                }
+              },
+              {
+                "intervals": 1,
+                "timeouts": 1,
+                "controller": {
+                  "active": true,
+                  "disposed": false,
+                  "pending": true,
+                  "intervals": 1,
+                  "timeouts": 1,
+                  "listeners": 2
+                }
+              },
+              {
+                "intervals": 1,
+                "timeouts": 1,
+                "controller": {
+                  "active": true,
+                  "disposed": false,
+                  "pending": true,
+                  "intervals": 1,
+                  "timeouts": 1,
+                  "listeners": 2
+                }
+              },
+              {
+                "intervals": 1,
+                "timeouts": 1,
+                "controller": {
+                  "active": true,
+                  "disposed": false,
+                  "pending": true,
+                  "intervals": 1,
+                  "timeouts": 1,
+                  "listeners": 2
+                }
+              },
+              {
+                "intervals": 1,
+                "timeouts": 1,
+                "controller": {
+                  "active": true,
+                  "disposed": false,
+                  "pending": true,
+                  "intervals": 1,
+                  "timeouts": 1,
+                  "listeners": 2
+                }
+              }
+            ]
+          },
+          "leaveScreen": {
+            "active": "screen-home",
+            "validSharedRevisionAppliedOnce": true
+          },
+          "lateAfterLogout": {
+            "authenticated": false,
+            "uid": "",
+            "applied": 2,
+            "screen": "screen-home",
+            "controller": {
+              "active": false,
+              "disposed": false,
+              "pending": false,
+              "intervals": 0,
+              "timeouts": 0,
+              "listeners": 0
+            },
+            "dbMatches": 184,
+            "players": 26,
+            "intervals": 0,
+            "timeouts": 0,
+            "appliedAfterLogout": 0
+          },
+          "sessionCycles": [
+            {
+              "on": {
+                "intervals": 1,
+                "timeouts": 1,
+                "listeners": 2
+              },
+              "off": {
+                "intervals": 0,
+                "timeouts": 0,
+                "listeners": 0
+              }
+            },
+            {
+              "on": {
+                "intervals": 1,
+                "timeouts": 1,
+                "listeners": 2
+              },
+              "off": {
+                "intervals": 0,
+                "timeouts": 0,
+                "listeners": 0
+              }
+            },
+            {
+              "on": {
+                "intervals": 1,
+                "timeouts": 1,
+                "listeners": 2
+              },
+              "off": {
+                "intervals": 0,
+                "timeouts": 0,
+                "listeners": 0
+              }
+            },
+            {
+              "on": {
+                "intervals": 1,
+                "timeouts": 1,
+                "listeners": 2
+              },
+              "off": {
+                "intervals": 0,
+                "timeouts": 0,
+                "listeners": 0
+              }
+            },
+            {
+              "on": {
+                "intervals": 1,
+                "timeouts": 1,
+                "listeners": 2
+              },
+              "off": {
+                "intervals": 0,
+                "timeouts": 0,
+                "listeners": 0
+              }
+            },
+            {
+              "on": {
+                "intervals": 1,
+                "timeouts": 1,
+                "listeners": 2
+              },
+              "off": {
+                "intervals": 0,
+                "timeouts": 0,
+                "listeners": 0
+              }
+            }
+          ],
+          "recovery": {
+            "offlineRequests": 1,
+            "reconnectedAppliedOnce": true,
+            "viaScheduledInterval": true
+          },
+          "lateToken": {
+            "authenticated": false,
+            "uid": "",
+            "applied": 3,
+            "screen": "screen-home",
+            "controller": {
+              "active": false,
+              "disposed": false,
+              "pending": false,
+              "intervals": 0,
+              "timeouts": 0,
+              "listeners": 0
+            },
+            "dbMatches": 184,
+            "players": 26,
+            "intervals": 0,
+            "timeouts": 0
+          }
+        },
+        "requests": [
+          {
+            "phase": "concurrent",
+            "kind": "/appData.json",
+            "method": "GET"
+          },
+          {
+            "phase": "same-revision",
+            "kind": "/appData.json",
+            "method": "GET"
+          },
+          {
+            "phase": "matches",
+            "kind": "/matches.json",
+            "method": "GET"
+          },
+          {
+            "phase": "navigation",
+            "kind": "/players.json",
+            "method": "GET"
+          },
+          {
+            "phase": "navigation",
+            "kind": "/matches.json",
+            "method": "GET"
+          },
+          {
+            "phase": "navigation",
+            "kind": "/tournaments.json",
+            "method": "GET"
+          },
+          {
+            "phase": "navigation",
+            "kind": "/tournaments.json",
+            "method": "GET"
+          },
+          {
+            "phase": "navigation",
+            "kind": "/appData.json",
+            "method": "GET"
+          },
+          {
+            "phase": "navigation",
+            "kind": "/players.json",
+            "method": "GET"
+          },
+          {
+            "phase": "navigation",
+            "kind": "/matches.json",
+            "method": "GET"
+          },
+          {
+            "phase": "navigation",
+            "kind": "/tournaments.json",
+            "method": "GET"
+          },
+          {
+            "phase": "navigation",
+            "kind": "/tournaments.json",
+            "method": "GET"
+          },
+          {
+            "phase": "navigation",
+            "kind": "/appData.json",
+            "method": "GET"
+          },
+          {
+            "phase": "navigation",
+            "kind": "/players.json",
+            "method": "GET"
+          },
+          {
+            "phase": "navigation",
+            "kind": "/matches.json",
+            "method": "GET"
+          },
+          {
+            "phase": "navigation",
+            "kind": "/tournaments.json",
+            "method": "GET"
+          },
+          {
+            "phase": "navigation",
+            "kind": "/tournaments.json",
+            "method": "GET"
+          },
+          {
+            "phase": "navigation",
+            "kind": "/appData.json",
+            "method": "GET"
+          },
+          {
+            "phase": "navigation",
+            "kind": "/players.json",
+            "method": "GET"
+          },
+          {
+            "phase": "navigation",
+            "kind": "/matches.json",
+            "method": "GET"
+          },
+          {
+            "phase": "navigation",
+            "kind": "/tournaments.json",
+            "method": "GET"
+          },
+          {
+            "phase": "navigation",
+            "kind": "/tournaments.json",
+            "method": "GET"
+          },
+          {
+            "phase": "navigation",
+            "kind": "/appData.json",
+            "method": "GET"
+          },
+          {
+            "phase": "navigation",
+            "kind": "/players.json",
+            "method": "GET"
+          },
+          {
+            "phase": "navigation",
+            "kind": "/matches.json",
+            "method": "GET"
+          },
+          {
+            "phase": "navigation",
+            "kind": "/tournaments.json",
+            "method": "GET"
+          },
+          {
+            "phase": "navigation",
+            "kind": "/tournaments.json",
+            "method": "GET"
+          },
+          {
+            "phase": "navigation",
+            "kind": "/appData.json",
+            "method": "GET"
+          },
+          {
+            "phase": "navigation",
+            "kind": "/players.json",
+            "method": "GET"
+          },
+          {
+            "phase": "navigation",
+            "kind": "/matches.json",
+            "method": "GET"
+          },
+          {
+            "phase": "navigation",
+            "kind": "/tournaments.json",
+            "method": "GET"
+          },
+          {
+            "phase": "navigation",
+            "kind": "/tournaments.json",
+            "method": "GET"
+          },
+          {
+            "phase": "navigation",
+            "kind": "/appData.json",
+            "method": "GET"
+          },
+          {
+            "phase": "leave-screen",
+            "kind": "/appData.json",
+            "method": "GET"
+          },
+          {
+            "phase": "leave-screen",
+            "kind": "/players.json",
+            "method": "GET"
+          },
+          {
+            "phase": "leave-screen",
+            "kind": "/matches.json",
+            "method": "GET"
+          },
+          {
+            "phase": "leave-screen",
+            "kind": "/tournaments.json",
+            "method": "GET"
+          },
+          {
+            "phase": "logout-pending",
+            "kind": "/appData.json",
+            "method": "GET"
+          },
+          {
+            "phase": "offline",
+            "kind": "/appData.json",
+            "method": "GET"
+          },
+          {
+            "phase": "reconnected",
+            "kind": "/appData.json",
+            "method": "GET"
+          },
+          {
+            "phase": "auth-late",
+            "kind": "token",
+            "method": "POST"
+          }
+        ],
+        "maxConcurrentMatches": 1,
+        "pageErrors": [],
+        "writes": [],
+        "final": {
+          "authenticated": false,
+          "uid": "",
+          "applied": 3,
+          "screen": "screen-home",
+          "controller": {
+            "active": false,
+            "disposed": false,
+            "pending": false,
+            "intervals": 0,
+            "timeouts": 0,
+            "listeners": 0
+          },
+          "dbMatches": 184,
+          "players": 26,
+          "intervals": 0,
+          "timeouts": 0
+        }
+      },
+      "soak": {
+        "backupSha256": "2afd2e5c48d3babf198d41809dd9fedbf8b188a28dd8e6056a0f27db69afdc6e",
+        "bytes": 40385164,
+        "cycles": 12,
+        "transitions": 60,
+        "reportOpens": 4,
+        "intervalCounts": [
+          6,
+          7
+        ],
+        "snapshots": [
+          {
+            "label": "loaded",
+            "heapBytes": 53428852,
+            "dom": 2967,
+            "listeners": 456,
+            "intervals": 6
+          },
+          {
+            "label": "cycle-1",
+            "heapBytes": 57114116,
+            "dom": 8403,
+            "listeners": 1036,
+            "intervals": 7
+          },
+          {
+            "label": "cycle-7",
+            "heapBytes": 57817464,
+            "dom": 8838,
+            "listeners": 1112,
+            "intervals": 7
+          },
+          {
+            "label": "cycle-12",
+            "heapBytes": 57913044,
+            "dom": 8838,
+            "listeners": 1112,
+            "intervals": 7
+          },
+          {
+            "label": "final",
+            "heapBytes": 57958784,
+            "dom": 8838,
+            "listeners": 1110,
+            "intervals": 6
+          }
+        ],
+        "sameRevisionApplications": 4,
+        "maxConcurrentMatches": 1,
+        "maxConcurrentAppData": 1,
+        "requestCounts": {
+          "/players.json": 12,
+          "/matches.json": 13,
+          "/tournaments.json": 24,
+          "/appData.json": 31,
+          "/stream/liveMatches.json": 4,
+          "/presence.json": 3
+        },
+        "calculationCalls": {
+          "matches": 28,
+          "season": 2
+        },
+        "pollCalls": 49,
+        "quotaErrors": 61,
+        "abortedMockWrites": 3,
+        "maxLongTask": 1465,
+        "mediansMs": {
+          "home": 49.5,
+          "results": 31.5,
+          "history": 63.5,
+          "stats": 203,
+          "federal-cup-2026": 599,
+          "cloud-poll": 807
+        },
+        "pageErrors": [],
+        "interactionFailures": [],
+        "remainingMatches": 184,
+        "remainingPlayers": 26
+      }
+    }
+  }
+}

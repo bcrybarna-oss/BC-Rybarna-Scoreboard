@@ -1,10 +1,14 @@
 # Aktuální stav Poolčítadla
 
-Aktualizace: 26. 10. 2026. Zadavatel aktuální revize: **Dominik**.
+Aktualizace: 27. 10. 2026. Zadavatel aktuální revize: **Dominik**.
 
 ## Verze a nasazení
 
-Aktuální verze: **v4.51.98 RC** — nasazeno a v uvedeném rozsahu ověřeno 26. 10. 2026.
+Aktuální verze: **v4.51.99 RC** — kandidát druhé etapy modularizace, nesloučeno a nenasazeno. Produkce zůstává **v4.51.98 RC**.
+
+- **Cloud lifecycle – Dominik,27.10.2026:** vybraná malá část je automatické čtení appData přihlášené relace. Produkční modul vlastní start/stop/dispose,1interval/1timeout/2uklízenélistenery a sdílený request; původní pollingové tělo odstraněno. Potvrzené závady98:3úvodnítimeouty,3souběžnéGET,pozdníaplikace a tokenrevival po logoutu;99zabraňuje všem těmto případům. Cache97/matches/permissions,PNG/Pushout aPDFUI/závislosti zachovány.15/15unit;lokálně242PASS/2známéFAIL ze244. Dlouhý60přechodovýscénář před/po0chyb,7/6intervalů,listener1110→1112přirelaci→1110postop,max1GETmatches/appData,4aplikace4novýchrevizí. [Mapa, hranice, důkazy a návrat](docs/cloud-refresh-stage-2.md). CI čeká po pushi. **Neslučovat a nenasazovat.**
+
+Následuje zachovaný stav nasazené98 a historie starších etap.
 
 - **PRODUKCE98 – Dominik:** PR36 sloučeno merge `4d7a564a7234912a5c8063cd42b2ae3fed8e166d`, [Pages40394978008](https://github.com/bcrybarna-oss/BC-Rybarna-Scoreboard/actions/runs/40394978008) success. PR/main release PASS, Node229PASS/2známéFAIL/3soukroméSKIP ze234; obě chyby jednotlivě potvrzeny také na aktuálním předmerge main. Veřejné HTML/overlay/14assetů HTTP200 a přesná SHA256, viditelná verze98 a jediný načtený modul/24funkcí/bezfallbacku, desktop/mobil/navigace/FC/0JS chyb PASS. Neupravená veřejná URL s oddělenou offline kopií #9 a novějšího Singles3: A1/A2/B,6PNG/6PDF/2XLSX, všech13metrik #9 a9Pushoutřádků PASS; navíc veřejný prázdnýA2PNG/PDF. Nezávisle všech7PDFpixelověshodnýchsPNG/FullHD/16:9 a2XLSX/2listy/číselnéhodnoty. Živá přihlášená Auth/Firebase/OBS/iPhone neověřeny; produkční data beze změny/migrace. B/PDF a40MBcache limity trvají. [Deployment report a návrat](docs/deployment-v4.51.98.md).
 

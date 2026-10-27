@@ -24,7 +24,12 @@ function cloudContext(quota=true){
  normalizeDataObject:x=>x,loadDeviceActiveMatch:()=>null,saveDeviceActiveMatch(){},ensureCloudToken:async()=>true,cloudUrl:()=>'',fetch:async()=>({ok:true,json:async()=>({updatedAt:11000,data:{federalCup2026:{year:2026}}})}),saveSafetyBackup(){backups++;},mergeDataObjects:(a,b)=>({...a,...b}),refreshViewsAfterCloudLoad(){renders++;},setCloudStatus(){},console};
  vm.createContext(c);const start=cloudSource.includes('let cloudRuntimeDataTs=0')?cloudSource.indexOf('  // Applied in this tab'):cloudSource.indexOf('  function localCloudTimestamp(');
  const end=cloudSource.indexOf('  let cloudReports',start);vm.runInContext(cloudSource.slice(start,end),c);
- const a=cloudSource.indexOf('  async function pollCloudData('),b=cloudSource.indexOf('  function startCloudAutoSync()',a);vm.runInContext(cloudSource.slice(a,b),c);
+ if(cloudSource.includes('window.CloudRefresh.create')){
+   c.cloudAuthenticated=true;c.cloudUid='unit-session';c.CLOUD_POLL_MS=2500;c.cloudAutoSync=null;
+   c.document.addEventListener=()=>{};c.document.removeEventListener=()=>{};
+   c.window={addEventListener(){},removeEventListener(){},CloudRefresh:{create:options=>require('../assets/js/cloud-refresh.js').create({...options,clock:{setInterval:()=>1,clearInterval(){},setTimeout:()=>2,clearTimeout(){}}})}};
+   const a=cloudSource.indexOf('  // Session-owned /appData auto-refresh.'),b=cloudSource.indexOf('  // Secure-list refresh',a);vm.runInContext(cloudSource.slice(a,b),c);c.startCloudAutoSync();
+ }else{const a=cloudSource.indexOf('  async function pollCloudData('),b=cloudSource.indexOf('  function startCloudAutoSync()',a);vm.runInContext(cloudSource.slice(a,b),c);}
  return {c,saved,counts:()=>({writes,backups,renders})};
 }
 test('quota: repeated polling applies an already received revision once without persisting an unsafe timestamp',async()=>{
@@ -34,7 +39,7 @@ test('quota: repeated polling applies an already received revision once without 
 test('successful cache and newer cloud revisions still apply, transient network failures remain retryable',async()=>{
  const {c,saved,counts}=cloudContext(false);await c.pollCloudData();assert.equal(saved.get('ts'),'11000');assert.ok(saved.has('db'));
  c.fetch=async()=>({ok:true,json:async()=>({updatedAt:21000,data:{federalCup2026:{year:2026}}})});await c.pollCloudData();assert.equal(c.localCloudTimestamp(),21000);assert.equal(counts().renders,2);
- c.fetch=async()=>{throw Error('offline')};await c.pollCloudData();assert.equal(c.cloudPollInProgress,false);assert.equal(c.localCloudTimestamp(),21000);
+ c.fetch=async()=>{throw Error('offline')};await c.pollCloudData();assert.equal(c.cloudAutoSync?c.cloudAutoSync.snapshot().pending:c.cloudPollInProgress,false);assert.equal(c.localCloudTimestamp(),21000);
 });
 test('concurrent match refreshes share one read, retry after failure and never apply another session response',async()=>{
  let calls=0,resolve;const c={cloudUid:'A',ensureCloudToken:async()=>true,cloudUrl:()=>'',fetch:()=>{calls++;return new Promise(r=>resolve=r)},data:{matches:[]},applyKnownHistoricalMatchMetadataRepairs:()=>false,currentUserIsSystemAdmin:()=>false,applyEffectiveConfirmationStatus(){},localStorage:{setItem(){}},DB_KEY:'db',setTimeout(){},maybeShowPendingResultConfirmation(){},window:{}};

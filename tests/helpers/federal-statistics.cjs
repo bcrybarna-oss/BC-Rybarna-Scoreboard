@@ -16,12 +16,12 @@ function instrumented(){
   vm.runInContext(source.replace('  return Object.freeze({',hook+'\n  return Object.freeze({'),c);
   const api={...c.FederalStatistics};Object.defineProperty(api,'__observe',{set(fn){c.__observe=fn;}});return api;
 }
-function serve(route,transform){
+function serve(route,transform,cloudTransform){
   const request=route.request(),url=new URL(request.url());
-  const statistics=url.pathname==='/assets/js/federal-statistics.js',xlsx=url.pathname==='/assets/pushout-xlsx.js';
-  if(!statistics&&!xlsx)return false;
+  const statistics=url.pathname==='/assets/js/federal-statistics.js',xlsx=url.pathname==='/assets/pushout-xlsx.js',cloud=url.pathname==='/assets/js/cloud-refresh.js';
+  if(!statistics&&!xlsx&&!cloud)return false;
   if(request.method()!=='GET')throw Error('Statistics module is read-only');
-  const source=fs.readFileSync(statistics?file:path.join(root,'assets/pushout-xlsx.js'),'utf8');
-  return route.fulfill({contentType:'application/javascript',body:statistics&&transform?transform(source):source});
+  const source=fs.readFileSync(statistics?file:path.join(root,cloud?'assets/js/cloud-refresh.js':'assets/pushout-xlsx.js'),'utf8');
+  return route.fulfill({contentType:'application/javascript',body:statistics&&transform?transform(source):cloud&&cloudTransform?cloudTransform(source):source});
 }
 module.exports={load,instrumented,serve};
