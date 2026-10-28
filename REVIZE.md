@@ -1,5 +1,14 @@
 # Revize aplikace Poolčítadlo
 
+## Dominik – životnost vlastních hlášení v produkčním modulu (v4.51.102 RC)
+Zadavatel: Dominik
+Datum: 28. 10. 2026
+Změny: Jediný assets/js/own-reports.js přebírá načítání vlastních hlášení a5000ms interval; původní těla a timer proměnná odstraněny, core deleguje. Stop/abort/generace obrazovky a identity, pagehide/dispose, single-flight před autorizací; pozdní index/legacy odpověď neovlivní opuštěnou obrazovku ani novou relaci. Platná legacy mirror kompatibilita zachována, volitelný guard pouze pro tuto větev GET/PUT. Dočasný seznam hlášení se při ztrátě identity vyčistí. Formulář/přístup/ukládání reportů a turnajové chování101 beze změny; další služby mapovány, ne plošně přesouvány.
+Testy:11novýchunit/26cílenýchcelkemPASS; skutečná101before/afterbrowser reprodukce3GET→1,1pozdnírender→0,staráA nemažeB,1pozdnílegacyPUT→0.20vstupů/odchodů,6relací,reconnect a0pageerrors; resources1interval/1listener při aktivním scope→0/0po. Bootstrap všech3modulů/404/desktop/mobil PASS. Turnaj101/historické/mockAuth evidence PASS; Node261 PASS/2známé FAIL/0SKIP ze263. Dlouhých60přechodů/12obnov/4reporty nad40MB před/po0chyb, stejných6/7/6intervalů a1129listenerů během/1127po,4aplikace4revizí/max1GETmatches iappData; CPU53,94→52,36s, B2206→2332ms amaxlongtask2709→2929ms, limitytrvají. PNG/PushoutXLSX a původní PDF regrese PASS; finální [CI40748727596](https://github.com/bcrybarna-oss/BC-Rybarna-Scoreboard/actions/runs/40748727596): release PASS, Node258 PASS/2 známé FAIL/3 soukromé SKIP ze263. Obě selhání jednotlivě shodná s aktuálním main7b7ff4f/CI40581247766 (247 PASS/2 stejné FAIL/3 SKIP ze252); nová regrese nezjištěna, CI není plně zelené. Viz docs/own-reports-modularization-stage-3.md.
+Nasazení: Pushnuto7c1a1e8147413c5bbb14aff6425bc0ccf26afeeb do draftPR41; dokumentační pokračování nemění aplikaci. Nesloučeno a nenasazeno. Produkce zůstává v4.51.101 RC. Žádná změna produkčních dat nebo migrace.
+Omezení: Původní uživatel turnaj101 dosud neověřil na svém zařízení. Ostatní služby mají dosavadní životnost; nelze zpětně odvolat již odeslaný PUT, pouze ignorovat jeho pozdní odpověď. Dvě známá preview selhání zůstávají jednotlivě rozlišená. PDF/cache/test-modular mimo rozsah, blokováníB a kapacitaarchivu trvají. ŽiváAuth/OBS/fyzický mobil neověřeny.
+
+
 ## Dominik – ověřené nasazení opravy turnajové přípravy (v4.51.101 RC)
 Zadavatel: Dominik
 Datum: 27. 10. 2026

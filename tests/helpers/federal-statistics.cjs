@@ -18,10 +18,10 @@ function instrumented(){
 }
 function serve(route,transform,cloudTransform){
   const request=route.request(),url=new URL(request.url());
-  const statistics=url.pathname==='/assets/js/federal-statistics.js',xlsx=url.pathname==='/assets/pushout-xlsx.js',cloud=url.pathname==='/assets/js/cloud-refresh.js';
-  if(!statistics&&!xlsx&&!cloud)return false;
+  const statistics=url.pathname==='/assets/js/federal-statistics.js',xlsx=url.pathname==='/assets/pushout-xlsx.js',cloud=url.pathname==='/assets/js/cloud-refresh.js',reports=url.pathname==='/assets/js/own-reports.js';
+  if(!statistics&&!xlsx&&!cloud&&!reports)return false;
   if(request.method()!=='GET')throw Error('Statistics module is read-only');
-  const source=fs.readFileSync(statistics?file:path.join(root,cloud?'assets/js/cloud-refresh.js':'assets/pushout-xlsx.js'),'utf8');
+  const source=fs.readFileSync(statistics?file:path.join(root,cloud?'assets/js/cloud-refresh.js':reports?'assets/js/own-reports.js':'assets/pushout-xlsx.js'),'utf8');
   return route.fulfill({contentType:'application/javascript',body:statistics&&transform?transform(source):cloud&&cloudTransform?cloudTransform(source):source});
 }
 module.exports={load,instrumented,serve};
