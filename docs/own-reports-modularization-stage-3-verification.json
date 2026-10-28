@@ -1,0 +1,812 @@
+{
+  "version": "v4.51.102 RC",
+  "base": "7b7ff4f096454fa23b89d7c3284f8af355d98c00",
+  "productionDataWrites": 0,
+  "originalUserTournamentDeviceVerification": false,
+  "ownReportsModuleSha256": "44be6dc2526ecd6deff8461b08bbb8a8f4789a691d2aa456663feeebb160a3d5",
+  "unchangedProductionRegions": {
+    "v101-form-config": "d6c82ab7e92a878f7225e179913f6895f11f650fa2c2f496c5eebc04511c63d3",
+    "v101-stage-rules": "0df3c27fcae5264881e637cfad50ac3f623fb6102eec22e05336e50584f616f9",
+    "historical-generation": "479b19157d38babcf661845378169e45390564ef0a9e9950d416dfb08c1b2a4c",
+    "v101-historical-setup": "f1a6c9bd080153e020ed6ef959bb7942d2feaccd1314a85f08b2d583a9a67c70",
+    "runtime-cache97": "35b6c7022a57fd0377bf73a2cee6b8902c9fc1d9e4615b3dd2e328b8eeed6fe9",
+    "assets/js/cloud-refresh.js": "ac53937d949b561a52b379c32f468bc2e927ad3a78e2295184a231dcf6da98b7",
+    "assets/js/federal-statistics.js": "7e1cae131f79f6bf5bdd2c417fe5b4272408c361053024a6e5f1c411a9ea7d21",
+    "assets/pushout-xlsx.js": "5e4436656444c3f87b2c8550414b49070eb7d8974455e321425388bc639ae874"
+  },
+  "results": {
+    "before": {
+      "ownReports": {
+        "concurrentReads": 3,
+        "maxConcurrentAcrossAbortedScopes": 3,
+        "lateAfterLeaveRenders": 1,
+        "legacyWritesAfterLeave": 1,
+        "indexReads": 68,
+        "samples": [
+          {
+            "on": {
+              "intervals": 1,
+              "listeners": 0,
+              "dom": 3364
+            },
+            "off": {
+              "intervals": 0,
+              "listeners": 0,
+              "dom": 3364
+            }
+          },
+          {
+            "on": {
+              "intervals": 1,
+              "listeners": 0,
+              "dom": 3364
+            },
+            "off": {
+              "intervals": 0,
+              "listeners": 0,
+              "dom": 3364
+            }
+          },
+          {
+            "on": {
+              "intervals": 1,
+              "listeners": 0,
+              "dom": 3364
+            },
+            "off": {
+              "intervals": 0,
+              "listeners": 0,
+              "dom": 3364
+            }
+          },
+          {
+            "on": {
+              "intervals": 1,
+              "listeners": 0,
+              "dom": 3364
+            },
+            "off": {
+              "intervals": 0,
+              "listeners": 0,
+              "dom": 3364
+            }
+          },
+          {
+            "on": {
+              "intervals": 1,
+              "listeners": 0,
+              "dom": 3364
+            },
+            "off": {
+              "intervals": 0,
+              "listeners": 0,
+              "dom": 3364
+            }
+          },
+          {
+            "on": {
+              "intervals": 1,
+              "listeners": 0,
+              "dom": 3364
+            },
+            "off": {
+              "intervals": 0,
+              "listeners": 0,
+              "dom": 3364
+            }
+          },
+          {
+            "on": {
+              "intervals": 1,
+              "listeners": 0,
+              "dom": 3364
+            },
+            "off": {
+              "intervals": 0,
+              "listeners": 0,
+              "dom": 3364
+            }
+          },
+          {
+            "on": {
+              "intervals": 1,
+              "listeners": 0,
+              "dom": 3364
+            },
+            "off": {
+              "intervals": 0,
+              "listeners": 0,
+              "dom": 3364
+            }
+          },
+          {
+            "on": {
+              "intervals": 1,
+              "listeners": 0,
+              "dom": 3364
+            },
+            "off": {
+              "intervals": 0,
+              "listeners": 0,
+              "dom": 3364
+            }
+          },
+          {
+            "on": {
+              "intervals": 1,
+              "listeners": 0,
+              "dom": 3364
+            },
+            "off": {
+              "intervals": 0,
+              "listeners": 0,
+              "dom": 3364
+            }
+          },
+          {
+            "on": {
+              "intervals": 1,
+              "listeners": 0,
+              "dom": 3364
+            },
+            "off": {
+              "intervals": 0,
+              "listeners": 0,
+              "dom": 3364
+            }
+          },
+          {
+            "on": {
+              "intervals": 1,
+              "listeners": 0,
+              "dom": 3364
+            },
+            "off": {
+              "intervals": 0,
+              "listeners": 0,
+              "dom": 3364
+            }
+          },
+          {
+            "on": {
+              "intervals": 1,
+              "listeners": 0,
+              "dom": 3364
+            },
+            "off": {
+              "intervals": 0,
+              "listeners": 0,
+              "dom": 3364
+            }
+          },
+          {
+            "on": {
+              "intervals": 1,
+              "listeners": 0,
+              "dom": 3364
+            },
+            "off": {
+              "intervals": 0,
+              "listeners": 0,
+              "dom": 3364
+            }
+          },
+          {
+            "on": {
+              "intervals": 1,
+              "listeners": 0,
+              "dom": 3364
+            },
+            "off": {
+              "intervals": 0,
+              "listeners": 0,
+              "dom": 3364
+            }
+          },
+          {
+            "on": {
+              "intervals": 1,
+              "listeners": 0,
+              "dom": 3364
+            },
+            "off": {
+              "intervals": 0,
+              "listeners": 0,
+              "dom": 3364
+            }
+          },
+          {
+            "on": {
+              "intervals": 1,
+              "listeners": 0,
+              "dom": 3364
+            },
+            "off": {
+              "intervals": 0,
+              "listeners": 0,
+              "dom": 3364
+            }
+          },
+          {
+            "on": {
+              "intervals": 1,
+              "listeners": 0,
+              "dom": 3364
+            },
+            "off": {
+              "intervals": 0,
+              "listeners": 0,
+              "dom": 3364
+            }
+          },
+          {
+            "on": {
+              "intervals": 1,
+              "listeners": 0,
+              "dom": 3364
+            },
+            "off": {
+              "intervals": 0,
+              "listeners": 0,
+              "dom": 3364
+            }
+          },
+          {
+            "on": {
+              "intervals": 1,
+              "listeners": 0,
+              "dom": 3364
+            },
+            "off": {
+              "intervals": 0,
+              "listeners": 0,
+              "dom": 3364
+            }
+          }
+        ],
+        "sessions": [
+          {
+            "intervals": 1,
+            "listeners": 0
+          },
+          {
+            "intervals": 1,
+            "listeners": 0
+          },
+          {
+            "intervals": 1,
+            "listeners": 0
+          },
+          {
+            "intervals": 1,
+            "listeners": 0
+          },
+          {
+            "intervals": 1,
+            "listeners": 0
+          },
+          {
+            "intervals": 1,
+            "listeners": 0
+          }
+        ],
+        "finalResources": {
+          "intervals": 0,
+          "listeners": 0
+        },
+        "pageErrors": [],
+        "archive": {
+          "bytes": 40913440,
+          "matches": 189,
+          "players": 26,
+          "sha256": "49908fbcd66113315e524e6e61a4fc3a889654bb0e9420d309b843d4181a4d5d"
+        }
+      },
+      "soak": {
+        "cycles": 12,
+        "steps": 76,
+        "snapshots": [
+          {
+            "label": "loaded",
+            "listeners": 461,
+            "intervals": 6,
+            "timeouts": 0,
+            "dom": 2978,
+            "heap": 53051696,
+            "counts": {
+              "matches": 189,
+              "players": 26
+            }
+          },
+          {
+            "label": "cycle-1",
+            "listeners": 1053,
+            "intervals": 7,
+            "timeouts": 0,
+            "dom": 8734,
+            "heap": 56700576,
+            "counts": {
+              "matches": 189,
+              "players": 26
+            }
+          },
+          {
+            "label": "cycle-7",
+            "listeners": 1129,
+            "intervals": 7,
+            "timeouts": 0,
+            "dom": 9169,
+            "heap": 57455092,
+            "counts": {
+              "matches": 189,
+              "players": 26
+            }
+          },
+          {
+            "label": "cycle-12",
+            "listeners": 1129,
+            "intervals": 7,
+            "timeouts": 0,
+            "dom": 9169,
+            "heap": 57636504,
+            "counts": {
+              "matches": 189,
+              "players": 26
+            }
+          },
+          {
+            "label": "final",
+            "listeners": 1127,
+            "intervals": 6,
+            "timeouts": 0,
+            "dom": 9169,
+            "heap": 57641136,
+            "counts": {
+              "matches": 189,
+              "players": 26
+            }
+          }
+        ],
+        "cpuTaskSeconds": 53.944035,
+        "maxLongTask": 2709,
+        "medians": {
+          "home": 68,
+          "results": 50,
+          "history": 402,
+          "stats": 1004,
+          "federal-cup-2026": 794,
+          "report-open-close-player": 2206
+        },
+        "requests": {
+          "/players.json": 12,
+          "/matches.json": 23,
+          "/tournaments.json": 24,
+          "/appData.json": 31,
+          "/stream/liveMatches.json": 6,
+          "/presence.json": 2
+        },
+        "samePathConcurrent": {
+          "matches": 1,
+          "appData": 1
+        },
+        "globalConcurrentDifferentPaths": 5,
+        "appliedRevisions": 4,
+        "matchCalculations": 28,
+        "seasonCalculations": 2,
+        "storageErrors": 71,
+        "mockWriteAttempts": 2,
+        "errors": [],
+        "interactionFailures": []
+      }
+    },
+    "after": {
+      "ownReports": {
+        "concurrentReads": 1,
+        "maxConcurrentAcrossAbortedScopes": 2,
+        "lateAfterLeaveRenders": 0,
+        "legacyWritesAfterLeave": 0,
+        "indexReads": 36,
+        "samples": [
+          {
+            "on": {
+              "intervals": 1,
+              "listeners": 1,
+              "dom": 3365
+            },
+            "off": {
+              "intervals": 0,
+              "listeners": 0,
+              "dom": 3365
+            }
+          },
+          {
+            "on": {
+              "intervals": 1,
+              "listeners": 1,
+              "dom": 3365
+            },
+            "off": {
+              "intervals": 0,
+              "listeners": 0,
+              "dom": 3365
+            }
+          },
+          {
+            "on": {
+              "intervals": 1,
+              "listeners": 1,
+              "dom": 3365
+            },
+            "off": {
+              "intervals": 0,
+              "listeners": 0,
+              "dom": 3365
+            }
+          },
+          {
+            "on": {
+              "intervals": 1,
+              "listeners": 1,
+              "dom": 3365
+            },
+            "off": {
+              "intervals": 0,
+              "listeners": 0,
+              "dom": 3365
+            }
+          },
+          {
+            "on": {
+              "intervals": 1,
+              "listeners": 1,
+              "dom": 3365
+            },
+            "off": {
+              "intervals": 0,
+              "listeners": 0,
+              "dom": 3365
+            }
+          },
+          {
+            "on": {
+              "intervals": 1,
+              "listeners": 1,
+              "dom": 3365
+            },
+            "off": {
+              "intervals": 0,
+              "listeners": 0,
+              "dom": 3365
+            }
+          },
+          {
+            "on": {
+              "intervals": 1,
+              "listeners": 1,
+              "dom": 3365
+            },
+            "off": {
+              "intervals": 0,
+              "listeners": 0,
+              "dom": 3365
+            }
+          },
+          {
+            "on": {
+              "intervals": 1,
+              "listeners": 1,
+              "dom": 3365
+            },
+            "off": {
+              "intervals": 0,
+              "listeners": 0,
+              "dom": 3365
+            }
+          },
+          {
+            "on": {
+              "intervals": 1,
+              "listeners": 1,
+              "dom": 3365
+            },
+            "off": {
+              "intervals": 0,
+              "listeners": 0,
+              "dom": 3365
+            }
+          },
+          {
+            "on": {
+              "intervals": 1,
+              "listeners": 1,
+              "dom": 3365
+            },
+            "off": {
+              "intervals": 0,
+              "listeners": 0,
+              "dom": 3365
+            }
+          },
+          {
+            "on": {
+              "intervals": 1,
+              "listeners": 1,
+              "dom": 3365
+            },
+            "off": {
+              "intervals": 0,
+              "listeners": 0,
+              "dom": 3365
+            }
+          },
+          {
+            "on": {
+              "intervals": 1,
+              "listeners": 1,
+              "dom": 3365
+            },
+            "off": {
+              "intervals": 0,
+              "listeners": 0,
+              "dom": 3365
+            }
+          },
+          {
+            "on": {
+              "intervals": 1,
+              "listeners": 1,
+              "dom": 3365
+            },
+            "off": {
+              "intervals": 0,
+              "listeners": 0,
+              "dom": 3365
+            }
+          },
+          {
+            "on": {
+              "intervals": 1,
+              "listeners": 1,
+              "dom": 3365
+            },
+            "off": {
+              "intervals": 0,
+              "listeners": 0,
+              "dom": 3365
+            }
+          },
+          {
+            "on": {
+              "intervals": 1,
+              "listeners": 1,
+              "dom": 3365
+            },
+            "off": {
+              "intervals": 0,
+              "listeners": 0,
+              "dom": 3365
+            }
+          },
+          {
+            "on": {
+              "intervals": 1,
+              "listeners": 1,
+              "dom": 3365
+            },
+            "off": {
+              "intervals": 0,
+              "listeners": 0,
+              "dom": 3365
+            }
+          },
+          {
+            "on": {
+              "intervals": 1,
+              "listeners": 1,
+              "dom": 3365
+            },
+            "off": {
+              "intervals": 0,
+              "listeners": 0,
+              "dom": 3365
+            }
+          },
+          {
+            "on": {
+              "intervals": 1,
+              "listeners": 1,
+              "dom": 3365
+            },
+            "off": {
+              "intervals": 0,
+              "listeners": 0,
+              "dom": 3365
+            }
+          },
+          {
+            "on": {
+              "intervals": 1,
+              "listeners": 1,
+              "dom": 3365
+            },
+            "off": {
+              "intervals": 0,
+              "listeners": 0,
+              "dom": 3365
+            }
+          },
+          {
+            "on": {
+              "intervals": 1,
+              "listeners": 1,
+              "dom": 3365
+            },
+            "off": {
+              "intervals": 0,
+              "listeners": 0,
+              "dom": 3365
+            }
+          }
+        ],
+        "sessions": [
+          {
+            "intervals": 0,
+            "listeners": 0
+          },
+          {
+            "intervals": 0,
+            "listeners": 0
+          },
+          {
+            "intervals": 0,
+            "listeners": 0
+          },
+          {
+            "intervals": 0,
+            "listeners": 0
+          },
+          {
+            "intervals": 0,
+            "listeners": 0
+          },
+          {
+            "intervals": 0,
+            "listeners": 0
+          }
+        ],
+        "finalResources": {
+          "intervals": 0,
+          "listeners": 0
+        },
+        "pageErrors": [],
+        "archive": {
+          "bytes": 40913440,
+          "matches": 189,
+          "players": 26,
+          "sha256": "49908fbcd66113315e524e6e61a4fc3a889654bb0e9420d309b843d4181a4d5d"
+        }
+      },
+      "soak": {
+        "cycles": 12,
+        "steps": 76,
+        "snapshots": [
+          {
+            "label": "loaded",
+            "listeners": 461,
+            "intervals": 6,
+            "timeouts": 0,
+            "dom": 2979,
+            "heap": 53058888,
+            "counts": {
+              "matches": 189,
+              "players": 26
+            }
+          },
+          {
+            "label": "cycle-1",
+            "listeners": 1053,
+            "intervals": 7,
+            "timeouts": 0,
+            "dom": 8735,
+            "heap": 56707836,
+            "counts": {
+              "matches": 189,
+              "players": 26
+            }
+          },
+          {
+            "label": "cycle-7",
+            "listeners": 1129,
+            "intervals": 7,
+            "timeouts": 0,
+            "dom": 9170,
+            "heap": 57464832,
+            "counts": {
+              "matches": 189,
+              "players": 26
+            }
+          },
+          {
+            "label": "cycle-12",
+            "listeners": 1129,
+            "intervals": 7,
+            "timeouts": 0,
+            "dom": 9170,
+            "heap": 57643824,
+            "counts": {
+              "matches": 189,
+              "players": 26
+            }
+          },
+          {
+            "label": "final",
+            "listeners": 1127,
+            "intervals": 6,
+            "timeouts": 0,
+            "dom": 9170,
+            "heap": 57648804,
+            "counts": {
+              "matches": 189,
+              "players": 26
+            }
+          }
+        ],
+        "cpuTaskSeconds": 52.356839,
+        "maxLongTask": 2929,
+        "medians": {
+          "home": 66,
+          "results": 42,
+          "history": 346,
+          "stats": 1022,
+          "federal-cup-2026": 845,
+          "report-open-close-player": 2332
+        },
+        "requests": {
+          "/players.json": 12,
+          "/matches.json": 19,
+          "/tournaments.json": 24,
+          "/appData.json": 31,
+          "/stream/liveMatches.json": 5,
+          "/presence.json": 2
+        },
+        "samePathConcurrent": {
+          "matches": 1,
+          "appData": 1
+        },
+        "globalConcurrentDifferentPaths": 6,
+        "appliedRevisions": 4,
+        "matchCalculations": 28,
+        "seasonCalculations": 2,
+        "storageErrors": 67,
+        "mockWriteAttempts": 2,
+        "errors": [],
+        "interactionFailures": []
+      }
+    }
+  },
+  "tests": {
+    "newUnitPass": 11,
+    "targetUnitPass": 26,
+    "node": {
+      "total": 263,
+      "pass": 261,
+      "fail": 2,
+      "skip": 0
+    },
+    "browser": [
+      "own-reports before/after",
+      "module bootstrap/404 desktop/mobile",
+      "tournament v101 desktop/mobile quota/reload and actual matches",
+      "historical full parity/ETag/permissions",
+      "mock Auth evidence/reload/undo",
+      "A1/A2/B PNG and unchanged PDF regression",
+      "Pushout XLSX Singles/Doubles/Team desktop/mobile"
+    ]
+  },
+  "limitations": [
+    "Not a live authenticated production session",
+    "Report index data is synthetic; private backup provides realistic archive context",
+    "Existing B/report blocking and archive cache capacity remain",
+    "One sequential soak per version is an indicative measurement, not a performance guarantee"
+  ]
+}

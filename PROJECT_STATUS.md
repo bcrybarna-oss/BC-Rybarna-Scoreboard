@@ -1,6 +1,6 @@
 # Aktuální stav Poolčítadla
 
-Aktualizace: 27. 10. 2026. Zadavatel aktuální revize: **Dominik**.
+Aktualizace: 28. 10. 2026. Zadavatel aktuální revize: **Dominik**.
 
 ## Verze a nasazení
 
@@ -8,7 +8,11 @@ Aktualizace: 27. 10. 2026. Zadavatel aktuální revize: **Dominik**.
 
 - **PRODUKCE100 – Jaroslav, 27.10.2026:** PR #38 sloučen merge `b42a9b2189a2c501f05ac70d5b6a94cb8fa3aa83`, [GitHub Pages 40575477118](https://github.com/bcrybarna-oss/BC-Rybarna-Scoreboard/actions/runs/40575477118) build/deploy success. ZAPOMENUTÉ HESLO? v loginu volá Firebase Authentication PASSWORD_RESET pouze s e-mailem, neopisuje heslo, nemění UID/role/profil ani historii. Zrušen matoucí produkční nápis SCOREBOARD 4.0 DEV. Release gate PR/main PASS, Node **244 PASS / 2 známé FAIL / 3 SKIP z 249**, všech 5 nových testů obnovy PASS; dvě preview chyby totožné s předchozí hlavní verzí, CI jako celek proto není zelené. Veřejný soubor nebylo možné nezávisle otevřít z nástroje; samotný Pages deploy success je potvrzen. Živá produkční Firebase Auth a doručení resetovacího e-mailu nebyly testovány, žádné produkční testovací zápisy ani migrace.
 
-Aktuální verze: **v4.51.101 RC** — nasazeno a v uvedeném rozsahu ověřeno 27. 10. 2026.
+Aktuální verze: **v4.51.102 RC** — kandidát třetí etapy modularizace, nesloučeno a nenasazeno. Produkce zůstává **v4.51.101 RC**.
+
+- **Vlastní hlášení – Dominik,28.10.:** jediný produkční modul vlastní start/stop/dispose, interval/listener a sdílený request. Původní loader a poll těla odstraněna; odchod/logout zneplatní opožděnou odpověď i navazující legacy mirror. Platné výsledky/řazení/legacy ukládání a oprávnění zachovány. Reprodukce101 před/po:3→1GET,1→0pozdnírender/legacyPUT,staráA nevymažeB;20cyklů/6relací/reconnect, prostředky1/1→0/0. Turnaje101/historické/mockAuth/26cílenýchunit/bootstrap PASS. Node261PASS/2známéFAIL/0SKIP ze263. Dlouhé60přechodovéběhy před/po bez JS/interakčních chyb, stejných6/7/6intervalů,4aplikace4revizí amax1GETmatches/appData. CPU53,94→52,36s; B/maxlongtask stáleblokují. A1/A2/B/PNG/PushoutXLSX a původníPDFregrese PASS. CI po pushi. [Mapa, hranice, ověření a návrat](docs/own-reports-modularization-stage-3.md). **Neslučovat a nenasazovat.**
+
+Původní uživatel opravu turnajů101 dosud nepotvrdil na svém zařízení. Její těla a chování se v této etapě nemění; izolovaná regrese není ručním potvrzením uživatele.
 
 Následuje zachovaná historie přípravy101; tehdejší zákaz sloučení/nasazení byl nahrazen schválením a ověřeným nasazením.
 

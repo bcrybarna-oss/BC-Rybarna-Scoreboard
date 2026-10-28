@@ -1044,6 +1044,7 @@
 
 <script src="assets/js/federal-statistics.js?v=4.51.98"></script>
 <script src="assets/js/cloud-refresh.js?v=4.51.99"></script>
+<script src="assets/js/own-reports.js?v=4.51.102"></script>
 <script src="assets/pushout-xlsx.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.2/dist/jspdf.umd.min.js"></script>
@@ -2605,7 +2606,7 @@ html[data-theme="light"] #leagueSchedule .history-item .muted{
           <span class="by">by</span>
           <span class="club">BC Rybárna</span>
         </div>
-        <small class="modern-brand-version">v4.51.101 RC</small>
+        <small class="modern-brand-version">v4.51.102 RC</small>
       </div>
     </div>
     <div class="nav">
@@ -3219,7 +3220,7 @@ html[data-theme="light"] #leagueSchedule .history-item .muted{
         </div>
         <div class="subpanel" style="min-width:210px;text-align:center;margin:0">
           <div class="muted" style="font-size:10px;font-weight:950;letter-spacing:1px">AKTUÁLNÍ VERZE</div>
-          <div style="font-size:22px;font-weight:950;color:var(--gold2);margin-top:5px">v4.51.101 RC</div>
+          <div style="font-size:22px;font-weight:950;color:var(--gold2);margin-top:5px">v4.51.102 RC</div>
         </div>
       </div>
     </div>
@@ -5984,7 +5985,7 @@ html[data-theme="light"] #leagueSchedule .history-item .muted{
       </div>
 
       <div id="groupPlayoffSeedStatus" class="muted" style="margin-top:12px;min-height:20px"></div>
-      <div class="muted" style="margin-top:4px;font-size:11px">RC v4.51.101</div>
+      <div class="muted" style="margin-top:4px;font-size:11px">RC v4.51.102</div>
       <div class="modal-actions">
         <button id="groupPlayoffSeedApplyBtn" class="btn primary big" type="button">NASADIT DO PLAY-OFF</button>
         <button id="groupPlayoffSeedCancelBtn" class="btn">ZRUŠIT</button>
@@ -6079,6 +6080,11 @@ html[data-theme="light"] #leagueSchedule .history-item .muted{
     error.textContent='Nepodařilo se načíst cloudové obnovy. Obnovte stránku.';document.body.prepend(error);
     throw new Error('CLOUD_REFRESH_MODULE_UNAVAILABLE');
   }
+  if(!window.OwnReports){
+    const error=document.createElement('div');error.id='ownReportsLoadError';error.setAttribute('role','alert');
+    error.textContent='Nepodařilo se načíst obnovy vlastních hlášení. Obnovte stránku.';document.body.prepend(error);
+    throw new Error('OWN_REPORTS_MODULE_UNAVAILABLE');
+  }
   let {federalRackScoresAgree,federalMetric,federalStatsRows,federalStatsRackRows,federalStatsRacksComplete,federalStatsHistoricalRacks,federalStatsRecordSignature,federalStatsRecordIndex,federalStatsReadableShot,federalStatsShotIssues,federalTaggedMetric,federalStatsSide,federalStatsOwner,federalCalculateMatch,federalMergeMetrics,federalFixtureSources,federalCalculateSeason,federalReportOrder,federalReportWinner,federalReportSelection,federalReportData,federalReportResults,federalReportMetric,federalPushoutModel}=window.FederalStatistics;
   const $ = id => document.getElementById(id);
   const nowTime = () => new Date().toLocaleTimeString('cs-CZ',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
@@ -6129,6 +6135,7 @@ html[data-theme="light"] #leagueSchedule .history-item .muted{
   let cloudSyncTimer=null;
   let cloudSyncInProgress=false;
   let cloudAutoSync=null;
+  let ownReportsSync=null;
   let cloudApplyingRemote=false;
   let cloudLastError='';
   const CLOUD_POLL_MS=2500;
@@ -7050,16 +7057,17 @@ html[data-theme="light"] #leagueSchedule .history-item .muted{
 
 
   let cloudReports=[];
-  let ownReportsPollTimer=null;
   const OWN_REPORTS_POLL_MS=5000;
   function reportTypeLabel(type){return {bug:'Chyba aplikace',feature:'Návrh na zlepšení',data:'Chybná data / výsledek',account:'Účet / profil',other:'Ostatní'}[type]||'Ostatní';}
   function reportStatusLabel(status){return {new:'NOVÉ',in_progress:'ŘEŠÍ SE',resolved:'VYŘEŠENO'}[status]||'NOVÉ';}
 
-  async function writeReportUserMirror(report){
+  async function writeReportUserMirror(report,requestContext=null){
     if(!report || !report.id || !report.createdByUid)return false;
-    if(!await ensureCloudToken())throw new Error('NO_AUTH');
-
-    const token=await currentIdToken();
+    if(requestContext&&!requestContext.current())throw new Error('REPORT_REQUEST_CANCELLED');
+    if(!await ensureCloudToken(requestContext))throw new Error('NO_AUTH');
+    if(requestContext&&!requestContext.current())throw new Error('REPORT_REQUEST_CANCELLED');
+    const token=requestContext?cloudIdToken:await currentIdToken();
+    if(requestContext&&!requestContext.current())throw new Error('REPORT_REQUEST_CANCELLED');
     if(!token)throw new Error('NO_AUTH');
 
     const mirror={
@@ -7080,6 +7088,7 @@ html[data-theme="light"] #leagueSchedule .history-item .muted{
     const url=`${FIREBASE_DB_URL}/reportIndexByUser/${encodeURIComponent(report.createdByUid)}/${encodeURIComponent(report.id)}.json?auth=${encodeURIComponent(token)}`;
     const r=await fetch(url,{
       method:'PUT',
+      ...(requestContext?{signal:requestContext.signal}:{}),
       headers:{'Content-Type':'application/json'},
       body:JSON.stringify(mirror),
       cache:'no-store'
@@ -7091,10 +7100,13 @@ html[data-theme="light"] #leagueSchedule .history-item .muted{
     return true;
   }
 
-  async function reportRequest(reportId,method,body=null){
-    if(!await ensureCloudToken())throw new Error('NO_AUTH');
+  async function reportRequest(reportId,method,body=null,requestContext=null){
+    if(requestContext&&!requestContext.current())throw new Error('REPORT_REQUEST_CANCELLED');
+    if(!await ensureCloudToken(requestContext))throw new Error('NO_AUTH');
+    if(requestContext&&!requestContext.current())throw new Error('REPORT_REQUEST_CANCELLED');
     const opts={method,headers:{'Content-Type':'application/json'},cache:'no-store'};
     if(body!==null)opts.body=JSON.stringify(body);
+    if(requestContext)opts.signal=requestContext.signal;
     const r=await fetch(cloudUrl('reports/'+reportId),opts);
     if(!r.ok){
       const body=await r.text().catch(()=> '');
@@ -7103,74 +7115,25 @@ html[data-theme="light"] #leagueSchedule .history-item .muted{
     try{return await r.json();}catch(e){return null;}
   }
 
-  function stopOwnReportsPolling(){
-    if(ownReportsPollTimer){
-      clearInterval(ownReportsPollTimer);
-      ownReportsPollTimer=null;
-    }
-  }
-
-  function startOwnReportsPolling(){
-    stopOwnReportsPolling();
-    ownReportsPollTimer=setInterval(()=>{
-      const screen=$('screen-reports');
-      if(!screen || !screen.classList.contains('active')){
-        stopOwnReportsPolling();
-        return;
-      }
-      loadOwnReports(true);
-    },OWN_REPORTS_POLL_MS);
-  }
-
-  async function loadOwnReports(silent=false){
-    if(!await ensureCloudToken())return [];
-    try{
-      const r=await fetch(cloudUrl('reportIndexByUser/'+cloudUid)+'&t='+Date.now(),{
-        cache:'no-store',
-        headers:{'Cache-Control':'no-cache, no-store, must-revalidate','Pragma':'no-cache'}
-      });
-      if(!r.ok)throw new Error('REPORT_INDEX_'+r.status);
-
-      const raw=await r.json()||{};
-      const rows=[];
-
-      for(const [id,value] of Object.entries(raw)){
-        if(value && typeof value==='object'){
-          rows.push({...value,id:value.id||id});
-          continue;
-        }
-
-        // Zpětná kompatibilita pro staré indexy uložené pouze jako true.
-        if(value===true){
-          try{
-            const item=await reportRequest(id,'GET');
-            if(item){
-              rows.push(item);
-              // Starý záznam rovnou převedeme na nový mirror.
-              try{await writeReportUserMirror(item);}catch(e){}
-            }
-          }catch(e){
-            console.warn('Load legacy report',id,e);
-          }
-        }
-      }
-
-      cloudReports=rows
-        .filter(r=>r && r.createdByUid===cloudUid)
-        .sort((a,b)=>new Date(b.createdAt||0)-new Date(a.createdAt||0));
-
-      renderMyReports();
-      if(!silent && $('reportSubmitInfo')){
-        $('reportSubmitInfo').textContent='Hlášení aktualizována • '+new Date().toLocaleTimeString('cs-CZ',{hour:'2-digit',minute:'2-digit'});
-      }
-      return cloudReports;
-    }catch(e){
-      console.error('Load own reports:',e);
-      if(!silent && $('reportSubmitInfo'))$('reportSubmitInfo').textContent='Moje hlášení se nepodařilo obnovit.';
-      renderMyReports();
-      return cloudReports;
-    }
-  }
+  // One screen-owned production reader; transport/permissions and rendering stay in core.
+  ownReportsSync=window.OwnReports.create({
+    identity:()=>cloudAuthenticated&&cloudUid?cloudUid:null,
+    screenActive:()=>$('screen-reports').classList.contains('active'),
+    intervalMs:OWN_REPORTS_POLL_MS,pageTarget:window,
+    authorize:context=>ensureCloudToken(context),fetch:(...args)=>fetch(...args),
+    indexUrl:owner=>cloudUrl('reportIndexByUser/'+owner)+'&t='+Date.now(),
+    readLegacy:(id,context)=>reportRequest(id,'GET',null,context),
+    mirrorLegacy:(item,context)=>writeReportUserMirror(item,context),
+    legacyError:(id,error)=>console.warn('Load legacy report',id,error),
+    started:()=>renderMyReports(),
+    rows:()=>cloudReports.filter(r=>r&&r.createdByUid===cloudUid),
+    apply(rows){cloudReports=rows;renderMyReports();},
+    success(notify){if(notify&&$('reportSubmitInfo'))$('reportSubmitInfo').textContent='Hlášení aktualizována • '+new Date().toLocaleTimeString('cs-CZ',{hour:'2-digit',minute:'2-digit'});},
+    error(error,notify){console.error('Load own reports:',error);if(notify&&$('reportSubmitInfo'))$('reportSubmitInfo').textContent='Moje hlášení se nepodařilo obnovit.';renderMyReports();}
+  });
+  function stopOwnReportsPolling(){ownReportsSync.stop();}
+  function startOwnReportsPolling(){ownReportsSync.start();}
+  function loadOwnReports(silent=false){return ownReportsSync.refresh(silent);}
 
   function renderMyReports(){
     const wrap=$('myReportsList');if(!wrap)return;
@@ -7186,7 +7149,7 @@ html[data-theme="light"] #leagueSchedule .history-item .muted{
     const btn=$('submitReportBtn');if(btn)btn.disabled=true;
     try{
       const id=uid(),p=currentUserPlayerId?data.players?.[currentUserPlayerId]:null;
-      const report={id,createdByUid:cloudUid,createdByPlayerId:currentUserPlayerId||'',createdByName:p?playerSelectionLabel(p):(cloudUserEmail||'Uživatel'),email:cloudUserEmail||'',type,area,description,appVersion:'v4.51.101 RC',createdAt:new Date().toISOString(),updatedAt:new Date().toISOString(),status:'new',adminNote:''};
+      const report={id,createdByUid:cloudUid,createdByPlayerId:currentUserPlayerId||'',createdByName:p?playerSelectionLabel(p):(cloudUserEmail||'Uživatel'),email:cloudUserEmail||'',type,area,description,appVersion:'v4.51.102 RC',createdAt:new Date().toISOString(),updatedAt:new Date().toISOString(),status:'new',adminNote:''};
       await reportRequest(id,'PUT',report);
       try{
         await writeReportUserMirror(report);
@@ -8580,6 +8543,8 @@ html[data-theme="light"] #leagueSchedule .history-item .muted{
 
   function clearRuntimeCloudIdentity(){
     cloudAutoSync?.stop();
+    ownReportsSync?.stop();
+    cloudReports=[];
     cloudAuthenticated=false;
     cloudIdToken='';
     cloudTokenExpiresAt=0;
@@ -8590,6 +8555,7 @@ html[data-theme="light"] #leagueSchedule .history-item .muted{
     currentUserClubId=null;
     currentUserProfileClaimId=null;
     cloudEmailVerified=false;
+    if(ownReportsSync){renderMyReports();if($('reportSubmitInfo'))$('reportSubmitInfo').textContent='';}
     try{refreshAccountUI();}catch(e){}
     try{updateLoggedInUserBadge();}catch(e){}
   }
@@ -8739,6 +8705,7 @@ html[data-theme="light"] #leagueSchedule .history-item .muted{
   function pollCloudData(){return cloudAutoSync.refresh();}
   function startCloudAutoSync(){
     cloudAutoSync.start();
+    ownReportsSync?.start();
     setCloudStatus('ONLINE • AUTO',true);
   }
 
@@ -9174,8 +9141,8 @@ html[data-theme="light"] #leagueSchedule .history-item .muted{
     if(name==='history') renderHistory();
     if(name==='players') renderPlayers();
     if(name==='reports'){
-      loadOwnReports();
       startOwnReportsPolling();
+      loadOwnReports();
     }else{
       stopOwnReportsPolling();
     }

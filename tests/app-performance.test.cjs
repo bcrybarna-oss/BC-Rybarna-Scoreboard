@@ -25,7 +25,7 @@ function cloudContext(quota=true){
  vm.createContext(c);const start=cloudSource.includes('let cloudRuntimeDataTs=0')?cloudSource.indexOf('  // Applied in this tab'):cloudSource.indexOf('  function localCloudTimestamp(');
  const end=cloudSource.indexOf('  let cloudReports',start);vm.runInContext(cloudSource.slice(start,end),c);
  if(cloudSource.includes('window.CloudRefresh.create')){
-   c.cloudAuthenticated=true;c.cloudUid='unit-session';c.CLOUD_POLL_MS=2500;c.cloudAutoSync=null;
+   c.cloudAuthenticated=true;c.cloudUid='unit-session';c.CLOUD_POLL_MS=2500;c.cloudAutoSync=null;c.ownReportsSync=null;
    c.document.addEventListener=()=>{};c.document.removeEventListener=()=>{};
    c.window={addEventListener(){},removeEventListener(){},CloudRefresh:{create:options=>require('../assets/js/cloud-refresh.js').create({...options,clock:{setInterval:()=>1,clearInterval(){},setTimeout:()=>2,clearTimeout(){}}})}};
    const a=cloudSource.indexOf('  // Session-owned /appData auto-refresh.'),b=cloudSource.indexOf('  // Secure-list refresh',a);vm.runInContext(cloudSource.slice(a,b),c);c.startCloudAutoSync();
