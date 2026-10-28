@@ -1,5 +1,14 @@
 # Revize aplikace Poolčítadlo
 
+## Dominik – vlastník administrátorského seznamu hlášení (v4.51.104 RC)
+Zadavatel: Dominik
+Datum: 28. 10. 2026
+Změny: AdminReports vlastní on-demand čtení, řazení a DOM seznamu, dvě delegované obsluhy a pagehide. Původní těla odstraněna, bez fallbacku. Mutace a kontrola oprávnění zůstávají v core; explicitní závislosti. Odchod/logout zneplatní a abortuje čtení a vyčistí citlivý seznam.
+Testy:8novýchunitPASS, plnáNode275PASS/2známéFAIL/0SKIP z277; obě chyby jednotlivě shodné s main899ee10, test/core beze změny. Admin20cyklů před/po3→1GET,0pozdníchrenderů/3→0listenerů/0timerů; skutečné mockovéstatus/note/delete jednou, poznámka přežije odchod běhemGET (samostatný test na původním core selže).60přechodů před/po0chyb/stabilníprostředky/max1GETcesty/4revize→4aplikace; CPU95,08→63,96s orientačně, bez tvrzení o optimalizaci. Bootstrap5modulů/404, předchozímoduly/turnaje101/PNG/XLSX a nezměněnéPDFregresePASS. ReleasegatePASS; finálníCI vPR. Viz docs/admin-reports-modularization-stage-5.md.
+Nasazení: Rozpracovaný kandidát104, nesloučen a nenasazen. Produkce103.
+Omezení: Veškerá Firebase/Auth mockovaná, produkční data beze změny/migrace. Nové funkce, PDF/cache/starý test-modular mimo rozsah; zápisové workflow zůstává původní.
+
+
 ## Dominik – ověřené nasazení životnosti FC přehledu (v4.51.103 RC)
 Zadavatel: Dominik
 Datum: 28. 10. 2026

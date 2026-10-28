@@ -12,7 +12,9 @@ Aktualizace: 28. 10. 2026. Zadavatel aktuální revize: **Dominik**.
 
 - **PRODUKCE100 – Jaroslav, 27.10.2026:** PR #38 sloučen merge `b42a9b2189a2c501f05ac70d5b6a94cb8fa3aa83`, [GitHub Pages 40575477118](https://github.com/bcrybarna-oss/BC-Rybarna-Scoreboard/actions/runs/40575477118) build/deploy success. ZAPOMENUTÉ HESLO? v loginu volá Firebase Authentication PASSWORD_RESET pouze s e-mailem, neopisuje heslo, nemění UID/role/profil ani historii. Zrušen matoucí produkční nápis SCOREBOARD 4.0 DEV. Release gate PR/main PASS, Node **244 PASS / 2 známé FAIL / 3 SKIP z 249**, všech 5 nových testů obnovy PASS; dvě preview chyby totožné s předchozí hlavní verzí, CI jako celek proto není zelené. Veřejný soubor nebylo možné nezávisle otevřít z nástroje; samotný Pages deploy success je potvrzen. Živá produkční Firebase Auth a doručení resetovacího e-mailu nebyly testovány, žádné produkční testovací zápisy ani migrace.
 
-Aktuální verze: **v4.51.103 RC** — nasazeno a v uvedeném rozsahu ověřeno28.10.2026.
+Aktuální verze: **v4.51.104 RC** — otestovaný kandidát, nesloučen a nenasazen. Produkce103.
+
+- **Modularizace5 – Dominik:** AdminReports je jediný vlastník čtení/renderu adminhlášení a delegovaných obsluh. Původní těla odstraněna; mutace vcore, pouze zachycení textu poznámky předGET pro bezpečný úklid.8unit a20cyklů před/poPASS:3→1GET,staráodpověďnepřepíše novourelaci,3→0listenerů/0timerů. Node275PASS/2známéFAIL; předchozímoduly/turnaje101/PNG/XLSX/60přechodůPASS. [Rozsah, důkazy, omezení a návrat](docs/admin-reports-modularization-stage-5.md). **Neslučovat a nenasazovat.**
 
 Následuje zachovaná historie přípravy103; tehdejší zákaz sloučení/nasazení byl nahrazen schválením a ověřeným nasazením.
 
