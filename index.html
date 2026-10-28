@@ -1045,6 +1045,7 @@
 <script src="assets/js/federal-statistics.js?v=4.51.98"></script>
 <script src="assets/js/cloud-refresh.js?v=4.51.99"></script>
 <script src="assets/js/own-reports.js?v=4.51.102"></script>
+<script src="assets/js/federal-viewer.js?v=4.51.103"></script>
 <script src="assets/pushout-xlsx.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.2/dist/jspdf.umd.min.js"></script>
@@ -2606,7 +2607,7 @@ html[data-theme="light"] #leagueSchedule .history-item .muted{
           <span class="by">by</span>
           <span class="club">BC Rybárna</span>
         </div>
-        <small class="modern-brand-version">v4.51.102 RC</small>
+        <small class="modern-brand-version">v4.51.103 RC</small>
       </div>
     </div>
     <div class="nav">
@@ -3220,7 +3221,7 @@ html[data-theme="light"] #leagueSchedule .history-item .muted{
         </div>
         <div class="subpanel" style="min-width:210px;text-align:center;margin:0">
           <div class="muted" style="font-size:10px;font-weight:950;letter-spacing:1px">AKTUÁLNÍ VERZE</div>
-          <div style="font-size:22px;font-weight:950;color:var(--gold2);margin-top:5px">v4.51.102 RC</div>
+          <div style="font-size:22px;font-weight:950;color:var(--gold2);margin-top:5px">v4.51.103 RC</div>
         </div>
       </div>
     </div>
@@ -5985,7 +5986,7 @@ html[data-theme="light"] #leagueSchedule .history-item .muted{
       </div>
 
       <div id="groupPlayoffSeedStatus" class="muted" style="margin-top:12px;min-height:20px"></div>
-      <div class="muted" style="margin-top:4px;font-size:11px">RC v4.51.102</div>
+      <div class="muted" style="margin-top:4px;font-size:11px">RC v4.51.103</div>
       <div class="modal-actions">
         <button id="groupPlayoffSeedApplyBtn" class="btn primary big" type="button">NASADIT DO PLAY-OFF</button>
         <button id="groupPlayoffSeedCancelBtn" class="btn">ZRUŠIT</button>
@@ -6084,6 +6085,11 @@ html[data-theme="light"] #leagueSchedule .history-item .muted{
     const error=document.createElement('div');error.id='ownReportsLoadError';error.setAttribute('role','alert');
     error.textContent='Nepodařilo se načíst obnovy vlastních hlášení. Obnovte stránku.';document.body.prepend(error);
     throw new Error('OWN_REPORTS_MODULE_UNAVAILABLE');
+  }
+  if(!window.FederalViewer){
+    const error=document.createElement('div');error.id='federalViewerLoadError';error.setAttribute('role','alert');
+    error.textContent='Nepodařilo se načíst obnovy Federal Cupu. Obnovte stránku.';document.body.prepend(error);
+    throw new Error('FEDERAL_VIEWER_MODULE_UNAVAILABLE');
   }
   let {federalRackScoresAgree,federalMetric,federalStatsRows,federalStatsRackRows,federalStatsRacksComplete,federalStatsHistoricalRacks,federalStatsRecordSignature,federalStatsRecordIndex,federalStatsReadableShot,federalStatsShotIssues,federalTaggedMetric,federalStatsSide,federalStatsOwner,federalCalculateMatch,federalMergeMetrics,federalFixtureSources,federalCalculateSeason,federalReportOrder,federalReportWinner,federalReportSelection,federalReportData,federalReportResults,federalReportMetric,federalPushoutModel}=window.FederalStatistics;
   const $ = id => document.getElementById(id);
@@ -7149,7 +7155,7 @@ html[data-theme="light"] #leagueSchedule .history-item .muted{
     const btn=$('submitReportBtn');if(btn)btn.disabled=true;
     try{
       const id=uid(),p=currentUserPlayerId?data.players?.[currentUserPlayerId]:null;
-      const report={id,createdByUid:cloudUid,createdByPlayerId:currentUserPlayerId||'',createdByName:p?playerSelectionLabel(p):(cloudUserEmail||'Uživatel'),email:cloudUserEmail||'',type,area,description,appVersion:'v4.51.102 RC',createdAt:new Date().toISOString(),updatedAt:new Date().toISOString(),status:'new',adminNote:''};
+      const report={id,createdByUid:cloudUid,createdByPlayerId:currentUserPlayerId||'',createdByName:p?playerSelectionLabel(p):(cloudUserEmail||'Uživatel'),email:cloudUserEmail||'',type,area,description,appVersion:'v4.51.103 RC',createdAt:new Date().toISOString(),updatedAt:new Date().toISOString(),status:'new',adminNote:''};
       await reportRequest(id,'PUT',report);
       try{
         await writeReportUserMirror(report);
@@ -8544,6 +8550,7 @@ html[data-theme="light"] #leagueSchedule .history-item .muted{
   function clearRuntimeCloudIdentity(){
     cloudAutoSync?.stop();
     ownReportsSync?.stop();
+    window.stopFederalCupViewer?.();
     cloudReports=[];
     cloudAuthenticated=false;
     cloudIdToken='';
@@ -8706,6 +8713,7 @@ html[data-theme="light"] #leagueSchedule .history-item .muted{
   function startCloudAutoSync(){
     cloudAutoSync.start();
     ownReportsSync?.start();
+    window.syncFederalCupViewer?.();
     setCloudStatus('ONLINE • AUTO',true);
   }
 
@@ -9110,6 +9118,7 @@ html[data-theme="light"] #leagueSchedule .history-item .muted{
     document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
     if(name==='federal-cup-editor' && !currentUserIsSystemAdmin())name='federal-cup-2026';
     $('screen-'+name).classList.add('active');
+    window.syncFederalCupViewer?.();
     $('screen-setup').classList.toggle('federal-setup',name==='setup'&&!!pendingFederalCupLink);
     $('screen-setup').classList.toggle('federal-team-setup',name==='setup'&&pendingFederalCupLink?.type==='team');
     $('fc26LagSetup').classList.toggle('hidden',name!=='setup'||!pendingFederalCupLink);
@@ -29925,28 +29934,24 @@ function renderStats(){
       rosterHtml('a','<img class="fc26-flag-svg fc26-flag-roster" src="assets/federal-cup/flag-sk-flat.svg" alt="Vlajka Slovenska">Slovensko · domácí')+
       rosterHtml('b','<img class="fc26-flag-svg fc26-flag-roster" src="assets/federal-cup/flag-cz-flat.svg" alt="Vlajka Česka">Česko · hosté')+'</div>';
   }
-  let refreshingSpectator=false;
-  async function refreshFederalCupViewer(){
-    if(refreshingSpectator)return;
-    if(!cloudAuthenticated){renderFederalCupViewer();return;}
-    refreshingSpectator=true;
-    const btn=$('fc26ViewerRefresh');
-    if(btn)btn.disabled=true;
-    try{await Promise.allSettled([pollCloudData(),loadSecureMatches()]);}
-    catch(e){console.warn('Federal Cup spectator refresh:',e);}
-    finally{
-      refreshingSpectator=false;
-      if(btn)btn.disabled=false;
-      renderFederalCupViewer();
-    }
-  }
+  // The viewer owns only screen refresh effects; shared readers remain app-owned.
+  const viewerRefresh=window.FederalViewer.create({
+    identity:()=>cloudAuthenticated&&cloudUid?cloudUid:null,
+    screenActive:()=>$('screen-federal-cup-2026')?.classList.contains('active'),
+    visible:()=>!document.hidden,intervalMs:25000,pageTarget:window,
+    read:()=>Promise.allSettled([pollCloudData(),loadSecureMatches()]),
+    render:()=>renderFederalCupViewer(),
+    busy(value){const button=$('fc26ViewerRefresh');if(button)button.disabled=value;},
+    error:error=>console.warn('Federal Cup spectator refresh:',error)
+  });
+  window.syncFederalCupViewer=()=>viewerRefresh.start();
+  window.stopFederalCupViewer=()=>viewerRefresh.stop();
+  function refreshFederalCupViewer(){return viewerRefresh.refresh();}
   window.refreshFederalCupViewer=refreshFederalCupViewer;
   $('fc26ViewerRefresh')?.addEventListener('click',refreshFederalCupViewer);
   $('fc26ViewerEditor')?.addEventListener('click',()=>{if(canEdit())showScreen('federal-cup-editor')});
   $('fc26EditorBack')?.addEventListener('click',()=>showScreen('federal-cup-2026'));
-  setInterval(()=>{
-    if(!document.hidden&&$('screen-federal-cup-2026')?.classList.contains('active'))refreshFederalCupViewer();
-  },25000);
+  viewerRefresh.start();
 
   function render(){
     const root=$('screen-federal-cup-editor');if(!root)return;
