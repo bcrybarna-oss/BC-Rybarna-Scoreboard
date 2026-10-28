@@ -808,5 +808,37 @@
     "Report index data is synthetic; private backup provides realistic archive context",
     "Existing B/report blocking and archive cache capacity remain",
     "One sequential soak per version is an indicative measurement, not a performance guarantee"
-  ]
+  ],
+  "pullRequest": 41,
+  "implementation": "7c1a1e8147413c5bbb14aff6425bc0ccf26afeeb",
+  "ci": {
+    "run": 40748727596,
+    "release": "success",
+    "node": {
+      "pass": 258,
+      "fail": 2,
+      "skip": 3,
+      "total": 263
+    },
+    "baselineRun": 40581247766,
+    "baseline": {
+      "pass": 247,
+      "fail": 2,
+      "skip": 3,
+      "total": 252
+    },
+    "knownFailuresIdentical": true,
+    "knownFailures": [
+      {
+        "file": "preview-match-reload-recovery.test.cjs",
+        "line": 50,
+        "cause": "Identity-wait preview contract mismatch"
+      },
+      {
+        "file": "preview-match-reload-recovery.test.cjs",
+        "line": 106,
+        "cause": "Stale standalone-call source regex"
+      }
+    ]
+  }
 }
