@@ -1,6 +1,6 @@
 # Čtvrtá etapa – životnost diváckého přehledu Federal Cupu
 
-Zadavatel: Dominik. Základ: main `6d809e01e75f5755180265378a2906efe6bdbec8`, v4.51.102 RC. Kandidát v4.51.103 RC. **Neslučovat, nenasazovat.** Produkční data se nemění.
+Zadavatel: Dominik. Základ: main `6d809e01e75f5755180265378a2906efe6bdbec8`, v4.51.102 RC. Etapa v4.51.103 RC byla následně schválena, PR42 sloučen a nasazen; [skutečné nasazení a rozsah ověření](deployment-v4.51.103.md). Níže zachovaná evidence přípravy; původní zákaz sloučení/nasazení byl nahrazen schválením. Produkční data se nemění.
 
 ## Výběr a hranice
 

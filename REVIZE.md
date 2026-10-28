@@ -1,5 +1,14 @@
 # Revize aplikace Poolčítadlo
 
+## Dominik – ověřené nasazení životnosti FC přehledu (v4.51.103 RC)
+Zadavatel: Dominik
+Datum: 28. 10. 2026
+Změny: Po schválení sloučen PR42 se zachováním historie, merge4b66ae068fa86b61b1b4e37c14f25bc3f304c3fc. Nasazen jediný FederalViewer modul. Tento dokumentační zápis nemění aplikaci/verzi; produkční data beze změny/migrace, další etapa nezahájena.
+Testy: Předmerge30/30unitPASS, releasePASS; PR/mainNode264PASS/2známéFAIL/3SKIP z269, obě chyby jednotlivě shodné s výchozím main. Veřejné19souborů přesnéSHA256/verze103/4moduly/desktop/mobil/FC/A2/5cyklů na viewport/0JS chybPASS. Publikovaný HTML+4moduly izolovaně20cyklů/cleanup0intervalů a listenerů/0pozdníchrenderů/změnaúčtu/výpadek/sdílenécloudčteníPASS, A1/A2/B a skutečnéPNG/XLSX desktop/mobilPASS; původní PDFregrese beze změny takéPASS.
+Nasazení: Automatický Pages40759055156 build/deploy/report success, skutečně publikovaná103 ověřena. Žádný ruční rerun. Viz docs/deployment-v4.51.103.md.
+Omezení: Živá produkčníAuth/Firebase/soukromázápasovádata a existujícíhlášení/fyzickázařízení/OBS neověřeny; testy těchto cest izolované. B/cache limity trvají, původní uživatel101 na zařízení stále nepotvrdil. Nová chyba nezjištěna, rollback nebyl potřeba; návrat reverzí kódu podle release pravidel bez vracení dat.
+
+
 ## Dominik – životnost diváckého přehledu Federal Cupu (v4.51.103 RC)
 Zadavatel: Dominik
 Datum: 28. 10. 2026
