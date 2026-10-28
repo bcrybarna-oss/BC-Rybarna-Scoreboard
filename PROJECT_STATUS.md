@@ -14,7 +14,7 @@ Aktualizace: 28. 10. 2026. Zadavatel aktuální revize: **Dominik**.
 
 Aktuální verze: **v4.51.104 RC** — otestovaný kandidát, nesloučen a nenasazen. Produkce103.
 
-- **Modularizace5 – Dominik:** AdminReports je jediný vlastník čtení/renderu adminhlášení a delegovaných obsluh. Původní těla odstraněna; mutace vcore, pouze zachycení textu poznámky předGET pro bezpečný úklid.8unit a20cyklů před/poPASS:3→1GET,staráodpověďnepřepíše novourelaci,3→0listenerů/0timerů. Node275PASS/2známéFAIL; předchozímoduly/turnaje101/PNG/XLSX/60přechodůPASS. [Rozsah, důkazy, omezení a návrat](docs/admin-reports-modularization-stage-5.md). **Neslučovat a nenasazovat.**
+- **Modularizace5 – Dominik:** [Draft PR43](https://github.com/bcrybarna-oss/BC-Rybarna-Scoreboard/pull/43), implementace deb9bc5; [CI40764363648](https://github.com/bcrybarna-oss/BC-Rybarna-Scoreboard/actions/runs/40764363648) releasePASS/Node272PASS,2známéFAIL,3SKIP. AdminReports je jediný vlastník čtení/renderu adminhlášení a delegovaných obsluh. Původní těla odstraněna; mutace vcore, pouze zachycení textu poznámky předGET pro bezpečný úklid.8unit a20cyklů před/poPASS:3→1GET,staráodpověďnepřepíše novourelaci,3→0listenerů/0timerů. Node275PASS/2známéFAIL; předchozímoduly/turnaje101/PNG/XLSX/60přechodůPASS. [Rozsah, důkazy, omezení a návrat](docs/admin-reports-modularization-stage-5.md). **Neslučovat a nenasazovat.**
 
 Následuje zachovaná historie přípravy103; tehdejší zákaz sloučení/nasazení byl nahrazen schválením a ověřeným nasazením.
 

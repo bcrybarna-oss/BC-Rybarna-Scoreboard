@@ -53,3 +53,6 @@ Baseline test i experimentální core zůstávají proti výchozímu main beze z
 ## Návrat a omezení
 
 Reverze celého PR včetně modulu, HTML napojení a core note capture podle release pravidel, bez obnovy databáze nebo migrace. Chybějící modul není řešen starým fallbackem. PDF/knihovny, cache a výpočty/exportní modely beze změny. Živá produkční Auth/Firebase/admin hlášení/fyzická zařízení nebyla testována. Zůstávají limity blokováníB a velikosti archivní cache a nepotvrzená turnajová oprava101 na zařízení původního uživatele.
+
+
+[Draft PR43](https://github.com/bcrybarna-oss/BC-Rybarna-Scoreboard/pull/43), implementace deb9bc51a48f1a7ddbc09fe569cf55094aca7356. [CI40764363648](https://github.com/bcrybarna-oss/BC-Rybarna-Scoreboard/actions/runs/40764363648): release PASS, Node272PASS/2známéFAIL/3soukroméSKIP z277. Obě chyby jednotlivě shodné s aktuálním main899ee10/CI40759980782, nová regrese nezjištěna. CI není plně zelené. Dokumentační pokračování aplikaci nemění; neslučovat/nenasazovat.
