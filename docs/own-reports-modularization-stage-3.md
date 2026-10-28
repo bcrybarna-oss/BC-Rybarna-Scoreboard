@@ -1,6 +1,6 @@
 # Třetí etapa modularizace – životnost vlastních hlášení
 
-Zadavatel: Dominik. Datum: 28. 10. 2026. Základ main `7b7ff4f096454fa23b89d7c3284f8af355d98c00`, produkce **v4.51.101 RC**. Kandidát **v4.51.102 RC**. Samostatný PR; neslučovat a nenasazovat, bez produkčních zápisů nebo migrací. Původní uživatel opravu turnajů101 dosud nepotvrdil na svém zařízení; tato etapa ji nemění a izolované regrese nejsou jeho ručním potvrzením.
+Zadavatel: Dominik. Datum: 28. 10. 2026. Základ main `7b7ff4f096454fa23b89d7c3284f8af355d98c00`, produkce **v4.51.101 RC**. Etapa **v4.51.102 RC** byla následně schválena, PR41 sloučen a nasazen; [skutečné nasazení a rozsah ověření](deployment-v4.51.102.md). Níže je zachovaná evidence přípravy, bez produkčních zápisů nebo migrací. Původní uživatel opravu turnajů101 dosud nepotvrdil na svém zařízení; tato etapa ji nemění a izolované regrese nejsou jeho ručním potvrzením.
 
 ## Mapa zbývajících vlastníků
 
@@ -79,4 +79,4 @@ Plná Node sada se soukromými vstupy **261 PASS /2známé FAIL /0SKIP ze263**. 
 
 Dvě dlouhodobá selhání se nemění: preview-match-reload-recovery:50 je rozpor kontraktu čekání na identitu (náhled nechá pointer místo odpojení bez smazání kopie); :106 je zastaralý regex samostatného volání, jehož výsledek je nyní přiřazen pro turnajový fallback. Nejde souhrnně o kosmetické chyby, nic se nevypíná. Starý test-modular, PDF, cache, turnajové chování a oprávnění zůstávají mimo rozsah.
 
-Známé blokování reportu B a nedostatečná místní cache celého archivu trvají. Ostatní loadery zatím nemají tuto novou screen epochu. Živý produkční Auth/OBS a fyzický mobil nejsou ověřeny. Návrat reverzí celého PR podle release pravidel, bez změn dat nebo migrace; vrátí se i doložené staré závady vlastních hlášení. PR se v této etapě neslučuje ani nenasazuje.
+Známé blokování reportu B a nedostatečná místní cache celého archivu trvají. Ostatní loadery zatím nemají tuto novou screen epochu. Živý produkční Auth/OBS a fyzický mobil nejsou ověřeny. Návrat reverzí celého PR podle release pravidel, bez změn dat nebo migrace; vrátí se i doložené staré závady vlastních hlášení. Schválené sloučení a skutečné nasazení jsou samostatně zaznamenány v docs/deployment-v4.51.102.md.

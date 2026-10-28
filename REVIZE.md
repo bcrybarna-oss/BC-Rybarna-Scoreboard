@@ -1,5 +1,15 @@
 # Revize aplikace Poolčítadlo
 
+## Dominik – ověřené nasazení modulu vlastních hlášení (v4.51.102 RC)
+Zadavatel: Dominik
+Datum: 28. 10. 2026
+Změny: Po schválení sloučen PR41 se zachováním historie, merge95da0953a8e67107df3f045b8a63caffa31211a5. Nasazen jediný OwnReports modul bez původního pollingového těla. Turnaje101 a obnova hesla zachovány; tento dokumentační zápis nemění aplikaci/verzi. Produkční data beze změny/migrace, další etapa nezahájena.
+Testy: Předmerge19/19cílenýchunitPASS. FinálníPR/mainrelease PASS, Node258 PASS/2známéFAIL/3soukroméSKIP ze263, obě chyby jednotlivě porovnány s aktuálním předmerge main. VeřejnéHTML/overlay/16assetů přesnéSHA256, verze102/3moduly/navigace/anonymousMojehlášení/desktop/mobil/0JS chyb PASS. Stažené produkčníHTML+3moduly v mocku:1souběžnýGET,0pozdníchrenderů/legacyPUT,staráA neovlivníB,20cyklů/6relací/retry a0vlastních prostředkůpo odchodu/logoutu; turnaje101/skupiny8-ball3/play-off10-ball7/plnákvóta/reload/FC,PNG/XLSX,dialogmockAuth a kompletníhistorickáregrese PASS. Původní PDF regrese také prošla bez změn PDF.
+Nasazení: Pages40749738579 build/deploy/report success, skutečně publikovaná v4.51.102 RC ověřena. Žádný ruční rerun; automatické Pages po dokumentačním pokračování mají stejnou aplikaci. Viz docs/deployment-v4.51.102.md.
+Omezení: Živá produkčníAuth/Firebase/soukromáhlášení/historickáspráva série/doručeníe-mailu/OBS/fyzický mobil neověřeny. Mock není testem těchto živých služeb; původní uživatel turnaje101 na svém zařízení stále nepotvrdil. LimityB/cache a jižodeslanéhoPUT trvají. Nová chyba nezjištěna, rollback nebyl potřeba; návrat reverzí kódu podle release pravidel bez vracení dat.
+
+
+
 ## Dominik – životnost vlastních hlášení v produkčním modulu (v4.51.102 RC)
 Zadavatel: Dominik
 Datum: 28. 10. 2026
