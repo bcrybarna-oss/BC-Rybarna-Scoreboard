@@ -1,0 +1,1158 @@
+{
+  "base": "6d809e01e75f5755180265378a2906efe6bdbec8",
+  "version": "v4.51.103 RC",
+  "productionVersion": "v4.51.102 RC",
+  "notDeployed": true,
+  "productionWrites": 0,
+  "liveAuthVerified": false,
+  "userFeedback102": "Logged-in My reports opened successfully, empty list only; no existing reports verified",
+  "unchanged": [
+    "assets/js/federal-statistics.js",
+    "assets/js/cloud-refresh.js",
+    "assets/js/own-reports.js",
+    "assets/pushout-xlsx.js",
+    "overlay.html",
+    "test-modular/assets/js/pool-core.js",
+    "tests/preview-match-reload-recovery.test.cjs"
+  ],
+  "scope": {
+    "before": {
+      "sourceSha256": "76887f7baab7d4e50a5bae2b2cbc0ecdf330a729a14f51ead285203cda3c8161",
+      "archive": {
+        "bytes": 40913440,
+        "matches": 189,
+        "players": 26,
+        "sha256": "49908fbcd66113315e524e6e61a4fc3a889654bb0e9420d309b843d4181a4d5d"
+      },
+      "lateLeaveRenders": 1,
+      "lateAccountRenders": 1,
+      "maxConcurrentTransport": 2,
+      "requests": 72,
+      "samples": [
+        {
+          "on": {
+            "screen": "screen-federal-cup-2026",
+            "renders": 8,
+            "intervals": 1,
+            "listeners": 0,
+            "dom": 4042,
+            "busy": false
+          },
+          "off": {
+            "screen": "screen-home",
+            "renders": 8,
+            "intervals": 1,
+            "listeners": 0,
+            "dom": 4042,
+            "busy": false
+          },
+          "wallMs": 4484
+        },
+        {
+          "on": {
+            "screen": "screen-federal-cup-2026",
+            "renders": 10,
+            "intervals": 1,
+            "listeners": 0,
+            "dom": 4042,
+            "busy": false
+          },
+          "off": {
+            "screen": "screen-home",
+            "renders": 10,
+            "intervals": 1,
+            "listeners": 0,
+            "dom": 4042,
+            "busy": false
+          },
+          "wallMs": 3988
+        },
+        {
+          "on": {
+            "screen": "screen-federal-cup-2026",
+            "renders": 12,
+            "intervals": 1,
+            "listeners": 0,
+            "dom": 4042,
+            "busy": false
+          },
+          "off": {
+            "screen": "screen-home",
+            "renders": 12,
+            "intervals": 1,
+            "listeners": 0,
+            "dom": 4042,
+            "busy": false
+          },
+          "wallMs": 5286
+        },
+        {
+          "on": {
+            "screen": "screen-federal-cup-2026",
+            "renders": 14,
+            "intervals": 1,
+            "listeners": 0,
+            "dom": 4042,
+            "busy": false
+          },
+          "off": {
+            "screen": "screen-home",
+            "renders": 14,
+            "intervals": 1,
+            "listeners": 0,
+            "dom": 4042,
+            "busy": false
+          },
+          "wallMs": 3239
+        },
+        {
+          "on": {
+            "screen": "screen-federal-cup-2026",
+            "renders": 16,
+            "intervals": 1,
+            "listeners": 0,
+            "dom": 4042,
+            "busy": false
+          },
+          "off": {
+            "screen": "screen-home",
+            "renders": 16,
+            "intervals": 1,
+            "listeners": 0,
+            "dom": 4042,
+            "busy": false
+          },
+          "wallMs": 3819
+        },
+        {
+          "on": {
+            "screen": "screen-federal-cup-2026",
+            "renders": 18,
+            "intervals": 1,
+            "listeners": 0,
+            "dom": 4042,
+            "busy": false
+          },
+          "off": {
+            "screen": "screen-home",
+            "renders": 18,
+            "intervals": 1,
+            "listeners": 0,
+            "dom": 4042,
+            "busy": false
+          },
+          "wallMs": 4667
+        },
+        {
+          "on": {
+            "screen": "screen-federal-cup-2026",
+            "renders": 20,
+            "intervals": 1,
+            "listeners": 0,
+            "dom": 4042,
+            "busy": false
+          },
+          "off": {
+            "screen": "screen-home",
+            "renders": 20,
+            "intervals": 1,
+            "listeners": 0,
+            "dom": 4042,
+            "busy": false
+          },
+          "wallMs": 2877
+        },
+        {
+          "on": {
+            "screen": "screen-federal-cup-2026",
+            "renders": 22,
+            "intervals": 1,
+            "listeners": 0,
+            "dom": 4042,
+            "busy": false
+          },
+          "off": {
+            "screen": "screen-home",
+            "renders": 22,
+            "intervals": 1,
+            "listeners": 0,
+            "dom": 4042,
+            "busy": false
+          },
+          "wallMs": 4605
+        },
+        {
+          "on": {
+            "screen": "screen-federal-cup-2026",
+            "renders": 24,
+            "intervals": 1,
+            "listeners": 0,
+            "dom": 4042,
+            "busy": false
+          },
+          "off": {
+            "screen": "screen-home",
+            "renders": 24,
+            "intervals": 1,
+            "listeners": 0,
+            "dom": 4042,
+            "busy": false
+          },
+          "wallMs": 3585
+        },
+        {
+          "on": {
+            "screen": "screen-federal-cup-2026",
+            "renders": 26,
+            "intervals": 1,
+            "listeners": 0,
+            "dom": 4042,
+            "busy": false
+          },
+          "off": {
+            "screen": "screen-home",
+            "renders": 26,
+            "intervals": 1,
+            "listeners": 0,
+            "dom": 4042,
+            "busy": false
+          },
+          "wallMs": 3519
+        },
+        {
+          "on": {
+            "screen": "screen-federal-cup-2026",
+            "renders": 28,
+            "intervals": 1,
+            "listeners": 0,
+            "dom": 4042,
+            "busy": false
+          },
+          "off": {
+            "screen": "screen-home",
+            "renders": 28,
+            "intervals": 1,
+            "listeners": 0,
+            "dom": 4042,
+            "busy": false
+          },
+          "wallMs": 4645
+        },
+        {
+          "on": {
+            "screen": "screen-federal-cup-2026",
+            "renders": 30,
+            "intervals": 1,
+            "listeners": 0,
+            "dom": 4042,
+            "busy": false
+          },
+          "off": {
+            "screen": "screen-home",
+            "renders": 30,
+            "intervals": 1,
+            "listeners": 0,
+            "dom": 4042,
+            "busy": false
+          },
+          "wallMs": 2947
+        },
+        {
+          "on": {
+            "screen": "screen-federal-cup-2026",
+            "renders": 32,
+            "intervals": 1,
+            "listeners": 0,
+            "dom": 4042,
+            "busy": false
+          },
+          "off": {
+            "screen": "screen-home",
+            "renders": 32,
+            "intervals": 1,
+            "listeners": 0,
+            "dom": 4042,
+            "busy": false
+          },
+          "wallMs": 3426
+        },
+        {
+          "on": {
+            "screen": "screen-federal-cup-2026",
+            "renders": 34,
+            "intervals": 1,
+            "listeners": 0,
+            "dom": 4042,
+            "busy": false
+          },
+          "off": {
+            "screen": "screen-home",
+            "renders": 34,
+            "intervals": 1,
+            "listeners": 0,
+            "dom": 4042,
+            "busy": false
+          },
+          "wallMs": 4959
+        },
+        {
+          "on": {
+            "screen": "screen-federal-cup-2026",
+            "renders": 36,
+            "intervals": 1,
+            "listeners": 0,
+            "dom": 4042,
+            "busy": false
+          },
+          "off": {
+            "screen": "screen-home",
+            "renders": 36,
+            "intervals": 1,
+            "listeners": 0,
+            "dom": 4042,
+            "busy": false
+          },
+          "wallMs": 3123
+        },
+        {
+          "on": {
+            "screen": "screen-federal-cup-2026",
+            "renders": 38,
+            "intervals": 1,
+            "listeners": 0,
+            "dom": 4042,
+            "busy": false
+          },
+          "off": {
+            "screen": "screen-home",
+            "renders": 38,
+            "intervals": 1,
+            "listeners": 0,
+            "dom": 4042,
+            "busy": false
+          },
+          "wallMs": 3437
+        },
+        {
+          "on": {
+            "screen": "screen-federal-cup-2026",
+            "renders": 40,
+            "intervals": 1,
+            "listeners": 0,
+            "dom": 4042,
+            "busy": false
+          },
+          "off": {
+            "screen": "screen-home",
+            "renders": 40,
+            "intervals": 1,
+            "listeners": 0,
+            "dom": 4042,
+            "busy": false
+          },
+          "wallMs": 3559
+        },
+        {
+          "on": {
+            "screen": "screen-federal-cup-2026",
+            "renders": 42,
+            "intervals": 1,
+            "listeners": 0,
+            "dom": 4042,
+            "busy": false
+          },
+          "off": {
+            "screen": "screen-home",
+            "renders": 42,
+            "intervals": 1,
+            "listeners": 0,
+            "dom": 4042,
+            "busy": false
+          },
+          "wallMs": 4131
+        },
+        {
+          "on": {
+            "screen": "screen-federal-cup-2026",
+            "renders": 44,
+            "intervals": 1,
+            "listeners": 0,
+            "dom": 4042,
+            "busy": false
+          },
+          "off": {
+            "screen": "screen-home",
+            "renders": 44,
+            "intervals": 1,
+            "listeners": 0,
+            "dom": 4042,
+            "busy": false
+          },
+          "wallMs": 4700
+        },
+        {
+          "on": {
+            "screen": "screen-federal-cup-2026",
+            "renders": 46,
+            "intervals": 1,
+            "listeners": 0,
+            "dom": 4042,
+            "busy": false
+          },
+          "off": {
+            "screen": "screen-home",
+            "renders": 46,
+            "intervals": 1,
+            "listeners": 0,
+            "dom": 4042,
+            "busy": false
+          },
+          "wallMs": 3503
+        }
+      ],
+      "loggedOut": {
+        "screen": "screen-federal-cup-2026",
+        "renders": 49,
+        "intervals": 1,
+        "listeners": 0,
+        "dom": 4042,
+        "busy": false
+      },
+      "pageErrors": []
+    },
+    "after": {
+      "sourceSha256": "112e1201b3dc508c1b8f2305c37e3ef916f6152b3ac032cec8cdf0fbe7c8b560",
+      "archive": {
+        "bytes": 40913440,
+        "matches": 189,
+        "players": 26,
+        "sha256": "49908fbcd66113315e524e6e61a4fc3a889654bb0e9420d309b843d4181a4d5d"
+      },
+      "lateLeaveRenders": 0,
+      "lateAccountRenders": 0,
+      "maxConcurrentTransport": 2,
+      "requests": 72,
+      "samples": [
+        {
+          "on": {
+            "screen": "screen-federal-cup-2026",
+            "renders": 7,
+            "intervals": 1,
+            "listeners": 1,
+            "dom": 4043,
+            "busy": false
+          },
+          "off": {
+            "screen": "screen-home",
+            "renders": 7,
+            "intervals": 0,
+            "listeners": 0,
+            "dom": 4043,
+            "busy": false
+          },
+          "wallMs": 4671
+        },
+        {
+          "on": {
+            "screen": "screen-federal-cup-2026",
+            "renders": 9,
+            "intervals": 1,
+            "listeners": 1,
+            "dom": 4043,
+            "busy": false
+          },
+          "off": {
+            "screen": "screen-home",
+            "renders": 9,
+            "intervals": 0,
+            "listeners": 0,
+            "dom": 4043,
+            "busy": false
+          },
+          "wallMs": 3708
+        },
+        {
+          "on": {
+            "screen": "screen-federal-cup-2026",
+            "renders": 11,
+            "intervals": 1,
+            "listeners": 1,
+            "dom": 4043,
+            "busy": false
+          },
+          "off": {
+            "screen": "screen-home",
+            "renders": 11,
+            "intervals": 0,
+            "listeners": 0,
+            "dom": 4043,
+            "busy": false
+          },
+          "wallMs": 3753
+        },
+        {
+          "on": {
+            "screen": "screen-federal-cup-2026",
+            "renders": 13,
+            "intervals": 1,
+            "listeners": 1,
+            "dom": 4043,
+            "busy": false
+          },
+          "off": {
+            "screen": "screen-home",
+            "renders": 13,
+            "intervals": 0,
+            "listeners": 0,
+            "dom": 4043,
+            "busy": false
+          },
+          "wallMs": 3838
+        },
+        {
+          "on": {
+            "screen": "screen-federal-cup-2026",
+            "renders": 15,
+            "intervals": 1,
+            "listeners": 1,
+            "dom": 4043,
+            "busy": false
+          },
+          "off": {
+            "screen": "screen-home",
+            "renders": 15,
+            "intervals": 0,
+            "listeners": 0,
+            "dom": 4043,
+            "busy": false
+          },
+          "wallMs": 3801
+        },
+        {
+          "on": {
+            "screen": "screen-federal-cup-2026",
+            "renders": 17,
+            "intervals": 1,
+            "listeners": 1,
+            "dom": 4043,
+            "busy": false
+          },
+          "off": {
+            "screen": "screen-home",
+            "renders": 17,
+            "intervals": 0,
+            "listeners": 0,
+            "dom": 4043,
+            "busy": false
+          },
+          "wallMs": 3440
+        },
+        {
+          "on": {
+            "screen": "screen-federal-cup-2026",
+            "renders": 19,
+            "intervals": 1,
+            "listeners": 1,
+            "dom": 4043,
+            "busy": false
+          },
+          "off": {
+            "screen": "screen-home",
+            "renders": 19,
+            "intervals": 0,
+            "listeners": 0,
+            "dom": 4043,
+            "busy": false
+          },
+          "wallMs": 3576
+        },
+        {
+          "on": {
+            "screen": "screen-federal-cup-2026",
+            "renders": 21,
+            "intervals": 1,
+            "listeners": 1,
+            "dom": 4043,
+            "busy": false
+          },
+          "off": {
+            "screen": "screen-home",
+            "renders": 21,
+            "intervals": 0,
+            "listeners": 0,
+            "dom": 4043,
+            "busy": false
+          },
+          "wallMs": 4851
+        },
+        {
+          "on": {
+            "screen": "screen-federal-cup-2026",
+            "renders": 23,
+            "intervals": 1,
+            "listeners": 1,
+            "dom": 4043,
+            "busy": false
+          },
+          "off": {
+            "screen": "screen-home",
+            "renders": 23,
+            "intervals": 0,
+            "listeners": 0,
+            "dom": 4043,
+            "busy": false
+          },
+          "wallMs": 4189
+        },
+        {
+          "on": {
+            "screen": "screen-federal-cup-2026",
+            "renders": 25,
+            "intervals": 1,
+            "listeners": 1,
+            "dom": 4043,
+            "busy": false
+          },
+          "off": {
+            "screen": "screen-home",
+            "renders": 25,
+            "intervals": 0,
+            "listeners": 0,
+            "dom": 4043,
+            "busy": false
+          },
+          "wallMs": 2755
+        },
+        {
+          "on": {
+            "screen": "screen-federal-cup-2026",
+            "renders": 27,
+            "intervals": 1,
+            "listeners": 1,
+            "dom": 4043,
+            "busy": false
+          },
+          "off": {
+            "screen": "screen-home",
+            "renders": 27,
+            "intervals": 0,
+            "listeners": 0,
+            "dom": 4043,
+            "busy": false
+          },
+          "wallMs": 3568
+        },
+        {
+          "on": {
+            "screen": "screen-federal-cup-2026",
+            "renders": 29,
+            "intervals": 1,
+            "listeners": 1,
+            "dom": 4043,
+            "busy": false
+          },
+          "off": {
+            "screen": "screen-home",
+            "renders": 29,
+            "intervals": 0,
+            "listeners": 0,
+            "dom": 4043,
+            "busy": false
+          },
+          "wallMs": 4073
+        },
+        {
+          "on": {
+            "screen": "screen-federal-cup-2026",
+            "renders": 31,
+            "intervals": 1,
+            "listeners": 1,
+            "dom": 4043,
+            "busy": false
+          },
+          "off": {
+            "screen": "screen-home",
+            "renders": 31,
+            "intervals": 0,
+            "listeners": 0,
+            "dom": 4043,
+            "busy": false
+          },
+          "wallMs": 4586
+        },
+        {
+          "on": {
+            "screen": "screen-federal-cup-2026",
+            "renders": 33,
+            "intervals": 1,
+            "listeners": 1,
+            "dom": 4043,
+            "busy": false
+          },
+          "off": {
+            "screen": "screen-home",
+            "renders": 33,
+            "intervals": 0,
+            "listeners": 0,
+            "dom": 4043,
+            "busy": false
+          },
+          "wallMs": 3022
+        },
+        {
+          "on": {
+            "screen": "screen-federal-cup-2026",
+            "renders": 35,
+            "intervals": 1,
+            "listeners": 1,
+            "dom": 4043,
+            "busy": false
+          },
+          "off": {
+            "screen": "screen-home",
+            "renders": 35,
+            "intervals": 0,
+            "listeners": 0,
+            "dom": 4043,
+            "busy": false
+          },
+          "wallMs": 3431
+        },
+        {
+          "on": {
+            "screen": "screen-federal-cup-2026",
+            "renders": 37,
+            "intervals": 1,
+            "listeners": 1,
+            "dom": 4043,
+            "busy": false
+          },
+          "off": {
+            "screen": "screen-home",
+            "renders": 37,
+            "intervals": 0,
+            "listeners": 0,
+            "dom": 4043,
+            "busy": false
+          },
+          "wallMs": 3956
+        },
+        {
+          "on": {
+            "screen": "screen-federal-cup-2026",
+            "renders": 39,
+            "intervals": 1,
+            "listeners": 1,
+            "dom": 4043,
+            "busy": false
+          },
+          "off": {
+            "screen": "screen-home",
+            "renders": 39,
+            "intervals": 0,
+            "listeners": 0,
+            "dom": 4043,
+            "busy": false
+          },
+          "wallMs": 4506
+        },
+        {
+          "on": {
+            "screen": "screen-federal-cup-2026",
+            "renders": 41,
+            "intervals": 1,
+            "listeners": 1,
+            "dom": 4043,
+            "busy": false
+          },
+          "off": {
+            "screen": "screen-home",
+            "renders": 41,
+            "intervals": 0,
+            "listeners": 0,
+            "dom": 4043,
+            "busy": false
+          },
+          "wallMs": 3506
+        },
+        {
+          "on": {
+            "screen": "screen-federal-cup-2026",
+            "renders": 43,
+            "intervals": 1,
+            "listeners": 1,
+            "dom": 4043,
+            "busy": false
+          },
+          "off": {
+            "screen": "screen-home",
+            "renders": 43,
+            "intervals": 0,
+            "listeners": 0,
+            "dom": 4043,
+            "busy": false
+          },
+          "wallMs": 3833
+        },
+        {
+          "on": {
+            "screen": "screen-federal-cup-2026",
+            "renders": 45,
+            "intervals": 1,
+            "listeners": 1,
+            "dom": 4043,
+            "busy": false
+          },
+          "off": {
+            "screen": "screen-home",
+            "renders": 45,
+            "intervals": 0,
+            "listeners": 0,
+            "dom": 4043,
+            "busy": false
+          },
+          "wallMs": 3698
+        }
+      ],
+      "loggedOut": {
+        "screen": "screen-federal-cup-2026",
+        "renders": 48,
+        "intervals": 0,
+        "listeners": 0,
+        "dom": 4043,
+        "busy": false
+      },
+      "pageErrors": []
+    }
+  },
+  "soak": {
+    "before": {
+      "cycles": 12,
+      "backupBytes": 40913440,
+      "backupSha256": "49908fbcd66113315e524e6e61a4fc3a889654bb0e9420d309b843d4181a4d5d",
+      "sourceSha256": "76887f7baab7d4e50a5bae2b2cbc0ecdf330a729a14f51ead285203cda3c8161",
+      "errors": [],
+      "interactionFailures": [],
+      "blockedWriteAttempts": 4,
+      "storageErrors": 73,
+      "snapshots": [
+        {
+          "label": "loaded",
+          "heap": 53057196,
+          "dom": 2979,
+          "intervals": [
+            5000,
+            1000,
+            30000,
+            25000,
+            30000,
+            5000
+          ],
+          "listeners": 461,
+          "cpu": 0.916071,
+          "maxLongTask": 3752
+        },
+        {
+          "label": "cycle-1",
+          "heap": 56693000,
+          "dom": 8735,
+          "intervals": [
+            5000,
+            1000,
+            30000,
+            25000,
+            30000,
+            5000,
+            2500
+          ],
+          "listeners": 1053,
+          "cpu": 8.062652,
+          "maxLongTask": 3752
+        },
+        {
+          "label": "cycle-7",
+          "heap": 57551328,
+          "dom": 9170,
+          "intervals": [
+            5000,
+            1000,
+            30000,
+            25000,
+            30000,
+            5000,
+            2500
+          ],
+          "listeners": 1129,
+          "cpu": 52.405412,
+          "maxLongTask": 4665
+        },
+        {
+          "label": "cycle-12",
+          "heap": 57671372,
+          "dom": 9170,
+          "intervals": [
+            5000,
+            1000,
+            30000,
+            25000,
+            30000,
+            5000,
+            2500
+          ],
+          "listeners": 1129,
+          "cpu": 89.988777,
+          "maxLongTask": 4700
+        },
+        {
+          "label": "final",
+          "heap": 57657368,
+          "dom": 9170,
+          "intervals": [
+            5000,
+            1000,
+            30000,
+            25000,
+            30000,
+            5000
+          ],
+          "listeners": 1127,
+          "cpu": 91.470834,
+          "maxLongTask": 4700
+        }
+      ],
+      "matches": {
+        "requests": 25,
+        "maxConcurrent": 1
+      },
+      "appData": {
+        "requests": 35,
+        "maxConcurrent": 1
+      },
+      "cloudApplications": 4,
+      "reportSteps": [
+        {
+          "cycle": 0,
+          "operation": "report-open-close-match",
+          "wallMs": 2169
+        },
+        {
+          "cycle": 3,
+          "operation": "report-open-close-team",
+          "wallMs": 2397
+        },
+        {
+          "cycle": 6,
+          "operation": "report-open-close-player",
+          "wallMs": 2902
+        },
+        {
+          "cycle": 9,
+          "operation": "report-open-close-match",
+          "wallMs": 1879
+        }
+      ]
+    },
+    "after": {
+      "cycles": 12,
+      "backupBytes": 40913440,
+      "backupSha256": "49908fbcd66113315e524e6e61a4fc3a889654bb0e9420d309b843d4181a4d5d",
+      "sourceSha256": "112e1201b3dc508c1b8f2305c37e3ef916f6152b3ac032cec8cdf0fbe7c8b560",
+      "errors": [],
+      "interactionFailures": [],
+      "blockedWriteAttempts": 4,
+      "storageErrors": 71,
+      "snapshots": [
+        {
+          "label": "loaded",
+          "heap": 53063448,
+          "dom": 2980,
+          "intervals": [
+            5000,
+            1000,
+            30000,
+            30000,
+            5000
+          ],
+          "listeners": 461,
+          "cpu": 1.001527,
+          "maxLongTask": 3702
+        },
+        {
+          "label": "cycle-1",
+          "heap": 56704864,
+          "dom": 8736,
+          "intervals": [
+            5000,
+            1000,
+            30000,
+            30000,
+            5000,
+            2500,
+            25000
+          ],
+          "listeners": 1054,
+          "cpu": 7.787421,
+          "maxLongTask": 3702
+        },
+        {
+          "label": "cycle-7",
+          "heap": 57538908,
+          "dom": 9171,
+          "intervals": [
+            5000,
+            1000,
+            30000,
+            30000,
+            5000,
+            2500,
+            25000
+          ],
+          "listeners": 1130,
+          "cpu": 52.429378,
+          "maxLongTask": 4580
+        },
+        {
+          "label": "cycle-12",
+          "heap": 57654448,
+          "dom": 9171,
+          "intervals": [
+            5000,
+            1000,
+            30000,
+            30000,
+            5000,
+            2500,
+            25000
+          ],
+          "listeners": 1130,
+          "cpu": 88.401065,
+          "maxLongTask": 4619
+        },
+        {
+          "label": "final",
+          "heap": 57660816,
+          "dom": 9171,
+          "intervals": [
+            5000,
+            1000,
+            30000,
+            30000,
+            5000
+          ],
+          "listeners": 1127,
+          "cpu": 88.625483,
+          "maxLongTask": 4619
+        }
+      ],
+      "matches": {
+        "requests": 23,
+        "maxConcurrent": 1
+      },
+      "appData": {
+        "requests": 33,
+        "maxConcurrent": 1
+      },
+      "cloudApplications": 4,
+      "reportSteps": [
+        {
+          "cycle": 0,
+          "operation": "report-open-close-match",
+          "wallMs": 2150
+        },
+        {
+          "cycle": 3,
+          "operation": "report-open-close-team",
+          "wallMs": 2527
+        },
+        {
+          "cycle": 6,
+          "operation": "report-open-close-player",
+          "wallMs": 2742
+        },
+        {
+          "cycle": 9,
+          "operation": "report-open-close-match",
+          "wallMs": 3241
+        }
+      ]
+    }
+  },
+  "parity": {
+    "bodies": 24,
+    "backups": [
+      {
+        "file": "BC_Rybarna_Scoreboard_Backup_2026-10-23 (1).json",
+        "matches": 171,
+        "personalTeam": 0,
+        "pushout": 1,
+        "sha256": "7494ec7168498e43bce3bfb30f4d53556685dfc45eb130ad5816614992e83d48"
+      },
+      {
+        "file": "BC_Rybarna_Scoreboard_Backup_2026-10-24 (1).json",
+        "matches": 180,
+        "personalTeam": 20,
+        "pushout": 8,
+        "sha256": "0aa18c9b610709025150ef55fd6fd177f1972612d72703635cbdd74e8b52f7eb"
+      },
+      {
+        "file": "BC_Rybarna_Scoreboard_Backup_2026-10-24 (2).json",
+        "matches": 180,
+        "personalTeam": 20,
+        "pushout": 9,
+        "sha256": "4701a20ed0583b503a12b29a39ba522a6a4239630c22ebc4bbdf172d97088c47"
+      },
+      {
+        "file": "BC_Rybarna_Scoreboard_Backup_2026-10-25.json",
+        "matches": 184,
+        "personalTeam": 30,
+        "pushout": 13,
+        "sha256": "2afd2e5c48d3babf198d41809dd9fedbf8b188a28dd8e6056a0f27db69afdc6e"
+      }
+    ]
+  },
+  "node": {
+    "private": {
+      "pass": 267,
+      "fail": 2,
+      "skip": 0,
+      "total": 269
+    },
+    "ciExpected": {
+      "pass": 264,
+      "fail": 2,
+      "skip": 3,
+      "total": 269
+    },
+    "known": [
+      {
+        "file": "preview-match-reload-recovery.test.cjs",
+        "line": 50,
+        "cause": "Saved pointer is retained while identity is unavailable; expected detach conflicts with experimental core behavior"
+      },
+      {
+        "file": "preview-match-reload-recovery.test.cjs",
+        "line": 106,
+        "cause": "Standalone-call regex does not match assigned return value used for tournament fallback"
+      }
+    ],
+    "baselinePreview": {
+      "pass": 7,
+      "fail": 2,
+      "total": 9
+    }
+  },
+  "browserSuites": [
+    "federal-viewer-browser before/after",
+    "federal-module-browser four assets/404 desktop/mobile",
+    "own-reports-browser",
+    "cloud-refresh-browser",
+    "tournament-setup-browser",
+    "federal-pushout-browser",
+    "federal-93-presentation-browser"
+  ],
+  "notes": [
+    "All Firebase/Auth were mocked; raw private archive is not in this PR",
+    "Shared transports remain app-owned, not aborted by viewer stop",
+    "Single orientation soak per version is not proof of speedup; B long tasks/cache limits remain"
+  ]
+}
