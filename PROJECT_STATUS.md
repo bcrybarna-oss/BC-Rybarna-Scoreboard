@@ -12,7 +12,7 @@ Aktualizace: 28. 10. 2026. Zadavatel aktuální revize: **Dominik**.
 
 Aktuální verze: **v4.51.103 RC** — otestovaný kandidát, nesloučený a nenasazený. Produkce zůstává v4.51.102 RC.
 
-- **Modularizace4 – Dominik:** samostatný FederalViewer vlastní životnost diváckého přehledu, bez původního těla/fallbacku.20cyklů a60navigačníchpřechodů před/po PASS:opožděnýrender1→0,intervalpo odchodu/logoutu1→0,stabilníDOM a max1souběžnýGET každé sdílené cesty. Node267PASS/2známéFAIL (CIbezsoukromýchdat264/2/3), obě chyby jednotlivě shodné s main6d809e0; bootstrap/ownreports/cloud/turnaje101/PNG/XLSX a4exportovéparityPASS. [Rozsah, měření, omezení a návrat](docs/federal-viewer-modularization-stage-4.md). **Neslučovat a nenasazovat.**
+- **Modularizace4 – Dominik:** [Draft PR42](https://github.com/bcrybarna-oss/BC-Rybarna-Scoreboard/pull/42), implementace162ea4e; [CI40755981045](https://github.com/bcrybarna-oss/BC-Rybarna-Scoreboard/actions/runs/40755981045) releasePASS/Node264PASS,2známéFAIL,3SKIP. samostatný FederalViewer vlastní životnost diváckého přehledu, bez původního těla/fallbacku.20cyklů a60navigačníchpřechodů před/po PASS:opožděnýrender1→0,intervalpo odchodu/logoutu1→0,stabilníDOM a max1souběžnýGET každé sdílené cesty. Node267PASS/2známéFAIL (CIbezsoukromýchdat264/2/3), obě chyby jednotlivě shodné s main6d809e0; bootstrap/ownreports/cloud/turnaje101/PNG/XLSX a4exportovéparityPASS. [Rozsah, měření, omezení a návrat](docs/federal-viewer-modularization-stage-4.md). **Neslučovat a nenasazovat.**
 
 Uživatel po102 otevřel Moje hlášení v přihlášené aplikaci bez potíží, ale seznam byl prázdný; práce s existujícími hlášeními tím ověřená není.
 

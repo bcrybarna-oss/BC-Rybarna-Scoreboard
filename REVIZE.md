@@ -5,7 +5,7 @@ Zadavatel: Dominik
 Datum: 28. 10. 2026
 Změny: Jediný produkční FederalViewer modul vlastní 25s interval, pagehide listener, sdílenou obnovu a generaci obrazovky/identity. Původní tělo a trvalý interval odstraněny. Sdílené cloudové transporty zůstávají app-owned, bez změny oprávnění/dat/cache/PDF/turnajů101.
 Testy:6novýchunit/21cílenýchPASS; Node267PASS/2známéFAIL/0SKIP z269, bez soukromých vstupů264/2/3. Obě preview chyby jednotlivě shodné s main6d809e0, jejich zdroje beze změny.20cyklů před/po:pozdnírender po odchodu i A/B1→0, intervalpo odchodu/logoutu1→0, stejných72requestů/stabilníDOM/medián3819→3801ms.60přechodů před/po0chyb, max1GETmatches/appData a4revize→4aplikace; CPU91,47→88,63s orientačně, limityB/cachetrvají. Bootstrap4modulů/404, vlastníhlášení/cloud/turnaje101 aPNG/XLSX/původníPDFregresePASS.4skutečnéexporty/31byteověshodnýchXLSX/24výpočetníchfunkcí parityPASS. ReleasegatePASS; CI průběžně u PR. Viz docs/federal-viewer-modularization-stage-4.md.
-Nasazení: Rozpracovaný kandidát103, nesloučen a nenasazen. Produkce102.
+Nasazení: Implementace162ea4e pushnuta do draftPR42 (https://github.com/bcrybarna-oss/BC-Rybarna-Scoreboard/pull/42), nesloučena a nenasazena. Produkce102. CI40755981045 releasePASS, Node264PASS/2známéFAIL/3SKIP z269, bez nové regrese. Čistě dokumentační pokračování aplikaci/verzi nemění.
 Omezení: Produkční data beze změny, Firebase/Auth pouze mock. Transport sdílený s jinými obrazovkami nelze při odchodu rušit; ignoruje se pozdní screen-owned výsledek. Limity reportuB a celé archivní cache trvají.
 
 

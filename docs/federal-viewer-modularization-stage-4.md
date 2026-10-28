@@ -41,3 +41,6 @@ Oba testy a experimentální core zůstávají beze změny proti základnímu ma
 ## Návrat a omezení
 
 Návrat reverzí celého PR (inline tělo, integrační háčky, script a modul dohromady), nová release verze podle pravidel, bez obnovy dat nebo migrace. Samotný chybějící modul se nesmí řešit fallbackem. PDF UI/závislosti ani starý test-modular nejsou měněné. Zůstává blokování hráčského reportuB a nedostatečná místní cache pro celý archiv. Živá produkční Auth/Firebase, fyzická zařízení a OBS nejsou součástí izolovaného ověření.
+
+
+[Draft PR42](https://github.com/bcrybarna-oss/BC-Rybarna-Scoreboard/pull/42), implementace162ea4ebfd546eb80eed60ac16dbef3487193f3a. [CI40755981045](https://github.com/bcrybarna-oss/BC-Rybarna-Scoreboard/actions/runs/40755981045): release PASS, Node264PASS/2známéFAIL/3soukroméSKIP z269. Obě selhání jednotlivě odpovídají základnímu main6d809e0; nová regrese nezjištěna, CI jako celek není zelené. Dokumentační pokračování nemění aplikaci. Neslučovat/nenasazovat.
