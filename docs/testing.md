@@ -42,3 +42,7 @@ Podrobné před/po, kontrakt a samostatná produkční oprava: [stage-6-test-con
 ## Cílená browserová kontrola identity kandidáta105
 
 `node tests/production-recovery-auth-browser.cjs`: celý kandidát, skutečné login/refresh/lookup/resume funkce, všechny endpointy mockované. `node tests/preview-recovery-contract-browser.cjs`: skutečné extrahované preview recovery/login/fallback funkce s mockovaným IO/renderem, nikoli produkční runtime. Oba skripty se spouštějí zvlášť, nejsou součástí Node CI. Výsledky a konkrétní mezera živého Auth: [kontrola105](v4.51.105-identity-review.md).
+
+## Etapa7a: renderer a viditelné kontrakty controlleru
+
+Produkční federal-report-renderer.test importuje skutečný modul a ověřuje nezávislé v105 otisky i konkrétní hodnoty. Paritní/exportní a lifecycle browsery se spouštějí samostatně dle [7a](federal-report-renderer-stage-7a.md). Dva nové přísné browser kontrakty federal-report-immediate-reopen-browser a federal-report-session-guard-browser **FAIL/exit1 na v105 i kandidátu**. Nejsou to experimentální Node chyby, nejsou expected-fail ani ignorované CI kroky; browser scénáře nejsou v Node CI. Jejich konkrétní neúspěch je samostatně evidovaný pro controller7b. Zelená produkční Node sada tedy není tvrzení o splnění všech controller kontraktů.

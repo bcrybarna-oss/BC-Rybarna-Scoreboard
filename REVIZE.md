@@ -1,5 +1,23 @@
 # Revize aplikace Poolčítadlo
 
+Etapa7b (Dominik,29.10.2026): navazující controller na PR45, společný nevydaný106. Samostatný PR do větve7a; nejprve integrace7b→7a a až po schválení společné vydání do main. Oba reproduktory PASS, ztráta role PASS,23výstupů shodných, Node269/0/0 lokálně, experiment28/2/0; žádné ignorování. [Rozsah, verze, důkazy a návrat](docs/federal-report-controller-stage-7b.md). Nesloučeno/nenasazeno, produkce105/data beze změny.
+
+## Dominik – controller reportů, navazující etapa7b (v4.51.106 RC)
+Zadavatel: Dominik
+Datum: 29. 10. 2026
+Změny: Jediný produkční controller převzal dialog/export/lifecycle. Oddělené funkční opravy queued close a zneplatnění exportu při změně identity/role. Renderer a výpočty beze změny.
+Testy: Oba browser reproduktory a role-loss PASS;20cyklů/slowfonts-images/chyba-retry/URLlease a23výstupů proti7a PASS. Node269/0/0 lokálně, experiment28/2/0; celek297/2/0z299.
+Nasazení: Navazující samostatné PR do větve7a, společný dosud nevydaný106; nesloučeno/nenasazeno, produkce105.
+Omezení: Živý Auth neověřen. Při samostatném nasazení7a musí7b dostat nové číslo, nikoli znovu106. Návrat bez datové migrace vrací i opravené vady. Viz docs/federal-report-controller-stage-7b.md.
+
+## Dominik – renderer reportů Federal Cupu, etapa7a (v4.51.106 RC)
+Zadavatel: Dominik
+Datum: 29. 10. 2026
+Změny: Kandidát odděluje jediný produkční HTML/SVG renderer A1/A2/B. Hotové modely a výsledky dál vytváří FederalStatistics, aplikace předává explicitní podklady, escapování, formátování a měření textu. Původní těla šablon odstraněna bez fallbacku. Dialog a exportní controller zůstávají samostatná etapa7b, PDF a Pushout writer beze změny.
+Testy: 5/5unit a14bootstrap scénářů PASS. HTML/SVG otisky proti105,51skutečných PNG/PDF/XLSX před/po a189zápasů/modely/osobníTeam/Pushout PASS. PNG aXLSX byteově shodné, PDF obraz shodný s výchozími desktop/mobil variantami.20cyklů/slowfonts-images/chyba-retry/DOM0/URLlease PASS; zděděná relace aclose→open mezera doloženy pro7b. Dva samostatné přísné browser testy pro tyto kontrakty FAIL/exit1 na105 i kandidátu; nejde o experimentální Node vady a nejsou ignorované. Produkce266/0/0 lokálně (veřejně263/0/3), experiment28/2/0, celek294/2/0z296 a exit1. Medián openB190,1→186,2ms/šablona1,1→1,2ms, bez významného zpomalení, ne optimalizace. Turnaje101 aidentity105 s mockem PASS. Viz docs/federal-report-renderer-stage-7a.md.
+Nasazení: Pushnuto f8ecdf8 do draftPR45 (https://github.com/bcrybarna-oss/BC-Rybarna-Scoreboard/pull/45), větev refactor/federal-report-renderer-stage-7a; nesloučeno/nenasazeno. CI40937804764 releasePASS/produkce263/0/3/experiment28/2/0, celekFAILURE. Dva přísné browser reproduktory controlleru také FAIL na105 i kandidátu a zůstávají výslovně pro7b. Produkce105 a data beze změny.
+Omezení: Toto je7a, nikoli dokončený controller7b. Neřeší PDF/cache, herní pravidla, Auth ani další oblast roadmapy. Samotný přesun není optimalizace. Experimentální vady etapy6 zůstávají viditelné.
+
 ## Dominik – ověřené nasazení etapy6 a opravy identity (v4.51.105 RC)
 Zadavatel: Dominik
 Datum: 29. 10. 2026

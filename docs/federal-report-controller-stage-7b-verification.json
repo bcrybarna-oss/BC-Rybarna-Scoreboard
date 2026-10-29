@@ -1,0 +1,74 @@
+{
+  "version": "v4.51.106 RC",
+  "basePR": 45,
+  "pr": 46,
+  "base": "9a434282b5942e2442ed820cdb68c6cfaffe848c",
+  "reproductions": {
+    "immediateReopen": "PASS",
+    "accountChange": "PASS",
+    "permissionLoss": "PASS"
+  },
+  "node": {
+    "productionPrivate": {
+      "pass": 269,
+      "fail": 0,
+      "skip": 0
+    },
+    "productionPublic": {
+      "pass": 266,
+      "fail": 0,
+      "skip": 3
+    },
+    "experimental": {
+      "pass": 28,
+      "fail": 2,
+      "skip": 0
+    }
+  },
+  "parity": {
+    "files": [
+      "doubles.png",
+      "match-mobile.pdf",
+      "match-mobile.png",
+      "match.pdf",
+      "match.png",
+      "player-mobile.pdf",
+      "player-mobile.png",
+      "player-partial.png",
+      "player.pdf",
+      "player.png",
+      "retry-after-image-error.png",
+      "score-wide.png",
+      "team-match.png",
+      "teams-mobile.pdf",
+      "teams-mobile.png",
+      "teams.pdf",
+      "teams.png",
+      "doubles-desktop.xlsx",
+      "doubles-mobile.xlsx",
+      "singles-desktop.xlsx",
+      "singles-mobile.xlsx",
+      "team-desktop.xlsx",
+      "team-mobile.xlsx"
+    ],
+    "allMatch": true
+  },
+  "lifecycle": {
+    "cycles": 20,
+    "delayedFontsAndImagesCancel": true,
+    "decodeErrorRetry": true,
+    "urlRetainedUntilLease": true,
+    "temporaryHostsAfter": 0,
+    "urlsAfterExpiry": 0,
+    "inheritedSessionDownload": false,
+    "sessionGuardOwner": "remaining stage7b controller",
+    "productionWrites": 0,
+    "pageErrors": []
+  },
+  "identity105": "PASS mocked manual/automatic",
+  "fixture9": "PASS all13 metrics PNG/PDF/XLSX desktop/mobile",
+  "liveAuth": false,
+  "productionWrites": 0,
+  "merged": false,
+  "deployed": false
+}

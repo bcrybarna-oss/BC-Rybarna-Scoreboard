@@ -1,6 +1,6 @@
 # Aktuální roadmapa modularizace Poolčítadla
 
-Zadavatel: Dominik. Platnost: **29. 10. 2026**, základ `origin/main` / `28f45bd32483d8c8275c23d6aac14480dfc8ee6f`, nasazená v4.51.104 RC. Toto je aktuální společný plán; starší plány v revizích, PR6, test-modular README a etapových dokumentech jsou historické podklady, nikoli paralelní pokyny. Schválena je nyní pouze etapa6. Etapa7 ani další implementace tímto dokumentem nezačínají.
+Zadavatel: Dominik. Aktualizace **29. 10. 2026**, základ etapy7 `origin/main` / `2d1de22a1c8577ad7642081bb36fde31e3fd6f91`, nasazená v4.51.105 RC. Etapa6 je nasazena s odděleně evidovanými experimentálními vadami. Nyní schválena etapa7; pro přehledný rozsah se realizuje7a (renderer), samostatná7b (controller) zbývá. Starší plány v revizích, PR6 a test-modular README jsou historické podklady. Další oblasti nezahájeny.
 
 ## Výchozí stav a závazná pravidla
 
@@ -14,7 +14,7 @@ Vstupní měření: soukromý export27.10.,40 913 440B/189zápasů/26profilů, b
 
 Navržené pořadí6–14 je použitelné jako pořadí oblastí, nikoli jeden PR na oblast. Etapy7/8 potřebují stabilní testy6 a stávající injektované loadery; nepotřebují dokončit celou datovou vrstvu. Etapa9 se musí opřít o výslovný kontrakt identity/oprávnění A níže, nikoli o nové implicitní globály. Kontrakty a adaptéry lze určit před extrakcí všech úložišť10, stejně jako to dělají nynější moduly. Datová vrstva10 musí být hotová před většími přesuny11–13. Závěrečný bootstrap14 nesmí předběhnout stanovení vlastníků prostředků. Bezpečnostní nebo naměřená závada může pořadí změnit jen konkrétním zdůvodněním a schváleným rozsahem.
 
-## 6. Produkční testy a starý test-modular — aktuální etapa
+## 6. Produkční testy a starý test-modular — nasazeno105
 
 - Rozsah/PR6a: přesný inventář sad, test skutečného produkčního login/reload/resume, chování preview loginu s turnajovým fallbackem namísto regexu, viditelné oddělené CI kontroly a souhrnný příkaz zahrnující vše. Preview jádro se plošně neopravuje ani nenasazuje.
 - Závislosti: root index.html, pět assetů, současné testové helpery, CI a release policy. Produkce i experiment mají vlastní zdroj a vlastní očekávání; sdílet lze pouze extrakci zdroje a izolované I/O prostředí, nikoli druhý sportovní algoritmus.
@@ -23,6 +23,8 @@ Navržené pořadí6–14 je použitelné jako pořadí oblastí, nikoli jeden P
 - Dokončeno, když je inventář úplný, každý skutečný fail/skip pojmenovaný a CI výsledek nezkreslený. Případné přetrvávající experimentální selhání znamená nevyřešený experimentální kontrakt, nikoli potvrzení jeho správnosti nebo automatickou výjimku pro release. Viz testing.md a stage-6-test-contracts.md.
 
 ## 7. Renderer A1/A2/B a controller exportů
+
+Aktuální realizace: **7a**, jediný FederalReportRenderer pro HTML/SVG. Modely a výběr identity se nepřesouvají do rendereru; core předává hotové metriky/výsledky. CSS a layout helpery zůstávají zachované. Větší stavový celek dialogu a asynchronních exportů se nyní nepřibírá: **7b musí samostatně převzít open/close/zoom/fokus, generace relace, font/image čekání, chyby, dočasný DOM a bezpečné60s download URL lease**. Dokončení7a není dokončením7b ani celé etapy7. PDF a XLSX se ověřují jako zachované funkce, nikoli přepisují. Podrobnosti a výsledky: [renderer7a](federal-report-renderer-stage-7a.md). Doložena zděděná mezera dokončení exportu při změně relace bez zavření a asynchronní close→open race;7b je musí řešit samostatnými funkčními testy/commitem, nikoli jen přenést.7a má jediný produkční renderer, pixelovou paritu a žádné nové prostředky.
 
 - PR7a: čistá tvorba HTML/SVG šablon z FederalStatistics modelu. PR7b: dialog, návrat fokusu, zoom/resize, exportní generace, object URL a úklid. PR7c: samostatné adaptéry PNG a Pushout XLSX, pokud se vejdou do přehledných hranic.
 - Závislosti: hotové modely, společné flag/logo assety, současné html2canvas/PushoutXlsx, dialog DOM. Přístup k datům a oprávněním přes vstupní model/adaptér, nikoli přímo data/currentUser globály. PDF zachovat v původním funkčním rozsahu, dokud není zvlášť odsouhlasen F1.
@@ -103,3 +105,5 @@ Současný core kombinuje firebaseSignIn/firebaseRefreshAuth, ověření e-mailu
 - **F3 — výkon B:** samostatně po měření určit, zda blokuje výpočet, DOM, fonty nebo rasterizace. Modulový přesun sám tento úkol neuzavírá.
 
 Každý bod potřebuje samostatný přezkoumatelný PR a výslovné schválení vydání. Tato roadmapa nepovoluje sloučení nebo nasazení žádné etapy.
+
+Viz [controller7b](federal-report-controller-stage-7b.md), navazující samostatné PR na7a pro společné nevydané106.
