@@ -669,3 +669,5 @@ Revize zahrnuje změny z PR #15, ručně otestované a schválené Dominikem. V�
 Funkční změny z PR #15 prošly izolovaným browser testem aktuálního kódu pro Singles, Doubles a Team, včetně breaků, Soft breaku, push outu, undo, reloadu, bodování série a reprodukce B&R. Ruční testování schválil Dominik. Zvýšení čísla verze bylo ověřeno smoke testy a kontrolou diffu.
 
 Celková Node sada PR #15: 60/62; dvě již existující chyby preview-match-reload-recovery nejsou součástí této opravy. Souběžné přepisování celé konfigurace Federal Cupu z více zařízení zůstává známým rizikem. Skutečné Firebase Auth/Rules a nativní mobilní buildy nebyly v této revizi ověřeny. Produkční Firebase data nebyla při vývoji ani testování měněna.
+
+Etapa8a: [Draft PR47](https://github.com/bcrybarna-oss/BC-Rybarna-Scoreboard/pull/47), implementace385e69d, CI40950640897 release/produkcePASS272/0/3, experiment28/2/0FAIL. Finální opakování30navigací: CPU24,73s/heap57,41MB/44requestů/2LIVEčtení podle délky běhu,0JSerrors. Výchozí a předběžná měření zachována v etapové evidenci; ne tvrzení optimalizace. Žádné sloučení/nasazení ani produkčnídata.

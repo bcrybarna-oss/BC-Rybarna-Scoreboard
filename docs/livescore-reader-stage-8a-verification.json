@@ -154,5 +154,83 @@
   "productionWrites": 0,
   "liveAuth": false,
   "merged": false,
-  "deployed": false
+  "deployed": false,
+  "performanceFinal": {
+    "sourceSha256": "889f367f9501e7b4b35117984a67133a938ca7e13a7210b42fd0750cd9e98ff6",
+    "cycles": 6,
+    "errors": [],
+    "interactionFailures": [],
+    "requestCount": 44,
+    "liveReads": 2,
+    "maxInflight": 5,
+    "snapshots": [
+      {
+        "label": "loaded",
+        "heap": 53094580,
+        "dom": 2982,
+        "listeners": 463,
+        "intervals": 5,
+        "timeouts": 1,
+        "cpu": 0.295158,
+        "maxLong": 947
+      },
+      {
+        "label": "cycle-1",
+        "heap": 56835172,
+        "dom": 8739,
+        "listeners": 1056,
+        "intervals": 7,
+        "timeouts": 0,
+        "cpu": 3.981031,
+        "maxLong": 947
+      },
+      {
+        "label": "cycle-4",
+        "heap": 57316996,
+        "dom": 9174,
+        "listeners": 1132,
+        "intervals": 7,
+        "timeouts": 0,
+        "cpu": 16.350854,
+        "maxLong": 2440
+      },
+      {
+        "label": "cycle-6",
+        "heap": 57407416,
+        "dom": 9174,
+        "listeners": 1132,
+        "intervals": 7,
+        "timeouts": 0,
+        "cpu": 24.687023,
+        "maxLong": 2581
+      },
+      {
+        "label": "final",
+        "heap": 57407640,
+        "dom": 9174,
+        "listeners": 1129,
+        "intervals": 5,
+        "timeouts": 0,
+        "cpu": 24.734187,
+        "maxLong": 2581
+      }
+    ]
+  },
+  "pullRequest": 47,
+  "implementationCommit": "385e69d6ed9eccc19e37b4c469fb848438150fef",
+  "ci": {
+    "run": 40950640897,
+    "release": "success",
+    "production": {
+      "pass": 272,
+      "fail": 0,
+      "skip": 3
+    },
+    "experimental": {
+      "pass": 28,
+      "fail": 2,
+      "skip": 0
+    },
+    "overall": "failure"
+  }
 }
