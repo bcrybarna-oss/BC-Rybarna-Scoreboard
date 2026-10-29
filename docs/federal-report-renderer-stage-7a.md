@@ -1,6 +1,6 @@
 # Federal Cup renderer — etapa7a, v4.51.106 RC
 
-Zadavatel: Dominik. Datum: 29. 10. 2026. Výchozí main po fetchi `2d1de22a1c8577ad7642081bb36fde31e3fd6f91`, produkce105. **Samostatný kandidát, neslučovat a nenasazovat.**
+Zadavatel: Dominik. Datum: 29. 10. 2026. Výchozí main po fetchi `2d1de22a1c8577ad7642081bb36fde31e3fd6f91`, produkce105. **Samostatný kandidát, neslučovat a nenasazovat.** [Draft PR45](https://github.com/bcrybarna-oss/BC-Rybarna-Scoreboard/pull/45), implementace `f8ecdf8eb9d943dc3a7a322cf5c3cd1167d7f065`.
 
 ## Hranice a důvod rozdělení
 
@@ -52,7 +52,7 @@ Chrome, stejný40MBarchiv,3otevření B a3PNG+3PDF na variantu, baseline a kandi
 
 ## Regrese, CI a opakování
 
-Produkční Node **266PASS/0FAIL/0SKIP** se soukromými vstupy, veřejně263PASS/0FAIL/3SKIP. Celá lokální sada296testů: **294PASS/2experimentálníFAIL/0SKIP**, exit1. Experiment28PASS/2FAIL na stejných kontraktech řádky50 a155; zdroj preview beze změny proti main. Žádná automatická výjimka/ignorování. Finální CI a PR jsou uvedeny v předání; celek při přetrvávajícím experimentálním failu není zelený.
+Produkční Node **266PASS/0FAIL/0SKIP** se soukromými vstupy, veřejně263PASS/0FAIL/3SKIP. Celá lokální sada296testů: **294PASS/2experimentálníFAIL/0SKIP**, exit1. Experiment28PASS/2FAIL na stejných kontraktech řádky50 a155; zdroj preview beze změny proti main. Žádná automatická výjimka/ignorování. [CI40937804764](https://github.com/bcrybarna-oss/BC-Rybarna-Scoreboard/actions/runs/40937804764): Release PASS, Production263PASS/0FAIL/3SKIP, Experimental28PASS/2FAIL/0SKIP. Celý workflow FAILURE; dva samostatné browser reproduktory controlleru nejsou tímto CI označené za úspěšné.
 
 Bootstrap14desktop/mobil kombinací včetně404 všech šesti modulů PASS. Turnaje101 včetně plnékvóty/skupin/play-off/reloadu/FC izolace a oba produkční identity/recovery průchody z105 s mockovaným Auth PASS. Živá Auth ani produkční účty/data nepoužity.
 

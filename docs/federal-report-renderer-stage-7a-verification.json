@@ -1006,5 +1006,22 @@
       "exitBefore": 1,
       "exitAfter": 1
     }
+  },
+  "pullRequest": 45,
+  "implementationCommit": "f8ecdf8eb9d943dc3a7a322cf5c3cd1167d7f065",
+  "ci": {
+    "run": 40937804764,
+    "release": "success",
+    "production": {
+      "pass": 263,
+      "fail": 0,
+      "skip": 3
+    },
+    "experimental": {
+      "pass": 28,
+      "fail": 2,
+      "skip": 0
+    },
+    "overall": "failure"
   }
 }
