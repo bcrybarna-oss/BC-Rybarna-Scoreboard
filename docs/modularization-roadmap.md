@@ -105,3 +105,5 @@ Současný core kombinuje firebaseSignIn/firebaseRefreshAuth, ověření e-mailu
 - **F3 — výkon B:** samostatně po měření určit, zda blokuje výpočet, DOM, fonty nebo rasterizace. Modulový přesun sám tento úkol neuzavírá.
 
 Každý bod potřebuje samostatný přezkoumatelný PR a výslovné schválení vydání. Tato roadmapa nepovoluje sloučení nebo nasazení žádné etapy.
+
+Viz [controller7b](federal-report-controller-stage-7b.md), navazující samostatné PR na7a pro společné nevydané106.

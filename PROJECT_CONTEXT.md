@@ -1,5 +1,7 @@
 # Etapa7a — renderer, kandidát v4.51.106 RC
 
+Etapa7b (Dominik,29.10.2026): navazující controller na PR45, společný nevydaný106. Samostatný PR do větve7a; nejprve integrace7b→7a a až po schválení společné vydání do main. Oba reproduktory PASS, ztráta role PASS,23výstupů shodných, Node269/0/0 lokálně, experiment28/2/0; žádné ignorování. [Rozsah, verze, důkazy a návrat](docs/federal-report-controller-stage-7b.md). Nesloučeno/nenasazeno, produkce105/data beze změny.
+
 Dominik,29.10.2026: etapa7 rozdělena dle roadmapy. FederalReportRenderer tvoří HTML/SVG z předaných výsledků/metrik, pouze escapování, stávající formátovač FederalStatistics a callback měření textu. Žádný přístup k datovému globálu, DOM, síti, persistence nebo životnímu cyklu. Core vybírá podklady a volá jedinou šablonu; stará těla odstraněna. CSS, texty, assety, výpočty a exporty neměněny. Dialog/exportní generace, asynchronní úklid a relace jsou výslovně zbývající etapa7b, nikoli druhý paralelní controller. Kandidát106 není nasazen. Produkce105 a data zůstávají beze změny; další oblast roadmapy nezahájena.
 
 # Etapa6 — nasazeno v4.51.105 RC

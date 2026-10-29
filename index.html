@@ -1044,6 +1044,7 @@
 
 <script src="assets/js/federal-statistics.js?v=4.51.98"></script>
 <script src="assets/js/federal-report-renderer.js?v=4.51.106"></script>
+<script src="assets/js/federal-report-controller.js?v=4.51.106"></script>
 <script src="assets/js/cloud-refresh.js?v=4.51.99"></script>
 <script src="assets/js/own-reports.js?v=4.51.102"></script>
 <script src="assets/js/federal-viewer.js?v=4.51.103"></script>
@@ -6078,6 +6079,7 @@ html[data-theme="light"] #leagueSchedule .history-item .muted{
     document.body.prepend(error);
     throw new Error('FEDERAL_STATISTICS_MODULE_UNAVAILABLE');
   }
+  if(!window.FederalReportController){const error=document.createElement('div');error.id='federalReportControllerLoadError';error.setAttribute('role','alert');error.textContent='Nepodařilo se načíst ovládání reportů Federal Cupu. Obnovte stránku.';document.body.prepend(error);throw Error('FEDERAL_REPORT_CONTROLLER_MODULE_UNAVAILABLE');}
   if(!window.FederalReportRenderer){
     const error=document.createElement('div');error.id='federalReportRendererLoadError';error.setAttribute('role','alert');error.textContent='Nepodařilo se načíst vykreslování reportů Federal Cupu. Obnovte stránku.';document.body.prepend(error);throw new Error('FEDERAL_REPORT_RENDERER_MODULE_UNAVAILABLE');
   }
@@ -6138,6 +6140,7 @@ html[data-theme="light"] #leagueSchedule .history-item .muted{
   let currentUserProfileClaimId=null;
   let currentUserClubId=null;
   let currentUserPlayerId=null;
+  let invalidateFederalReport=()=>{};
   let currentUserRole='player';
   let adminRegisteredUsersCache={};
   let adminRegisteredUsersLoading=false;
@@ -8471,7 +8474,7 @@ html[data-theme="light"] #leagueSchedule .history-item .muted{
       }
 
       if(rec){
-        currentUserRole=rec.role||'player';
+        if(currentUserRole!==(rec.role||'player'))invalidateFederalReport();currentUserRole=rec.role||'player';
         currentUserPlayerId=rec.playerId||null;
         currentUserClubId=rec.clubId||null;
         if(!cloudUserEmail) cloudUserEmail=rec.email||'';
@@ -8501,7 +8504,7 @@ html[data-theme="light"] #leagueSchedule .history-item .muted{
     }
 
     await userRecordRequest('PUT',rec);
-    currentUserRole=rec.role||'player';
+    if(currentUserRole!==(rec.role||'player'))invalidateFederalReport();currentUserRole=rec.role||'player';
     currentUserPlayerId=rec.playerId||null;
     currentUserClubId=rec.clubId||null;
     refreshAccountUI();
@@ -8551,6 +8554,7 @@ html[data-theme="light"] #leagueSchedule .history-item .muted{
   }
 
   function clearRuntimeCloudIdentity(){
+    invalidateFederalReport();
     cloudAutoSync?.stop();
     ownReportsSync?.stop();
     adminReportsSync?.stop();
@@ -29711,7 +29715,8 @@ function renderStats(){
 
   const reportRenderer=window.FederalReportRenderer.create({esc,formatMetric:federalReportMetric,measureScoreText:text=>{const ctx=document.createElement('canvas').getContext('2d');ctx.font='900 84px Arial';return ctx.measureText(text).width;}});
   const REPORT_REPS=reportRenderer.representations;
-  const reportDialog=$('fcReportDialog');let reportReturnFocus=null,reportExportBusy=false,reportExportGeneration=0,reportZoomed=false;
+  const reportController=window.FederalReportController.create({document,window,dialog:$('fcReportDialog'),screen:$('screen-federal-cup-2026'),identity:()=>JSON.stringify([cloudAuthenticated,cloudUid,currentUserRole,currentUserPlayerId]),prepare:prepareFederalReport,sources:reportRenderer.sources});
+  invalidateFederalReport=()=>reportController.invalidate();
 
   function reportMatchName(m,side){
     if(m.federalCupLink?.type==='team')return REPORT_REPS[side].name;
@@ -29722,7 +29727,7 @@ function renderStats(){
   }
   function reportButton(kind,label,attrs=''){return '<button type="button" class="btn" data-fc-report="'+kind+'" '+attrs+'>'+label+'</button>';}
 
-  function openFederalReport(button){
+  function prepareFederalReport(button){
     if(!$('screen-federal-cup-2026')?.classList.contains('active'))return;
     const conf=cfg(),year=Number(conf.year),order=federalReportOrder(conf);let content='',context='';
     const unavailable=text=>'<div class="fc-report-notice"><h2>Report není dostupný</h2><p>'+esc(text)+'</p></div>';
@@ -29745,95 +29750,29 @@ function renderStats(){
         else{context='ID zápasu '+id+' · #'+fixture+' '+m.federalCupLink.type+'. Herní údaje: kanonická evidence a společné API 13 metrik. Zobrazení používá dostupné evidované hodnoty. Úplnost a důvody neúplnosti zůstávají součástí podkladů.';const result=federalCalculateMatch(m),names=[0,1].map(side=>reportMatchName(m,side));content=reportRenderer.comparison('FEDERAL CUP '+year+' · ZÁPAS #'+fixture+' · '+String(m.federalCupLink.type).toUpperCase(),names,m.scores||[],result.sides.map(x=>x.metrics),order,null,'Dokončený zápas. Neúplná nebo chybějící statistická evidence je označena v jednotlivých řádcích.');}
       }else content=unavailable('Neznámý typ reportu.');
     }
-    reportExportGeneration++;reportZoomed=false;
-    const hasSheet=content.includes('fc-report-sheet');
-    $('fcReportContent').innerHTML=hasSheet?'<div class="fc-report-preview-viewport" tabindex="0" role="region" aria-label="Náhled reportu, při zvětšení lze posouvat"><div class="fc-report-preview-frame">'+content+'</div></div>'+reportRenderer.sources(context):content;
-    for(const id of ['fcReportPng','fcReportPdf','fcReportZoom'])$(id).disabled=!hasSheet||reportExportBusy;
-    $('fcReportZoom').setAttribute('aria-pressed','false');$('fcReportZoom').textContent='ZVĚTŠIT NÁHLED';$('fcReportExportStatus').textContent='';
-    reportReturnFocus=button;if(!reportDialog.open)reportDialog.showModal();reportDialog.scrollTop=0;layoutFederalReportPreview();
+    return {content,context};
   }
-  function fitFederalReportNames(root){
-    for(const el of root.querySelectorAll('.fc-report-person h2')){
-      el.style.fontSize='44px';
-      for(let size=44;size>14&&(el.scrollHeight>el.clientHeight+1||el.scrollWidth>el.clientWidth+1||[...el.querySelectorAll('.fc-report-name-line')].some(n=>n.scrollWidth>el.clientWidth+1));size--)el.style.fontSize=(size-1)+'px';
-      if(el.scrollHeight>el.clientHeight+1||el.scrollWidth>el.clientWidth+1||[...el.querySelectorAll('.fc-report-name-line')].some(n=>n.scrollWidth>el.clientWidth+1))throw Error('Jméno se nevejde do Full HD reportu bez oříznutí. Export nebyl vytvořen.');
-    }
-    for(const el of root.querySelectorAll('.fc-report-value,.fc-report-card strong')){
-      const max=el.matches('.fc-report-card strong')?48:24;el.style.whiteSpace='nowrap';el.style.fontSize=max+'px';
-      for(let size=max;size>12&&el.scrollWidth>el.clientWidth+1;size--)el.style.fontSize=(size-1)+'px';
-      if(el.scrollWidth>el.clientWidth+1)throw Error('Hodnota se nevejde do Full HD reportu bez oříznutí.');
-    }
-  }
-  function layoutFederalReportPreview(){
-    const root=$('fcReportContent').querySelector('.fc-report-sheet'),frame=root?.parentElement;if(!root||!reportDialog.open)return;
-    const scale=reportZoomed?1:Math.min(1,Math.max(1,reportDialog.clientWidth-24)/1920);
-    root.style.transform='scale('+scale+')';root.style.transformOrigin='top left';frame.style.width=(1920*scale)+'px';frame.style.height=(1080*scale)+'px';
-    try{fitFederalReportNames(root);}catch(e){$('fcReportExportStatus').textContent=e.message;}
-  }
-  async function createFederalReportCanvas(root){
-    if(!window.html2canvas)throw Error('Exportní knihovna se nenačetla. Obnov připojení a stránku.');
-    const host=document.createElement('div');host.id='fcReportExportSurface';host.setAttribute('aria-hidden','true');
-    host.style.cssText='position:fixed;left:0;top:0;width:1920px;height:1080px;z-index:-2147483647;pointer-events:none;';
-    const copy=root.cloneNode(true);copy.style.transform='none';host.appendChild(copy);document.body.appendChild(host);
-    try{
-      await Promise.race([document.fonts.ready,new Promise((_,reject)=>setTimeout(()=>reject(Error('Fonty se nepodařilo načíst.')),15000))]);
-      await Promise.all([...copy.querySelectorAll('img')].map(async img=>{
-        if(new URL(img.currentSrc||img.src,location.href).origin!==location.origin)throw Error('Grafický podklad musí být dostupný ze stejného webu.');
-        await img.decode().catch(()=>{throw Error('Grafický podklad nebo logo není načtené.');});if(!img.naturalWidth)throw Error('Grafický podklad nebo logo není načtené.');
-      }));
-      const canvas=await html2canvas(copy,{backgroundColor:'#090b0a',scale:1,width:1920,height:1080,windowWidth:1920,windowHeight:1080,scrollX:0,scrollY:0,useCORS:true,allowTaint:false,logging:false,removeContainer:true,onclone:doc=>{
-        const sheet=doc.querySelector('#fcReportExportSurface .fc-report-sheet');fitFederalReportNames(sheet);
-        if(sheet.scrollWidth>1920||sheet.scrollHeight>1080)throw Error('Obsah přesahuje Full HD formát. Export nebyl vytvořen, aby se nic neořízlo.');
-        const header=sheet.querySelector('.fc-report-head');if(header)for(const panel of header.querySelectorAll('.fc-report-person'))if(panel.getBoundingClientRect().bottom>header.getBoundingClientRect().bottom+1)throw Error('Hlavička reportu přesahuje vyhrazené místo.');
-        const footer=sheet.querySelector('.fc-report-footer').getBoundingClientRect();for(const row of sheet.querySelectorAll('[data-report-metric]'))if(row.getBoundingClientRect().bottom>footer.top+1)throw Error('Statistiky se překrývají s patičkou.');
-        for(const el of sheet.querySelectorAll('[data-report-metric],.fc-report-footer,.fc-report-brands,.fc-report-brands span,.fc-report-person h2,.fc-report-club-logo,.fc-report-pool-logo,.fc-report-pushout-logo')){const box=el.getBoundingClientRect(),page=sheet.getBoundingClientRect();if(box.bottom>page.bottom+1||box.right>page.right+1)throw Error('Obsah reportu se nevejde do Full HD.');}
-      }});
-      if(canvas.width!==1920||canvas.height!==1080)throw Error('Export nemá požadované rozlišení.');
-      return canvas;
-    }finally{host.remove();}
-  }
-  async function exportFederalReport(format){
-    const root=$('fcReportContent').querySelector('.fc-report-sheet');
-    if(reportExportBusy||!root||!reportDialog.open||!$('screen-federal-cup-2026').classList.contains('active'))return;
-    const generation=reportExportGeneration,name=('federal-cup-'+(root.querySelector('.fc-report-kicker')?.textContent||'report')).normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9]+/gi,'-').toLowerCase().slice(0,120);
-    reportExportBusy=true;$('fcReportPng').disabled=true;$('fcReportPdf').disabled=true;$('fcReportExportStatus').textContent='Připravuji '+format.toUpperCase()+' ve Full HD…';
-    try{
-      if(format==='pdf'&&!window.jspdf?.jsPDF)throw Error('PDF knihovna se nenačetla. Obnov připojení a stránku.');
-      const canvas=await createFederalReportCanvas(root);let blob;
-      if(format==='png')blob=await new Promise((resolve,reject)=>canvas.toBlob(b=>b?resolve(b):reject(Error('PNG se nepodařilo vytvořit.')),'image/png'));
-      else{const pdf=new window.jspdf.jsPDF({orientation:'landscape',unit:'pt',format:[1440,810],compress:true});pdf.addImage(canvas.toDataURL('image/png'),'PNG',0,0,1440,810);blob=pdf.output('blob');}
-      if(!reportDialog.open||generation!==reportExportGeneration)return;
-      const url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=name+'.'+format;document.body.appendChild(a);try{a.click();}finally{a.remove();setTimeout(()=>URL.revokeObjectURL(url),60000);}
-      $('fcReportExportStatus').textContent=format.toUpperCase()+' připraveno ke stažení (1920 × 1080).';
-    }catch(e){if(reportDialog.open&&generation===reportExportGeneration)$('fcReportExportStatus').textContent='Export se nezdařil: '+e.message;}
-    finally{reportExportBusy=false;const enabled=reportDialog.open&&!!$('fcReportContent').querySelector('.fc-report-sheet');$('fcReportPng').disabled=!enabled;$('fcReportPdf').disabled=!enabled;}
-  }
-  $('fcReportPng').addEventListener('click',()=>exportFederalReport('png'));
-  $('fcReportPdf').addEventListener('click',()=>exportFederalReport('pdf'));
-  $('fcReportZoom').addEventListener('click',()=>{reportZoomed=!reportZoomed;$('fcReportZoom').setAttribute('aria-pressed',String(reportZoomed));$('fcReportZoom').textContent=reportZoomed?'ZMENŠIT NÁHLED':'ZVĚTŠIT NÁHLED';layoutFederalReportPreview();});
-  window.addEventListener('resize',()=>{if(reportDialog.open)requestAnimationFrame(layoutFederalReportPreview);});
-  $('screen-federal-cup-2026')?.addEventListener('click',e=>{const button=e.target.closest('[data-fc-report]');if(button)openFederalReport(button);});
+
+
+
+
   let pushoutExportBusy=false;
   $('screen-federal-cup-2026')?.addEventListener('click',async event=>{
     const button=event.target.closest('[data-fc-pushout]');if(!button||pushoutExportBusy||!$('screen-federal-cup-2026').classList.contains('active'))return;
-    const buttons=[...document.querySelectorAll('[data-fc-pushout]')];pushoutExportBusy=true;buttons.forEach(b=>b.disabled=true);
+    const ticket=reportController.ticket();const buttons=[...document.querySelectorAll('[data-fc-pushout]')];pushoutExportBusy=true;buttons.forEach(b=>b.disabled=true);
     try{
       // Yield before serializing, both for feedback and to guard repeated clicks.
-      await new Promise(resolve=>setTimeout(resolve,0));
+      await new Promise(resolve=>setTimeout(resolve,0));if(!ticket())return;
       const year=Number(cfg().year),fixture=Number(button.dataset.fixture),id=button.dataset.fcPushout;
       const selected=federalReportData(data.matches,cfg(),year).selected.some(s=>s.matchId===id&&s.fixtureNo===fixture&&s.source==='detailed');
       const matches=federalStatsRows(data.matches).filter(m=>m.id===id&&Number(m.federalCupLink?.year)===year&&Number(m.federalCupLink?.fixtureNo)===fixture);
       if(!selected||matches.length!==1)throw Error('Uložený zápas není dostupný nebo má nejednoznačnou identitu.');
       if(!window.PushoutXlsx)throw Error('Exportní podklad se nenačetl. Obnov stránku.');
       const model=federalPushoutModel(matches[0]);
-      const url=URL.createObjectURL(new Blob([window.PushoutXlsx.write(model)],{type:window.PushoutXlsx.mime})),link=document.createElement('a');link.href=url;link.download=model.filename;document.body.appendChild(link);try{link.click();}finally{link.remove();setTimeout(()=>URL.revokeObjectURL(url),60000);}toast('XLSX pro Pushout připraven.');
+      if(!ticket())return;reportController.download(new Blob([window.PushoutXlsx.write(model)],{type:window.PushoutXlsx.mime}),model.filename);toast('XLSX pro Pushout připraven.');
     }catch(error){toast('Export pro Pushout se nezdařil: '+error.message);}
     finally{pushoutExportBusy=false;buttons.forEach(b=>b.disabled=false);}
   });
-  $('fcReportClose')?.addEventListener('click',()=>reportDialog.close());
-  reportDialog?.addEventListener('close',()=>{reportExportGeneration++;if(reportReturnFocus?.isConnected)reportReturnFocus.focus({preventScroll:true});$('fcReportContent').replaceChildren();});
-  new MutationObserver(()=>{if(reportDialog.open&&!$('screen-federal-cup-2026').classList.contains('active'))reportDialog.close();}).observe($('screen-federal-cup-2026'),{attributes:true,attributeFilter:['class']});
-
   // Výhradně čtecí obrazovka; žádný druhý zápis dat ani editace utkání.
   function renderFederalCupViewer(){
     if(!$('fc26ViewerScoreboard'))return;
