@@ -2608,7 +2608,7 @@ html[data-theme="light"] #leagueSchedule .history-item .muted{
           <span class="by">by</span>
           <span class="club">BC Rybárna</span>
         </div>
-        <small class="modern-brand-version">v4.51.104 RC</small>
+        <small class="modern-brand-version">v4.51.105 RC</small>
       </div>
     </div>
     <div class="nav">
@@ -3222,7 +3222,7 @@ html[data-theme="light"] #leagueSchedule .history-item .muted{
         </div>
         <div class="subpanel" style="min-width:210px;text-align:center;margin:0">
           <div class="muted" style="font-size:10px;font-weight:950;letter-spacing:1px">AKTUÁLNÍ VERZE</div>
-          <div style="font-size:22px;font-weight:950;color:var(--gold2);margin-top:5px">v4.51.104 RC</div>
+          <div style="font-size:22px;font-weight:950;color:var(--gold2);margin-top:5px">v4.51.105 RC</div>
         </div>
       </div>
     </div>
@@ -5987,7 +5987,7 @@ html[data-theme="light"] #leagueSchedule .history-item .muted{
       </div>
 
       <div id="groupPlayoffSeedStatus" class="muted" style="margin-top:12px;min-height:20px"></div>
-      <div class="muted" style="margin-top:4px;font-size:11px">RC v4.51.104</div>
+      <div class="muted" style="margin-top:4px;font-size:11px">RC v4.51.105</div>
       <div class="modal-actions">
         <button id="groupPlayoffSeedApplyBtn" class="btn primary big" type="button">NASADIT DO PLAY-OFF</button>
         <button id="groupPlayoffSeedCancelBtn" class="btn">ZRUŠIT</button>
@@ -7160,7 +7160,7 @@ html[data-theme="light"] #leagueSchedule .history-item .muted{
     const btn=$('submitReportBtn');if(btn)btn.disabled=true;
     try{
       const id=uid(),p=currentUserPlayerId?data.players?.[currentUserPlayerId]:null;
-      const report={id,createdByUid:cloudUid,createdByPlayerId:currentUserPlayerId||'',createdByName:p?playerSelectionLabel(p):(cloudUserEmail||'Uživatel'),email:cloudUserEmail||'',type,area,description,appVersion:'v4.51.104 RC',createdAt:new Date().toISOString(),updatedAt:new Date().toISOString(),status:'new',adminNote:''};
+      const report={id,createdByUid:cloudUid,createdByPlayerId:currentUserPlayerId||'',createdByName:p?playerSelectionLabel(p):(cloudUserEmail||'Uživatel'),email:cloudUserEmail||'',type,area,description,appVersion:'v4.51.105 RC',createdAt:new Date().toISOString(),updatedAt:new Date().toISOString(),status:'new',adminNote:''};
       await reportRequest(id,'PUT',report);
       try{
         await writeReportUserMirror(report);
@@ -14447,6 +14447,9 @@ $('winnerText').textContent = match.solo14
     // renderMatch ho zrušil a následný kód pak mohl narazit na null objekt.
     if(!cloudUid && !m.createdByUid)return true;
 
+    // Runtime UID/profile alone is not proof of an authenticated owner.
+    if(!cloudAuthenticated || !cloudUid)return false;
+
     // Tvůrce běžného zápasu ho musí mít vždy možnost řídit, i když sám není hráčem.
     // To je důležité pro zapisovatele / pořadatele, kteří počítají cizí zápas.
     if(cloudUid && m.createdByUid===cloudUid)return true;
@@ -14481,9 +14484,9 @@ $('winnerText').textContent = match.solo14
   }
 
   function discardForeignLocalActiveMatch(){
-    // Přihlášení se po reloadu obnovuje asynchronně. Federal Cup snapshot
-    // zachováme v zařízení, ale do ověření identity ho nenecháme upravovat.
-    if(match?.federalCupLink && (!cloudAuthenticated || !cloudUid)){
+    // Auth restoration is asynchronous for every account-owned match.
+    // Detach only the editable pointer; keep disk/recovery for authorized resume.
+    if((match?.createdByUid || match?.federalCupLink) && (!cloudAuthenticated || !cloudUid)){
       match=null;
       data.currentMatch=null;
       return true;

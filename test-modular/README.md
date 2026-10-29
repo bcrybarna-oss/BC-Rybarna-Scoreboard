@@ -1,3 +1,5 @@
+> **Historický experiment, ne současná produkce.** Tento náhled zůstává na starém odděleném core. Jeho testy mají vlastní viditelný CI job a přetrvávající kontraktní chyby; zelené produkční testy neznamenají správnost tohoto náhledu. Aktuální plán je v [roadmapě](../docs/modularization-roadmap.md), přesné záruky a skutečné chyby v [testových sadách](../docs/testing.md). Následující text je zachovaný popis experimentu, nikoli pokyn k dokončení jeho implementace nebo náhrada produkční větve.
+
 # Poolčítadlo TEST MODULAR – v4.51.75 RC
 
 Odkaz po publikaci na hlavní větvi GitHub Pages:

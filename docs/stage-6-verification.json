@@ -1,0 +1,320 @@
+{
+  "date": "2026-10-29",
+  "base": "28f45bd32483d8c8275c23d6aac14480dfc8ee6f",
+  "version": "v4.51.105 RC",
+  "productionVersion": "v4.51.104 RC",
+  "notDeployed": true,
+  "productionFixCommit": "917e310",
+  "preserved": [
+    {
+      "file": "assets/js/federal-statistics.js",
+      "sha256": "7e1cae131f79f6bf5bdd2c417fe5b4272408c361053024a6e5f1c411a9ea7d21",
+      "sameAsBaseline": true
+    },
+    {
+      "file": "assets/js/cloud-refresh.js",
+      "sha256": "ac53937d949b561a52b379c32f468bc2e927ad3a78e2295184a231dcf6da98b7",
+      "sameAsBaseline": true
+    },
+    {
+      "file": "assets/js/own-reports.js",
+      "sha256": "44be6dc2526ecd6deff8461b08bbb8a8f4789a691d2aa456663feeebb160a3d5",
+      "sameAsBaseline": true
+    },
+    {
+      "file": "assets/js/federal-viewer.js",
+      "sha256": "18c56c268fb394cab25225dfd032b1401b109254d4142c4f2db976ce7f2234c8",
+      "sameAsBaseline": true
+    },
+    {
+      "file": "assets/js/admin-reports.js",
+      "sha256": "7d294f2c634ef567db20352ce85b3d8a0aad4abd829d8d4a3ca6e8dd625d3070",
+      "sameAsBaseline": true
+    },
+    {
+      "file": "test-modular/assets/js/pool-core.js",
+      "sha256": "d167a121da8ce86ef41c63bb070d2bb0ad74680f0444ad1aaf18e0aa092d9ede",
+      "sameAsBaseline": true
+    }
+  ],
+  "inventory": {
+    "all": [
+      "admin-reports.test.cjs",
+      "app-performance.test.cjs",
+      "cloud-refresh.test.cjs",
+      "completed-tournament-correction.test.cjs",
+      "completed-tournament-persistence.test.cjs",
+      "detailed-counter.test.cjs",
+      "federal-calculation-integrity.test.cjs",
+      "federal-calculation.test.cjs",
+      "federal-cup-break-accounting.test.cjs",
+      "federal-diagnostic.test.cjs",
+      "federal-evidence.test.cjs",
+      "federal-fixture-link-plan.test.cjs",
+      "federal-lineup-rules.test.cjs",
+      "federal-linked-ordinary.test.cjs",
+      "federal-module.test.cjs",
+      "federal-pushout-export.test.cjs",
+      "federal-pushout.test.cjs",
+      "federal-quick-evidence.test.cjs",
+      "federal-reports.test.cjs",
+      "federal-tags.test.cjs",
+      "federal-viewer.test.cjs",
+      "federal-zero-pots.test.cjs",
+      "own-reports.test.cjs",
+      "password-reset.test.cjs",
+      "pdf-download.test.cjs",
+      "preview-141-shotclock.test.cjs",
+      "preview-match-reload-recovery.test.cjs",
+      "preview-real-auth.test.cjs",
+      "preview-shotclock-time-foul.test.cjs",
+      "preview-tournament-141-regression.test.cjs",
+      "preview-tournament-recovery.test.cjs",
+      "production-match-reload-recovery.test.cjs",
+      "release-policy.test.cjs",
+      "safety-escape-pot.test.cjs",
+      "smoke.test.cjs",
+      "stream-isolation.test.cjs",
+      "test-suites.test.cjs",
+      "tournament-setup.test.cjs"
+    ],
+    "experimental": [
+      "preview-141-shotclock.test.cjs",
+      "preview-match-reload-recovery.test.cjs",
+      "preview-real-auth.test.cjs",
+      "preview-shotclock-time-foul.test.cjs",
+      "preview-tournament-141-regression.test.cjs",
+      "preview-tournament-recovery.test.cjs"
+    ],
+    "production": [
+      "admin-reports.test.cjs",
+      "app-performance.test.cjs",
+      "cloud-refresh.test.cjs",
+      "completed-tournament-correction.test.cjs",
+      "completed-tournament-persistence.test.cjs",
+      "detailed-counter.test.cjs",
+      "federal-calculation-integrity.test.cjs",
+      "federal-calculation.test.cjs",
+      "federal-cup-break-accounting.test.cjs",
+      "federal-diagnostic.test.cjs",
+      "federal-evidence.test.cjs",
+      "federal-fixture-link-plan.test.cjs",
+      "federal-lineup-rules.test.cjs",
+      "federal-linked-ordinary.test.cjs",
+      "federal-module.test.cjs",
+      "federal-pushout-export.test.cjs",
+      "federal-pushout.test.cjs",
+      "federal-quick-evidence.test.cjs",
+      "federal-reports.test.cjs",
+      "federal-tags.test.cjs",
+      "federal-viewer.test.cjs",
+      "federal-zero-pots.test.cjs",
+      "own-reports.test.cjs",
+      "password-reset.test.cjs",
+      "pdf-download.test.cjs",
+      "production-match-reload-recovery.test.cjs",
+      "release-policy.test.cjs",
+      "safety-escape-pot.test.cjs",
+      "smoke.test.cjs",
+      "stream-isolation.test.cjs",
+      "test-suites.test.cjs",
+      "tournament-setup.test.cjs"
+    ]
+  },
+  "productionReproduction": {
+    "before": {
+      "pass": 4,
+      "fail": 2,
+      "total": 6
+    },
+    "after": {
+      "pass": 6,
+      "fail": 0,
+      "total": 6
+    },
+    "causes": [
+      "pending identity deleted local ordinary account-owned match instead of detaching only editable state",
+      "stale runtime UID/profile accepted without authenticated identity"
+    ],
+    "login": "Production explicit resume unchanged; preview automatic navigation not ported"
+  },
+  "node": {
+    "productionPrivate": {
+      "pass": 261,
+      "fail": 0,
+      "skip": 0,
+      "total": 261
+    },
+    "productionPublic": {
+      "pass": 258,
+      "fail": 0,
+      "skip": 3,
+      "total": 261
+    },
+    "experimental": {
+      "pass": 28,
+      "fail": 2,
+      "skip": 0,
+      "total": 30
+    },
+    "allPrivate": {
+      "pass": 289,
+      "fail": 2,
+      "skip": 0,
+      "total": 291
+    },
+    "allPublic": {
+      "pass": 286,
+      "fail": 2,
+      "skip": 3,
+      "total": 291
+    },
+    "aggregateExitCode": 1,
+    "failures": [
+      {
+        "test": "reloading while Firebase identity is unavailable detaches but never deletes a saved match",
+        "scope": "experimental",
+        "status": "original unresolved contract",
+        "cause": "preview POOL_TEST_MODE retains match pointer while identity unavailable"
+      },
+      {
+        "test": "experimental contract: stale UID without authenticated identity must not authorize the saved owner",
+        "scope": "experimental",
+        "status": "newly covered latent defect, not the old regex",
+        "cause": "actual preview ownership predicate accepts stale UID"
+      }
+    ],
+    "replacedRegex": {
+      "actualManualAndAutoEntryPoints": true,
+      "actualMatchAndTournamentRestore": true,
+      "asyncLoadOrderAndNavigation": true,
+      "passingScenarios": 4
+    },
+    "privateSkips": [
+      "actual fixture9 original backup link/hash",
+      "actual linked ordinary before/after backups",
+      "actual surviving history/undo snapshots"
+    ]
+  },
+  "browser": {
+    "recovery": {
+      "productionSource": true,
+      "pendingDetaches": true,
+      "originalPointerAndRecoveryPreserved": true,
+      "staleIdentityCannotScore": true,
+      "strangerCannotResume": true,
+      "ownerRestoresScore": [
+        3,
+        2
+      ],
+      "clockPaused": true,
+      "scoringUndoPreserved": true,
+      "pageErrors": [],
+      "mockRequests": [
+        {
+          "method": "PUT",
+          "path": "/stream/liveMatches/77b2afec-b130-44e8-859d-83eb18b8a0e3.json"
+        },
+        {
+          "method": "PUT",
+          "path": "/stream/liveMatches/77b2afec-b130-44e8-859d-83eb18b8a0e3.json"
+        },
+        {
+          "method": "GET",
+          "path": "/matches/77b2afec-b130-44e8-859d-83eb18b8a0e3.json"
+        },
+        {
+          "method": "PUT",
+          "path": "/matches/77b2afec-b130-44e8-859d-83eb18b8a0e3.json"
+        },
+        {
+          "method": "GET",
+          "path": "/appData.json"
+        },
+        {
+          "method": "GET",
+          "path": "/stream/liveMatches.json"
+        },
+        {
+          "method": "GET",
+          "path": "/players.json"
+        },
+        {
+          "method": "PUT",
+          "path": "/stream/liveMatches/77b2afec-b130-44e8-859d-83eb18b8a0e3.json"
+        },
+        {
+          "method": "GET",
+          "path": "/matches/77b2afec-b130-44e8-859d-83eb18b8a0e3.json"
+        },
+        {
+          "method": "PUT",
+          "path": "/matches/77b2afec-b130-44e8-859d-83eb18b8a0e3.json"
+        },
+        {
+          "method": "GET",
+          "path": "/players.json"
+        },
+        {
+          "method": "GET",
+          "path": "/matches.json"
+        },
+        {
+          "method": "GET",
+          "path": "/tournaments.json"
+        },
+        {
+          "method": "GET",
+          "path": "/matches/77b2afec-b130-44e8-859d-83eb18b8a0e3.json"
+        },
+        {
+          "method": "GET",
+          "path": "/matches/77b2afec-b130-44e8-859d-83eb18b8a0e3.json"
+        },
+        {
+          "method": "PUT",
+          "path": "/stream/liveMatches/77b2afec-b130-44e8-859d-83eb18b8a0e3.json"
+        },
+        {
+          "method": "PUT",
+          "path": "/stream/liveMatches/77b2afec-b130-44e8-859d-83eb18b8a0e3.json"
+        }
+      ]
+    },
+    "otherSuites": [
+      "FederalCup Auth/reload/resume/undo/PUTGET",
+      "stream simple/full/OBS mock desktop/mobile/reload",
+      "ordinary/historical turn101 quota/settings/reload",
+      "five module bootstrap/404 desktop/mobile",
+      "Pushout XLSX Singles/Doubles/Team actual downloads",
+      "A1/A2/B FullHD PNG and unchanged PDF regression"
+    ]
+  },
+  "productionWrites": 0,
+  "liveAuthVerified": false,
+  "stage7Started": false,
+  "pullRequest": "https://github.com/bcrybarna-oss/BC-Rybarna-Scoreboard/pull/44",
+  "implementationCommits": [
+    "917e310",
+    "b77cafa0dc3cf24f203d3c9a01c2ed570207b48c"
+  ],
+  "githubCI": {
+    "run": 40920540934,
+    "url": "https://github.com/bcrybarna-oss/BC-Rybarna-Scoreboard/actions/runs/40920540934",
+    "release": "success",
+    "production": {
+      "pass": 258,
+      "fail": 0,
+      "skip": 3,
+      "total": 261
+    },
+    "experimental": {
+      "pass": 28,
+      "fail": 2,
+      "skip": 0,
+      "total": 30
+    },
+    "overall": "failure",
+    "failuresIgnored": false
+  }
+}

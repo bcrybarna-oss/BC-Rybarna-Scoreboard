@@ -1,5 +1,17 @@
 # Revize aplikace Poolčítadlo
 
+## Dominik – produkční kontrakt obnovy a etapa6 testů (v4.51.105 RC)
+Zadavatel: Dominik
+Datum: 29. 10. 2026
+Změny: Samostatný commit917e310 opravuje pending identitu a staleUID guard produkce, bez mazání snapshotů/změny explicitního resume. Odděleně roadmapa6–14/Authhranice a samostatnéPDF/cache úkoly, registry produkční/experimentální Node sady a2normálníCIjoby. npm test stále spouští vše bez allow-failure. Starý regex nahrazen4actual login/match-first/tournamentfallback scénáři; experimentální core beze změny, starýpointerfail zachován a nově testovaný staleUID rovněž viditelně selhává.
+Testy: Produkční reprodukce před4PASS/2FAIL, po6/6PASS; actual ordinary browser reload/Auth/resume/score/undoPASS. Produkční Node261/0/0 lokálně, bez soukromýchdat258/0/3. Experiment28PASS/2skutečnéFAIL. Celek289PASS/2FAIL/0SKIP z291; veřejná sada286/2/3 aexit1. FCAuth/stream/turnaje101/5modulůbootstrap/PNG/XLSX/původníPDFregresePASS. Pět modulů i experimentální implementace byteově shodné s base28f45bd. Viz docs/stage-6-test-contracts.md a docs/testing.md; releasegatePASS, finálníCI vPR.
+Nasazení: Pushnuto917e310 + b77cafa do draftPR44 (https://github.com/bcrybarna-oss/BC-Rybarna-Scoreboard/pull/44), nesloučeno/nenasazeno. CI40920540934 releasePASS, produkce258/0/3, experiment28/2/0; celýworkflowFAILURE se skutečnými chybami. Dokumentační pokračování aplikaci/testy nemění. Produkce104 a produkční data beze změny.
+Omezení: Experimentální implementace není portována do produkce ani plošně opravena. ŽiváAuth/Firebase neověřeny; cache/PDF/etapa7 mimo rozsah.
+
+
+
+Dodatečná kontrola29.10.2026: [cílené browserové ověření identity105](docs/v4.51.105-identity-review.md) PASS pro opožděný manuální/automatický Auth s mockovanými endpointy, zachování strků/skóre/nastavení, viditelné POKRAČOVAT, staleUID, jiný účet a offline režim. Preview fallback4/4PASS s mockovanými hranicemi; není produkční automatickou obnovou. Živý Auth neověřen: chybí oddělené testovací prostředí. Celá veřejná Node sada286PASS/2skutečnéFAIL/3SKIP z291, exit1, releasePASS. Produkce nenačítá experimentální core; jeho vady EXP-RECOVERY-PENDING/EXP-IDENTITY-STALE zůstávají viditelné. Testy a dokumentace doplněny, aplikace beze změny. Nesloučeno/nenasazeno, etapa7 nezahájena.
+
 ## Dominik – ověřené nasazení vlastníka admin seznamu (v4.51.104 RC)
 Zadavatel: Dominik
 Datum: 29. 10. 2026

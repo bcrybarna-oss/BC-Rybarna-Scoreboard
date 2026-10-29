@@ -11,7 +11,7 @@
     "run:android": "npx cap run android",
     "add:ios": "npx cap add ios",
     "add:android": "npx cap add android",
-    "test": "node --test tests/*.test.cjs",
+    "test": "node scripts/run-tests.cjs all",
     "test:federal-cup": "node tests/federal-cup-browser.cjs",
     "test:stream": "node tests/stream-controls-browser.cjs",
     "test:stream-lag": "node tests/stream-lag-browser.cjs",
@@ -26,7 +26,9 @@
     "test:federal-reports": "node tests/federal-reports-browser.cjs",
     "test:federal-report-exports": "node tests/federal-report-exports-browser.cjs",
     "test:federal-report-ui": "node tests/federal-report-ui-browser.cjs",
-    "test:federal-report-data": "node --test tests/federal-reports.test.cjs"
+    "test:federal-report-data": "node --test tests/federal-reports.test.cjs",
+    "test:production": "node scripts/run-tests.cjs production",
+    "test:experimental": "node scripts/run-tests.cjs experimental"
   },
   "dependencies": {
     "@capacitor/core": "^8.0.0",

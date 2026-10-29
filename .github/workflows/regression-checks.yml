@@ -31,8 +31,8 @@ jobs:
         env:
           RELEASE_BASE: ${{ github.event.before }}
         run: node scripts/check-release.cjs --base "$RELEASE_BASE"
-  smoke-tests:
-    name: Node smoke tests
+  production-tests:
+    name: Production Node tests
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
@@ -42,4 +42,15 @@ jobs:
         with:
           node-version: '22'
       - name: Run regression suite
-        run: npm test
+        run: npm run test:production
+
+  experimental-tests:
+    name: Experimental test-modular contracts
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Run every experimental assertion (failures remain visible)
+        run: npm run test:experimental
