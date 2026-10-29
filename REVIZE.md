@@ -5,7 +5,7 @@ Zadavatel: Dominik
 Datum: 29. 10. 2026
 Změny: Samostatný commit917e310 opravuje pending identitu a staleUID guard produkce, bez mazání snapshotů/změny explicitního resume. Odděleně roadmapa6–14/Authhranice a samostatnéPDF/cache úkoly, registry produkční/experimentální Node sady a2normálníCIjoby. npm test stále spouští vše bez allow-failure. Starý regex nahrazen4actual login/match-first/tournamentfallback scénáři; experimentální core beze změny, starýpointerfail zachován a nově testovaný staleUID rovněž viditelně selhává.
 Testy: Produkční reprodukce před4PASS/2FAIL, po6/6PASS; actual ordinary browser reload/Auth/resume/score/undoPASS. Produkční Node261/0/0 lokálně, bez soukromýchdat258/0/3. Experiment28PASS/2skutečnéFAIL. Celek289PASS/2FAIL/0SKIP z291; veřejná sada286/2/3 aexit1. FCAuth/stream/turnaje101/5modulůbootstrap/PNG/XLSX/původníPDFregresePASS. Pět modulů i experimentální implementace byteově shodné s base28f45bd. Viz docs/stage-6-test-contracts.md a docs/testing.md; releasegatePASS, finálníCI vPR.
-Nasazení: Kandidát105, nesloučen/nenasazen. Produkce104 a produkční data beze změny.
+Nasazení: Pushnuto917e310 + b77cafa do draftPR44 (https://github.com/bcrybarna-oss/BC-Rybarna-Scoreboard/pull/44), nesloučeno/nenasazeno. CI40920540934 releasePASS, produkce258/0/3, experiment28/2/0; celýworkflowFAILURE se skutečnými chybami. Dokumentační pokračování aplikaci/testy nemění. Produkce104 a produkční data beze změny.
 Omezení: Experimentální implementace není portována do produkce ani plošně opravena. ŽiváAuth/Firebase neověřeny; cache/PDF/etapa7 mimo rozsah.
 
 

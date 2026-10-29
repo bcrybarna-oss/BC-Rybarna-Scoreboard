@@ -292,5 +292,29 @@
   },
   "productionWrites": 0,
   "liveAuthVerified": false,
-  "stage7Started": false
+  "stage7Started": false,
+  "pullRequest": "https://github.com/bcrybarna-oss/BC-Rybarna-Scoreboard/pull/44",
+  "implementationCommits": [
+    "917e310",
+    "b77cafa0dc3cf24f203d3c9a01c2ed570207b48c"
+  ],
+  "githubCI": {
+    "run": 40920540934,
+    "url": "https://github.com/bcrybarna-oss/BC-Rybarna-Scoreboard/actions/runs/40920540934",
+    "release": "success",
+    "production": {
+      "pass": 258,
+      "fail": 0,
+      "skip": 3,
+      "total": 261
+    },
+    "experimental": {
+      "pass": 28,
+      "fail": 2,
+      "skip": 0,
+      "total": 30
+    },
+    "overall": "failure",
+    "failuresIgnored": false
+  }
 }

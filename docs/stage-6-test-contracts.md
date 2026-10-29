@@ -48,3 +48,6 @@ ReleasegatePASS. FinálníCI aPR budou uvedeny u předání. Zelený produkční
 ## Návrat
 
 Reverze celého PR vrátí organizaci testů i cílené guardy, bez datové migrace. Protože vrací také doloženou produkční vadu, není doporučenou nápravou nalezeného bezpečnostního regresu; případný rollback musí výslovně zachovat bezpečný kontrakt nebo následovat hotfix podle release pravidel. Samostatné commity dovolují rozlišit testovací infrastrukturu od produkční opravy. Žádné zapnutí, mazání nebo plošná oprava test-modular, žádné změny PDF/cache ani rendererů7.
+
+
+[Draft PR44](https://github.com/bcrybarna-oss/BC-Rybarna-Scoreboard/pull/44), produkční oprava917e310, testy/roadmapa b77cafa. [CI40920540934](https://github.com/bcrybarna-oss/BC-Rybarna-Scoreboard/actions/runs/40920540934): Release PASS, Production Node258PASS/0FAIL/3SKIP ze261, Experimental28PASS/2FAIL/0SKIP ze30. Celýworkflow FAILURE, obě skutečné experimentální neshody zůstaly viditelné. Dokumentační pokračování kód aplikace ani testy nemění. Neslučovat/nenasazovat, etapa7 nezahájena.
