@@ -1,5 +1,8 @@
 # Etapa7a — renderer, kandidát v4.51.106 RC
 
+**Nasazeno106 (Dominik,29.10.2026):** PR46→PR45 integracee2e5bc6, společný merge do main2b8edcf835748e7526e38e127ad20c791c260937; Pages40945274924success, žádné samostatné vydání7a. Release/prodCI266/0/3PASS, experiment28/2/0FAIL, celekFAILURE bez ignorování. Veřejná106/22souborůSHA256/7modulů/desktop-mobil/navigace/0JSerrors. Publikovanýkód izolovaně: A1/A2/B immediateclose-open, role/session invalidace, skutečnéPNG/PDF/XLSX a úklid PASS; živýAuth/Rules neověřen. Produkčnídata beze změny. [Deploymentreport a návrat](docs/deployment-v4.51.106.md). Další etapa nezahájena. Následující příprava106 je zachovaná historie, zákazy sloučení byly nahrazeny schváleným společným vydáním.
+
+
 Etapa7b (Dominik,29.10.2026): navazující controller na PR45, společný nevydaný106. Samostatný PR do větve7a; nejprve integrace7b→7a a až po schválení společné vydání do main. Oba reproduktory PASS, ztráta role PASS,23výstupů shodných, Node269/0/0 lokálně, experiment28/2/0; žádné ignorování. [Rozsah, verze, důkazy a návrat](docs/federal-report-controller-stage-7b.md). Nesloučeno/nenasazeno, produkce105/data beze změny.
 
 Dominik,29.10.2026: etapa7 rozdělena dle roadmapy. FederalReportRenderer tvoří HTML/SVG z předaných výsledků/metrik, pouze escapování, stávající formátovač FederalStatistics a callback měření textu. Žádný přístup k datovému globálu, DOM, síti, persistence nebo životnímu cyklu. Core vybírá podklady a volá jedinou šablonu; stará těla odstraněna. CSS, texty, assety, výpočty a exporty neměněny. Dialog/exportní generace, asynchronní úklid a relace jsou výslovně zbývající etapa7b, nikoli druhý paralelní controller. Kandidát106 není nasazen. Produkce105 a data zůstávají beze změny; další oblast roadmapy nezahájena.

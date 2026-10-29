@@ -107,3 +107,5 @@ Současný core kombinuje firebaseSignIn/firebaseRefreshAuth, ověření e-mailu
 Každý bod potřebuje samostatný přezkoumatelný PR a výslovné schválení vydání. Tato roadmapa nepovoluje sloučení nebo nasazení žádné etapy.
 
 Viz [controller7b](federal-report-controller-stage-7b.md), navazující samostatné PR na7a pro společné nevydané106.
+
+29.10.2026: etapa7a+7b společně nasazena106, merge2b8edcf, nikoli oddělené verze. [Ověření, meze a návrat](deployment-v4.51.106.md). Etapa8 ani další oblast nezahájena.

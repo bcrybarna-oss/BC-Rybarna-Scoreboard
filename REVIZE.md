@@ -1,5 +1,14 @@
 # Revize aplikace Poolčítadlo
 
+## Dominik – společné ověřené nasazení rendereru a controlleru (v4.51.106 RC)
+Zadavatel: Dominik
+Datum: 29. 10. 2026
+Změny: PR46 začleněn do45 mergee2e5bc6, pak společný merge2b8edcf835748e7526e38e127ad20c791c260937 do main. Samostatná7a nebyla nasazena. Tento zápis mění pouze dokumentaci.
+Testy: Integrační/mainreleasePASS a produkce266/0/3, lokálně269/0/0. Experiment28/2/0, dvě konkrétní vady shodné; celýworkflowFAILURE. Oba reproduktory/PNG/PDF/XLSX předmergePASS. Veřejná106/22souborůSHA256/7modulů/desktop-mobil/navigace/0JSerrors. Publikovanýkód izolovaně A1/A2/B immediateclose-open, session/role,20cyklů/slowfonts-images/chyba-retry/DOM0/URLlease a skutečnéPNG/PDF/XLSX PASS.
+Nasazení: Pages40945274924success, skutečná veřejná106 odpovídá merge. Viz docs/deployment-v4.51.106.md a strojová evidence. Produkčnídata/účty neměněny, žádná migrace.
+Omezení: ŽivýAuth/Rules/soukromárelace/fyzickéiOS/OBS neověřeny; soukromé scénáře pouze mockované. PDF/B/cachelimity trvají. Návrat reverzí kódu s novou verzí bez vracení dat by vrátil i opravené exportní vady. Dalšíetapa nezahájena.
+
+
 Etapa7b (Dominik,29.10.2026): navazující controller na PR45, společný nevydaný106. Samostatný PR do větve7a; nejprve integrace7b→7a a až po schválení společné vydání do main. Oba reproduktory PASS, ztráta role PASS,23výstupů shodných, Node269/0/0 lokálně, experiment28/2/0; žádné ignorování. [Rozsah, verze, důkazy a návrat](docs/federal-report-controller-stage-7b.md). Nesloučeno/nenasazeno, produkce105/data beze změny.
 
 ## Dominik – controller reportů, navazující etapa7b (v4.51.106 RC)
