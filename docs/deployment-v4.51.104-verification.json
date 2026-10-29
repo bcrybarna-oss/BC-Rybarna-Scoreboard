@@ -1,0 +1,1420 @@
+{
+  "version": "v4.51.104 RC",
+  "date": "2026-10-29",
+  "merge": "87f898375970cfa3c1a243af5edaf4463c94c36e",
+  "approvedHead": "d2bf107d71fc6768fa97cab1f4c43928d7aa617d",
+  "previousMain": "899ee10000efaa3235021b90212283e3d280fa28",
+  "pages": {
+    "run": 40913700775,
+    "conclusion": "success"
+  },
+  "ci": {
+    "pr": 40764794586,
+    "main": 40913702234,
+    "release": "success",
+    "node": {
+      "pass": 272,
+      "fail": 2,
+      "skip": 3,
+      "total": 277
+    },
+    "baseline": 40759980782,
+    "knownFailures": [
+      {
+        "line": 50,
+        "cause": "experimental core retains saved pointer while identity unavailable; expected detach differs"
+      },
+      {
+        "line": 106,
+        "cause": "static regex expects standalone restoration call, return is assigned for tournament fallback"
+      }
+    ],
+    "newRegressions": false
+  },
+  "preMergeTargeted": {
+    "pass": 38,
+    "fail": 0
+  },
+  "public": {
+    "version": "v4.51.104 RC",
+    "merge": "87f898375970cfa3c1a243af5edaf4463c94c36e",
+    "url": "https://bcrybarna-oss.github.io/BC-Rybarna-Scoreboard/",
+    "files": {
+      "index.html": {
+        "status": 200,
+        "sha256": "4164b507ee44632eb4e54fcd6e8b82422b54e810e7246ffc8f09e0585049c4d0",
+        "bytes": 1660203
+      },
+      "overlay.html": {
+        "status": 200,
+        "sha256": "54ad8de46f5b1051bb601b4f2340ce5bec71f5d8f03860c7b1e2d2977eadd73d",
+        "bytes": 20885
+      },
+      "assets/pushout-xlsx.js": {
+        "status": 200,
+        "sha256": "5e4436656444c3f87b2c8550414b49070eb7d8974455e321425388bc639ae874",
+        "bytes": 7977
+      },
+      "assets/federal-report-billiards.webp": {
+        "status": 200,
+        "sha256": "2a8d73c1b0a5ecd07597b993f0da5ed22b7c30bba6023448b8069d154bf3e228",
+        "bytes": 74790
+      },
+      "assets/federal-report-pool-logo.png": {
+        "status": 200,
+        "sha256": "c28fd81775d4013e2b58716d6f8ef1a92691f4d5d4c0b8b2ba1b0d3a3a12c593",
+        "bytes": 220520
+      },
+      "assets/pushout-sports-logo-yellow.png": {
+        "status": 200,
+        "sha256": "049c2b4648a2e6106c5c41459c346689915256f62330ee17129b4484fc8314ff",
+        "bytes": 44487
+      },
+      "bc-rybarna-logo.png": {
+        "status": 200,
+        "sha256": "5ad8dccc37f3426e189916f5e5bce61fa922f82d8757283832ac01d224f1f083",
+        "bytes": 131525
+      },
+      "assets/poolcitadlo-logo.webp": {
+        "status": 200,
+        "sha256": "7f9caff46b1924186ef7d6a42b6b9079ee9ace9e7875d8f688e9fdc83bd488db",
+        "bytes": 27896
+      },
+      "assets/federal-cup/flag-sk-flat.svg": {
+        "status": 200,
+        "sha256": "659b2c072f05d05e8b5d38caa878626459ac652c6dc02359094b423a4ae1d6ee",
+        "bytes": 1543
+      },
+      "assets/federal-cup/flag-cz-flat.svg": {
+        "status": 200,
+        "sha256": "172aa188241c3f5fbd95d7881095d65e2b681f105fb867923709cc09a5dcc3a0",
+        "bytes": 222
+      },
+      "assets/federal-cup/flag-sk-cloth.svg": {
+        "status": 200,
+        "sha256": "cf8cc9a9fec2f76db4ba3cf6f66c303488cb7ad738aba6dc8afe7535a7a968e7",
+        "bytes": 3230
+      },
+      "assets/federal-cup/flag-cz-cloth.svg": {
+        "status": 200,
+        "sha256": "e83808ab2c0c8a5a6b2dde63c44c8e22416ca0a38c00b468136643baca2064e8",
+        "bytes": 1910
+      },
+      "assets/federal-cup/flag-sk-cloth.png": {
+        "status": 200,
+        "sha256": "27faf3b6b76a07b4793ddadb3f549d104ef5c91256c300ad3d24d4dd25a9111a",
+        "bytes": 717340
+      },
+      "assets/federal-cup/flag-cz-cloth.png": {
+        "status": 200,
+        "sha256": "e6485509db399555689fe7b9e23aa1e9e70b27a28e3ca8f1ac2ad38c505cc7fb",
+        "bytes": 641363
+      },
+      "assets/federal-cup/gold-trophy.png": {
+        "status": 200,
+        "sha256": "d4c8ec993c1e20d16508e3f96aade23dc217593597ed3649ca7bc777f85c29c7",
+        "bytes": 1854457
+      },
+      "assets/js/federal-statistics.js": {
+        "status": 200,
+        "sha256": "7e1cae131f79f6bf5bdd2c417fe5b4272408c361053024a6e5f1c411a9ea7d21",
+        "bytes": 48112
+      },
+      "assets/js/cloud-refresh.js": {
+        "status": 200,
+        "sha256": "ac53937d949b561a52b379c32f468bc2e927ad3a78e2295184a231dcf6da98b7",
+        "bytes": 3453
+      },
+      "assets/js/own-reports.js": {
+        "status": 200,
+        "sha256": "44be6dc2526ecd6deff8461b08bbb8a8f4789a691d2aa456663feeebb160a3d5",
+        "bytes": 4001
+      },
+      "assets/js/federal-viewer.js": {
+        "status": 200,
+        "sha256": "18c56c268fb394cab25225dfd032b1401b109254d4142c4f2db976ce7f2234c8",
+        "bytes": 2210
+      },
+      "assets/js/admin-reports.js": {
+        "status": 200,
+        "sha256": "7d294f2c634ef567db20352ce85b3d8a0aad4abd829d8d4a3ca6e8dd625d3070",
+        "bytes": 5004
+      }
+    },
+    "clients": [
+      {
+        "mode": "desktop",
+        "authenticated": false,
+        "screens": [
+          "home",
+          "support",
+          "reports",
+          "results",
+          "tournament",
+          "federal-cup-2026"
+        ],
+        "ownReports": {
+          "refreshButton": true,
+          "submitForm": true,
+          "anonymousRefreshNoRequest": true
+        },
+        "ordinaryFields": {
+          "groups": {
+            "discipline": "8-ball",
+            "race": 3
+          },
+          "playoff": {
+            "discipline": "10-ball",
+            "race": 7
+          }
+        },
+        "fixtureCount": 21,
+        "viewerCycles": [
+          {
+            "on": {
+              "timers": 1,
+              "listeners": 1
+            },
+            "off": {
+              "timers": 0,
+              "listeners": 0
+            }
+          },
+          {
+            "on": {
+              "timers": 1,
+              "listeners": 1
+            },
+            "off": {
+              "timers": 0,
+              "listeners": 0
+            }
+          },
+          {
+            "on": {
+              "timers": 1,
+              "listeners": 1
+            },
+            "off": {
+              "timers": 0,
+              "listeners": 0
+            }
+          },
+          {
+            "on": {
+              "timers": 1,
+              "listeners": 1
+            },
+            "off": {
+              "timers": 0,
+              "listeners": 0
+            }
+          },
+          {
+            "on": {
+              "timers": 1,
+              "listeners": 1
+            },
+            "off": {
+              "timers": 0,
+              "listeners": 0
+            }
+          }
+        ],
+        "publicA2Dialog": true,
+        "modulesLoaded": 5,
+        "passwordResetControlAndLocalValidation": true,
+        "errors": [],
+        "consoleErrors": [],
+        "blocked": [],
+        "historicalForm": "Requires authorized series management; tested separately in isolated environment"
+      },
+      {
+        "mode": "mobile",
+        "authenticated": false,
+        "screens": [
+          "home",
+          "support",
+          "reports",
+          "results",
+          "tournament",
+          "federal-cup-2026"
+        ],
+        "ownReports": {
+          "refreshButton": true,
+          "submitForm": true,
+          "anonymousRefreshNoRequest": true
+        },
+        "ordinaryFields": {
+          "groups": {
+            "discipline": "8-ball",
+            "race": 3
+          },
+          "playoff": {
+            "discipline": "10-ball",
+            "race": 7
+          }
+        },
+        "fixtureCount": 21,
+        "viewerCycles": [
+          {
+            "on": {
+              "timers": 1,
+              "listeners": 1
+            },
+            "off": {
+              "timers": 0,
+              "listeners": 0
+            }
+          },
+          {
+            "on": {
+              "timers": 1,
+              "listeners": 1
+            },
+            "off": {
+              "timers": 0,
+              "listeners": 0
+            }
+          },
+          {
+            "on": {
+              "timers": 1,
+              "listeners": 1
+            },
+            "off": {
+              "timers": 0,
+              "listeners": 0
+            }
+          },
+          {
+            "on": {
+              "timers": 1,
+              "listeners": 1
+            },
+            "off": {
+              "timers": 0,
+              "listeners": 0
+            }
+          },
+          {
+            "on": {
+              "timers": 1,
+              "listeners": 1
+            },
+            "off": {
+              "timers": 0,
+              "listeners": 0
+            }
+          }
+        ],
+        "publicA2Dialog": true,
+        "modulesLoaded": 5,
+        "passwordResetControlAndLocalValidation": true,
+        "errors": [],
+        "consoleErrors": [],
+        "blocked": [],
+        "historicalForm": "Requires authorized series management; tested separately in isolated environment"
+      }
+    ],
+    "passwordReset": {
+      "sameFunctionAsVersion100": true,
+      "sha256": "68239d6f690b44b59c8207b67169256c4b5a975ca52b56f0647a2971e3edfada"
+    }
+  },
+  "isolated": {
+    "source": "Downloaded public HTML and all five modules SHA256 verified, read-only fs overlay in browser tests, all Auth/Firebase requests mocked",
+    "admin": {
+      "sourceSha256": "4164b507ee44632eb4e54fcd6e8b82422b54e810e7246ffc8f09e0585049c4d0",
+      "archive": {
+        "bytes": 40913440,
+        "matches": 189,
+        "sha256": "49908fbcd66113315e524e6e61a4fc3a889654bb0e9420d309b843d4181a4d5d"
+      },
+      "concurrentReads": 1,
+      "lateAfterLeave": false,
+      "oldAAfterB": false,
+      "samples": [
+        {
+          "on": {
+            "dom": 3457,
+            "probe": {
+              "listeners": 3,
+              "intervals": 0,
+              "additions": 9
+            },
+            "controller": {
+              "active": true,
+              "disposed": false,
+              "pending": false,
+              "rows": 1,
+              "listeners": 3,
+              "timers": 0
+            }
+          },
+          "off": {
+            "dom": 3440,
+            "probe": {
+              "listeners": 0,
+              "intervals": 0,
+              "additions": 9
+            },
+            "controller": {
+              "active": false,
+              "disposed": false,
+              "pending": false,
+              "rows": 0,
+              "listeners": 0,
+              "timers": 0
+            }
+          },
+          "ms": 1165
+        },
+        {
+          "on": {
+            "dom": 3457,
+            "probe": {
+              "listeners": 3,
+              "intervals": 0,
+              "additions": 12
+            },
+            "controller": {
+              "active": true,
+              "disposed": false,
+              "pending": false,
+              "rows": 1,
+              "listeners": 3,
+              "timers": 0
+            }
+          },
+          "off": {
+            "dom": 3440,
+            "probe": {
+              "listeners": 0,
+              "intervals": 0,
+              "additions": 12
+            },
+            "controller": {
+              "active": false,
+              "disposed": false,
+              "pending": false,
+              "rows": 0,
+              "listeners": 0,
+              "timers": 0
+            }
+          },
+          "ms": 3092
+        },
+        {
+          "on": {
+            "dom": 3457,
+            "probe": {
+              "listeners": 3,
+              "intervals": 0,
+              "additions": 15
+            },
+            "controller": {
+              "active": true,
+              "disposed": false,
+              "pending": false,
+              "rows": 1,
+              "listeners": 3,
+              "timers": 0
+            }
+          },
+          "off": {
+            "dom": 3440,
+            "probe": {
+              "listeners": 0,
+              "intervals": 0,
+              "additions": 15
+            },
+            "controller": {
+              "active": false,
+              "disposed": false,
+              "pending": false,
+              "rows": 0,
+              "listeners": 0,
+              "timers": 0
+            }
+          },
+          "ms": 2919
+        },
+        {
+          "on": {
+            "dom": 3457,
+            "probe": {
+              "listeners": 3,
+              "intervals": 0,
+              "additions": 18
+            },
+            "controller": {
+              "active": true,
+              "disposed": false,
+              "pending": false,
+              "rows": 1,
+              "listeners": 3,
+              "timers": 0
+            }
+          },
+          "off": {
+            "dom": 3440,
+            "probe": {
+              "listeners": 0,
+              "intervals": 0,
+              "additions": 18
+            },
+            "controller": {
+              "active": false,
+              "disposed": false,
+              "pending": false,
+              "rows": 0,
+              "listeners": 0,
+              "timers": 0
+            }
+          },
+          "ms": 2403
+        },
+        {
+          "on": {
+            "dom": 3457,
+            "probe": {
+              "listeners": 3,
+              "intervals": 0,
+              "additions": 21
+            },
+            "controller": {
+              "active": true,
+              "disposed": false,
+              "pending": false,
+              "rows": 1,
+              "listeners": 3,
+              "timers": 0
+            }
+          },
+          "off": {
+            "dom": 3440,
+            "probe": {
+              "listeners": 0,
+              "intervals": 0,
+              "additions": 21
+            },
+            "controller": {
+              "active": false,
+              "disposed": false,
+              "pending": false,
+              "rows": 0,
+              "listeners": 0,
+              "timers": 0
+            }
+          },
+          "ms": 2565
+        },
+        {
+          "on": {
+            "dom": 3457,
+            "probe": {
+              "listeners": 3,
+              "intervals": 0,
+              "additions": 24
+            },
+            "controller": {
+              "active": true,
+              "disposed": false,
+              "pending": false,
+              "rows": 1,
+              "listeners": 3,
+              "timers": 0
+            }
+          },
+          "off": {
+            "dom": 3440,
+            "probe": {
+              "listeners": 0,
+              "intervals": 0,
+              "additions": 24
+            },
+            "controller": {
+              "active": false,
+              "disposed": false,
+              "pending": false,
+              "rows": 0,
+              "listeners": 0,
+              "timers": 0
+            }
+          },
+          "ms": 3138
+        },
+        {
+          "on": {
+            "dom": 3457,
+            "probe": {
+              "listeners": 3,
+              "intervals": 0,
+              "additions": 27
+            },
+            "controller": {
+              "active": true,
+              "disposed": false,
+              "pending": false,
+              "rows": 1,
+              "listeners": 3,
+              "timers": 0
+            }
+          },
+          "off": {
+            "dom": 3440,
+            "probe": {
+              "listeners": 0,
+              "intervals": 0,
+              "additions": 27
+            },
+            "controller": {
+              "active": false,
+              "disposed": false,
+              "pending": false,
+              "rows": 0,
+              "listeners": 0,
+              "timers": 0
+            }
+          },
+          "ms": 2781
+        },
+        {
+          "on": {
+            "dom": 3457,
+            "probe": {
+              "listeners": 3,
+              "intervals": 0,
+              "additions": 30
+            },
+            "controller": {
+              "active": true,
+              "disposed": false,
+              "pending": false,
+              "rows": 1,
+              "listeners": 3,
+              "timers": 0
+            }
+          },
+          "off": {
+            "dom": 3440,
+            "probe": {
+              "listeners": 0,
+              "intervals": 0,
+              "additions": 30
+            },
+            "controller": {
+              "active": false,
+              "disposed": false,
+              "pending": false,
+              "rows": 0,
+              "listeners": 0,
+              "timers": 0
+            }
+          },
+          "ms": 2784
+        },
+        {
+          "on": {
+            "dom": 3457,
+            "probe": {
+              "listeners": 3,
+              "intervals": 0,
+              "additions": 33
+            },
+            "controller": {
+              "active": true,
+              "disposed": false,
+              "pending": false,
+              "rows": 1,
+              "listeners": 3,
+              "timers": 0
+            }
+          },
+          "off": {
+            "dom": 3440,
+            "probe": {
+              "listeners": 0,
+              "intervals": 0,
+              "additions": 33
+            },
+            "controller": {
+              "active": false,
+              "disposed": false,
+              "pending": false,
+              "rows": 0,
+              "listeners": 0,
+              "timers": 0
+            }
+          },
+          "ms": 3346
+        },
+        {
+          "on": {
+            "dom": 3457,
+            "probe": {
+              "listeners": 3,
+              "intervals": 0,
+              "additions": 36
+            },
+            "controller": {
+              "active": true,
+              "disposed": false,
+              "pending": false,
+              "rows": 1,
+              "listeners": 3,
+              "timers": 0
+            }
+          },
+          "off": {
+            "dom": 3440,
+            "probe": {
+              "listeners": 0,
+              "intervals": 0,
+              "additions": 36
+            },
+            "controller": {
+              "active": false,
+              "disposed": false,
+              "pending": false,
+              "rows": 0,
+              "listeners": 0,
+              "timers": 0
+            }
+          },
+          "ms": 4180
+        },
+        {
+          "on": {
+            "dom": 3457,
+            "probe": {
+              "listeners": 3,
+              "intervals": 0,
+              "additions": 39
+            },
+            "controller": {
+              "active": true,
+              "disposed": false,
+              "pending": false,
+              "rows": 1,
+              "listeners": 3,
+              "timers": 0
+            }
+          },
+          "off": {
+            "dom": 3440,
+            "probe": {
+              "listeners": 0,
+              "intervals": 0,
+              "additions": 39
+            },
+            "controller": {
+              "active": false,
+              "disposed": false,
+              "pending": false,
+              "rows": 0,
+              "listeners": 0,
+              "timers": 0
+            }
+          },
+          "ms": 1487
+        },
+        {
+          "on": {
+            "dom": 3457,
+            "probe": {
+              "listeners": 3,
+              "intervals": 0,
+              "additions": 42
+            },
+            "controller": {
+              "active": true,
+              "disposed": false,
+              "pending": false,
+              "rows": 1,
+              "listeners": 3,
+              "timers": 0
+            }
+          },
+          "off": {
+            "dom": 3440,
+            "probe": {
+              "listeners": 0,
+              "intervals": 0,
+              "additions": 42
+            },
+            "controller": {
+              "active": false,
+              "disposed": false,
+              "pending": false,
+              "rows": 0,
+              "listeners": 0,
+              "timers": 0
+            }
+          },
+          "ms": 2347
+        },
+        {
+          "on": {
+            "dom": 3457,
+            "probe": {
+              "listeners": 3,
+              "intervals": 0,
+              "additions": 45
+            },
+            "controller": {
+              "active": true,
+              "disposed": false,
+              "pending": false,
+              "rows": 1,
+              "listeners": 3,
+              "timers": 0
+            }
+          },
+          "off": {
+            "dom": 3440,
+            "probe": {
+              "listeners": 0,
+              "intervals": 0,
+              "additions": 45
+            },
+            "controller": {
+              "active": false,
+              "disposed": false,
+              "pending": false,
+              "rows": 0,
+              "listeners": 0,
+              "timers": 0
+            }
+          },
+          "ms": 3649
+        },
+        {
+          "on": {
+            "dom": 3457,
+            "probe": {
+              "listeners": 3,
+              "intervals": 0,
+              "additions": 48
+            },
+            "controller": {
+              "active": true,
+              "disposed": false,
+              "pending": false,
+              "rows": 1,
+              "listeners": 3,
+              "timers": 0
+            }
+          },
+          "off": {
+            "dom": 3440,
+            "probe": {
+              "listeners": 0,
+              "intervals": 0,
+              "additions": 48
+            },
+            "controller": {
+              "active": false,
+              "disposed": false,
+              "pending": false,
+              "rows": 0,
+              "listeners": 0,
+              "timers": 0
+            }
+          },
+          "ms": 1556
+        },
+        {
+          "on": {
+            "dom": 3457,
+            "probe": {
+              "listeners": 3,
+              "intervals": 0,
+              "additions": 51
+            },
+            "controller": {
+              "active": true,
+              "disposed": false,
+              "pending": false,
+              "rows": 1,
+              "listeners": 3,
+              "timers": 0
+            }
+          },
+          "off": {
+            "dom": 3440,
+            "probe": {
+              "listeners": 0,
+              "intervals": 0,
+              "additions": 51
+            },
+            "controller": {
+              "active": false,
+              "disposed": false,
+              "pending": false,
+              "rows": 0,
+              "listeners": 0,
+              "timers": 0
+            }
+          },
+          "ms": 3336
+        },
+        {
+          "on": {
+            "dom": 3457,
+            "probe": {
+              "listeners": 3,
+              "intervals": 0,
+              "additions": 54
+            },
+            "controller": {
+              "active": true,
+              "disposed": false,
+              "pending": false,
+              "rows": 1,
+              "listeners": 3,
+              "timers": 0
+            }
+          },
+          "off": {
+            "dom": 3440,
+            "probe": {
+              "listeners": 0,
+              "intervals": 0,
+              "additions": 54
+            },
+            "controller": {
+              "active": false,
+              "disposed": false,
+              "pending": false,
+              "rows": 0,
+              "listeners": 0,
+              "timers": 0
+            }
+          },
+          "ms": 1735
+        },
+        {
+          "on": {
+            "dom": 3457,
+            "probe": {
+              "listeners": 3,
+              "intervals": 0,
+              "additions": 57
+            },
+            "controller": {
+              "active": true,
+              "disposed": false,
+              "pending": false,
+              "rows": 1,
+              "listeners": 3,
+              "timers": 0
+            }
+          },
+          "off": {
+            "dom": 3440,
+            "probe": {
+              "listeners": 0,
+              "intervals": 0,
+              "additions": 57
+            },
+            "controller": {
+              "active": false,
+              "disposed": false,
+              "pending": false,
+              "rows": 0,
+              "listeners": 0,
+              "timers": 0
+            }
+          },
+          "ms": 2197
+        },
+        {
+          "on": {
+            "dom": 3457,
+            "probe": {
+              "listeners": 3,
+              "intervals": 0,
+              "additions": 60
+            },
+            "controller": {
+              "active": true,
+              "disposed": false,
+              "pending": false,
+              "rows": 1,
+              "listeners": 3,
+              "timers": 0
+            }
+          },
+          "off": {
+            "dom": 3440,
+            "probe": {
+              "listeners": 0,
+              "intervals": 0,
+              "additions": 60
+            },
+            "controller": {
+              "active": false,
+              "disposed": false,
+              "pending": false,
+              "rows": 0,
+              "listeners": 0,
+              "timers": 0
+            }
+          },
+          "ms": 2251
+        },
+        {
+          "on": {
+            "dom": 3457,
+            "probe": {
+              "listeners": 3,
+              "intervals": 0,
+              "additions": 63
+            },
+            "controller": {
+              "active": true,
+              "disposed": false,
+              "pending": false,
+              "rows": 1,
+              "listeners": 3,
+              "timers": 0
+            }
+          },
+          "off": {
+            "dom": 3440,
+            "probe": {
+              "listeners": 0,
+              "intervals": 0,
+              "additions": 63
+            },
+            "controller": {
+              "active": false,
+              "disposed": false,
+              "pending": false,
+              "rows": 0,
+              "listeners": 0,
+              "timers": 0
+            }
+          },
+          "ms": 2733
+        },
+        {
+          "on": {
+            "dom": 3457,
+            "probe": {
+              "listeners": 3,
+              "intervals": 0,
+              "additions": 66
+            },
+            "controller": {
+              "active": true,
+              "disposed": false,
+              "pending": false,
+              "rows": 1,
+              "listeners": 3,
+              "timers": 0
+            }
+          },
+          "off": {
+            "dom": 3440,
+            "probe": {
+              "listeners": 0,
+              "intervals": 0,
+              "additions": 66
+            },
+            "controller": {
+              "active": false,
+              "disposed": false,
+              "pending": false,
+              "rows": 0,
+              "listeners": 0,
+              "timers": 0
+            }
+          },
+          "ms": 2324
+        }
+      ],
+      "logout": {
+        "probe": {
+          "listeners": 0,
+          "intervals": 0,
+          "additions": 69
+        },
+        "controller": {
+          "active": false,
+          "disposed": false,
+          "pending": false,
+          "rows": 0,
+          "listeners": 0,
+          "timers": 0
+        }
+      },
+      "pageErrors": [],
+      "mockReportMutations": [
+        {
+          "phase": "actions",
+          "kind": "/reports/one.json",
+          "method": "PUT"
+        },
+        {
+          "phase": "actions",
+          "kind": "/reports/one.json",
+          "method": "PUT"
+        },
+        {
+          "phase": "actions",
+          "kind": "/reports/one.json",
+          "method": "DELETE"
+        },
+        {
+          "phase": "note-late",
+          "kind": "/reports/draft.json",
+          "method": "PUT"
+        }
+      ],
+      "noteCaptureAcrossLeavePassed": true,
+      "statusNoteDeleteEachOnce": true,
+      "sortParityPassed": true,
+      "unauthorizedCollectionReads": 0
+    },
+    "viewer": {
+      "lateLeaveRenders": 0,
+      "lateAccountRenders": 0,
+      "loggedOut": {
+        "screen": "screen-federal-cup-2026",
+        "renders": 48,
+        "intervals": 0,
+        "listeners": 0,
+        "dom": 4043,
+        "busy": false
+      },
+      "pageErrors": []
+    },
+    "own": {
+      "concurrentReads": 1,
+      "lateAfterLeaveRenders": 0,
+      "legacyWritesAfterLeave": 0,
+      "final": {
+        "screen": "screen-home",
+        "authenticated": false,
+        "renders": 85,
+        "rows": [],
+        "text": "Zatím jsi neposlal žádné hlášení.",
+        "info": "",
+        "controller": {
+          "active": false,
+          "disposed": false,
+          "pending": false,
+          "intervals": 0,
+          "timeouts": 0,
+          "listeners": 0
+        },
+        "intervals": 0,
+        "listeners": 0,
+        "dom": 3360
+      },
+      "pageErrors": []
+    },
+    "cloud": {
+      "cases": {
+        "repeatedStart": {
+          "authenticated": true,
+          "uid": "A",
+          "applied": 0,
+          "screen": "screen-home",
+          "controller": {
+            "active": true,
+            "disposed": false,
+            "pending": false,
+            "intervals": 1,
+            "timeouts": 1,
+            "listeners": 2
+          },
+          "dbMatches": 184,
+          "players": 26,
+          "intervals": 1,
+          "timeouts": 1
+        },
+        "concurrentReads": 1,
+        "sameRevisionAppliedAgain": false,
+        "sharedMatches": 1,
+        "navigation": {
+          "transitions": 24,
+          "resources": [
+            {
+              "intervals": 1,
+              "timeouts": 1,
+              "controller": {
+                "active": true,
+                "disposed": false,
+                "pending": true,
+                "intervals": 1,
+                "timeouts": 1,
+                "listeners": 2
+              }
+            },
+            {
+              "intervals": 1,
+              "timeouts": 1,
+              "controller": {
+                "active": true,
+                "disposed": false,
+                "pending": true,
+                "intervals": 1,
+                "timeouts": 1,
+                "listeners": 2
+              }
+            },
+            {
+              "intervals": 1,
+              "timeouts": 1,
+              "controller": {
+                "active": true,
+                "disposed": false,
+                "pending": true,
+                "intervals": 1,
+                "timeouts": 1,
+                "listeners": 2
+              }
+            },
+            {
+              "intervals": 1,
+              "timeouts": 1,
+              "controller": {
+                "active": true,
+                "disposed": false,
+                "pending": true,
+                "intervals": 1,
+                "timeouts": 1,
+                "listeners": 2
+              }
+            },
+            {
+              "intervals": 1,
+              "timeouts": 1,
+              "controller": {
+                "active": true,
+                "disposed": false,
+                "pending": true,
+                "intervals": 1,
+                "timeouts": 1,
+                "listeners": 2
+              }
+            },
+            {
+              "intervals": 1,
+              "timeouts": 1,
+              "controller": {
+                "active": true,
+                "disposed": false,
+                "pending": true,
+                "intervals": 1,
+                "timeouts": 1,
+                "listeners": 2
+              }
+            }
+          ]
+        },
+        "leaveScreen": {
+          "active": "screen-home",
+          "validSharedRevisionAppliedOnce": true
+        },
+        "lateAfterLogout": {
+          "authenticated": false,
+          "uid": "",
+          "applied": 2,
+          "screen": "screen-home",
+          "controller": {
+            "active": false,
+            "disposed": false,
+            "pending": false,
+            "intervals": 0,
+            "timeouts": 0,
+            "listeners": 0
+          },
+          "dbMatches": 184,
+          "players": 26,
+          "intervals": 0,
+          "timeouts": 0,
+          "appliedAfterLogout": 0
+        },
+        "sessionCycles": [
+          {
+            "on": {
+              "intervals": 1,
+              "timeouts": 1,
+              "listeners": 2
+            },
+            "off": {
+              "intervals": 0,
+              "timeouts": 0,
+              "listeners": 0
+            }
+          },
+          {
+            "on": {
+              "intervals": 1,
+              "timeouts": 1,
+              "listeners": 2
+            },
+            "off": {
+              "intervals": 0,
+              "timeouts": 0,
+              "listeners": 0
+            }
+          },
+          {
+            "on": {
+              "intervals": 1,
+              "timeouts": 1,
+              "listeners": 2
+            },
+            "off": {
+              "intervals": 0,
+              "timeouts": 0,
+              "listeners": 0
+            }
+          },
+          {
+            "on": {
+              "intervals": 1,
+              "timeouts": 1,
+              "listeners": 2
+            },
+            "off": {
+              "intervals": 0,
+              "timeouts": 0,
+              "listeners": 0
+            }
+          },
+          {
+            "on": {
+              "intervals": 1,
+              "timeouts": 1,
+              "listeners": 2
+            },
+            "off": {
+              "intervals": 0,
+              "timeouts": 0,
+              "listeners": 0
+            }
+          },
+          {
+            "on": {
+              "intervals": 1,
+              "timeouts": 1,
+              "listeners": 2
+            },
+            "off": {
+              "intervals": 0,
+              "timeouts": 0,
+              "listeners": 0
+            }
+          }
+        ],
+        "recovery": {
+          "offlineRequests": 1,
+          "reconnectedAppliedOnce": true,
+          "viaScheduledInterval": true
+        },
+        "lateToken": {
+          "authenticated": false,
+          "uid": "",
+          "applied": 3,
+          "screen": "screen-home",
+          "controller": {
+            "active": false,
+            "disposed": false,
+            "pending": false,
+            "intervals": 0,
+            "timeouts": 0,
+            "listeners": 0
+          },
+          "dbMatches": 184,
+          "players": 26,
+          "intervals": 0,
+          "timeouts": 0
+        }
+      },
+      "maxConcurrentMatches": 1,
+      "final": {
+        "authenticated": false,
+        "uid": "",
+        "applied": 3,
+        "screen": "screen-home",
+        "controller": {
+          "active": false,
+          "disposed": false,
+          "pending": false,
+          "intervals": 0,
+          "timeouts": 0,
+          "listeners": 0
+        },
+        "dbMatches": 184,
+        "players": 26,
+        "intervals": 0,
+        "timeouts": 0
+      },
+      "pageErrors": []
+    },
+    "tournament": {
+      "baseline": false,
+      "archive": {
+        "bytes": 40913440,
+        "sha256": "49908fbcd66113315e524e6e61a4fc3a889654bb0e9420d309b843d4181a4d5d",
+        "matches": 189,
+        "players": 26
+      },
+      "clients": [
+        {
+          "mobile": false,
+          "archiveQuota": true,
+          "format": "groups_sko",
+          "playedGroup": {
+            "discipline": "8-ball",
+            "target": 3,
+            "federalCupLink": null
+          },
+          "played": {
+            "discipline": "10-ball",
+            "target": 7,
+            "federalCupLink": null
+          },
+          "federalConfigurationUnchanged": true,
+          "errors": []
+        },
+        {
+          "mobile": true,
+          "archiveQuota": true,
+          "format": "groups_dko",
+          "playedGroup": {
+            "discipline": "8-ball",
+            "target": 3,
+            "federalCupLink": null
+          },
+          "played": {
+            "discipline": "10-ball",
+            "target": 7,
+            "federalCupLink": null
+          },
+          "federalConfigurationUnchanged": true,
+          "errors": []
+        }
+      ]
+    },
+    "exports": {
+      "PNG": "A1/A2/B actual 1920x1080 desktop/mobile",
+      "XLSX": "Singles/Doubles/Team actual two-sheet downloads",
+      "controlSingles3": "SK93%14 / CZ95%38",
+      "unchangedPDFRegressionPassed": true
+    }
+  },
+  "productionWrites": 0,
+  "migrations": 0,
+  "liveAuthenticatedSessionVerified": false,
+  "physicalMobileVerified": false,
+  "OBSVerified": false,
+  "rollbackRequired": false
+}

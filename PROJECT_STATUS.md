@@ -1,8 +1,10 @@
 # Aktuální stav Poolčítadla
 
-Aktualizace: 28. 10. 2026. Zadavatel aktuální revize: **Dominik**.
+Aktualizace: 29. 10. 2026. Zadavatel aktuální revize: **Dominik**.
 
 ## Verze a nasazení
+
+- **PRODUKCE104 – Dominik:** PR43 sloučen merge`87f898375970cfa3c1a243af5edaf4463c94c36e`, Pages40913700775 success. ReleasePR/mainPASS, Node272PASS/2známéFAIL/3SKIP z277; chyby jednotlivě shodné s výchozím main, předmerge38/38unitPASS. Veřejné20souborů přesnéSHA256/verze104/5modulů/desktop/mobil/dostupnánavigace/0JS chybPASS. Publikovaný HTML+5modulů izolovaně:admin3→1GET/řazení/20cyklů/3→0listenerů/A-B/odchod/pozdníodpovědi/retry/poznámkapřežijeodchod/status-note-delete jednouPASS. Předchozímoduly/turnaje101/plnáquota/PNG/XLSXPASS. Žádnéprodukčnízápisy/migrace. ŽiváAuth/adminhlášení/fyzickázařízení/OBS neověřeny, limityB/cachetrvají. [Deploymentreport a návrat](docs/deployment-v4.51.104.md). Dalšíetapa nezahájena.
 
 - **PRODUKCE103 – Dominik:** PR42 sloučen merge`4b66ae068fa86b61b1b4e37c14f25bc3f304c3fc`, Pages40759055156 success. PR/mainreleasePASS, Node264PASS/2známéFAIL/3SKIP z269, jednotlivě shodné s výchozím main; předmerge30/30unitPASS. Veřejné19souborů přesnéSHA256/verze103/4moduly/desktop/mobil/FC/A2/5vstupů a odchodů na viewport/0JS chybPASS. Publikovaný HTML+4moduly izolovaně:20cyklů/0pozdníchrenderů/1→0interval i listener při odchodu/logoutu/A-B/retry/sdílenécloudčteníPASS. A1/A2/B/skutečnéPNG/XLSX desktop/mobilPASS. Produkčnídata bezezměny, živáAuth/Firebase/soukromádata/OBS/fyzický mobil neověřeny, limityB/cachetrvají. [Deploymentreport a návrat](docs/deployment-v4.51.103.md). Dalšíetapa nezahájena.
 
@@ -12,7 +14,9 @@ Aktualizace: 28. 10. 2026. Zadavatel aktuální revize: **Dominik**.
 
 - **PRODUKCE100 – Jaroslav, 27.10.2026:** PR #38 sloučen merge `b42a9b2189a2c501f05ac70d5b6a94cb8fa3aa83`, [GitHub Pages 40575477118](https://github.com/bcrybarna-oss/BC-Rybarna-Scoreboard/actions/runs/40575477118) build/deploy success. ZAPOMENUTÉ HESLO? v loginu volá Firebase Authentication PASSWORD_RESET pouze s e-mailem, neopisuje heslo, nemění UID/role/profil ani historii. Zrušen matoucí produkční nápis SCOREBOARD 4.0 DEV. Release gate PR/main PASS, Node **244 PASS / 2 známé FAIL / 3 SKIP z 249**, všech 5 nových testů obnovy PASS; dvě preview chyby totožné s předchozí hlavní verzí, CI jako celek proto není zelené. Veřejný soubor nebylo možné nezávisle otevřít z nástroje; samotný Pages deploy success je potvrzen. Živá produkční Firebase Auth a doručení resetovacího e-mailu nebyly testovány, žádné produkční testovací zápisy ani migrace.
 
-Aktuální verze: **v4.51.104 RC** — otestovaný kandidát, nesloučen a nenasazen. Produkce103.
+Aktuální verze: **v4.51.104 RC** — nasazeno a v uvedeném rozsahu ověřeno29.10.2026.
+
+Následuje zachovaná historie přípravy104; tehdejší zákaz sloučení/nasazení byl nahrazen schválením a ověřeným nasazením.
 
 - **Modularizace5 – Dominik:** [Draft PR43](https://github.com/bcrybarna-oss/BC-Rybarna-Scoreboard/pull/43), implementace deb9bc5; [CI40764363648](https://github.com/bcrybarna-oss/BC-Rybarna-Scoreboard/actions/runs/40764363648) releasePASS/Node272PASS,2známéFAIL,3SKIP. AdminReports je jediný vlastník čtení/renderu adminhlášení a delegovaných obsluh. Původní těla odstraněna; mutace vcore, pouze zachycení textu poznámky předGET pro bezpečný úklid.8unit a20cyklů před/poPASS:3→1GET,staráodpověďnepřepíše novourelaci,3→0listenerů/0timerů. Node275PASS/2známéFAIL; předchozímoduly/turnaje101/PNG/XLSX/60přechodůPASS. [Rozsah, důkazy, omezení a návrat](docs/admin-reports-modularization-stage-5.md). **Neslučovat a nenasazovat.**
 

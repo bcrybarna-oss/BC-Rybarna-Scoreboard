@@ -1,5 +1,14 @@
 # Revize aplikace Poolčítadlo
 
+## Dominik – ověřené nasazení vlastníka admin seznamu (v4.51.104 RC)
+Zadavatel: Dominik
+Datum: 29. 10. 2026
+Změny: Po schválení sloučen PR43 se zachováním historie, merge87f898375970cfa3c1a243af5edaf4463c94c36e. Nasazen jediný AdminReports modul s core note capture; tento dokumentační zápis nemění aplikaci/verzi. Žádné produkční zápisy/migrace, další etapa nezahájena.
+Testy: Předmerge38/38cílenýchunitPASS; PR/mainreleasePASS a Node272PASS/2známéFAIL/3SKIP z277, chyby jednotlivě porovnány s výchozím main. Veřejné20souborů přesnéSHA256/verze104/5modulů/dostupnánavigace/desktop/mobil/0JS chybPASS. Publikovaný HTML+5modulů izolovaně:admin3→1GET,řazení/20cyklů/3→0listenerů/odchod-A-B/pozdníodpovědi/retry/oprávnění/status-note-delete jednou/poznámkapřežijeGET-odchod-PUT PASS. Předchozímoduly/turnaje101/plnáquota/reload/zápasy8-ball3 a10-ball7/FC a skutečnéPNG/XLSX desktop/mobilPASS; původní PDFregrese beze změny takéPASS.
+Nasazení: Automatický Pages40913700775 build/deploy/report success, skutečně publikovaná104 ověřena. Žádný ruční rerun. Viz docs/deployment-v4.51.104.md.
+Omezení: Živá produkčníAuth/Firebase/adminhlášení/soukromádata/fyzickázařízení/OBS neověřeny, scénáře těchto cest jsou mockované. Původní uživatel101 na zařízení nepotvrdil; B/cachelimitytrvají. Již zahájené mutace zůstávají původní aplikačníworkflow. Nová regrese nezjištěna; návrat reverzí kódu podle release pravidel bez zásahu do dat.
+
+
 ## Dominik – vlastník administrátorského seznamu hlášení (v4.51.104 RC)
 Zadavatel: Dominik
 Datum: 28. 10. 2026

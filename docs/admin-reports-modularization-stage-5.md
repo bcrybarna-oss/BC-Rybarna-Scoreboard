@@ -1,6 +1,6 @@
 # Pátá etapa – vlastník administrátorského seznamu hlášení
 
-Zadavatel: Dominik. Základ main `899ee10000efaa3235021b90212283e3d280fa28`, produkce v4.51.103 RC. Kandidát **v4.51.104 RC**, neslučovat a nenasazovat. Žádné změny produkčních dat.
+Zadavatel: Dominik. Základ main `899ee10000efaa3235021b90212283e3d280fa28`, produkce v4.51.103 RC. Etapa **v4.51.104 RC** byla následně schválena, PR43 sloučen a nasazen; [skutečné nasazení a rozsah ověření](deployment-v4.51.104.md). Níže je zachovaná historie přípravy, původní zákaz sloučení/nasazení byl nahrazen schválením. Žádné změny produkčních dat.
 
 ## Proč tento celek
 
