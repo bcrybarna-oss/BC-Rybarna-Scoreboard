@@ -1,5 +1,14 @@
 # Revize aplikace Poolčítadlo
 
+## Dominik – produkční kontrakt obnovy a etapa6 testů (v4.51.105 RC)
+Zadavatel: Dominik
+Datum: 29. 10. 2026
+Změny: Samostatná cílená produkční oprava: při čekání na identitu odpojit i běžný účetní zápas bez smazání lokálních dat, samotný zbytkový UID/profil nesmí udělit právo editace. Výslovný offline ownerless režim zachován, produkční obnovení zůstává explicitní přes POKRAČOVAT. Roadmapa a rozdělení testových sad se připravují odděleně.
+Testy: Nové testy skutečných produkčních funkcí před opravou4PASS/2FAIL, po opravě čeká ověření. Další výsledky budou doplněny před předáním.
+Nasazení: Kandidát105, nesloučen/nenasazen. Produkce104 a produkční data beze změny.
+Omezení: Experimentální implementace není portována do produkce ani plošně opravena. ŽiváAuth/Firebase neověřeny; cache/PDF/etapa7 mimo rozsah.
+
+
 ## Dominik – ověřené nasazení vlastníka admin seznamu (v4.51.104 RC)
 Zadavatel: Dominik
 Datum: 29. 10. 2026

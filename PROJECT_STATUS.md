@@ -14,7 +14,7 @@ Aktualizace: 29. 10. 2026. Zadavatel aktuální revize: **Dominik**.
 
 - **PRODUKCE100 – Jaroslav, 27.10.2026:** PR #38 sloučen merge `b42a9b2189a2c501f05ac70d5b6a94cb8fa3aa83`, [GitHub Pages 40575477118](https://github.com/bcrybarna-oss/BC-Rybarna-Scoreboard/actions/runs/40575477118) build/deploy success. ZAPOMENUTÉ HESLO? v loginu volá Firebase Authentication PASSWORD_RESET pouze s e-mailem, neopisuje heslo, nemění UID/role/profil ani historii. Zrušen matoucí produkční nápis SCOREBOARD 4.0 DEV. Release gate PR/main PASS, Node **244 PASS / 2 známé FAIL / 3 SKIP z 249**, všech 5 nových testů obnovy PASS; dvě preview chyby totožné s předchozí hlavní verzí, CI jako celek proto není zelené. Veřejný soubor nebylo možné nezávisle otevřít z nástroje; samotný Pages deploy success je potvrzen. Živá produkční Firebase Auth a doručení resetovacího e-mailu nebyly testovány, žádné produkční testovací zápisy ani migrace.
 
-Aktuální verze: **v4.51.104 RC** — nasazeno a v uvedeném rozsahu ověřeno29.10.2026.
+Aktuální verze: **v4.51.105 RC** — rozpracovaný kandidát etapy6, nesloučen a nenasazen. Produkce104.
 
 Následuje zachovaná historie přípravy104; tehdejší zákaz sloučení/nasazení byl nahrazen schválením a ověřeným nasazením.
 
