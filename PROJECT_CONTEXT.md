@@ -1,3 +1,7 @@
+# Etapa8a — kandidát v4.51.107 RC
+
+Dominik,29.10.2026: společný LivescoreReader vlastní čtecí single-flight, background poll a view/dialog epochy. Publikace/heartbeat/OBS beze změny. Produkce106, nesloučeno/nenasazeno.6unit+actualbrowser/OBS/identity/turnaje/exporty PASS, Node275/0/0 lokálně, experiment28/2/0. [Hranice, úklidové zápisy a důkazy](docs/livescore-reader-stage-8a.md).
+
 # Etapa7a — renderer, kandidát v4.51.106 RC
 
 **Nasazeno106 (Dominik,29.10.2026):** PR46→PR45 integracee2e5bc6, společný merge do main2b8edcf835748e7526e38e127ad20c791c260937; Pages40945274924success, žádné samostatné vydání7a. Release/prodCI266/0/3PASS, experiment28/2/0FAIL, celekFAILURE bez ignorování. Veřejná106/22souborůSHA256/7modulů/desktop-mobil/navigace/0JSerrors. Publikovanýkód izolovaně: A1/A2/B immediateclose-open, role/session invalidace, skutečnéPNG/PDF/XLSX a úklid PASS; živýAuth/Rules neověřen. Produkčnídata beze změny. [Deploymentreport a návrat](docs/deployment-v4.51.106.md). Další etapa nezahájena. Následující příprava106 je zachovaná historie, zákazy sloučení byly nahrazeny schváleným společným vydáním.

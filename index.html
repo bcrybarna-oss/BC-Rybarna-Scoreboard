@@ -1043,8 +1043,9 @@
   </div>
 
 <script src="assets/js/federal-statistics.js?v=4.51.98"></script>
-<script src="assets/js/federal-report-renderer.js?v=4.51.106"></script>
-<script src="assets/js/federal-report-controller.js?v=4.51.106"></script>
+<script src="assets/js/federal-report-renderer.js?v=4.51.107"></script>
+<script src="assets/js/federal-report-controller.js?v=4.51.107"></script>
+<script src="assets/js/livescore-reader.js?v=4.51.107"></script>
 <script src="assets/js/cloud-refresh.js?v=4.51.99"></script>
 <script src="assets/js/own-reports.js?v=4.51.102"></script>
 <script src="assets/js/federal-viewer.js?v=4.51.103"></script>
@@ -2610,7 +2611,7 @@ html[data-theme="light"] #leagueSchedule .history-item .muted{
           <span class="by">by</span>
           <span class="club">BC Rybárna</span>
         </div>
-        <small class="modern-brand-version">v4.51.106 RC</small>
+        <small class="modern-brand-version">v4.51.107 RC</small>
       </div>
     </div>
     <div class="nav">
@@ -3224,7 +3225,7 @@ html[data-theme="light"] #leagueSchedule .history-item .muted{
         </div>
         <div class="subpanel" style="min-width:210px;text-align:center;margin:0">
           <div class="muted" style="font-size:10px;font-weight:950;letter-spacing:1px">AKTUÁLNÍ VERZE</div>
-          <div style="font-size:22px;font-weight:950;color:var(--gold2);margin-top:5px">v4.51.106 RC</div>
+          <div style="font-size:22px;font-weight:950;color:var(--gold2);margin-top:5px">v4.51.107 RC</div>
         </div>
       </div>
     </div>
@@ -5989,7 +5990,7 @@ html[data-theme="light"] #leagueSchedule .history-item .muted{
       </div>
 
       <div id="groupPlayoffSeedStatus" class="muted" style="margin-top:12px;min-height:20px"></div>
-      <div class="muted" style="margin-top:4px;font-size:11px">RC v4.51.106</div>
+      <div class="muted" style="margin-top:4px;font-size:11px">RC v4.51.107</div>
       <div class="modal-actions">
         <button id="groupPlayoffSeedApplyBtn" class="btn primary big" type="button">NASADIT DO PLAY-OFF</button>
         <button id="groupPlayoffSeedCancelBtn" class="btn">ZRUŠIT</button>
@@ -6083,6 +6084,7 @@ html[data-theme="light"] #leagueSchedule .history-item .muted{
   if(!window.FederalReportRenderer){
     const error=document.createElement('div');error.id='federalReportRendererLoadError';error.setAttribute('role','alert');error.textContent='Nepodařilo se načíst vykreslování reportů Federal Cupu. Obnovte stránku.';document.body.prepend(error);throw new Error('FEDERAL_REPORT_RENDERER_MODULE_UNAVAILABLE');
   }
+  if(!window.LivescoreReader){const error=document.createElement('div');error.id='livescoreReaderLoadError';error.setAttribute('role','alert');error.textContent='Nepodařilo se načíst Livescore. Obnovte stránku.';document.body.prepend(error);throw Error('LIVESCORE_READER_MODULE_UNAVAILABLE');}
   if(!window.CloudRefresh){
     const error=document.createElement('div');error.id='cloudRefreshLoadError';error.setAttribute('role','alert');
     error.textContent='Nepodařilo se načíst cloudové obnovy. Obnovte stránku.';document.body.prepend(error);
@@ -6354,63 +6356,8 @@ html[data-theme="light"] #leagueSchedule .history-item .muted{
     try{return await r.json();}catch(e){return null;}
   }
 
-  async function loadCloudLiveMatches(force=false){
-    if(liveMatchLoadInProgress)return cloudLiveMatches;
-    if(!await ensureCloudToken())return cloudLiveMatches;
-
-    const now=Date.now();
-    if(!force && now-liveLastCloudPollAt<700)return cloudLiveMatches;
-
-    liveMatchLoadInProgress=true;
-    liveLastCloudPollAt=now;
-
-    try{
-      const url=cloudUrl('stream/liveMatches')+'&_live='+now;
-      const r=await fetch(url,{
-        method:'GET',
-        cache:'no-store',
-        headers:{
-          'Cache-Control':'no-cache, no-store, must-revalidate',
-          'Pragma':'no-cache'
-        }
-      });
-
-      if(!r.ok)throw new Error('LIVE_MATCHES_READ_'+r.status);
-
-      const raw=await r.json()||{};
-      const all=Object.values(raw).filter(m=>m && m.id && !m.endedAt);
-
-      const fresh=[];
-      const stale=[];
-
-      all.forEach(m=>{
-        const ts=Date.parse(m.updatedAt||m.startedAt||'');
-        const age=Number.isFinite(ts)?now-ts:Infinity;
-        if(age>LIVE_STALE_MS) stale.push(m);
-        else fresh.push(m);
-      });
-
-      cloudLiveMatches=fresh;
-
-      // Osiřelé LIVE záznamy po pádu/zavření aplikace čistíme automaticky.
-      if(stale.length){
-        // Cizí LIVE zápas nesmí běžný uživatel mazat. Rules dovolí mazání jen
-        // vlastníkovi záznamu nebo systémovému administrátorovi.
-        const deletable=stale.filter(m=>currentUserIsSystemAdmin() || m.createdByUid===cloudUid);
-        if(deletable.length){
-          Promise.allSettled(deletable.map(m=>liveMatchRequest(m.id,'DELETE')))
-            .catch(()=>{});
-        }
-      }
-
-      return cloudLiveMatches;
-    }catch(e){
-      console.error('Load live matches:',e);
-      return cloudLiveMatches;
-    }finally{
-      liveMatchLoadInProgress=false;
-    }
-  }
+  async function cleanupLiveReadRecord(m,valid){if(!valid()||!await ensureCloudToken({current:valid})||!valid()||!(currentUserIsSystemAdmin()||m.createdByUid===cloudUid))return;const r=await fetch(cloudUrl('stream/liveMatches/'+m.id),{method:'DELETE',headers:{'Content-Type':'application/json'},cache:'no-store'});if(!r.ok)throw Error('LIVE_MATCH_'+r.status);}
+  function loadCloudLiveMatches(force=false){return livescoreReader.refresh(force); }
 
 
   function liveMomentumSnapshotFromMatch(m){
@@ -6605,16 +6552,27 @@ html[data-theme="light"] #leagueSchedule .history-item .muted{
   let postMatchReturnScreen=null;
   let postMatchTournamentId=null;
   let liveScoreSelectedId=null;
-  let liveRefreshTimer=null;
+
   let cloudLiveMatches=[];
   let liveMatchSendTimer=null;
   let activeMatchCloudSaveTimer=null;
-  let liveMatchLoadInProgress=false;
-  let liveLastCloudPollAt=0;
+
+
   let liveHeartbeatTimer=null;
   const LIVE_HEARTBEAT_MS=30*1000;
   const LIVE_STALE_MS=3*60*1000;
   const LIVE_WARNING_MS=90*1000;
+  const livescoreReader=window.LivescoreReader.create({
+    identity:()=>JSON.stringify([cloudAuthenticated,cloudUid,currentUserRole,currentUserPlayerId,currentUserClubId,cloudEmailVerified]),authorize:ensureCloudToken,
+    get:()=>cloudLiveMatches,set:rows=>{cloudLiveMatches=rows;},now:()=>Date.now(),staleMs:LIVE_STALE_MS,
+    read:async(now,signal)=>{const r=await fetch(cloudUrl('stream/liveMatches')+'&_live='+now,{method:'GET',cache:'no-store',signal,headers:{'Cache-Control':'no-cache, no-store, must-revalidate','Pragma':'no-cache'}});if(!r.ok)throw Error('LIVE_MATCHES_READ_'+r.status);return r.json();},
+    canDelete:m=>currentUserIsSystemAdmin()||m.createdByUid===cloudUid,
+    cleanup:cleanupLiveReadRecord,
+    viewVisible:()=>$('screen-live').classList.contains('active'),dialogVisible:()=>$('liveScoreModal').classList.contains('show'),nav:updateLiveNavStatus,renderView:renderLive,renderDialog:renderLiveScoreModal,error:e=>console.error('Load live matches:',e),
+    page:window,setInterval:window.setInterval.bind(window),clearInterval:window.clearInterval.bind(window),setTimeout:window.setTimeout.bind(window),clearTimeout:window.clearTimeout.bind(window)
+  });
+
+  window.invalidateLivescoreReader=()=>livescoreReader.invalidate();
   let selectedTournamentId=null;
   let forcedTournamentReturnId=null;
   let manualTournamentSeedOrder=[];
@@ -7167,7 +7125,7 @@ html[data-theme="light"] #leagueSchedule .history-item .muted{
     const btn=$('submitReportBtn');if(btn)btn.disabled=true;
     try{
       const id=uid(),p=currentUserPlayerId?data.players?.[currentUserPlayerId]:null;
-      const report={id,createdByUid:cloudUid,createdByPlayerId:currentUserPlayerId||'',createdByName:p?playerSelectionLabel(p):(cloudUserEmail||'Uživatel'),email:cloudUserEmail||'',type,area,description,appVersion:'v4.51.106 RC',createdAt:new Date().toISOString(),updatedAt:new Date().toISOString(),status:'new',adminNote:''};
+      const report={id,createdByUid:cloudUid,createdByPlayerId:currentUserPlayerId||'',createdByName:p?playerSelectionLabel(p):(cloudUserEmail||'Uživatel'),email:cloudUserEmail||'',type,area,description,appVersion:'v4.51.107 RC',createdAt:new Date().toISOString(),updatedAt:new Date().toISOString(),status:'new',adminNote:''};
       await reportRequest(id,'PUT',report);
       try{
         await writeReportUserMirror(report);
@@ -8556,6 +8514,7 @@ html[data-theme="light"] #leagueSchedule .history-item .muted{
   function clearRuntimeCloudIdentity(){
     invalidateFederalReport();
     cloudAutoSync?.stop();
+    window.invalidateLivescoreReader?.();
     ownReportsSync?.stop();
     adminReportsSync?.stop();
     window.stopFederalCupViewer?.();
@@ -9184,12 +9143,11 @@ html[data-theme="light"] #leagueSchedule .history-item .muted{
         .catch(e=>console.warn('League load:',e));
     }
     if(name==='tournament-detail' && selectedTournamentId) renderTournamentDetail();
+    livescoreReader.viewChanged();
     if(name==='live'){
       discardForeignLocalActiveMatch();
       renderLive();
-      Promise.allSettled([loadSecureMatches(),loadSecureTournaments(),cleanupStaleLiveMatches(false),loadCloudLiveMatches(true)])
-        .then(()=>renderLive())
-        .catch(()=>{});
+      livescoreReader.enter(()=>Promise.allSettled([loadSecureMatches(),loadSecureTournaments(),cleanupStaleLiveMatches(false),loadCloudLiveMatches(true)])).catch(()=>{});
     }
     if(name==='admin'){populateAdminProfileOwnerSelect();populateMergePlayerSelectors();loadReportsAdmin();}
     if(name==='home'){
@@ -14712,7 +14670,8 @@ $('winnerText').textContent = match.solo14
 
 
   async function cleanupStaleLiveMatches(showToast=true){
-    if(!await ensureCloudToken()){
+    const ui=livescoreReader.viewTicket();const owner=JSON.stringify([cloudUid,cloudAuthenticated,currentUserRole]),valid=()=>owner===JSON.stringify([cloudUid,cloudAuthenticated,currentUserRole]);
+    if(!await ensureCloudToken({current:valid})){
       if(showToast)toast('Pro vyčištění Livescore je potřeba přihlášení.');
       return 0;
     }
@@ -14722,7 +14681,7 @@ $('winnerText').textContent = match.solo14
       const r=await fetch(cloudUrl('stream/liveMatches')+'&_cleanup='+now,{cache:'no-store'});
       if(!r.ok)throw new Error('LIVE_CLEANUP_READ_'+r.status);
 
-      const raw=await r.json()||{};
+      const raw=await r.json()||{};if(!valid())return 0;
       const stale=Object.values(raw).filter(m=>{
         if(!m||!m.id)return false;
         // Bezpečnost: běžný uživatel smí uklízet jen vlastní LIVE záznamy.
@@ -14733,13 +14692,13 @@ $('winnerText').textContent = match.solo14
       });
 
       for(const m of stale){
-        try{await liveMatchRequest(m.id,'DELETE');}catch(e){}
+        try{await cleanupLiveReadRecord(m,valid);}catch(e){}
       }
 
       await loadCloudLiveMatches(true);
-      renderLive();
+      if(!valid())return 0;if(ui())renderLive();
 
-      if(showToast){
+      if(showToast&&ui()){
         toast(stale.length
           ? 'Obnoveno • odstraněno '+stale.length+' neaktivních LIVE zápasů.'
           : 'Obnoveno • skóre je aktuální.');
@@ -15109,11 +15068,7 @@ $('winnerText').textContent = match.solo14
     liveScoreSelectedId=matchId;
     $('liveScoreModal').classList.add('show');
 
-    try{
-      await loadCloudLiveMatches(true);
-    }catch(e){}
-
-    renderLiveScoreModal();
+    await livescoreReader.open();
 
     // Běžně je LIVESCORE pouze náhled.
     // Výjimkou je vlastní rozehraná 14.1 sólo hra, do které se její hráč může přímo vrátit.
@@ -15302,6 +15257,7 @@ $('winnerText').textContent = match.solo14
     if($('liveScoreEditSolo14'))$('liveScoreEditSolo14').onclick=editSolo14FromLiveScore;
 
 $('liveScoreClose').onclick=()=>{
+    livescoreReader.dialogChanged();
     $('liveScoreModal').classList.remove('show');
     liveScoreSelectedId=null;
   };
@@ -28675,42 +28631,10 @@ function renderStats(){
   // Připojení ke cloudu proběhne až po inicializaci lokálního UI.
   setTimeout(autoCloudInit,150);
 
-  // LIVE indikátor musí fungovat i bez otevření obrazovky Livescore.
-  // Po startu počkáme na Firebase Auth a hned načteme aktivní LIVE zápasy.
-  async function refreshLiveNavInBackground(force=false){
-    try{
-      await loadCloudLiveMatches(force);
-    }catch(e){}
-    try{updateLiveNavStatus();}catch(e){}
-  }
-
-  setTimeout(()=>refreshLiveNavInBackground(true),900);
-
+  livescoreReader.start();
   try{updateLoggedInUserBadge();}catch(e){}
-  if(match && !match.endedAt){ try{startLiveHeartbeat();}catch(e){} }
+  if(match && !match.endedAt){try{startLiveHeartbeat();}catch(e){}}
   try{updateLiveNavStatus();}catch(e){}
-
-  if(!liveRefreshTimer){
-    liveRefreshTimer=setInterval(async()=>{
-      const liveScreen=$('screen-live');
-      const modal=$('liveScoreModal');
-      const liveVisible=!!(liveScreen && liveScreen.classList.contains('active'));
-      const modalVisible=!!(modal && modal.classList.contains('show'));
-
-      // Stav horního LIVESCORE tlačítka hlídáme i mimo Livescore obrazovku.
-      // Cloud se na pozadí dotazuje jednou za 15 s; při otevřeném Livescore okamžitě.
-      const shouldBackgroundPoll=(Date.now()-liveLastCloudPollAt)>=15000;
-      if(liveVisible || modalVisible || shouldBackgroundPoll){
-        try{
-          await loadCloudLiveMatches(liveVisible || modalVisible);
-        }catch(e){}
-      }
-
-      updateLiveNavStatus();
-      if(liveVisible)renderLive();
-      if(modalVisible)renderLiveScoreModal();
-    },1000);
-  }
 
   // ===== MODERN TEST DASHBOARD BRIDGE =====
   // Bezpečně zpřístupní pouze data potřebná pro testovací domovskou stránku.

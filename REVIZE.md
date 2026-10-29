@@ -1,5 +1,13 @@
 # Revize aplikace Poolčítadlo
 
+## Dominik – čtecí Livescore, etapa8a (v4.51.107 RC)
+Zadavatel: Dominik
+Datum: 29. 10. 2026
+Změny: Jediný produkční shared reader a koordinátor background/view/dialog. Původní loader/poll odstraněn. Single-flight před Auth, epochy identity a konzumentů. Úklid stale jen vlastník/systemadmin přes explicitní guard.
+Testy: 6unit/actualbrowser PASS, preAuth race3→1GET,10dialog/navigation cyklů a20lifecycle cyklů, own/foreignDELETE ověřeny v mocku. Node275/0/0 lokálně (veřejně272/0/3), experiment28/2/0; celek303/2/0z305.30navigací před/po: CPU28,23→27,20s, heap57,40→57,39MB, intervaly5→5; nový vlastněnýlistener+1. OBS/identity/turnaje101 aPNG/PDF/XLSX PASS. Viz docs/livescore-reader-stage-8a.md.
+Nasazení: Kandidát, nesloučeno/nenasazeno, produkce106.
+Omezení: Seznam a dialog renderer zůstávají core, přesun dalších částí není zahájen. Produkční data neměněna.
+
 ## Dominik – společné ověřené nasazení rendereru a controlleru (v4.51.106 RC)
 Zadavatel: Dominik
 Datum: 29. 10. 2026

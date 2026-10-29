@@ -1,0 +1,158 @@
+{
+  "baseline": "b0881d35c41ca6d2580bbf7ce012cfe57ff896c5",
+  "version": "v4.51.107 RC",
+  "scope": "8a shared reader/background/view-dialog orchestration; renderers stay core",
+  "race": {
+    "source": "b0881d3 actual loader",
+    "concurrent": 3,
+    "requestsBefore": 3,
+    "requestsAfter": 1
+  },
+  "performance": {
+    "before": {
+      "cycles": 6,
+      "errors": [],
+      "interactionFailures": [],
+      "requestCount": 48,
+      "liveReads": 3,
+      "maxInflight": 6,
+      "snapshots": [
+        {
+          "label": "loaded",
+          "heap": 53082236,
+          "dom": 2981,
+          "listeners": 462,
+          "intervals": 5,
+          "timeouts": 1,
+          "cpu": 0.332203,
+          "maxLong": 954
+        },
+        {
+          "label": "cycle-1",
+          "heap": 56825424,
+          "dom": 8738,
+          "listeners": 1055,
+          "intervals": 7,
+          "timeouts": 0,
+          "cpu": 4.758349,
+          "maxLong": 954
+        },
+        {
+          "label": "cycle-4",
+          "heap": 57306140,
+          "dom": 9173,
+          "listeners": 1131,
+          "intervals": 7,
+          "timeouts": 0,
+          "cpu": 18.707851,
+          "maxLong": 2610
+        },
+        {
+          "label": "cycle-6",
+          "heap": 57402612,
+          "dom": 9173,
+          "listeners": 1131,
+          "intervals": 7,
+          "timeouts": 0,
+          "cpu": 28.193187,
+          "maxLong": 2615
+        },
+        {
+          "label": "final",
+          "heap": 57402848,
+          "dom": 9173,
+          "listeners": 1128,
+          "intervals": 5,
+          "timeouts": 0,
+          "cpu": 28.234604,
+          "maxLong": 2615
+        }
+      ]
+    },
+    "after": {
+      "cycles": 6,
+      "errors": [],
+      "interactionFailures": [],
+      "requestCount": 48,
+      "liveReads": 3,
+      "maxInflight": 5,
+      "snapshots": [
+        {
+          "label": "loaded",
+          "heap": 53091624,
+          "dom": 2982,
+          "listeners": 463,
+          "intervals": 5,
+          "timeouts": 1,
+          "cpu": 0.318169,
+          "maxLong": 977
+        },
+        {
+          "label": "cycle-1",
+          "heap": 56839168,
+          "dom": 8739,
+          "listeners": 1056,
+          "intervals": 7,
+          "timeouts": 0,
+          "cpu": 4.345429,
+          "maxLong": 977
+        },
+        {
+          "label": "cycle-4",
+          "heap": 57320168,
+          "dom": 9174,
+          "listeners": 1132,
+          "intervals": 7,
+          "timeouts": 0,
+          "cpu": 17.879762,
+          "maxLong": 2529
+        },
+        {
+          "label": "cycle-6",
+          "heap": 57394892,
+          "dom": 9174,
+          "listeners": 1132,
+          "intervals": 7,
+          "timeouts": 0,
+          "cpu": 27.158559,
+          "maxLong": 2529
+        },
+        {
+          "label": "final",
+          "heap": 57393552,
+          "dom": 9174,
+          "listeners": 1129,
+          "intervals": 5,
+          "timeouts": 0,
+          "cpu": 27.202804,
+          "maxLong": 2529
+        }
+      ]
+    }
+  },
+  "unit": {
+    "pass": 6,
+    "fail": 0
+  },
+  "browser": "PASS mock Firebase, own/foreign cleanup checked",
+  "regressions": [
+    "OBS isolation",
+    "identity recovery",
+    "tournament101 quota",
+    "actual PNG/PDF/XLSX"
+  ],
+  "production": {
+    "privatePass": 275,
+    "publicPass": 272,
+    "skipWithoutPrivate": 3,
+    "fail": 0
+  },
+  "experimental": {
+    "pass": 28,
+    "fail": 2
+  },
+  "productionWrites": 0,
+  "liveAuth": false,
+  "merged": false,
+  "deployed": false
+}
