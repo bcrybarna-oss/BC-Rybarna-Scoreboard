@@ -3,8 +3,8 @@
 ## Dominik – produkční kontrakt obnovy a etapa6 testů (v4.51.105 RC)
 Zadavatel: Dominik
 Datum: 29. 10. 2026
-Změny: Samostatná cílená produkční oprava: při čekání na identitu odpojit i běžný účetní zápas bez smazání lokálních dat, samotný zbytkový UID/profil nesmí udělit právo editace. Výslovný offline ownerless režim zachován, produkční obnovení zůstává explicitní přes POKRAČOVAT. Roadmapa a rozdělení testových sad se připravují odděleně.
-Testy: Nové testy skutečných produkčních funkcí před opravou4PASS/2FAIL, po opravě čeká ověření. Další výsledky budou doplněny před předáním.
+Změny: Samostatný commit917e310 opravuje pending identitu a staleUID guard produkce, bez mazání snapshotů/změny explicitního resume. Odděleně roadmapa6–14/Authhranice a samostatnéPDF/cache úkoly, registry produkční/experimentální Node sady a2normálníCIjoby. npm test stále spouští vše bez allow-failure. Starý regex nahrazen4actual login/match-first/tournamentfallback scénáři; experimentální core beze změny, starýpointerfail zachován a nově testovaný staleUID rovněž viditelně selhává.
+Testy: Produkční reprodukce před4PASS/2FAIL, po6/6PASS; actual ordinary browser reload/Auth/resume/score/undoPASS. Produkční Node261/0/0 lokálně, bez soukromýchdat258/0/3. Experiment28PASS/2skutečnéFAIL. Celek289PASS/2FAIL/0SKIP z291; veřejná sada286/2/3 aexit1. FCAuth/stream/turnaje101/5modulůbootstrap/PNG/XLSX/původníPDFregresePASS. Pět modulů i experimentální implementace byteově shodné s base28f45bd. Viz docs/stage-6-test-contracts.md a docs/testing.md; releasegatePASS, finálníCI vPR.
 Nasazení: Kandidát105, nesloučen/nenasazen. Produkce104 a produkční data beze změny.
 Omezení: Experimentální implementace není portována do produkce ani plošně opravena. ŽiváAuth/Firebase neověřeny; cache/PDF/etapa7 mimo rozsah.
 

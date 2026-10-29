@@ -2,6 +2,10 @@
 
 Aktualizace: 29. 10. 2026. Zadavatel aktuální revize: **Dominik**.
 
+## Aktuální plán
+
+Autoritativní [roadmapa zbývající modularizace](docs/modularization-roadmap.md), včetně samostatné hranice Auth/oprávnění a úkolů PDF/cache. Nyní pouze etapa6: [testové sady a jejich záruky](docs/testing.md), [kontrakt obnovy a oddělená produkční oprava](docs/stage-6-test-contracts.md). Etapa7 nezahájena; historické návrhy níže nejsou další paralelní plán.
+
 ## Verze a nasazení
 
 - **PRODUKCE104 – Dominik:** PR43 sloučen merge`87f898375970cfa3c1a243af5edaf4463c94c36e`, Pages40913700775 success. ReleasePR/mainPASS, Node272PASS/2známéFAIL/3SKIP z277; chyby jednotlivě shodné s výchozím main, předmerge38/38unitPASS. Veřejné20souborů přesnéSHA256/verze104/5modulů/desktop/mobil/dostupnánavigace/0JS chybPASS. Publikovaný HTML+5modulů izolovaně:admin3→1GET/řazení/20cyklů/3→0listenerů/A-B/odchod/pozdníodpovědi/retry/poznámkapřežijeodchod/status-note-delete jednouPASS. Předchozímoduly/turnaje101/plnáquota/PNG/XLSXPASS. Žádnéprodukčnízápisy/migrace. ŽiváAuth/adminhlášení/fyzickázařízení/OBS neověřeny, limityB/cachetrvají. [Deploymentreport a návrat](docs/deployment-v4.51.104.md). Dalšíetapa nezahájena.
@@ -14,7 +18,9 @@ Aktualizace: 29. 10. 2026. Zadavatel aktuální revize: **Dominik**.
 
 - **PRODUKCE100 – Jaroslav, 27.10.2026:** PR #38 sloučen merge `b42a9b2189a2c501f05ac70d5b6a94cb8fa3aa83`, [GitHub Pages 40575477118](https://github.com/bcrybarna-oss/BC-Rybarna-Scoreboard/actions/runs/40575477118) build/deploy success. ZAPOMENUTÉ HESLO? v loginu volá Firebase Authentication PASSWORD_RESET pouze s e-mailem, neopisuje heslo, nemění UID/role/profil ani historii. Zrušen matoucí produkční nápis SCOREBOARD 4.0 DEV. Release gate PR/main PASS, Node **244 PASS / 2 známé FAIL / 3 SKIP z 249**, všech 5 nových testů obnovy PASS; dvě preview chyby totožné s předchozí hlavní verzí, CI jako celek proto není zelené. Veřejný soubor nebylo možné nezávisle otevřít z nástroje; samotný Pages deploy success je potvrzen. Živá produkční Firebase Auth a doručení resetovacího e-mailu nebyly testovány, žádné produkční testovací zápisy ani migrace.
 
-Aktuální verze: **v4.51.105 RC** — rozpracovaný kandidát etapy6, nesloučen a nenasazen. Produkce104.
+Aktuální verze: **v4.51.105 RC** — otestovaný kandidát etapy6, nesloučen a nenasazen. Produkce104.
+
+- **Etapa6 – Dominik:** [roadmapa](docs/modularization-roadmap.md), [garance sad](docs/testing.md) a [kontrakt/před-po](docs/stage-6-test-contracts.md). Samostatný produkční guardfix917e310 zachovává pending snapshot a vyžaduje Auth; actualroot6/6testů a browserPASS. Produkce261PASS/0FAIL/0SKIP lokálně (veřejně258/0/3), experiment28PASS/2skutečnéFAIL; celek289/2/0z291, default npm test failuje. Původní regex nahrazen4passingbehavior scénáři; zbývá starýpointer a nově pokrytý latentní staleUID. Nic není přeskočeno pro zelený výsledek. Ostatnírelevantníbrowser regresePASS, pětmodulů i starýcore beze změny. **Neslučovat/nenasazovat, etapu7nezahajovat.**
 
 Následuje zachovaná historie přípravy104; tehdejší zákaz sloučení/nasazení byl nahrazen schválením a ověřeným nasazením.
 

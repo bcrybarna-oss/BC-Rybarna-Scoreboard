@@ -103,10 +103,26 @@ test('recovery must skip explicitly deleted and finished matches',()=>{
   assert.equal(h.calls.save.length,0);
 });
 
-test('successful manual and automatic login both recover after loading saved matches',()=>{
-  assert.match(core,/await promoteLegacyTournamentGuestsToProfiles\(\);\s+restoreOwnedTestMatchAfterLogin\(\);/);
-  assert.equal((core.match(/restoreOwnedTestMatchAfterLogin\(\);/g)||[]).length,2);
-  assert.doesNotThrow(()=>new Function(core));
+// Execute the actual preview login entry points, not a source-order regex.
+for(const mode of ['manual','automatic'])for(const hasMatch of [true,false])test('preview '+mode+' login restores match first or actual tournament fallback after data loads ('+hasMatch+')',async()=>{
+  const {topFunction}=require('./helpers/source-functions.cjs');
+  const live=mk('login-match','owner',[4,3]);
+  const h=harness({uid:'owner',authenticated:false,saved:hasMatch?[live]:[]}),events=[],els=new Map();
+  Object.assign(h.ctx,{
+    $:id=>{if(!els.has(id))els.set(id,{value:id==='cloudEmail'?'mock@example.invalid':'mock-password',textContent:'',classList:{add(){},remove(){}}});return els.get(id);},
+    persistedCloudSession:()=>({email:'mock@example.invalid',refresh:'mock-refresh'}),
+    firebaseSignIn:async()=>{h.ctx.cloudAuthenticated=true;events.push('identity');},firebaseRefreshAuth:async()=>{h.ctx.cloudAuthenticated=true;events.push('identity');},
+    ensureVerifiedBeforeApp:async()=>true,ensureUserAccessRecord:async()=>events.push('access'),loadOwnProfileClaim:async()=>events.push('profile'),initialCloudMerge:async()=>events.push('appData'),loadSecurePlayers:async()=>events.push('players'),loadSecureMatches:async()=>{await new Promise(setImmediate);events.push('matches');},loadSecureTournaments:async()=>{await new Promise(setImmediate);events.push('tournaments');h.ctx.data.tournaments=[{id:'cup',status:'active'}];},promoteLegacyTournamentGuestsToProfiles:async()=>events.push('guests'),
+    showScreen:where=>{h.calls.screens.push(where);events.push('screen:'+where);},
+    sessionStorage:{getItem:()=>null},selectedTournamentId:null,updateCurrentTournamentShortcut:()=>events.push('shortcut'),renderTournamentDetail:()=>events.push('tournament-render'),refreshAccountUI(){},renderPlayers(){},setCloudStatus(){},clearRuntimeCloudIdentity(){h.ctx.cloudAuthenticated=false;}
+  });
+  for(const name of ['restoreTestTournamentAfterLogin','cloudLoginFromModal','autoCloudInit'])vm.runInContext(topFunction(core,name),vm.isContext(h.ctx)?h.ctx:vm.createContext(h.ctx));
+  // Recovery slice originally ran in the same context via runInNewContext; declarations remain available.
+  await h.ctx[mode==='manual'?'cloudLoginFromModal':'autoCloudInit']();
+  assert.deepEqual(events.slice(0,8),['identity','access','profile','appData','players','matches','tournaments','guests']);
+  assert.deepEqual(h.calls.screens,[hasMatch?'match':'tournament-detail']);
+  if(hasMatch){assert.deepEqual(Array.from(h.ctx.match.scores),[4,3]);assert.equal(h.ctx.selectedTournamentId,null);assert.equal(events.includes('tournament-render'),false);}
+  else{assert.equal(h.ctx.match,null);assert.equal(h.ctx.selectedTournamentId,'cup');assert.equal(events.filter(x=>x==='tournament-render').length,1);}
 });
 
 test('active secure test-database backup is discoverable even if local snapshot is absent',()=>{
@@ -134,4 +150,11 @@ test('modular preview exposes the backup diagnostic button and status panel',()=
   assert.match(html,/poolTestOpenRecovery\?\.\(\)/);
   assert.match(core,/window\.poolTestOpenRecovery=function\(\)/);
   assert.match(core,/renderTestMatchRecoveryStatus\(\);/);
+});
+
+test('experimental contract: stale UID without authenticated identity must not authorize the saved owner',()=>{
+  const {topFunction}=require('./helpers/source-functions.cjs');
+  const c={cloudAuthenticated:false,cloudUid:'owner',currentUserPlayerId:'stale-profile',currentUserIsSystemAdmin:()=>false,data:{tournaments:[]},canManageTournament:()=>false};
+  vm.runInNewContext(topFunction(core,'editableMatchOwnedByCurrentUser'),c);
+  assert.equal(c.editableMatchOwnedByCurrentUser(mk('stale-identity','owner')),false,'runtime UID alone is not authenticated ownership');
 });
