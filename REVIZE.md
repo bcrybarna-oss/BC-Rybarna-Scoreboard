@@ -1,5 +1,15 @@
 # Revize aplikace Poolčítadlo
 
+Etapa7b (Dominik,29.10.2026): navazující controller na PR45, společný nevydaný106. Samostatný PR do větve7a; nejprve integrace7b→7a a až po schválení společné vydání do main. Oba reproduktory PASS, ztráta role PASS,23výstupů shodných, Node269/0/0 lokálně, experiment28/2/0; žádné ignorování. [Rozsah, verze, důkazy a návrat](docs/federal-report-controller-stage-7b.md). Nesloučeno/nenasazeno, produkce105/data beze změny.
+
+## Dominik – controller reportů, navazující etapa7b (v4.51.106 RC)
+Zadavatel: Dominik
+Datum: 29. 10. 2026
+Změny: Jediný produkční controller převzal dialog/export/lifecycle. Oddělené funkční opravy queued close a zneplatnění exportu při změně identity/role. Renderer a výpočty beze změny.
+Testy: Oba browser reproduktory a role-loss PASS;20cyklů/slowfonts-images/chyba-retry/URLlease a23výstupů proti7a PASS. Node269/0/0 lokálně, experiment28/2/0; celek297/2/0z299.
+Nasazení: Navazující samostatné PR do větve7a, společný dosud nevydaný106; nesloučeno/nenasazeno, produkce105.
+Omezení: Živý Auth neověřen. Při samostatném nasazení7a musí7b dostat nové číslo, nikoli znovu106. Návrat bez datové migrace vrací i opravené vady. Viz docs/federal-report-controller-stage-7b.md.
+
 ## Dominik – renderer reportů Federal Cupu, etapa7a (v4.51.106 RC)
 Zadavatel: Dominik
 Datum: 29. 10. 2026
