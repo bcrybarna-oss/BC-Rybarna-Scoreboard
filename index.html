@@ -1046,6 +1046,7 @@
 <script src="assets/js/cloud-refresh.js?v=4.51.99"></script>
 <script src="assets/js/own-reports.js?v=4.51.102"></script>
 <script src="assets/js/federal-viewer.js?v=4.51.103"></script>
+<script src="assets/js/admin-reports.js?v=4.51.104"></script>
 <script src="assets/pushout-xlsx.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.2/dist/jspdf.umd.min.js"></script>
@@ -2607,7 +2608,7 @@ html[data-theme="light"] #leagueSchedule .history-item .muted{
           <span class="by">by</span>
           <span class="club">BC Rybárna</span>
         </div>
-        <small class="modern-brand-version">v4.51.103 RC</small>
+        <small class="modern-brand-version">v4.51.104 RC</small>
       </div>
     </div>
     <div class="nav">
@@ -3221,7 +3222,7 @@ html[data-theme="light"] #leagueSchedule .history-item .muted{
         </div>
         <div class="subpanel" style="min-width:210px;text-align:center;margin:0">
           <div class="muted" style="font-size:10px;font-weight:950;letter-spacing:1px">AKTUÁLNÍ VERZE</div>
-          <div style="font-size:22px;font-weight:950;color:var(--gold2);margin-top:5px">v4.51.103 RC</div>
+          <div style="font-size:22px;font-weight:950;color:var(--gold2);margin-top:5px">v4.51.104 RC</div>
         </div>
       </div>
     </div>
@@ -5986,7 +5987,7 @@ html[data-theme="light"] #leagueSchedule .history-item .muted{
       </div>
 
       <div id="groupPlayoffSeedStatus" class="muted" style="margin-top:12px;min-height:20px"></div>
-      <div class="muted" style="margin-top:4px;font-size:11px">RC v4.51.103</div>
+      <div class="muted" style="margin-top:4px;font-size:11px">RC v4.51.104</div>
       <div class="modal-actions">
         <button id="groupPlayoffSeedApplyBtn" class="btn primary big" type="button">NASADIT DO PLAY-OFF</button>
         <button id="groupPlayoffSeedCancelBtn" class="btn">ZRUŠIT</button>
@@ -6091,6 +6092,9 @@ html[data-theme="light"] #leagueSchedule .history-item .muted{
     error.textContent='Nepodařilo se načíst obnovy Federal Cupu. Obnovte stránku.';document.body.prepend(error);
     throw new Error('FEDERAL_VIEWER_MODULE_UNAVAILABLE');
   }
+  if(!window.AdminReports){
+    const error=document.createElement('div');error.id='adminReportsLoadError';error.setAttribute('role','alert');error.textContent='Nepodařilo se načíst správu hlášení. Obnovte stránku.';document.body.prepend(error);throw new Error('ADMIN_REPORTS_MODULE_UNAVAILABLE');
+  }
   let {federalRackScoresAgree,federalMetric,federalStatsRows,federalStatsRackRows,federalStatsRacksComplete,federalStatsHistoricalRacks,federalStatsRecordSignature,federalStatsRecordIndex,federalStatsReadableShot,federalStatsShotIssues,federalTaggedMetric,federalStatsSide,federalStatsOwner,federalCalculateMatch,federalMergeMetrics,federalFixtureSources,federalCalculateSeason,federalReportOrder,federalReportWinner,federalReportSelection,federalReportData,federalReportResults,federalReportMetric,federalPushoutModel}=window.FederalStatistics;
   const $ = id => document.getElementById(id);
   const nowTime = () => new Date().toLocaleTimeString('cs-CZ',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
@@ -6142,6 +6146,7 @@ html[data-theme="light"] #leagueSchedule .history-item .muted{
   let cloudSyncInProgress=false;
   let cloudAutoSync=null;
   let ownReportsSync=null;
+  let adminReportsSync=null;
   let cloudApplyingRemote=false;
   let cloudLastError='';
   const CLOUD_POLL_MS=2500;
@@ -7155,7 +7160,7 @@ html[data-theme="light"] #leagueSchedule .history-item .muted{
     const btn=$('submitReportBtn');if(btn)btn.disabled=true;
     try{
       const id=uid(),p=currentUserPlayerId?data.players?.[currentUserPlayerId]:null;
-      const report={id,createdByUid:cloudUid,createdByPlayerId:currentUserPlayerId||'',createdByName:p?playerSelectionLabel(p):(cloudUserEmail||'Uživatel'),email:cloudUserEmail||'',type,area,description,appVersion:'v4.51.103 RC',createdAt:new Date().toISOString(),updatedAt:new Date().toISOString(),status:'new',adminNote:''};
+      const report={id,createdByUid:cloudUid,createdByPlayerId:currentUserPlayerId||'',createdByName:p?playerSelectionLabel(p):(cloudUserEmail||'Uživatel'),email:cloudUserEmail||'',type,area,description,appVersion:'v4.51.104 RC',createdAt:new Date().toISOString(),updatedAt:new Date().toISOString(),status:'new',adminNote:''};
       await reportRequest(id,'PUT',report);
       try{
         await writeReportUserMirror(report);
@@ -7176,22 +7181,15 @@ html[data-theme="light"] #leagueSchedule .history-item .muted{
     }finally{if(btn)btn.disabled=false;}
   }
 
-  async function loadReportsAdmin(){
-    const wrap=$('reportsAdminList');if(!currentUserIsSystemAdmin()){if(wrap)wrap.innerHTML='<div class="muted">Pouze pro systémového administrátora.</div>';return [];}
-    try{if(!await ensureCloudToken())throw new Error('NO_AUTH');const r=await fetch(cloudUrl('reports')+'&t='+Date.now(),{cache:'no-store'});if(!r.ok)throw new Error('REPORTS_ADMIN_'+r.status);const raw=await r.json()||{};const order={new:0,in_progress:1,resolved:2};const rows=Object.values(raw).filter(Boolean).sort((a,b)=>(order[a.status]??9)-(order[b.status]??9)||new Date(b.createdAt||0)-new Date(a.createdAt||0));renderReportsAdmin(rows);return rows;}catch(e){console.error('Load reports admin:',e);if(wrap)wrap.innerHTML='<div class="muted">Hlášení se nepodařilo načíst.</div>';return [];}
-  }
-
-  function renderReportsAdmin(rows){
-    const wrap=$('reportsAdminList');if(!wrap)return;if(!rows.length){wrap.innerHTML='<div class="muted">Žádná hlášení.</div>';return;}
-    wrap.innerHTML=rows.map(r=>`<div class="subpanel" style="margin-bottom:10px"><div style="display:flex;justify-content:space-between;gap:10px;align-items:flex-start;flex-wrap:wrap"><div><strong>${esc(r.createdByName||r.email||'Uživatel')}</strong><div class="muted">${esc(reportTypeLabel(r.type))}${r.area?' • '+esc(r.area):''} • ${esc(r.appVersion||'')}</div><div class="muted">${esc(new Date(r.createdAt).toLocaleString('cs-CZ'))}</div></div><select id="reportStatus_${r.id}" onchange="updateReportStatus('${r.id}',this.value)"><option value="new" ${r.status==='new'?'selected':''}>NOVÉ</option><option value="in_progress" ${r.status==='in_progress'?'selected':''}>ŘEŠÍ SE</option><option value="resolved" ${r.status==='resolved'?'selected':''}>VYŘEŠENO</option></select></div><div style="margin-top:10px;white-space:pre-wrap">${esc(r.description||'')}</div><div style="margin-top:10px"><label>Odpověď / poznámka pro uživatele</label><textarea id="reportNote_${r.id}" rows="3">${esc(r.adminNote||'')}</textarea><div style="display:flex;justify-content:flex-end;gap:8px;margin-top:7px"><button class="btn report-save-note-btn" data-report-id="${r.id}">ULOŽIT ODPOVĚĎ</button><button class="btn danger report-delete-btn" data-report-id="${r.id}">SMAZAT</button></div></div></div>`).join('');
-
-    wrap.querySelectorAll('.report-save-note-btn').forEach(btn=>{
-      btn.addEventListener('click',()=>window.saveReportAdminNote(btn.dataset.reportId));
-    });
-    wrap.querySelectorAll('.report-delete-btn').forEach(btn=>{
-      btn.addEventListener('click',()=>window.deleteProblemReport(btn.dataset.reportId));
-    });
-  }
+  adminReportsSync=window.AdminReports.create({
+    container:$('reportsAdminList'),pageTarget:window,esc,reportTypeLabel,
+    identity:()=>cloudAuthenticated&&cloudUid&&currentUserIsSystemAdmin()?cloudUid:null,
+    screenActive:()=>$('screen-admin').classList.contains('active'),
+    authorize:context=>ensureCloudToken(context),fetch:(...args)=>fetch(...args),url:()=>cloudUrl('reports')+'&t='+Date.now(),
+    updateStatus:(...args)=>window.updateReportStatus(...args),saveNote:id=>window.saveReportAdminNote(id),deleteReport:id=>window.deleteProblemReport(id),
+    error:error=>console.error('Load reports admin:',error)
+  });
+  function loadReportsAdmin(){return adminReportsSync.refresh();}
 
   window.updateReportStatus=async function(id,status){
     if(!currentUserIsSystemAdmin())return;
@@ -7211,10 +7209,11 @@ html[data-theme="light"] #leagueSchedule .history-item .muted{
   };
   window.saveReportAdminNote=async function(id){
     if(!currentUserIsSystemAdmin())return;
+    const note=($('reportNote_'+id)?.value||'').trim();
     try{
       const report=await reportRequest(id,'GET');
       if(!report)return;
-      report.adminNote=($('reportNote_'+id)?.value||'').trim();
+      report.adminNote=note;
       if(report.adminNote&&report.status==='new')report.status='in_progress';
       report.updatedAt=new Date().toISOString();
 
@@ -8550,6 +8549,7 @@ html[data-theme="light"] #leagueSchedule .history-item .muted{
   function clearRuntimeCloudIdentity(){
     cloudAutoSync?.stop();
     ownReportsSync?.stop();
+    adminReportsSync?.stop();
     window.stopFederalCupViewer?.();
     cloudReports=[];
     cloudAuthenticated=false;
@@ -8713,6 +8713,7 @@ html[data-theme="light"] #leagueSchedule .history-item .muted{
   function startCloudAutoSync(){
     cloudAutoSync.start();
     ownReportsSync?.start();
+    adminReportsSync?.start();
     window.syncFederalCupViewer?.();
     setCloudStatus('ONLINE • AUTO',true);
   }
@@ -9118,6 +9119,7 @@ html[data-theme="light"] #leagueSchedule .history-item .muted{
     document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
     if(name==='federal-cup-editor' && !currentUserIsSystemAdmin())name='federal-cup-2026';
     $('screen-'+name).classList.add('active');
+    adminReportsSync?.start();
     window.syncFederalCupViewer?.();
     $('screen-setup').classList.toggle('federal-setup',name==='setup'&&!!pendingFederalCupLink);
     $('screen-setup').classList.toggle('federal-team-setup',name==='setup'&&pendingFederalCupLink?.type==='team');

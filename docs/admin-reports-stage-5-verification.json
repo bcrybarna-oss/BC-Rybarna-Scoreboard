@@ -1,0 +1,977 @@
+{
+  "base": "899ee10000efaa3235021b90212283e3d280fa28",
+  "version": "v4.51.104 RC",
+  "notDeployed": true,
+  "productionWrites": 0,
+  "liveAuthVerified": false,
+  "unchanged": [
+    "assets/js/federal-statistics.js",
+    "assets/js/cloud-refresh.js",
+    "assets/js/own-reports.js",
+    "assets/js/federal-viewer.js",
+    "assets/pushout-xlsx.js",
+    "overlay.html",
+    "test-modular/assets/js/pool-core.js",
+    "tests/preview-match-reload-recovery.test.cjs"
+  ],
+  "node": {
+    "private": {
+      "pass": 275,
+      "fail": 2,
+      "skip": 0,
+      "total": 277
+    },
+    "expectedCI": {
+      "pass": 272,
+      "fail": 2,
+      "skip": 3,
+      "total": 277
+    }
+  },
+  "knownFailures": {
+    "baselineRun": 40759980782,
+    "previewLocal": {
+      "pass": 7,
+      "fail": 2,
+      "total": 9
+    },
+    "line50": "recovery pointer retained rather than detached by experimental core",
+    "line106": "standalone-call regex versus assigned recovery return"
+  },
+  "noteCaptureRegression": {
+    "oldCoreFails": true,
+    "currentCorePasses": true,
+    "browserDelayedGetLeavePutPasses": true
+  },
+  "scope": {
+    "before": {
+      "sourceSha256": "4ef5fb4ccc6445c6a310d291bc0e991a5dc2940b1b6bedd4c416d02fe883d454",
+      "archive": {
+        "bytes": 40913440,
+        "matches": 189,
+        "sha256": "49908fbcd66113315e524e6e61a4fc3a889654bb0e9420d309b843d4181a4d5d"
+      },
+      "concurrentReads": 3,
+      "lateAfterLeave": true,
+      "oldAAfterB": true,
+      "samples": [
+        {
+          "on": {
+            "dom": 3456,
+            "listeners": 0,
+            "intervals": 0
+          },
+          "off": {
+            "dom": 3456,
+            "listeners": 0,
+            "intervals": 0
+          },
+          "ms": 1362
+        },
+        {
+          "on": {
+            "dom": 3456,
+            "listeners": 0,
+            "intervals": 0
+          },
+          "off": {
+            "dom": 3456,
+            "listeners": 0,
+            "intervals": 0
+          },
+          "ms": 4325
+        },
+        {
+          "on": {
+            "dom": 3456,
+            "listeners": 0,
+            "intervals": 0
+          },
+          "off": {
+            "dom": 3456,
+            "listeners": 0,
+            "intervals": 0
+          },
+          "ms": 4507
+        },
+        {
+          "on": {
+            "dom": 3456,
+            "listeners": 0,
+            "intervals": 0
+          },
+          "off": {
+            "dom": 3456,
+            "listeners": 0,
+            "intervals": 0
+          },
+          "ms": 4491
+        },
+        {
+          "on": {
+            "dom": 3456,
+            "listeners": 0,
+            "intervals": 0
+          },
+          "off": {
+            "dom": 3456,
+            "listeners": 0,
+            "intervals": 0
+          },
+          "ms": 4341
+        },
+        {
+          "on": {
+            "dom": 3456,
+            "listeners": 0,
+            "intervals": 0
+          },
+          "off": {
+            "dom": 3456,
+            "listeners": 0,
+            "intervals": 0
+          },
+          "ms": 4416
+        },
+        {
+          "on": {
+            "dom": 3456,
+            "listeners": 0,
+            "intervals": 0
+          },
+          "off": {
+            "dom": 3456,
+            "listeners": 0,
+            "intervals": 0
+          },
+          "ms": 4422
+        },
+        {
+          "on": {
+            "dom": 3456,
+            "listeners": 0,
+            "intervals": 0
+          },
+          "off": {
+            "dom": 3456,
+            "listeners": 0,
+            "intervals": 0
+          },
+          "ms": 4769
+        },
+        {
+          "on": {
+            "dom": 3456,
+            "listeners": 0,
+            "intervals": 0
+          },
+          "off": {
+            "dom": 3456,
+            "listeners": 0,
+            "intervals": 0
+          },
+          "ms": 4492
+        },
+        {
+          "on": {
+            "dom": 3456,
+            "listeners": 0,
+            "intervals": 0
+          },
+          "off": {
+            "dom": 3456,
+            "listeners": 0,
+            "intervals": 0
+          },
+          "ms": 4577
+        },
+        {
+          "on": {
+            "dom": 3456,
+            "listeners": 0,
+            "intervals": 0
+          },
+          "off": {
+            "dom": 3456,
+            "listeners": 0,
+            "intervals": 0
+          },
+          "ms": 4379
+        },
+        {
+          "on": {
+            "dom": 3456,
+            "listeners": 0,
+            "intervals": 0
+          },
+          "off": {
+            "dom": 3456,
+            "listeners": 0,
+            "intervals": 0
+          },
+          "ms": 4393
+        },
+        {
+          "on": {
+            "dom": 3456,
+            "listeners": 0,
+            "intervals": 0
+          },
+          "off": {
+            "dom": 3456,
+            "listeners": 0,
+            "intervals": 0
+          },
+          "ms": 6037
+        },
+        {
+          "on": {
+            "dom": 3456,
+            "listeners": 0,
+            "intervals": 0
+          },
+          "off": {
+            "dom": 3456,
+            "listeners": 0,
+            "intervals": 0
+          },
+          "ms": 2559
+        },
+        {
+          "on": {
+            "dom": 3456,
+            "listeners": 0,
+            "intervals": 0
+          },
+          "off": {
+            "dom": 3456,
+            "listeners": 0,
+            "intervals": 0
+          },
+          "ms": 5787
+        },
+        {
+          "on": {
+            "dom": 3456,
+            "listeners": 0,
+            "intervals": 0
+          },
+          "off": {
+            "dom": 3456,
+            "listeners": 0,
+            "intervals": 0
+          },
+          "ms": 2571
+        },
+        {
+          "on": {
+            "dom": 3456,
+            "listeners": 0,
+            "intervals": 0
+          },
+          "off": {
+            "dom": 3456,
+            "listeners": 0,
+            "intervals": 0
+          },
+          "ms": 4257
+        },
+        {
+          "on": {
+            "dom": 3456,
+            "listeners": 0,
+            "intervals": 0
+          },
+          "off": {
+            "dom": 3456,
+            "listeners": 0,
+            "intervals": 0
+          },
+          "ms": 5788
+        },
+        {
+          "on": {
+            "dom": 3456,
+            "listeners": 0,
+            "intervals": 0
+          },
+          "off": {
+            "dom": 3456,
+            "listeners": 0,
+            "intervals": 0
+          },
+          "ms": 2384
+        },
+        {
+          "on": {
+            "dom": 3456,
+            "listeners": 0,
+            "intervals": 0
+          },
+          "off": {
+            "dom": 3456,
+            "listeners": 0,
+            "intervals": 0
+          },
+          "ms": 4081
+        }
+      ],
+      "logout": {
+        "probe": {
+          "listeners": 0,
+          "intervals": 0,
+          "additions": 0
+        },
+        "controller": null
+      },
+      "pageErrors": [],
+      "syntheticMutations": [
+        {
+          "phase": "actions",
+          "path": "/reports/one.json",
+          "method": "PUT"
+        },
+        {
+          "phase": "actions",
+          "path": "/reportIndexByUser/owner/one.json",
+          "method": "PUT"
+        },
+        {
+          "phase": "actions",
+          "path": "/reports/one.json",
+          "method": "PUT"
+        },
+        {
+          "phase": "actions",
+          "path": "/reportIndexByUser/owner/one.json",
+          "method": "PUT"
+        },
+        {
+          "phase": "actions",
+          "path": "/reports/one.json",
+          "method": "DELETE"
+        },
+        {
+          "phase": "actions",
+          "path": "/reportIndexByUser/owner/one.json",
+          "method": "DELETE"
+        }
+      ]
+    },
+    "after": {
+      "sourceSha256": "4164b507ee44632eb4e54fcd6e8b82422b54e810e7246ffc8f09e0585049c4d0",
+      "archive": {
+        "bytes": 40913440,
+        "matches": 189,
+        "sha256": "49908fbcd66113315e524e6e61a4fc3a889654bb0e9420d309b843d4181a4d5d"
+      },
+      "concurrentReads": 1,
+      "lateAfterLeave": false,
+      "oldAAfterB": false,
+      "samples": [
+        {
+          "on": {
+            "dom": 3457,
+            "listeners": 3,
+            "intervals": 0
+          },
+          "off": {
+            "dom": 3440,
+            "listeners": 0,
+            "intervals": 0
+          },
+          "ms": 1332
+        },
+        {
+          "on": {
+            "dom": 3457,
+            "listeners": 3,
+            "intervals": 0
+          },
+          "off": {
+            "dom": 3440,
+            "listeners": 0,
+            "intervals": 0
+          },
+          "ms": 4344
+        },
+        {
+          "on": {
+            "dom": 3457,
+            "listeners": 3,
+            "intervals": 0
+          },
+          "off": {
+            "dom": 3440,
+            "listeners": 0,
+            "intervals": 0
+          },
+          "ms": 6123
+        },
+        {
+          "on": {
+            "dom": 3457,
+            "listeners": 3,
+            "intervals": 0
+          },
+          "off": {
+            "dom": 3440,
+            "listeners": 0,
+            "intervals": 0
+          },
+          "ms": 2680
+        },
+        {
+          "on": {
+            "dom": 3457,
+            "listeners": 3,
+            "intervals": 0
+          },
+          "off": {
+            "dom": 3440,
+            "listeners": 0,
+            "intervals": 0
+          },
+          "ms": 4408
+        },
+        {
+          "on": {
+            "dom": 3457,
+            "listeners": 3,
+            "intervals": 0
+          },
+          "off": {
+            "dom": 3440,
+            "listeners": 0,
+            "intervals": 0
+          },
+          "ms": 4529
+        },
+        {
+          "on": {
+            "dom": 3457,
+            "listeners": 3,
+            "intervals": 0
+          },
+          "off": {
+            "dom": 3440,
+            "listeners": 0,
+            "intervals": 0
+          },
+          "ms": 4327
+        },
+        {
+          "on": {
+            "dom": 3457,
+            "listeners": 3,
+            "intervals": 0
+          },
+          "off": {
+            "dom": 3440,
+            "listeners": 0,
+            "intervals": 0
+          },
+          "ms": 6100
+        },
+        {
+          "on": {
+            "dom": 3457,
+            "listeners": 3,
+            "intervals": 0
+          },
+          "off": {
+            "dom": 3440,
+            "listeners": 0,
+            "intervals": 0
+          },
+          "ms": 2873
+        },
+        {
+          "on": {
+            "dom": 3457,
+            "listeners": 3,
+            "intervals": 0
+          },
+          "off": {
+            "dom": 3440,
+            "listeners": 0,
+            "intervals": 0
+          },
+          "ms": 6098
+        },
+        {
+          "on": {
+            "dom": 3457,
+            "listeners": 3,
+            "intervals": 0
+          },
+          "off": {
+            "dom": 3440,
+            "listeners": 0,
+            "intervals": 0
+          },
+          "ms": 3040
+        },
+        {
+          "on": {
+            "dom": 3457,
+            "listeners": 3,
+            "intervals": 0
+          },
+          "off": {
+            "dom": 3440,
+            "listeners": 0,
+            "intervals": 0
+          },
+          "ms": 4576
+        },
+        {
+          "on": {
+            "dom": 3457,
+            "listeners": 3,
+            "intervals": 0
+          },
+          "off": {
+            "dom": 3440,
+            "listeners": 0,
+            "intervals": 0
+          },
+          "ms": 4850
+        },
+        {
+          "on": {
+            "dom": 3457,
+            "listeners": 3,
+            "intervals": 0
+          },
+          "off": {
+            "dom": 3440,
+            "listeners": 0,
+            "intervals": 0
+          },
+          "ms": 4334
+        },
+        {
+          "on": {
+            "dom": 3457,
+            "listeners": 3,
+            "intervals": 0
+          },
+          "off": {
+            "dom": 3440,
+            "listeners": 0,
+            "intervals": 0
+          },
+          "ms": 6162
+        },
+        {
+          "on": {
+            "dom": 3457,
+            "listeners": 3,
+            "intervals": 0
+          },
+          "off": {
+            "dom": 3440,
+            "listeners": 0,
+            "intervals": 0
+          },
+          "ms": 4138
+        },
+        {
+          "on": {
+            "dom": 3457,
+            "listeners": 3,
+            "intervals": 0
+          },
+          "off": {
+            "dom": 3440,
+            "listeners": 0,
+            "intervals": 0
+          },
+          "ms": 2606
+        },
+        {
+          "on": {
+            "dom": 3457,
+            "listeners": 3,
+            "intervals": 0
+          },
+          "off": {
+            "dom": 3440,
+            "listeners": 0,
+            "intervals": 0
+          },
+          "ms": 5731
+        },
+        {
+          "on": {
+            "dom": 3457,
+            "listeners": 3,
+            "intervals": 0
+          },
+          "off": {
+            "dom": 3440,
+            "listeners": 0,
+            "intervals": 0
+          },
+          "ms": 2605
+        },
+        {
+          "on": {
+            "dom": 3457,
+            "listeners": 3,
+            "intervals": 0
+          },
+          "off": {
+            "dom": 3440,
+            "listeners": 0,
+            "intervals": 0
+          },
+          "ms": 5981
+        }
+      ],
+      "logout": {
+        "probe": {
+          "listeners": 0,
+          "intervals": 0,
+          "additions": 69
+        },
+        "controller": {
+          "active": false,
+          "disposed": false,
+          "pending": false,
+          "rows": 0,
+          "listeners": 0,
+          "timers": 0
+        }
+      },
+      "pageErrors": [],
+      "syntheticMutations": [
+        {
+          "phase": "boot",
+          "path": "/presence/A/dgxfeldbrhxp.json",
+          "method": "DELETE"
+        },
+        {
+          "phase": "actions",
+          "path": "/reports/one.json",
+          "method": "PUT"
+        },
+        {
+          "phase": "actions",
+          "path": "/reportIndexByUser/owner/one.json",
+          "method": "PUT"
+        },
+        {
+          "phase": "actions",
+          "path": "/reports/one.json",
+          "method": "PUT"
+        },
+        {
+          "phase": "actions",
+          "path": "/reportIndexByUser/owner/one.json",
+          "method": "PUT"
+        },
+        {
+          "phase": "actions",
+          "path": "/reports/one.json",
+          "method": "DELETE"
+        },
+        {
+          "phase": "actions",
+          "path": "/reportIndexByUser/owner/one.json",
+          "method": "DELETE"
+        },
+        {
+          "phase": "note-late",
+          "path": "/reports/draft.json",
+          "method": "PUT"
+        }
+      ]
+    }
+  },
+  "soak": {
+    "before": {
+      "sourceSha256": "4ef5fb4ccc6445c6a310d291bc0e991a5dc2940b1b6bedd4c416d02fe883d454",
+      "backupBytes": 40913440,
+      "backupSha256": "49908fbcd66113315e524e6e61a4fc3a889654bb0e9420d309b843d4181a4d5d",
+      "cycles": 12,
+      "snapshots": [
+        {
+          "label": "loaded",
+          "heap": 54161380,
+          "dom": 2980,
+          "listeners": 461,
+          "intervals": [
+            5000,
+            1000,
+            30000,
+            30000,
+            5000
+          ],
+          "cpu": 1.069317,
+          "maxLongTask": 3715
+        },
+        {
+          "label": "cycle-1",
+          "heap": 57782220,
+          "dom": 8736,
+          "listeners": 1054,
+          "intervals": [
+            5000,
+            1000,
+            30000,
+            30000,
+            5000,
+            2500,
+            25000
+          ],
+          "cpu": 7.980713,
+          "maxLongTask": 3715
+        },
+        {
+          "label": "cycle-7",
+          "heap": 58635788,
+          "dom": 9171,
+          "listeners": 1130,
+          "intervals": [
+            5000,
+            1000,
+            30000,
+            30000,
+            5000,
+            2500,
+            25000
+          ],
+          "cpu": 55.036118,
+          "maxLongTask": 4993
+        },
+        {
+          "label": "cycle-12",
+          "heap": 58741056,
+          "dom": 9171,
+          "listeners": 1130,
+          "intervals": [
+            5000,
+            1000,
+            30000,
+            30000,
+            5000,
+            2500,
+            25000
+          ],
+          "cpu": 94.943291,
+          "maxLongTask": 5016
+        },
+        {
+          "label": "final",
+          "heap": 58739436,
+          "dom": 9171,
+          "listeners": 1127,
+          "intervals": [
+            5000,
+            1000,
+            30000,
+            30000,
+            5000
+          ],
+          "cpu": 95.081973,
+          "maxLongTask": 5016
+        }
+      ],
+      "matches": {
+        "count": 23,
+        "max": 1
+      },
+      "appData": {
+        "count": 35,
+        "max": 1
+      },
+      "cloudApplications": 4,
+      "errors": [],
+      "interactionFailures": [],
+      "blockedWriteAttempts": 4,
+      "storageErrors": 71,
+      "reportSteps": [
+        {
+          "cycle": 0,
+          "operation": "report-open-close-match",
+          "wallMs": 2124
+        },
+        {
+          "cycle": 3,
+          "operation": "report-open-close-team",
+          "wallMs": 2528
+        },
+        {
+          "cycle": 6,
+          "operation": "report-open-close-player",
+          "wallMs": 3466
+        },
+        {
+          "cycle": 9,
+          "operation": "report-open-close-match",
+          "wallMs": 2077
+        }
+      ]
+    },
+    "after": {
+      "sourceSha256": "4164b507ee44632eb4e54fcd6e8b82422b54e810e7246ffc8f09e0585049c4d0",
+      "backupBytes": 40913440,
+      "backupSha256": "49908fbcd66113315e524e6e61a4fc3a889654bb0e9420d309b843d4181a4d5d",
+      "cycles": 12,
+      "snapshots": [
+        {
+          "label": "loaded",
+          "heap": 54169264,
+          "dom": 2980,
+          "listeners": 461,
+          "intervals": [
+            5000,
+            1000,
+            30000,
+            30000,
+            5000
+          ],
+          "cpu": 0.672027,
+          "maxLongTask": 2069
+        },
+        {
+          "label": "cycle-1",
+          "heap": 57785368,
+          "dom": 8736,
+          "listeners": 1054,
+          "intervals": [
+            5000,
+            1000,
+            30000,
+            30000,
+            5000,
+            2500,
+            25000
+          ],
+          "cpu": 4.633328,
+          "maxLongTask": 2069
+        },
+        {
+          "label": "cycle-7",
+          "heap": 58569040,
+          "dom": 9171,
+          "listeners": 1130,
+          "intervals": [
+            5000,
+            1000,
+            30000,
+            30000,
+            5000,
+            2500,
+            25000
+          ],
+          "cpu": 29.795799,
+          "maxLongTask": 2965
+        },
+        {
+          "label": "cycle-12",
+          "heap": 58741484,
+          "dom": 9171,
+          "listeners": 1130,
+          "intervals": [
+            5000,
+            1000,
+            30000,
+            30000,
+            5000,
+            2500,
+            25000
+          ],
+          "cpu": 63.726725,
+          "maxLongTask": 4339
+        },
+        {
+          "label": "final",
+          "heap": 58741912,
+          "dom": 9171,
+          "listeners": 1127,
+          "intervals": [
+            5000,
+            1000,
+            30000,
+            30000,
+            5000
+          ],
+          "cpu": 63.959429,
+          "maxLongTask": 4339
+        }
+      ],
+      "matches": {
+        "count": 22,
+        "max": 1
+      },
+      "appData": {
+        "count": 33,
+        "max": 1
+      },
+      "cloudApplications": 4,
+      "errors": [],
+      "interactionFailures": [],
+      "blockedWriteAttempts": 3,
+      "storageErrors": 70,
+      "reportSteps": [
+        {
+          "cycle": 0,
+          "operation": "report-open-close-match",
+          "wallMs": 1324
+        },
+        {
+          "cycle": 3,
+          "operation": "report-open-close-team",
+          "wallMs": 1680
+        },
+        {
+          "cycle": 6,
+          "operation": "report-open-close-player",
+          "wallMs": 1472
+        },
+        {
+          "cycle": 9,
+          "operation": "report-open-close-match",
+          "wallMs": 1715
+        }
+      ]
+    }
+  },
+  "browserSuites": [
+    "admin before/after and actions",
+    "five production modules and each 404 desktop/mobile",
+    "FederalViewer",
+    "OwnReports",
+    "CloudRefresh",
+    "tournament101",
+    "Pushout XLSX",
+    "A1/A2/B PNG and unchanged PDF regression"
+  ],
+  "testHarnessNotes": [
+    "Extracted VM contexts include new injected lifecycle binding; assertions unchanged",
+    "Viewer mock only holds account A, not new account B, to avoid artificial gate deadlock"
+  ],
+  "notes": [
+    "Reports are synthetic; archive remains unchanged and private",
+    "General soak does not open admin; targeted 20 cycles exercises admin",
+    "One soak per version under variable host load is not proof of optimization",
+    "All writes hit only mocks; already-started mutations remain app-owned"
+  ],
+  "pullRequest": "https://github.com/bcrybarna-oss/BC-Rybarna-Scoreboard/pull/43",
+  "implementationCommit": "deb9bc51a48f1a7ddbc09fe569cf55094aca7356",
+  "githubCI": {
+    "run": 40764363648,
+    "url": "https://github.com/bcrybarna-oss/BC-Rybarna-Scoreboard/actions/runs/40764363648",
+    "release": "success",
+    "node": {
+      "pass": 272,
+      "fail": 2,
+      "skip": 3,
+      "total": 277
+    },
+    "newRegressions": false
+  }
+}
