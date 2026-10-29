@@ -51,3 +51,7 @@ Reverze celého PR vrátí organizaci testů i cílené guardy, bez datové migr
 
 
 [Draft PR44](https://github.com/bcrybarna-oss/BC-Rybarna-Scoreboard/pull/44), produkční oprava917e310, testy/roadmapa b77cafa. [CI40920540934](https://github.com/bcrybarna-oss/BC-Rybarna-Scoreboard/actions/runs/40920540934): Release PASS, Production Node258PASS/0FAIL/3SKIP ze261, Experimental28PASS/2FAIL/0SKIP ze30. Celýworkflow FAILURE, obě skutečné experimentální neshody zůstaly viditelné. Dokumentační pokračování kód aplikace ani testy nemění. Neslučovat/nenasazovat, etapa7 nezahájena.
+
+## Dodatečná cílená kontrola před rozhodnutím o nasazení
+
+29.10.2026: [browserová kontrola identity a obnovy](v4.51.105-identity-review.md), včetně skutečných produkčních login funkcí s mockovanými endpointy, strků/nastavení, explicitního POKRAČOVAT, cizího účtu a offline režimu. Čtyři preview fallback kontrakty rovněž PASS, ale nejsou produkční funkcí. Živý Auth neověřen kvůli absenci samostatného testovacího prostředí. Node286PASS/2FAIL/3SKIP, experimentální úkoly jednotlivě evidované, žádné ignorování. Aplikační kód v tomto pokračování beze změny, neslučovat/nenasazovat.

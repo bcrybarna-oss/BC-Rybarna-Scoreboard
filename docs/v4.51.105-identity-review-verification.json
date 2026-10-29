@@ -1,0 +1,231 @@
+{
+  "date": "2026-10-29",
+  "candidate": "56f9c05e8d496d48c5c3f1aa94be942affc59da7",
+  "base": "28f45bd32483d8c8275c23d6aac14480dfc8ee6f",
+  "production": {
+    "candidateSha256": "89c9efb1538752bd3cd38d77c93749d667b1a3b3877471761cd686a1d18848f7",
+    "realAuthVerified": false,
+    "externalRequestsAllowed": 0,
+    "productionWrites": 0,
+    "results": [
+      {
+        "mode": "manual",
+        "transport": "all Auth and RTDB intercepted; not live Firebase",
+        "delayedAuthMsAtLeast": 400,
+        "gatedAuthRequests": 1,
+        "identityPendingSnapshotIntact": true,
+        "lookupVerifiedMockOwner": true,
+        "explicitVisibleContinue": true,
+        "preservedFields": [
+          "id",
+          "createdByUid",
+          "scores",
+          "turn",
+          "rackNumber",
+          "discipline",
+          "counterMode",
+          "raceTo",
+          "breakMode",
+          "clock",
+          "useClock",
+          "useLag",
+          "streamEnabled",
+          "handicapEnabled",
+          "handicapScores",
+          "stats",
+          "events",
+          "detailedPlay",
+          "manualEntryUndoSnapshots"
+        ],
+        "detailedRecords": 2,
+        "score": [
+          3,
+          2
+        ],
+        "clockPaused": true,
+        "staleUIDDenied": true,
+        "otherAccountDenied": true,
+        "noPreviewRuntimeLoaded": true,
+        "scriptURLs": [
+          "assets/js/federal-statistics.js?v=4.51.98",
+          "assets/js/cloud-refresh.js?v=4.51.99",
+          "assets/js/own-reports.js?v=4.51.102",
+          "assets/js/federal-viewer.js?v=4.51.103",
+          "assets/js/admin-reports.js?v=4.51.104",
+          "assets/pushout-xlsx.js",
+          "https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js",
+          "https://cdn.jsdelivr.net/npm/jspdf@2.5.2/dist/jspdf.umd.min.js"
+        ],
+        "pageErrors": [],
+        "requestCounts": {
+          "auth": 4,
+          "rtdb": 39
+        },
+        "offlineOwnerlessScoreReload": true
+      },
+      {
+        "mode": "automatic",
+        "transport": "all Auth and RTDB intercepted; not live Firebase",
+        "delayedAuthMsAtLeast": 400,
+        "gatedAuthRequests": 5,
+        "identityPendingSnapshotIntact": true,
+        "lookupVerifiedMockOwner": true,
+        "explicitVisibleContinue": true,
+        "preservedFields": [
+          "id",
+          "createdByUid",
+          "scores",
+          "turn",
+          "rackNumber",
+          "discipline",
+          "counterMode",
+          "raceTo",
+          "breakMode",
+          "clock",
+          "useClock",
+          "useLag",
+          "streamEnabled",
+          "handicapEnabled",
+          "handicapScores",
+          "stats",
+          "events",
+          "detailedPlay",
+          "manualEntryUndoSnapshots"
+        ],
+        "detailedRecords": 2,
+        "score": [
+          3,
+          2
+        ],
+        "clockPaused": true,
+        "staleUIDDenied": true,
+        "otherAccountDenied": true,
+        "noPreviewRuntimeLoaded": true,
+        "scriptURLs": [
+          "assets/js/federal-statistics.js?v=4.51.98",
+          "assets/js/cloud-refresh.js?v=4.51.99",
+          "assets/js/own-reports.js?v=4.51.102",
+          "assets/js/federal-viewer.js?v=4.51.103",
+          "assets/js/admin-reports.js?v=4.51.104",
+          "assets/pushout-xlsx.js",
+          "https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js",
+          "https://cdn.jsdelivr.net/npm/jspdf@2.5.2/dist/jspdf.umd.min.js"
+        ],
+        "pageErrors": [],
+        "requestCounts": {
+          "auth": 8,
+          "rtdb": 40
+        },
+        "offlineOwnerlessScoreReload": true
+      }
+    ]
+  },
+  "preview": {
+    "runtime": "Chromium actual extracted preview functions; IO and renderer mocked",
+    "realAuthVerified": false,
+    "productionWrites": 0,
+    "results": [
+      {
+        "mode": "manual",
+        "hasMatch": true,
+        "events": [
+          "identity",
+          "access",
+          "profile",
+          "appData",
+          "players",
+          "matches",
+          "tournaments",
+          "guests",
+          "save:synthetic-preview-match",
+          "screen:match",
+          "clock",
+          "match-render",
+          "heartbeat"
+        ],
+        "score": [
+          4,
+          3
+        ],
+        "tournament": null,
+        "screen": "match"
+      },
+      {
+        "mode": "manual",
+        "hasMatch": false,
+        "events": [
+          "identity",
+          "access",
+          "profile",
+          "appData",
+          "players",
+          "matches",
+          "tournaments",
+          "guests",
+          "shortcut",
+          "tournament-render",
+          "screen:tournament-detail"
+        ],
+        "score": null,
+        "tournament": "synthetic-cup",
+        "screen": "tournament-detail"
+      },
+      {
+        "mode": "automatic",
+        "hasMatch": true,
+        "events": [
+          "identity",
+          "access",
+          "profile",
+          "appData",
+          "players",
+          "matches",
+          "tournaments",
+          "guests",
+          "save:synthetic-preview-match",
+          "screen:match",
+          "clock",
+          "match-render",
+          "heartbeat"
+        ],
+        "score": [
+          4,
+          3
+        ],
+        "tournament": null,
+        "screen": "match"
+      },
+      {
+        "mode": "automatic",
+        "hasMatch": false,
+        "events": [
+          "identity",
+          "access",
+          "profile",
+          "appData",
+          "players",
+          "matches",
+          "tournaments",
+          "guests",
+          "shortcut",
+          "tournament-render",
+          "screen:tournament-detail"
+        ],
+        "score": null,
+        "tournament": "synthetic-cup",
+        "screen": "tournament-detail"
+      }
+    ]
+  },
+  "node": {
+    "total": 291,
+    "pass": 286,
+    "fail": 2,
+    "skip": 3,
+    "exit": 1
+  },
+  "releaseGate": "PASS",
+  "liveAuth": "Not verified: no separate authorized Auth test project or emulator available",
+  "merged": false,
+  "deployed": false
+}

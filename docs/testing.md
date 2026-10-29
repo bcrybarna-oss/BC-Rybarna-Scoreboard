@@ -38,3 +38,7 @@ Výchozí šest experimentálních souborů (cesty se nezměnily):
 - Původní regex fail byl odstraněn jako kontrola textu a nahrazen čtyřmi procházejícími behaviorálními scénáři: manual/automatic × match exists/tournament fallback. Assert pořadí obsahuje i skutečný okamžik navigace a zpožděné loadery.
 
 Podrobné před/po, kontrakt a samostatná produkční oprava: [stage-6-test-contracts.md](stage-6-test-contracts.md). [Aktuální roadmapa](modularization-roadmap.md).
+
+## Cílená browserová kontrola identity kandidáta105
+
+`node tests/production-recovery-auth-browser.cjs`: celý kandidát, skutečné login/refresh/lookup/resume funkce, všechny endpointy mockované. `node tests/preview-recovery-contract-browser.cjs`: skutečné extrahované preview recovery/login/fallback funkce s mockovaným IO/renderem, nikoli produkční runtime. Oba skripty se spouštějí zvlášť, nejsou součástí Node CI. Výsledky a konkrétní mezera živého Auth: [kontrola105](v4.51.105-identity-review.md).

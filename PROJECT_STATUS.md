@@ -6,6 +6,9 @@ Aktualizace: 29. 10. 2026. Zadavatel aktuální revize: **Dominik**.
 
 Autoritativní [roadmapa zbývající modularizace](docs/modularization-roadmap.md), včetně samostatné hranice Auth/oprávnění a úkolů PDF/cache. Nyní pouze etapa6: [testové sady a jejich záruky](docs/testing.md), [kontrakt obnovy a oddělená produkční oprava](docs/stage-6-test-contracts.md). Etapa7 nezahájena; historické návrhy níže nejsou další paralelní plán.
 
+
+Dodatečná kontrola29.10.2026: [cílené browserové ověření identity105](docs/v4.51.105-identity-review.md) PASS pro opožděný manuální/automatický Auth s mockovanými endpointy, zachování strků/skóre/nastavení, viditelné POKRAČOVAT, staleUID, jiný účet a offline režim. Preview fallback4/4PASS s mockovanými hranicemi; není produkční automatickou obnovou. Živý Auth neověřen: chybí oddělené testovací prostředí. Celá veřejná Node sada286PASS/2skutečnéFAIL/3SKIP z291, exit1, releasePASS. Produkce nenačítá experimentální core; jeho vady EXP-RECOVERY-PENDING/EXP-IDENTITY-STALE zůstávají viditelné. Testy a dokumentace doplněny, aplikace beze změny. Nesloučeno/nenasazeno, etapa7 nezahájena.
+
 ## Verze a nasazení
 
 - **PRODUKCE104 – Dominik:** PR43 sloučen merge`87f898375970cfa3c1a243af5edaf4463c94c36e`, Pages40913700775 success. ReleasePR/mainPASS, Node272PASS/2známéFAIL/3SKIP z277; chyby jednotlivě shodné s výchozím main, předmerge38/38unitPASS. Veřejné20souborů přesnéSHA256/verze104/5modulů/desktop/mobil/dostupnánavigace/0JS chybPASS. Publikovaný HTML+5modulů izolovaně:admin3→1GET/řazení/20cyklů/3→0listenerů/A-B/odchod/pozdníodpovědi/retry/poznámkapřežijeodchod/status-note-delete jednouPASS. Předchozímoduly/turnaje101/plnáquota/PNG/XLSXPASS. Žádnéprodukčnízápisy/migrace. ŽiváAuth/adminhlášení/fyzickázařízení/OBS neověřeny, limityB/cachetrvají. [Deploymentreport a návrat](docs/deployment-v4.51.104.md). Dalšíetapa nezahájena.

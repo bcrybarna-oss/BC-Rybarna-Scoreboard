@@ -9,6 +9,9 @@ Nasazení: Pushnuto917e310 + b77cafa do draftPR44 (https://github.com/bcrybarna-
 Omezení: Experimentální implementace není portována do produkce ani plošně opravena. ŽiváAuth/Firebase neověřeny; cache/PDF/etapa7 mimo rozsah.
 
 
+
+Dodatečná kontrola29.10.2026: [cílené browserové ověření identity105](docs/v4.51.105-identity-review.md) PASS pro opožděný manuální/automatický Auth s mockovanými endpointy, zachování strků/skóre/nastavení, viditelné POKRAČOVAT, staleUID, jiný účet a offline režim. Preview fallback4/4PASS s mockovanými hranicemi; není produkční automatickou obnovou. Živý Auth neověřen: chybí oddělené testovací prostředí. Celá veřejná Node sada286PASS/2skutečnéFAIL/3SKIP z291, exit1, releasePASS. Produkce nenačítá experimentální core; jeho vady EXP-RECOVERY-PENDING/EXP-IDENTITY-STALE zůstávají viditelné. Testy a dokumentace doplněny, aplikace beze změny. Nesloučeno/nenasazeno, etapa7 nezahájena.
+
 ## Dominik – ověřené nasazení vlastníka admin seznamu (v4.51.104 RC)
 Zadavatel: Dominik
 Datum: 29. 10. 2026
