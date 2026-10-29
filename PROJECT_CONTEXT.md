@@ -1,4 +1,8 @@
-# Aktuální plán a etapa6 — kandidát v4.51.105 RC
+# Etapa6 — nasazeno v4.51.105 RC
+
+Dominik,29.10.2026: PR44 sloučen merge2d64a13fb5a07e785820e20dfab974b62d72e71a, Pages40928461240success. Produkční guardy zachovávají disk při pendingAuth a vyžadují Auth pro účetní zápasy; explicitní POKRAČOVAT a ownerless offline režim zachovány. Produkční/experimentální sady jsou oddělené, obě zůstávají vCI i npm test. Release/produkcePASS, dvě experimentální vady nadále viditelněFAIL; experimentální core se vprodukci nenačítá. Veřejná aplikace ověřena, funkční identity/recovery/exporty zvlášť na publikovaném kódu s mockovanými endpointy. Živý Auth test nebyl dostupný a omezení bylo schváleno. Žádná migrace/datový zásah/etapa7. [Nasazení a návrat](docs/deployment-v4.51.105.md). Níže zachovaný historický kontext přípravy105.
+
+# Historie: plán a etapa6 — kandidát v4.51.105 RC
 
 Dominik,29.10.2026: autoritativní [roadmapa6–14](docs/modularization-roadmap.md), včetně samostatné hranice přihlášení/oprávnění, nahrazuje starší plánové návrhy jako aktivní plán; historické doklady níže se zachovávají. [Testové sady](docs/testing.md) nyní rozlišují skutečnou produkci a samostatný starý experiment, přičemž npm test stále zahrnuje vše a selhání se neignorují. [Etapa6](docs/stage-6-test-contracts.md) odděleně opravuje produkční pending identity guard, zachovává pět modulů a skutečné sportovní chování. Produkce104, kandidát105 nesloučen/nenasazen, etapa7 nezahájena. PDF, cache a výkonB jsou samostatné úkoly, ne implicitní součást přesunů.
 

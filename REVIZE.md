@@ -1,5 +1,13 @@
 # Revize aplikace Poolčítadlo
 
+## Dominik – ověřené nasazení etapy6 a opravy identity (v4.51.105 RC)
+Zadavatel: Dominik
+Datum: 29. 10. 2026
+Změny: Po schválení sloučen PR44 standardním merge2d64a13fb5a07e785820e20dfab974b62d72e71a, bez bypassu kontrol. Produkční guardfix a testové sady/roadmapa nasazeny; tento zápis mění pouze dokumentaci. Produkční data/účty ani experimentální core se nemění, etapa7 nezahájena.
+Testy: PR/main release a produkce258PASS/0FAIL/3SKIP; experiment28PASS/2FAIL/0SKIP, obě konkrétní vady nezměněné, celekFAILURE bez ignorování. Veřejná105/20souborů SHA256/desktop-mobil/5modulů/navigace/0JSerrors. Publikovaný kód izolovaně: opožděný manual/autoAuth, zachování strků/skóre/nastavení a POKRAČOVAT, staleUID/cizíúčet/offline/UNDO, FCevidence, turnaje101/plnáquota, A1/A2/B PNG/PDF a PushoutXLSX PASS. Node nad publikovanými soubory se soukromými vstupy289PASS/2experimentálníFAIL/0SKIP z291. Viz docs/deployment-v4.51.105.md a strojová evidence.
+Nasazení: Pages40928461240 success a skutečná veřejná105 odpovídá merge; žádný rerun. MainCI40928462949 release/produkcePASS a experimentFAIL. Produkce ověřena anonymně, soukromé funkční scénáře zvlášť s mockovaným Auth/Firebase.
+Omezení: Živý Auth nebyl proveden (bez autorizovaného samostatného testprostředí), schváleno zadavatelem. Experimentální vady zůstávají samostatné úkoly. CRLF citlivost staršího lokálního password-reset testu doložena i na starém main; nad publikovanými bytes PASS. Fyzické iOS/OBS/cache/B limity trvají. Návrat pouze kódem podle release pravidel bez vracení dat; úplný revert by vrátil také opravené guard vady.
+
 ## Dominik – produkční kontrakt obnovy a etapa6 testů (v4.51.105 RC)
 Zadavatel: Dominik
 Datum: 29. 10. 2026
