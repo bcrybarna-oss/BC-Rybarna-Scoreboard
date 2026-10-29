@@ -43,7 +43,7 @@ function download(blob,name){const url=URL.createObjectURL(blob),a=document.crea
       }));
       if(!valid(j))throw Error('Export zneplatněn.');
       const canvas=await window.html2canvas(copy,{backgroundColor:'#090b0a',scale:1,width:1920,height:1080,windowWidth:1920,windowHeight:1080,scrollX:0,scrollY:0,useCORS:true,allowTaint:false,logging:false,removeContainer:true,onclone:doc=>{
-        const sheet=doc.querySelector('[data-report-generation="'+j.generation+'"] .fc-report-sheet');fitFederalReportNames(sheet);
+        const frame=doc.defaultView?.frameElement;if(frame)j.frames.add(frame);const sheet=doc.querySelector('[data-report-generation="'+j.generation+'"] .fc-report-sheet');fitFederalReportNames(sheet);
         if(sheet.scrollWidth>1920||sheet.scrollHeight>1080)throw Error('Obsah přesahuje Full HD formát. Export nebyl vytvořen, aby se nic neořízlo.');
         const header=sheet.querySelector('.fc-report-head');if(header)for(const panel of header.querySelectorAll('.fc-report-person'))if(panel.getBoundingClientRect().bottom>header.getBoundingClientRect().bottom+1)throw Error('Hlavička reportu přesahuje vyhrazené místo.');
         const footer=sheet.querySelector('.fc-report-footer').getBoundingClientRect();for(const row of sheet.querySelectorAll('[data-report-metric]'))if(row.getBoundingClientRect().bottom>footer.top+1)throw Error('Statistiky se překrývají s patičkou.');
@@ -51,12 +51,12 @@ function download(blob,name){const url=URL.createObjectURL(blob),a=document.crea
       }});
       if(canvas.width!==1920||canvas.height!==1080)throw Error('Export nemá požadované rozlišení.');
       return canvas;
-    }finally{host.remove();}
+    }finally{host.remove();j.frames.forEach(frame=>frame.remove());j.frames.clear();}
   }
   async function exportFederalReport(format){
     const root=$('fcReportContent').querySelector('.fc-report-sheet');
     if(reportExportBusy||!root||!reportDialog.open||!screen.classList.contains('active'))return;
-    const j={generation:reportExportGeneration,identity:identity(),abort:new window.AbortController()};job=j;const generation=j.generation,name=('federal-cup-'+(root.querySelector('.fc-report-kicker')?.textContent||'report')).normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9]+/gi,'-').toLowerCase().slice(0,120);
+    const j={generation:reportExportGeneration,identity:identity(),abort:new window.AbortController(),frames:new Set()};job=j;const generation=j.generation,name=('federal-cup-'+(root.querySelector('.fc-report-kicker')?.textContent||'report')).normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9]+/gi,'-').toLowerCase().slice(0,120);
     reportExportBusy=true;$('fcReportPng').disabled=true;$('fcReportPdf').disabled=true;$('fcReportExportStatus').textContent='Připravuji '+format.toUpperCase()+' ve Full HD…';
     try{
       if(format==='pdf'&&!window.jspdf?.jsPDF)throw Error('PDF knihovna se nenačetla. Obnov připojení a stránku.');

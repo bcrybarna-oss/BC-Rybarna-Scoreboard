@@ -29715,7 +29715,7 @@ function renderStats(){
 
   const reportRenderer=window.FederalReportRenderer.create({esc,formatMetric:federalReportMetric,measureScoreText:text=>{const ctx=document.createElement('canvas').getContext('2d');ctx.font='900 84px Arial';return ctx.measureText(text).width;}});
   const REPORT_REPS=reportRenderer.representations;
-  const reportController=window.FederalReportController.create({document,window,dialog:$('fcReportDialog'),screen:$('screen-federal-cup-2026'),identity:()=>JSON.stringify([cloudAuthenticated,cloudUid,currentUserRole,currentUserPlayerId]),prepare:prepareFederalReport,sources:reportRenderer.sources});
+  const reportController=window.FederalReportController.create({document,window,dialog:$('fcReportDialog'),screen:$('screen-federal-cup-2026'),identity:()=>JSON.stringify([cloudAuthenticated,cloudUid,currentUserRole,currentUserPlayerId,currentUserClubId,currentUserProfileClaimId,cloudEmailVerified]),prepare:prepareFederalReport,sources:reportRenderer.sources});
   invalidateFederalReport=()=>reportController.invalidate();
 
   function reportMatchName(m,side){

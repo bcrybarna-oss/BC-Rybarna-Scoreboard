@@ -25,3 +25,5 @@ Všechna síťová data/Auth/raster fault injection izolovaná, žádný produk�
 ## Návrat
 
 Reverze pouze7b nad7a obnoví původní controller, ale také obě doložené vady. Žádná migrace dat nebo změna cache. Celý kandidát lze vrátit reverzí integračního PR, po nasazení s novou verzí dle AGENTS. Další oblast roadmapy nezahájena.
+
+[Draft PR46](https://github.com/bcrybarna-oss/BC-Rybarna-Scoreboard/pull/46), závisí na45; [sanitizovaná evidence](federal-report-controller-stage-7b-verification.json). CI40940430347 implementace09ae258: releasePASS, produkce266/0/3, experiment28/2/0, celekFAILURE. Dodatečně potvrzeny identity105 a opravenýDoubles9 (všech13metrik/skutečnéPNG/PDF/XLSX desktop/mobil), bez produkční sítě.
