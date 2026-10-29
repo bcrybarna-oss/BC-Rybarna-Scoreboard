@@ -1,5 +1,13 @@
 # Revize aplikace Poolčítadlo
 
+## Dominik – renderer reportů Federal Cupu, etapa7a (v4.51.106 RC)
+Zadavatel: Dominik
+Datum: 29. 10. 2026
+Změny: Kandidát odděluje jediný produkční HTML/SVG renderer A1/A2/B. Hotové modely a výsledky dál vytváří FederalStatistics, aplikace předává explicitní podklady, escapování, formátování a měření textu. Původní těla šablon odstraněna bez fallbacku. Dialog a exportní controller zůstávají samostatná etapa7b, PDF a Pushout writer beze změny.
+Testy: 5/5unit a14bootstrap scénářů PASS. HTML/SVG otisky proti105,51skutečných PNG/PDF/XLSX před/po a189zápasů/modely/osobníTeam/Pushout PASS. PNG aXLSX byteově shodné, PDF obraz shodný s výchozími desktop/mobil variantami.20cyklů/slowfonts-images/chyba-retry/DOM0/URLlease PASS; zděděná relace aclose→open mezera doloženy pro7b. Dva samostatné přísné browser testy pro tyto kontrakty FAIL/exit1 na105 i kandidátu; nejde o experimentální Node vady a nejsou ignorované. Produkce266/0/0 lokálně (veřejně263/0/3), experiment28/2/0, celek294/2/0z296 a exit1. Medián openB190,1→186,2ms/šablona1,1→1,2ms, bez významného zpomalení, ne optimalizace. Turnaje101 aidentity105 s mockem PASS. Viz docs/federal-report-renderer-stage-7a.md.
+Nasazení: Pracovní větev refactor/federal-report-renderer-stage-7a; nesloučeno/nenasazeno. Produkce105 a data beze změny.
+Omezení: Toto je7a, nikoli dokončený controller7b. Neřeší PDF/cache, herní pravidla, Auth ani další oblast roadmapy. Samotný přesun není optimalizace. Experimentální vady etapy6 zůstávají viditelné.
+
 ## Dominik – ověřené nasazení etapy6 a opravy identity (v4.51.105 RC)
 Zadavatel: Dominik
 Datum: 29. 10. 2026

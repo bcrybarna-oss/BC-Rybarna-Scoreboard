@@ -1,3 +1,7 @@
+# Etapa7a — renderer, kandidát v4.51.106 RC
+
+Dominik,29.10.2026: etapa7 rozdělena dle roadmapy. FederalReportRenderer tvoří HTML/SVG z předaných výsledků/metrik, pouze escapování, stávající formátovač FederalStatistics a callback měření textu. Žádný přístup k datovému globálu, DOM, síti, persistence nebo životnímu cyklu. Core vybírá podklady a volá jedinou šablonu; stará těla odstraněna. CSS, texty, assety, výpočty a exporty neměněny. Dialog/exportní generace, asynchronní úklid a relace jsou výslovně zbývající etapa7b, nikoli druhý paralelní controller. Kandidát106 není nasazen. Produkce105 a data zůstávají beze změny; další oblast roadmapy nezahájena.
+
 # Etapa6 — nasazeno v4.51.105 RC
 
 Dominik,29.10.2026: PR44 sloučen merge2d64a13fb5a07e785820e20dfab974b62d72e71a, Pages40928461240success. Produkční guardy zachovávají disk při pendingAuth a vyžadují Auth pro účetní zápasy; explicitní POKRAČOVAT a ownerless offline režim zachovány. Produkční/experimentální sady jsou oddělené, obě zůstávají vCI i npm test. Release/produkcePASS, dvě experimentální vady nadále viditelněFAIL; experimentální core se vprodukci nenačítá. Veřejná aplikace ověřena, funkční identity/recovery/exporty zvlášť na publikovaném kódu s mockovanými endpointy. Živý Auth test nebyl dostupný a omezení bylo schváleno. Žádná migrace/datový zásah/etapa7. [Nasazení a návrat](docs/deployment-v4.51.105.md). Níže zachovaný historický kontext přípravy105.

@@ -1,0 +1,1010 @@
+{
+  "date": "2026-10-29",
+  "version": "v4.51.106 RC",
+  "baseline": "2d1de22a1c8577ad7642081bb36fde31e3fd6f91",
+  "scope": "7a renderer only; 7b controller not implemented",
+  "rendererSha256": "d971eee277927874208b9a6d35d0e5d901277d9beb266a4112e4b3e5f051bc7d",
+  "models": {
+    "backupBytes": 40913440,
+    "backupSha256": "49908fbcd66113315e524e6e61a4fc3a889654bb0e9420d309b843d4181a4d5d",
+    "matches": 189,
+    "selected": 13,
+    "people": 10,
+    "personalContributions": 40,
+    "pushoutModels": 13,
+    "reportAndMatchModels": "deep-equal",
+    "productionWrites": 0
+  },
+  "parity": {
+    "results": [
+      {
+        "suite": "presentation",
+        "name": "A1-mobile.pdf",
+        "bytesBefore": 922328,
+        "bytesAfter": 922328,
+        "sha256Before": "6216a674af3c8b637f058219de97b79f36a193ece771a7a17edb230a81899aad",
+        "sha256After": "37639d8c0525b8a55480aa452ed3d924fda44e596eaa5bedc2806807cc0cc3b5",
+        "comparison": "exact baseline PDF image pixels (desktop/mobile variants)",
+        "pdfComparison": {
+          "images": [
+            {
+              "w": 1920,
+              "h": 1080,
+              "channels": 3
+            },
+            {
+              "w": 1920,
+              "h": 1080,
+              "channels": 1
+            }
+          ],
+          "differentChannels": 0,
+          "totalChannels": 8294400,
+          "meanAbsoluteDelta": 0,
+          "maxDelta": 0
+        }
+      },
+      {
+        "suite": "presentation",
+        "name": "A1-mobile.png",
+        "bytesBefore": 1609391,
+        "bytesAfter": 1609391,
+        "sha256Before": "ad56adffc0d394f6c0afca4c697f0f9fe76943be73fb9fcdac1ad36055bee00d",
+        "sha256After": "ad56adffc0d394f6c0afca4c697f0f9fe76943be73fb9fcdac1ad36055bee00d",
+        "comparison": "byte-identical",
+        "pdfComparison": null
+      },
+      {
+        "suite": "presentation",
+        "name": "A1.pdf",
+        "bytesBefore": 922328,
+        "bytesAfter": 922328,
+        "sha256Before": "da57c8da0bc53c77ca6bf678a13b14b1a3d162f2595b5843dcf945b838fd97e0",
+        "sha256After": "4685d21e4b8183520b88b0c7259fa1fd2eb6541df5ce16c5d1754eb0a144f5e0",
+        "comparison": "exact baseline PDF image pixels (desktop/mobile variants)",
+        "pdfComparison": {
+          "images": [
+            {
+              "w": 1920,
+              "h": 1080,
+              "channels": 3
+            },
+            {
+              "w": 1920,
+              "h": 1080,
+              "channels": 1
+            }
+          ],
+          "differentChannels": 0,
+          "totalChannels": 8294400,
+          "meanAbsoluteDelta": 0,
+          "maxDelta": 0
+        }
+      },
+      {
+        "suite": "presentation",
+        "name": "A1.png",
+        "bytesBefore": 1609391,
+        "bytesAfter": 1609391,
+        "sha256Before": "ad56adffc0d394f6c0afca4c697f0f9fe76943be73fb9fcdac1ad36055bee00d",
+        "sha256After": "ad56adffc0d394f6c0afca4c697f0f9fe76943be73fb9fcdac1ad36055bee00d",
+        "comparison": "byte-identical",
+        "pdfComparison": null
+      },
+      {
+        "suite": "presentation",
+        "name": "A2-mobile.pdf",
+        "bytesBefore": 925106,
+        "bytesAfter": 925106,
+        "sha256Before": "bafdf336c614dca1085471c069861ca5bf7134ecef8e8169c517e9933aba5ee2",
+        "sha256After": "a4453a62f1de91c4ef5c69d9fefb52c4559205b45fb96a5051194cbaaeeac9b9",
+        "comparison": "exact baseline PDF image pixels (desktop/mobile variants)",
+        "pdfComparison": {
+          "images": [
+            {
+              "w": 1920,
+              "h": 1080,
+              "channels": 3
+            },
+            {
+              "w": 1920,
+              "h": 1080,
+              "channels": 1
+            }
+          ],
+          "differentChannels": 0,
+          "totalChannels": 8294400,
+          "meanAbsoluteDelta": 0,
+          "maxDelta": 0
+        }
+      },
+      {
+        "suite": "presentation",
+        "name": "A2-mobile.png",
+        "bytesBefore": 1613094,
+        "bytesAfter": 1613094,
+        "sha256Before": "e2fe133920902de752bd7a86119fe54263cbb81a9484a47882eade5d95c9a2aa",
+        "sha256After": "e2fe133920902de752bd7a86119fe54263cbb81a9484a47882eade5d95c9a2aa",
+        "comparison": "byte-identical",
+        "pdfComparison": null
+      },
+      {
+        "suite": "presentation",
+        "name": "A2.pdf",
+        "bytesBefore": 925106,
+        "bytesAfter": 925106,
+        "sha256Before": "283a9c6d3fa46dede7440bac59440ffa2491552fc1887fff31f3c876ddb1c5e8",
+        "sha256After": "238576b3ddb11d49e286e41495f4a3397672b5c990a5e83e80330993579ce1dc",
+        "comparison": "exact baseline PDF image pixels (desktop/mobile variants)",
+        "pdfComparison": {
+          "images": [
+            {
+              "w": 1920,
+              "h": 1080,
+              "channels": 3
+            },
+            {
+              "w": 1920,
+              "h": 1080,
+              "channels": 1
+            }
+          ],
+          "differentChannels": 0,
+          "totalChannels": 8294400,
+          "meanAbsoluteDelta": 0,
+          "maxDelta": 0
+        }
+      },
+      {
+        "suite": "presentation",
+        "name": "A2.png",
+        "bytesBefore": 1613094,
+        "bytesAfter": 1613094,
+        "sha256Before": "e2fe133920902de752bd7a86119fe54263cbb81a9484a47882eade5d95c9a2aa",
+        "sha256After": "e2fe133920902de752bd7a86119fe54263cbb81a9484a47882eade5d95c9a2aa",
+        "comparison": "byte-identical",
+        "pdfComparison": null
+      },
+      {
+        "suite": "presentation",
+        "name": "B-mobile.pdf",
+        "bytesBefore": 872390,
+        "bytesAfter": 872390,
+        "sha256Before": "7b1300c03031a375b01ffed15dfa946c8dc9d669c5b86fc6fc48f19acfe79dfe",
+        "sha256After": "126802dad801eeac1570203f3a5a57a1bd991104afa72e6d06a34bf9f3a3c5b1",
+        "comparison": "exact baseline PDF image pixels (desktop/mobile variants)",
+        "pdfComparison": {
+          "images": [
+            {
+              "w": 1920,
+              "h": 1080,
+              "channels": 3
+            },
+            {
+              "w": 1920,
+              "h": 1080,
+              "channels": 1
+            }
+          ],
+          "differentChannels": 0,
+          "totalChannels": 8294400,
+          "meanAbsoluteDelta": 0,
+          "maxDelta": 0
+        }
+      },
+      {
+        "suite": "presentation",
+        "name": "B-mobile.png",
+        "bytesBefore": 1508101,
+        "bytesAfter": 1508101,
+        "sha256Before": "157913d1bc1a86d490fa5e839cdf461693fe771ba79b6e9c5e376291567e4a81",
+        "sha256After": "157913d1bc1a86d490fa5e839cdf461693fe771ba79b6e9c5e376291567e4a81",
+        "comparison": "byte-identical",
+        "pdfComparison": null
+      },
+      {
+        "suite": "presentation",
+        "name": "B.pdf",
+        "bytesBefore": 872390,
+        "bytesAfter": 872390,
+        "sha256Before": "0e8d56f832144bdbca1a56313b10778b83496e68166d90a860ee80c8cbd679db",
+        "sha256After": "ad49f9d64267984ac0129940ea7fd3cdfab0adf687b0a05ed0892259a95dcc6b",
+        "comparison": "exact baseline PDF image pixels (desktop/mobile variants)",
+        "pdfComparison": {
+          "images": [
+            {
+              "w": 1920,
+              "h": 1080,
+              "channels": 3
+            },
+            {
+              "w": 1920,
+              "h": 1080,
+              "channels": 1
+            }
+          ],
+          "differentChannels": 0,
+          "totalChannels": 8294400,
+          "meanAbsoluteDelta": 0,
+          "maxDelta": 0
+        }
+      },
+      {
+        "suite": "presentation",
+        "name": "B.png",
+        "bytesBefore": 1508101,
+        "bytesAfter": 1508101,
+        "sha256Before": "157913d1bc1a86d490fa5e839cdf461693fe771ba79b6e9c5e376291567e4a81",
+        "sha256After": "157913d1bc1a86d490fa5e839cdf461693fe771ba79b6e9c5e376291567e4a81",
+        "comparison": "byte-identical",
+        "pdfComparison": null
+      },
+      {
+        "suite": "linked",
+        "name": "A1-desktop.pdf",
+        "bytesBefore": 912434,
+        "bytesAfter": 912434,
+        "sha256Before": "904a40786ab35add674677df1e64caf11ad38326ca7c553e0c10022804c1f4db",
+        "sha256After": "58bf0c63e49b974801fc34ad92e8331f41522abdce03bae2c979c11ee55ef824",
+        "comparison": "exact baseline PDF image pixels (desktop/mobile variants)",
+        "pdfComparison": {
+          "images": [
+            {
+              "w": 1920,
+              "h": 1080,
+              "channels": 3
+            },
+            {
+              "w": 1920,
+              "h": 1080,
+              "channels": 1
+            }
+          ],
+          "differentChannels": 0,
+          "totalChannels": 8294400,
+          "meanAbsoluteDelta": 0,
+          "maxDelta": 0
+        }
+      },
+      {
+        "suite": "linked",
+        "name": "A1-desktop.png",
+        "bytesBefore": 1549431,
+        "bytesAfter": 1549431,
+        "sha256Before": "12232cb170dc0bb6416a64b0eedf7e09d3f807008ea246c67a58fbc5b1f8bb34",
+        "sha256After": "12232cb170dc0bb6416a64b0eedf7e09d3f807008ea246c67a58fbc5b1f8bb34",
+        "comparison": "byte-identical",
+        "pdfComparison": null
+      },
+      {
+        "suite": "linked",
+        "name": "A1-mobile.pdf",
+        "bytesBefore": 912434,
+        "bytesAfter": 912434,
+        "sha256Before": "42c6bba17dd67c734fbc4f4a272596fae712a78d399d0f27249363e818558396",
+        "sha256After": "f1ccdaa95243b02512f7b9f752431ca4e98558ff406748f631b0281dc35b014a",
+        "comparison": "exact baseline PDF image pixels (desktop/mobile variants)",
+        "pdfComparison": {
+          "images": [
+            {
+              "w": 1920,
+              "h": 1080,
+              "channels": 3
+            },
+            {
+              "w": 1920,
+              "h": 1080,
+              "channels": 1
+            }
+          ],
+          "differentChannels": 0,
+          "totalChannels": 8294400,
+          "meanAbsoluteDelta": 0,
+          "maxDelta": 0
+        }
+      },
+      {
+        "suite": "linked",
+        "name": "A1-mobile.png",
+        "bytesBefore": 1549431,
+        "bytesAfter": 1549431,
+        "sha256Before": "12232cb170dc0bb6416a64b0eedf7e09d3f807008ea246c67a58fbc5b1f8bb34",
+        "sha256After": "12232cb170dc0bb6416a64b0eedf7e09d3f807008ea246c67a58fbc5b1f8bb34",
+        "comparison": "byte-identical",
+        "pdfComparison": null
+      },
+      {
+        "suite": "linked",
+        "name": "dialog-desktop.png",
+        "bytesBefore": 931699,
+        "bytesAfter": 931699,
+        "sha256Before": "85b7af54c514243a610c8ce3adf6fb4b2db79f4c6ce7f3f95c6c3f9fa874779f",
+        "sha256After": "85b7af54c514243a610c8ce3adf6fb4b2db79f4c6ce7f3f95c6c3f9fa874779f",
+        "comparison": "byte-identical",
+        "pdfComparison": null
+      },
+      {
+        "suite": "linked",
+        "name": "dialog-mobile.png",
+        "bytesBefore": 102404,
+        "bytesAfter": 102404,
+        "sha256Before": "c44b01eddc080c2525e53c910e4428fb1d7d6703253f23de98dc0d38b3ec8369",
+        "sha256After": "c44b01eddc080c2525e53c910e4428fb1d7d6703253f23de98dc0d38b3ec8369",
+        "comparison": "byte-identical",
+        "pdfComparison": null
+      },
+      {
+        "suite": "linked",
+        "name": "fixture-9-desktop.png",
+        "bytesBefore": 9409,
+        "bytesAfter": 9409,
+        "sha256Before": "7e9d84dd0e02fae591997f33d8b01d0c45720f6bdc9c8317b96078f2ccec4c10",
+        "sha256After": "7e9d84dd0e02fae591997f33d8b01d0c45720f6bdc9c8317b96078f2ccec4c10",
+        "comparison": "byte-identical",
+        "pdfComparison": null
+      },
+      {
+        "suite": "linked",
+        "name": "fixture-9-mobile.png",
+        "bytesBefore": 7988,
+        "bytesAfter": 7988,
+        "sha256Before": "06f3e6206b072477d56907ae2e7b257431ef036eaea01129df82729769705e32",
+        "sha256After": "06f3e6206b072477d56907ae2e7b257431ef036eaea01129df82729769705e32",
+        "comparison": "byte-identical",
+        "pdfComparison": null
+      },
+      {
+        "suite": "linked",
+        "name": "Pushout-desktop.xlsx",
+        "bytesBefore": 13427,
+        "bytesAfter": 13427,
+        "sha256Before": "43f9798a1bebd622fdc1d6ef539ffdb396b3326e9e4d66104ef17149c40cea58",
+        "sha256After": "43f9798a1bebd622fdc1d6ef539ffdb396b3326e9e4d66104ef17149c40cea58",
+        "comparison": "byte-identical",
+        "pdfComparison": null
+      },
+      {
+        "suite": "linked",
+        "name": "Pushout-mobile.xlsx",
+        "bytesBefore": 13427,
+        "bytesAfter": 13427,
+        "sha256Before": "43f9798a1bebd622fdc1d6ef539ffdb396b3326e9e4d66104ef17149c40cea58",
+        "sha256After": "43f9798a1bebd622fdc1d6ef539ffdb396b3326e9e4d66104ef17149c40cea58",
+        "comparison": "byte-identical",
+        "pdfComparison": null
+      },
+      {
+        "suite": "exports",
+        "name": "doubles.png",
+        "bytesBefore": 1610474,
+        "bytesAfter": 1610474,
+        "sha256Before": "3f91f644de64c4eccfe31e7b36595c16f77cde0b35dd747f4528e7e0f0e604cd",
+        "sha256After": "3f91f644de64c4eccfe31e7b36595c16f77cde0b35dd747f4528e7e0f0e604cd",
+        "comparison": "byte-identical",
+        "pdfComparison": null
+      },
+      {
+        "suite": "exports",
+        "name": "match-mobile.pdf",
+        "bytesBefore": 918921,
+        "bytesAfter": 918921,
+        "sha256Before": "4c3291ef6d774ba0e3b7609a0151a8a8c9a6105fc3215126b03432cb04fd7e38",
+        "sha256After": "c6dd30fed5e4e0050aa14e0e8e6304d98c43d41107fe7ac1b5ba302ef8825b99",
+        "comparison": "exact baseline PDF image pixels (desktop/mobile variants)",
+        "pdfComparison": {
+          "images": [
+            {
+              "w": 1920,
+              "h": 1080,
+              "channels": 3
+            },
+            {
+              "w": 1920,
+              "h": 1080,
+              "channels": 1
+            }
+          ],
+          "differentChannels": 0,
+          "totalChannels": 8294400,
+          "meanAbsoluteDelta": 0,
+          "maxDelta": 0
+        }
+      },
+      {
+        "suite": "exports",
+        "name": "match-mobile.png",
+        "bytesBefore": 1604208,
+        "bytesAfter": 1604208,
+        "sha256Before": "5b087c81a99125c60fca4cb9bde3b05aa057776d4cd11dc634d076ac715aa35a",
+        "sha256After": "5b087c81a99125c60fca4cb9bde3b05aa057776d4cd11dc634d076ac715aa35a",
+        "comparison": "byte-identical",
+        "pdfComparison": null
+      },
+      {
+        "suite": "exports",
+        "name": "match.pdf",
+        "bytesBefore": 918921,
+        "bytesAfter": 918921,
+        "sha256Before": "c07585dfe2879c36cc5167e01dfcdcec43d84e95085c99ca60b41ce0056e4879",
+        "sha256After": "b105c4ede5a2dc6b628323f0c1abed8dc2df31b84d9baec0852be10f28eabc43",
+        "comparison": "exact baseline PDF image pixels (desktop/mobile variants)",
+        "pdfComparison": {
+          "images": [
+            {
+              "w": 1920,
+              "h": 1080,
+              "channels": 3
+            },
+            {
+              "w": 1920,
+              "h": 1080,
+              "channels": 1
+            }
+          ],
+          "differentChannels": 0,
+          "totalChannels": 8294400,
+          "meanAbsoluteDelta": 0,
+          "maxDelta": 0
+        }
+      },
+      {
+        "suite": "exports",
+        "name": "match.png",
+        "bytesBefore": 1604208,
+        "bytesAfter": 1604208,
+        "sha256Before": "5b087c81a99125c60fca4cb9bde3b05aa057776d4cd11dc634d076ac715aa35a",
+        "sha256After": "5b087c81a99125c60fca4cb9bde3b05aa057776d4cd11dc634d076ac715aa35a",
+        "comparison": "byte-identical",
+        "pdfComparison": null
+      },
+      {
+        "suite": "exports",
+        "name": "player-mobile.pdf",
+        "bytesBefore": 891008,
+        "bytesAfter": 891008,
+        "sha256Before": "3ff39f49f96b69278f806c8714ebfb770c895ee394084f6322c3c73ba6b312e9",
+        "sha256After": "8f75a548533d4680fc58cf91ce9c4d97089c71753c95c7c8adccb8d3655cda36",
+        "comparison": "exact baseline PDF image pixels (desktop/mobile variants)",
+        "pdfComparison": {
+          "images": [
+            {
+              "w": 1920,
+              "h": 1080,
+              "channels": 3
+            },
+            {
+              "w": 1920,
+              "h": 1080,
+              "channels": 1
+            }
+          ],
+          "differentChannels": 0,
+          "totalChannels": 8294400,
+          "meanAbsoluteDelta": 0,
+          "maxDelta": 0
+        }
+      },
+      {
+        "suite": "exports",
+        "name": "player-mobile.png",
+        "bytesBefore": 1535199,
+        "bytesAfter": 1535199,
+        "sha256Before": "1c0ef4b5c76ab7ea08d6b9165d3e0b8587c4c36cc31295bbb5774217f3d22629",
+        "sha256After": "1c0ef4b5c76ab7ea08d6b9165d3e0b8587c4c36cc31295bbb5774217f3d22629",
+        "comparison": "byte-identical",
+        "pdfComparison": null
+      },
+      {
+        "suite": "exports",
+        "name": "player-partial.png",
+        "bytesBefore": 1520418,
+        "bytesAfter": 1520418,
+        "sha256Before": "c3d778167099c5bd8ca6b41ba6fbf60b50dc781ee0abf052a7a9f36f42acfe21",
+        "sha256After": "c3d778167099c5bd8ca6b41ba6fbf60b50dc781ee0abf052a7a9f36f42acfe21",
+        "comparison": "byte-identical",
+        "pdfComparison": null
+      },
+      {
+        "suite": "exports",
+        "name": "player.pdf",
+        "bytesBefore": 891008,
+        "bytesAfter": 891008,
+        "sha256Before": "8d094bf8971fb6151276a5da9fcafaa844c2209c75948a76b507bb19b82476a3",
+        "sha256After": "3d2e359b7a0ab17cf84a340c3758d4542eead4e4a1bd0d1d5a02e6846abce6cf",
+        "comparison": "exact baseline PDF image pixels (desktop/mobile variants)",
+        "pdfComparison": {
+          "images": [
+            {
+              "w": 1920,
+              "h": 1080,
+              "channels": 3
+            },
+            {
+              "w": 1920,
+              "h": 1080,
+              "channels": 1
+            }
+          ],
+          "differentChannels": 0,
+          "totalChannels": 8294400,
+          "meanAbsoluteDelta": 0,
+          "maxDelta": 0
+        }
+      },
+      {
+        "suite": "exports",
+        "name": "player.png",
+        "bytesBefore": 1535199,
+        "bytesAfter": 1535199,
+        "sha256Before": "1c0ef4b5c76ab7ea08d6b9165d3e0b8587c4c36cc31295bbb5774217f3d22629",
+        "sha256After": "1c0ef4b5c76ab7ea08d6b9165d3e0b8587c4c36cc31295bbb5774217f3d22629",
+        "comparison": "byte-identical",
+        "pdfComparison": null
+      },
+      {
+        "suite": "exports",
+        "name": "retry-after-image-error.png",
+        "bytesBefore": 1593800,
+        "bytesAfter": 1593800,
+        "sha256Before": "d6ad2972edefb8952c50aa9b880ac35a908ab0f26347826f3f6f2f0fc69335a2",
+        "sha256After": "d6ad2972edefb8952c50aa9b880ac35a908ab0f26347826f3f6f2f0fc69335a2",
+        "comparison": "byte-identical",
+        "pdfComparison": null
+      },
+      {
+        "suite": "exports",
+        "name": "score-wide.png",
+        "bytesBefore": 1583020,
+        "bytesAfter": 1583020,
+        "sha256Before": "9f76bf70169966f20bc49c272d070f8b17fd1eb1eebe0339393f114c94a651a0",
+        "sha256After": "9f76bf70169966f20bc49c272d070f8b17fd1eb1eebe0339393f114c94a651a0",
+        "comparison": "byte-identical",
+        "pdfComparison": null
+      },
+      {
+        "suite": "exports",
+        "name": "team-match.png",
+        "bytesBefore": 1608928,
+        "bytesAfter": 1608928,
+        "sha256Before": "ee73ae894553fe39ec76a90c3e88717334aceaf0a89c7b3faf13fea1976458ba",
+        "sha256After": "ee73ae894553fe39ec76a90c3e88717334aceaf0a89c7b3faf13fea1976458ba",
+        "comparison": "byte-identical",
+        "pdfComparison": null
+      },
+      {
+        "suite": "exports",
+        "name": "teams-mobile.pdf",
+        "bytesBefore": 929535,
+        "bytesAfter": 929535,
+        "sha256Before": "07a6a5100298e5cf992562b225531a165e372d13295701fa33aba9251859dd5c",
+        "sha256After": "ab0eb8fb6ff0d138f917f6e391d796ef078b03124dfcac835013a80854eeb9b1",
+        "comparison": "exact baseline PDF image pixels (desktop/mobile variants)",
+        "pdfComparison": {
+          "images": [
+            {
+              "w": 1920,
+              "h": 1080,
+              "channels": 3
+            },
+            {
+              "w": 1920,
+              "h": 1080,
+              "channels": 1
+            }
+          ],
+          "differentChannels": 0,
+          "totalChannels": 8294400,
+          "meanAbsoluteDelta": 0,
+          "maxDelta": 0
+        }
+      },
+      {
+        "suite": "exports",
+        "name": "teams-mobile.png",
+        "bytesBefore": 1615068,
+        "bytesAfter": 1615068,
+        "sha256Before": "38cbe6a6862266dbfb21a6aab77e62cfe00c873095aac16b5a8a337dab14161f",
+        "sha256After": "38cbe6a6862266dbfb21a6aab77e62cfe00c873095aac16b5a8a337dab14161f",
+        "comparison": "byte-identical",
+        "pdfComparison": null
+      },
+      {
+        "suite": "exports",
+        "name": "teams.pdf",
+        "bytesBefore": 929535,
+        "bytesAfter": 929535,
+        "sha256Before": "e3feb20fc1ad92449e1587dcf131667d3608f62a7d80dc001882b8d0795abead",
+        "sha256After": "7452db916a1bb9a466ad06b44b66c1965ab010412343dbbbeb4d87f0460bc23d",
+        "comparison": "exact baseline PDF image pixels (desktop/mobile variants)",
+        "pdfComparison": {
+          "images": [
+            {
+              "w": 1920,
+              "h": 1080,
+              "channels": 3
+            },
+            {
+              "w": 1920,
+              "h": 1080,
+              "channels": 1
+            }
+          ],
+          "differentChannels": 0,
+          "totalChannels": 8294400,
+          "meanAbsoluteDelta": 0,
+          "maxDelta": 0
+        }
+      },
+      {
+        "suite": "exports",
+        "name": "teams.png",
+        "bytesBefore": 1615068,
+        "bytesAfter": 1615068,
+        "sha256Before": "38cbe6a6862266dbfb21a6aab77e62cfe00c873095aac16b5a8a337dab14161f",
+        "sha256After": "38cbe6a6862266dbfb21a6aab77e62cfe00c873095aac16b5a8a337dab14161f",
+        "comparison": "byte-identical",
+        "pdfComparison": null
+      },
+      {
+        "suite": "pushout",
+        "name": "doubles-desktop.xlsx",
+        "bytesBefore": 13333,
+        "bytesAfter": 13333,
+        "sha256Before": "9b5515e404180e59a134b1281a9823ad697c4beb3d615984e8232c8869b5902a",
+        "sha256After": "9b5515e404180e59a134b1281a9823ad697c4beb3d615984e8232c8869b5902a",
+        "comparison": "byte-identical",
+        "pdfComparison": null
+      },
+      {
+        "suite": "pushout",
+        "name": "doubles-mobile.xlsx",
+        "bytesBefore": 13333,
+        "bytesAfter": 13333,
+        "sha256Before": "9b5515e404180e59a134b1281a9823ad697c4beb3d615984e8232c8869b5902a",
+        "sha256After": "9b5515e404180e59a134b1281a9823ad697c4beb3d615984e8232c8869b5902a",
+        "comparison": "byte-identical",
+        "pdfComparison": null
+      },
+      {
+        "suite": "pushout",
+        "name": "singles-desktop.xlsx",
+        "bytesBefore": 13355,
+        "bytesAfter": 13355,
+        "sha256Before": "06432dc82294f37866ac3671169b59f8ba0a4cf3592c4dcae2d9ee0ace8cf815",
+        "sha256After": "06432dc82294f37866ac3671169b59f8ba0a4cf3592c4dcae2d9ee0ace8cf815",
+        "comparison": "byte-identical",
+        "pdfComparison": null
+      },
+      {
+        "suite": "pushout",
+        "name": "singles-mobile.xlsx",
+        "bytesBefore": 13355,
+        "bytesAfter": 13355,
+        "sha256Before": "06432dc82294f37866ac3671169b59f8ba0a4cf3592c4dcae2d9ee0ace8cf815",
+        "sha256After": "06432dc82294f37866ac3671169b59f8ba0a4cf3592c4dcae2d9ee0ace8cf815",
+        "comparison": "byte-identical",
+        "pdfComparison": null
+      },
+      {
+        "suite": "pushout",
+        "name": "team-desktop.xlsx",
+        "bytesBefore": 13285,
+        "bytesAfter": 13285,
+        "sha256Before": "941b8da2570aaa353b158868554b76ce9d41a235814cdf8f4d7ee1fa0a0b9fe3",
+        "sha256After": "941b8da2570aaa353b158868554b76ce9d41a235814cdf8f4d7ee1fa0a0b9fe3",
+        "comparison": "byte-identical",
+        "pdfComparison": null
+      },
+      {
+        "suite": "pushout",
+        "name": "team-mobile.xlsx",
+        "bytesBefore": 13285,
+        "bytesAfter": 13285,
+        "sha256Before": "941b8da2570aaa353b158868554b76ce9d41a235814cdf8f4d7ee1fa0a0b9fe3",
+        "sha256After": "941b8da2570aaa353b158868554b76ce9d41a235814cdf8f4d7ee1fa0a0b9fe3",
+        "comparison": "byte-identical",
+        "pdfComparison": null
+      },
+      {
+        "suite": "profile",
+        "name": "B-0.pdf",
+        "bytesBefore": 881794,
+        "bytesAfter": 881794,
+        "sha256Before": "1f87d683ef68dedc5576a2f7a10e823fad004767117cc8a3b19a18ce3fe98d97",
+        "sha256After": "4b4a07a5d887be6dbced99d6fefa3a5281941950cc6df5235a03a34bbf3a9f2e",
+        "comparison": "exact baseline PDF image pixels (desktop/mobile variants)",
+        "pdfComparison": {
+          "images": [
+            {
+              "w": 1920,
+              "h": 1080,
+              "channels": 3
+            },
+            {
+              "w": 1920,
+              "h": 1080,
+              "channels": 1
+            }
+          ],
+          "differentChannels": 0,
+          "totalChannels": 8294400,
+          "meanAbsoluteDelta": 0,
+          "maxDelta": 0
+        }
+      },
+      {
+        "suite": "profile",
+        "name": "B-0.png",
+        "bytesBefore": 1529189,
+        "bytesAfter": 1529189,
+        "sha256Before": "9257bcccaee127e46ed939feb9f36aa2b785451bb0d4c1dd0e02754c68e9e534",
+        "sha256After": "9257bcccaee127e46ed939feb9f36aa2b785451bb0d4c1dd0e02754c68e9e534",
+        "comparison": "byte-identical",
+        "pdfComparison": null
+      },
+      {
+        "suite": "profile",
+        "name": "B-1.pdf",
+        "bytesBefore": 881794,
+        "bytesAfter": 881794,
+        "sha256Before": "957d7a23a57a330441c5745772ea1f560f2c3a69aab9505ddc6b185016ec80ed",
+        "sha256After": "40c358729a950389b0a5ab507b93bc165efb33e8c8d66aed269c125ac41320c9",
+        "comparison": "exact baseline PDF image pixels (desktop/mobile variants)",
+        "pdfComparison": {
+          "images": [
+            {
+              "w": 1920,
+              "h": 1080,
+              "channels": 3
+            },
+            {
+              "w": 1920,
+              "h": 1080,
+              "channels": 1
+            }
+          ],
+          "differentChannels": 0,
+          "totalChannels": 8294400,
+          "meanAbsoluteDelta": 0,
+          "maxDelta": 0
+        }
+      },
+      {
+        "suite": "profile",
+        "name": "B-1.png",
+        "bytesBefore": 1529189,
+        "bytesAfter": 1529189,
+        "sha256Before": "9257bcccaee127e46ed939feb9f36aa2b785451bb0d4c1dd0e02754c68e9e534",
+        "sha256After": "9257bcccaee127e46ed939feb9f36aa2b785451bb0d4c1dd0e02754c68e9e534",
+        "comparison": "byte-identical",
+        "pdfComparison": null
+      },
+      {
+        "suite": "profile",
+        "name": "B-2.pdf",
+        "bytesBefore": 881794,
+        "bytesAfter": 881794,
+        "sha256Before": "95e82cc35c6773ebc4c25b21257e36295320d7621512a7ebb804157000ac9b42",
+        "sha256After": "68bc0c909cdf3b19274dc6346c24d87c1e11f74d7b7a5cccb77d8048de268e04",
+        "comparison": "exact baseline PDF image pixels (desktop/mobile variants)",
+        "pdfComparison": {
+          "images": [
+            {
+              "w": 1920,
+              "h": 1080,
+              "channels": 3
+            },
+            {
+              "w": 1920,
+              "h": 1080,
+              "channels": 1
+            }
+          ],
+          "differentChannels": 0,
+          "totalChannels": 8294400,
+          "meanAbsoluteDelta": 0,
+          "maxDelta": 0
+        }
+      },
+      {
+        "suite": "profile",
+        "name": "B-2.png",
+        "bytesBefore": 1529189,
+        "bytesAfter": 1529189,
+        "sha256Before": "9257bcccaee127e46ed939feb9f36aa2b785451bb0d4c1dd0e02754c68e9e534",
+        "sha256After": "9257bcccaee127e46ed939feb9f36aa2b785451bb0d4c1dd0e02754c68e9e534",
+        "comparison": "byte-identical",
+        "pdfComparison": null
+      }
+    ],
+    "lifecycle": {
+      "before": {
+        "cycles": 20,
+        "delayedFontsAndImagesCancel": true,
+        "decodeErrorRetry": true,
+        "urlRetainedUntilLease": true,
+        "temporaryHostsAfter": 0,
+        "urlsAfterExpiry": 0,
+        "inheritedSessionDownload": true,
+        "sessionGuardOwner": "remaining stage7b controller",
+        "productionWrites": 0,
+        "pageErrors": []
+      },
+      "after": {
+        "cycles": 20,
+        "delayedFontsAndImagesCancel": true,
+        "decodeErrorRetry": true,
+        "urlRetainedUntilLease": true,
+        "temporaryHostsAfter": 0,
+        "urlsAfterExpiry": 0,
+        "inheritedSessionDownload": true,
+        "sessionGuardOwner": "remaining stage7b controller",
+        "productionWrites": 0,
+        "pageErrors": []
+      }
+    },
+    "productionWrites": 0
+  },
+  "performance": {
+    "before": {
+      "archiveBytes": 40913440,
+      "matches": 189,
+      "people": 26,
+      "syncOpenMedianMs": 190.09999999962747,
+      "components": {
+        "federalReportData": {
+          "calls": 3,
+          "medianMs": 184.09999999962747
+        },
+        "federalReportResults": {
+          "calls": 6,
+          "medianMs": 0
+        },
+        "reportPlayer": {
+          "calls": 3,
+          "medianMs": 1.099999999627471
+        },
+        "layoutFederalReportPreview": {
+          "calls": 3,
+          "medianMs": 1.099999999627471
+        },
+        "html2canvas": {
+          "calls": 6,
+          "medianMs": 356.80000000074506
+        },
+        "canvas.toBlob": {
+          "calls": 3,
+          "medianMs": 50.40000000037253
+        },
+        "jsPDF.addImage": {
+          "calls": 3,
+          "medianMs": 1875.4000000003725
+        },
+        "jsPDF.output": {
+          "calls": 3,
+          "medianMs": 4.399999998509884
+        }
+      }
+    },
+    "after": {
+      "archiveBytes": 40913440,
+      "matches": 189,
+      "people": 26,
+      "syncOpenMedianMs": 186.19999999925494,
+      "components": {
+        "federalReportData": {
+          "calls": 3,
+          "medianMs": 179.5
+        },
+        "federalReportResults": {
+          "calls": 6,
+          "medianMs": 0
+        },
+        "reportPlayer": {
+          "calls": 3,
+          "medianMs": 1.199999999254942
+        },
+        "layoutFederalReportPreview": {
+          "calls": 3,
+          "medianMs": 0.6999999992549419
+        },
+        "html2canvas": {
+          "calls": 6,
+          "medianMs": 364
+        },
+        "canvas.toBlob": {
+          "calls": 3,
+          "medianMs": 45.69999999925494
+        },
+        "jsPDF.addImage": {
+          "calls": 3,
+          "medianMs": 1812.800000000745
+        },
+        "jsPDF.output": {
+          "calls": 3,
+          "medianMs": 3.800000000745058
+        }
+      }
+    }
+  },
+  "node": {
+    "productionPrivate": {
+      "pass": 266,
+      "fail": 0,
+      "skip": 0
+    },
+    "productionPublic": {
+      "pass": 263,
+      "fail": 0,
+      "skip": 3
+    },
+    "experimental": {
+      "pass": 28,
+      "fail": 2,
+      "skip": 0
+    },
+    "allPrivate": {
+      "tests": 296,
+      "pass": 294,
+      "fail": 2,
+      "skip": 0,
+      "exit": 1
+    }
+  },
+  "browser": {
+    "bootstrap": 14,
+    "turnament101": "PASS",
+    "identityRecovery": "PASS with mocked Auth",
+    "actualLiveAuth": false
+  },
+  "productionWrites": 0,
+  "merged": false,
+  "deployed": false,
+  "controllerDiagnostics": {
+    "note": "These are real FAILs on baseline v105 and candidate, separate from Node/experimental results; unresolved7b, not ignored or marked expected-fail",
+    "immediateReopen": {
+      "before": {
+        "immediate": {
+          "open": true,
+          "rows": 13
+        },
+        "settled": {
+          "open": true,
+          "rows": 0
+        },
+        "contractSatisfied": false,
+        "productionWrites": 0
+      },
+      "after": {
+        "immediate": {
+          "open": true,
+          "rows": 13
+        },
+        "settled": {
+          "open": true,
+          "rows": 0
+        },
+        "contractSatisfied": false,
+        "productionWrites": 0
+      },
+      "exitBefore": 1,
+      "exitAfter": 1
+    },
+    "sessionGuard": {
+      "before": {
+        "downloads": 1,
+        "contractSatisfied": false,
+        "productionWrites": 0,
+        "liveAuth": false
+      },
+      "after": {
+        "downloads": 1,
+        "contractSatisfied": false,
+        "productionWrites": 0,
+        "liveAuth": false
+      },
+      "exitBefore": 1,
+      "exitAfter": 1
+    }
+  }
+}
