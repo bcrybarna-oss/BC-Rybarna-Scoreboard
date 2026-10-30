@@ -4,7 +4,7 @@
   const canvas=$('output'),ctx=canvas.getContext('2d',{alpha:false});
   const camera=$('camera');
   const W=canvas.width,H=canvas.height;
-  let scene='camera',stream=null,recorder=null,socket=null,recording=false,upload=Promise.resolve();
+  let scene='camera',stream=null,recorder=null,socket=null,recording=false,draining=false,upload=Promise.resolve();
   let scores=[0,0],frameRequest=0,previousFrame=0;
   const uploadLimit=6*1024*1024;
   const names=['camera','soon','pause','end'];
@@ -105,6 +105,7 @@
   }
   function closeLive(message,kind=''){
     recording=false;
+    draining=false;
     try{if(recorder&&recorder.state!=='inactive')recorder.stop();}catch(_){}
     recorder=null;
     if(socket){
@@ -117,13 +118,13 @@
   function transmit(blob){
     if(!blob||!blob.size)return;
     upload=upload.then(async()=>{
-      if(!socket||socket.readyState!==WebSocket.OPEN||!recording)return;
+      if(!socket||socket.readyState!==WebSocket.OPEN||(!recording&&!draining))return;
       if(socket.bufferedAmount>uploadLimit){
         closeLive('Připojení nestíhá odesílat video. Přenos byl zastaven kvůli ochraně paměti.','error');
         return;
       }
       const bytes=await blob.arrayBuffer();
-      if(socket&&socket.readyState===WebSocket.OPEN&&recording)socket.send(bytes);
+      if(socket&&socket.readyState===WebSocket.OPEN&&(recording||draining))socket.send(bytes);
     }).catch(()=>{
       closeLive('Chyba při odesílání videozáznamu.','error');
     });
@@ -176,6 +177,7 @@
   function stopLive(){
     if(!recording)return;
     recording=false;
+    draining=true;
     const ws=socket;
     const r=recorder;
     if(!r||r.state==='inactive'){
