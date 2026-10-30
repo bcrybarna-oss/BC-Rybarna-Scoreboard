@@ -38,3 +38,19 @@ jobs:
           ffmpeg -version | head -n 1
       - name: Browser to local FFmpeg smoke test (NO Facebook connection)
         run: node studio-live-test/tests/browser.cjs
+  docker-image:
+    name: Build independent Render test image
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build isolated Docker web service
+        run: docker build --file studio-live-test/Dockerfile --tag poolcitadlo-live-fb:test .
+      - name: Verify test service starts and health endpoint is available
+        run: |
+          docker run -d --name pool-live-test -e STUDIO_ADMIN_TOKEN=example-very-long-test-password-12345 -p 10000:10000 poolcitadlo-live-fb:test
+          for i in $(seq 1 20); do
+            if curl --silent --fail http://localhost:10000/health; then exit 0; fi
+            sleep 1
+          done
+          docker logs pool-live-test
+          exit 1
