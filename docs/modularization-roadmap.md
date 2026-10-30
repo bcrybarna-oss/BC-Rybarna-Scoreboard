@@ -1,14 +1,14 @@
 # Aktuální roadmapa modularizace Poolčítadla
 
-Zadavatel: Dominik. Aktualizace30.10.2026: produkce107, merge bb9b0e06b0c82dd0e4a8a74d48eac41dff0dae0d, PR47/Pages41103864524 success. Etapy6,7a+7b a samostatná8a čtecí koordinátor Livescore jsou nasazené. Pro8b zůstává vykreslování seznamu/detailu/indikátoru; není podmínkou8a a není zahájené. [Výsledek a omezení](deployment-v4.51.107.md). Starší rozsahy níže jsou zachovaný plán/historie; další oblast9 nezahájena.
+Zadavatel: Dominik. Aktualizace30.10.2026: produkce108, PR49 merge d2ed8be97dfd124713b7e35c3ab986d74b237eca/Pages41110008447 success. Etapy6,7a+7b,8a a8b jsou nasazené. Livescore má jediný reader a renderer s oddělenými odpovědnostmi. [Ověření, omezení a návrat](deployment-v4.51.108.md). Další oblast9 není zahájená; starší přípravy níže jsou historie.
 
-## Aktuální práce 8b
+## Historie přípravy 8b — nyní nasazeno108
 
 Dominik,30.10.2026: samostatný kandidát108 odděluje renderer Livescore seznamu/detailu/indikátoru. 8a a předchozí produkční moduly zachované, žádné Firebase/storage/polling v rendereru. [Rozsah, ověření a návrat](livescore-renderer-stage-8b.md). Neslučovat/nenasazovat, etapu9 nezahajovat. Starší údaj „8b nezahájena“ v záznamu nasazení107 výše je historie.
 
 ## Výchozí stav a závazná pravidla
 
-Produkční root index.html načítá osm skutečně používaných modulů: FederalStatistics (čisté výpočty a reportové modely), CloudRefresh (automatické appData relace), OwnReports, FederalViewer, AdminReports, FederalReportRenderer, FederalReportController a LivescoreReader. Starý test-modular/assets/js/pool-core.js je samostatná experimentální větev, nikoli zdroj produkčního bootstrapu. Žádné slučování těchto dvou implementací naslepo.
+Produkční root index.html načítá devět skutečně používaných modulů: FederalStatistics (čisté výpočty a reportové modely), CloudRefresh (automatické appData relace), OwnReports, FederalViewer, AdminReports, FederalReportRenderer, FederalReportController, LivescoreReader a LivescoreRenderer. Starý test-modular/assets/js/pool-core.js je samostatná experimentální větev, nikoli zdroj produkčního bootstrapu. Žádné slučování těchto dvou implementací naslepo.
 
 Každý přesun: jeden vlastník stavu a prostředků, výslovné závislosti, původní tělo odstranit ve stejném PR, žádný tichý fallback. Zachovat práva, payloady a sportovní výsledky. Funkční opravy oddělit od mechanického přesunu a doložit reprodukcí. PR má testy přímo nad produkčním zdrojem, před/po a možnost návratu reverzí bez vracení dat. U každého vydání čerstvý fetch, verze a revize podle AGENTS.md, bez předpokládané automatické výjimky pro stará selhání. Bez produkčních testovacích zápisů.
 

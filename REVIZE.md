@@ -1,5 +1,13 @@
 # Revize aplikace Poolčítadlo
 
+## Dominik – ověřené nasazení rendereru Livescore, etapa 8b (v4.51.108 RC)
+Zadavatel: Dominik
+Datum: 30. 10. 2026
+Změny: PR49 sloučen standardním merge d2ed8be97dfd124713b7e35c3ab986d74b237eca. Tento následný zápis mění jen dokumentaci, nikoli aplikaci nebo verzi. Etapa9 nezahájena.
+Testy: PR/mainrelease PASS, produkce278PASS/0FAIL/3SKIP, experiment28PASS/2FAIL/0SKIP; obě vady jednotlivě shodné s výchozím main, celýworkflowFAILURE. Veřejných24souborů přesnéSHA256/9modulů/desktop-mobil/0JSerrors. Publikovanýkód izolovaně8a/renderer13vstupů/14shodnýchPNG/7callbackůjednou/úklid/bezpečnýtextstolu+race-to/recovery/streamOBS/skutečnéPNG/PDF/XLSX PASS. Viz docs/deployment-v4.51.108.md.
+Nasazení: Pages41110008447 build/deploy/report success, veřejná v4.51.108 RC odpovídá merge. Produkčnídata nezměněna, žádná migrace.
+Omezení: Veřejnárelace anonymní a bezživýchzápasů; naplněnéseznamy/detail/kladnýindikátor jen izolovaně. ŽivýAuth/Rules/fyzickýiPhone/OBS neověřeny. LimityB/cache a cleanupGET→DELETE trvají. Návrat reverzí kódu s novou verzí bez vracení dat; úplnáreverze vrátí i neescapovanýtext, posoudit užšíhotfix.
+
 ## Dominik – renderer Livescore, etapa 8b (v4.51.108 RC)
 Zadavatel: Dominik
 Datum: 30. 10. 2026

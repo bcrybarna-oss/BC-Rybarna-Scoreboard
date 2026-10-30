@@ -1,6 +1,6 @@
-# Etapa 8b — kandidát v4.51.108 RC
+# Etapa 8b — nasazeno v4.51.108 RC
 
-Dominik, 30.10.2026: příprava samostatného produkčního LivescoreRenderer. LivescoreReader8a zůstává vlastníkem čtení, timerů a platnosti výsledků; aplikace připravuje data a oprávnění, renderer vlastní DOM a delegované akce. Bez fallbacku a bez původních těl. Produkce107, nesloučeno/nenasazeno. ProdukčníNode281/0/0 lokálně (veřejně278/0/3), experiment28/2/0 nezměněný;14PNGshodných/6novýchunit/100renderů/7akcíjednou a8a/identity/OBS/turnaje101/PNG/PDF/XLSX PASS. [Rozsah a ověření](docs/livescore-renderer-stage-8b.md). Etapa9 nezahájena.
+Dominik,30.10.2026: PR49 sloučen merge d2ed8be97dfd124713b7e35c3ab986d74b237eca, Pages41110008447 success. Veřejná108/24souborů přesnéSHA256/devětmodulů/reader+renderer/desktop-mobil/navigace/prázdnýLivescore+indikátor/nedostupnýdetail+rychléclose-reopen/0JSerrors. Publikovanýkód izolovaně8a souběh/pozdníodpovědi/A→B/logout/úklid, naplněnýrenderer/14shodnýchPNG/7akcíjednou/bezrůstulistenerů/escapovánístolu+race-to, recovery/streamOBS/PNG/PDF/XLSX PASS. ReleasePR/mainPASS, produkce278/0/3, experiment28/2/0 jednotlivě nezměněný, celéCI FAILURE. ŽiváAuth/Rules/naplněnáprodukčnírelace/fyzickázařízení neověřeny; produkčnídata neměněna ani nemigrována. [Deployment a návrat](docs/deployment-v4.51.108.md). Další část/etapa9 nezahájena. Následující přípravy a zákazy nasazení jsou historie před schválením.
 
 # Etapa 8a — nasazeno v4.51.107 RC
 
