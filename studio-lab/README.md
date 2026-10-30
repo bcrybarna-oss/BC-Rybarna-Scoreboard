@@ -49,3 +49,13 @@ Každý PR běh `Poolcitalo LIVE laboratory` ověří testovací stránku v Chro
 Tato adresa může být veřejně dostupná komukoli, kdo zná odkaz. V testu se ovšem žádná data neukládají ani neodesílají; veškerý obraz zůstává v prohlížeči. Nepoužívej ji pro ostré přenosy ani skutečnou správu účtů. Testovací kopie se neaktualizuje sama; po změnách je nutné nahrát nový balíček. Kamera musí mít HTTPS oprávnění a otevřenou aktivní stránku. U Netlify je vhodné spravovat zkušební web z vlastního účtu, aby jej bylo možné později vypnout.
 
 **Alternativně** lze připojit samostatnou statickou službu Render k vývojové větvi a nasadit pouze `studio-lab/`; nepublikovat kořen repozitáře ani větev `main`. Nastavení a přihlášení externí služby vyžaduje vlastní autorizaci.
+
+## Pokud kamera na iPhonu nefunguje
+
+- Použij plné Safari a **HTTPS** adresu nově nahrané verze (ne stažený `file://` HTML soubor, ne interní prohlížeč Messengeru/Facebooku).
+- Na načtené stránce vyber **Nastavení webu → Kamera → Povolit**, případně **Nastavení → Aplikace → Safari → Kamera → Zeptat se / Povolit**. Znovu načti stránku a klepni na **Zapnout kameru**.
+- Pokud Safari kameru povolí, ale obraz zůstane prázdný nebo přehrávání zablokuje, objeví se **Zobrazit obraz ručně**. Klepni na něj, případně změň přední/zadní kameru. Zobrazenou zprávu v diagnostickém řádku si opiš.
+- Při chybě `NotAllowedError` zkontroluj oprávnění pro konkrétní web, `NotReadableError` znamená obvykle obsazenou kameru, `NotFoundError` / `OverconstrainedError` může znamenat nedostupný zdroj (aplikace sama zkouší výchozí kameru).
+- **Změny vývojové větve se na již nasazené Netlify stránce neaktualizují automaticky.** Pro ověření nové opravy stáhni a znovu nahraj balíček z posledního úspěšného workflow; po nahrání stránku v Safari obnov.
+
+Upozornění: Chromium v CI používá simulovanou kameru. Skutečné Safari/iOS je samostatný ruční test a do jeho provedení nelze označit kameru na iPhonu za ověřenou.
