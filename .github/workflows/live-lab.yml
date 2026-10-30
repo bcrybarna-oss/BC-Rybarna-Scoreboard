@@ -13,12 +13,41 @@ permissions:
 
 jobs:
   isolated-lab-checks:
-    name: LIVE lab static and controller tests
+    name: LIVE lab camera and preview tests
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
           node-version: "22"
-      - run: node studio-lab/tests/smoke.cjs
-      - run: node studio-lab/tests/controller.cjs
+      - name: Validate pure browser source
+        run: node studio-lab/tests/smoke.cjs
+      - name: Validate local camera lifecycle and overlay model
+        run: node studio-lab/tests/controller.cjs
+      - name: Install test-only browser dependencies
+        run: |
+          npm install --no-audit --no-fund
+          npx playwright install --with-deps chromium
+      - name: Test real Chromium with synthetic camera
+        env:
+          LIVE_LAB_SCREENSHOTS: live-lab-screenshots
+        run: node studio-lab/tests/browser.cjs
+      - name: Upload test screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: poolcitadlo-live-screenshots
+          path: live-lab-screenshots/
+          if-no-files-found: ignore
+          retention-days: 14
+      - name: Package standalone HTML for manual HTTPS preview
+        run: |
+          mkdir -p live-preview-package
+          cp studio-lab/index.html live-preview-package/index.html
+          printf "User-agent: *\nDisallow: /\n" > live-preview-package/robots.txt
+      - name: Upload independent preview package
+        uses: actions/upload-artifact@v4
+        with:
+          name: poolcitadlo-live-https-package
+          path: live-preview-package/
+          retention-days: 14
