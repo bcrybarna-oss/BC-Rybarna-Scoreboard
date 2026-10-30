@@ -23,8 +23,8 @@
 ## Kritické kontrakty
 
 - **Vlastnictví relace:** atomicky přidělit stream jedinému účtu; duplicita dvou souběžných kliknutí nesmí vytvořit dvě Egress úlohy. Server při uzavření musí ověřit ownerId + sessionId + oprávnění.
-- **Stav streamu:** \`idle → preparing → ready → broadcasting → stopping → stopped\`; chyby a obnovení nejsou záminkou k převzetí jiné relace.
-- **Scéna:** nový \`sceneRevision\` a přidělené \`matchId\`, s potvrzením aktualizace overlaye. Do té doby ponechat poslední bezpečnou grafiku nebo neutrální přechodovou scénu.
+- **Stav streamu:** `idle → preparing → ready → broadcasting → stopping → stopped`; chyby a obnovení nejsou záminkou k převzetí jiné relace.
+- **Scéna:** nový `sceneRevision` a přidělené `matchId`, s potvrzením aktualizace overlaye. Do té doby ponechat poslední bezpečnou grafiku nebo neutrální přechodovou scénu.
 - **Komentátor:** přístup jen do své relace, mikrofon volitelně vypnut při připojení, výběr vstupu a sluchátek, na serveru odvolatelné oprávnění.
 - **Režisér:** kombinovatelná role + jedna aktivní řídicí lease. Přepnutí kamer musí být odolné proti dvěma souběžným požadavkům a nesmí ovlivnit skóre.
 - **Pauza/obraz:** vypadne-li kamera, zobrazit bezpečnou přestávkovou obrazovku; neukončovat automaticky ostatní připojené mikrofony ani stream.
@@ -42,6 +42,6 @@
 
 ## Izolace a release
 
-- Vývoj v samostatné větvi \`feature/poolcitadlo-live-lab-20261030\`. \`main\`, aktuální \`index.html\`, \`overlay.html\`, produkční účty a data se nemění.
+- Vývoj v samostatné větvi `feature/poolcitadlo-live-lab-20261030`. `main`, aktuální `index.html`, `overlay.html`, produkční účty a data se nemění.
 - Testovací HTTPS doména, Firebase a LiveKit nejsou dosud zřízené. Neexistuje zatím veřejný odkaz pro spuštění na iPhonu.
-- \`studio-lab/\` je samostatná experimentální plocha, nikoliv nový produkční vstup. Pokud bude někdy chtít nasadit kód do hlavního webu, nejprve projít release politikou, verzováním \`v4.51.X RC\`, bezpečnostním ověřením, dokumentací, CI a výslovným schválením sloučení.
+- `studio-lab/` je samostatná experimentální plocha, nikoliv nový produkční vstup. Pokud bude někdy chtít nasadit kód do hlavního webu, nejprve projít release politikou, verzováním `v4.51.X RC`, bezpečnostním ověřením, dokumentací, CI a výslovným schválením sloučení.
