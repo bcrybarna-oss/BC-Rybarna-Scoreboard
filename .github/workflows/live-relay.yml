@@ -1,0 +1,38 @@
+name: Poolcitalo LIVE – Facebook relay experiments
+
+on:
+  pull_request:
+    paths:
+      - "studio-live-test/**"
+      - ".github/workflows/live-relay.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  relay-tests:
+    name: Isolated relay contract and streaming tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Install test relay dependencies
+        working-directory: studio-live-test
+        run: npm install --no-audit --no-fund
+      - name: Verify server and browser script syntax
+        run: |
+          node --check studio-live-test/server.js
+          node --check studio-live-test/public/app.js
+      - name: Exercise auth, WebSocket and FFmpeg contracts
+        working-directory: studio-live-test
+        run: npm test
+      - name: Install Chromium and FFmpeg for synthetic end-to-end video test
+        run: |
+          npm install --no-audit --no-fund
+          npx playwright install --with-deps chromium
+          ffmpeg -version | head -n 1
+      - name: Browser to local FFmpeg smoke test (NO Facebook connection)
+        run: node studio-live-test/tests/browser.cjs
