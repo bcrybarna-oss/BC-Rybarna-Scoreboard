@@ -1,0 +1,24 @@
+name: Poolcitalo LIVE laboratory
+
+on:
+  pull_request:
+    paths:
+      - "studio-lab/**"
+      - "docs/poolcitadlo-live-architecture.md"
+      - ".github/workflows/live-lab.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  isolated-lab-checks:
+    name: LIVE lab static and controller tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - run: node studio-lab/tests/smoke.cjs
+      - run: node studio-lab/tests/controller.cjs
