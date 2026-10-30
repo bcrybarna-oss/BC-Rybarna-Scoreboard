@@ -1,6 +1,6 @@
-# Etapa8a — kandidát v4.51.107 RC
+# Etapa 8a — nasazeno v4.51.107 RC
 
-Dominik,29.10.2026: společný LivescoreReader vlastní čtecí single-flight, background poll a view/dialog epochy. Publikace/heartbeat/OBS beze změny. Produkce106, nesloučeno/nenasazeno.6unit+actualbrowser/OBS/identity/turnaje/exporty PASS, Node275/0/0 lokálně, experiment28/2/0. [Hranice, úklidové zápisy a důkazy](docs/livescore-reader-stage-8a.md).
+Dominik, 30.10.2026: PR47 sloučen merge bb9b0e06b0c82dd0e4a8a74d48eac41dff0dae0d, Pages41103864524 success. Veřejná v107, 23 souborů přesné SHA256, osm modulů, desktop/mobil, navigace a prázdný Livescore/indikátor/nedostupný detail bez JS chyb. Publikovaný kód izolovaně:3→1GET, indikátor2LIVE mimo přehled, deset cyklů/dialogy/close-reopen/A→B/logout/pozdní odpovědi/úklid a obnova identity PASS s mockem. Release a produkce272/0/3 PASS, experiment28/2/0 FAIL: dvě jednotlivě shodné vady, celé CI FAILURE. Živý Auth a naplněný produkční dialog neověřeny. Samostatná8a nevyžaduje8b, žádná duplicitní implementace. Pro8b zůstává přesun vykreslování seznamu/detailu/indikátoru; nezahájeno. Produkční data neměněna. [Deployment, omezení a návrat](docs/deployment-v4.51.107.md). Starší přípravy a zákazy nasazení níže jsou historie před schválením.
 
 # Aktuální stav Poolčítadla
 
@@ -32,7 +32,7 @@ Historie kontroly před schválením nasazení29.10.2026: [cílené browserové 
 
 - **PRODUKCE100 – Jaroslav, 27.10.2026:** PR #38 sloučen merge `b42a9b2189a2c501f05ac70d5b6a94cb8fa3aa83`, [GitHub Pages 40575477118](https://github.com/bcrybarna-oss/BC-Rybarna-Scoreboard/actions/runs/40575477118) build/deploy success. ZAPOMENUTÉ HESLO? v loginu volá Firebase Authentication PASSWORD_RESET pouze s e-mailem, neopisuje heslo, nemění UID/role/profil ani historii. Zrušen matoucí produkční nápis SCOREBOARD 4.0 DEV. Release gate PR/main PASS, Node **244 PASS / 2 známé FAIL / 3 SKIP z 249**, všech 5 nových testů obnovy PASS; dvě preview chyby totožné s předchozí hlavní verzí, CI jako celek proto není zelené. Veřejný soubor nebylo možné nezávisle otevřít z nástroje; samotný Pages deploy success je potvrzen. Živá produkční Firebase Auth a doručení resetovacího e-mailu nebyly testovány, žádné produkční testovací zápisy ani migrace.
 
-Aktuální verze: **v4.51.107 RC** — kandidát8a, produkce106.
+Aktuální verze: **v4.51.107 RC** — nasazeno a v rozsahu deployment reportu ověřeno.
 
 - **Etapa6 – Dominik:** [Draft PR44](https://github.com/bcrybarna-oss/BC-Rybarna-Scoreboard/pull/44), produkčnífix917e310 a testy/roadmapab77cafa; [CI40920540934](https://github.com/bcrybarna-oss/BC-Rybarna-Scoreboard/actions/runs/40920540934) releasePASS/production258PASS,0FAIL,3SKIP/experiment28PASS,2FAIL. CelekFAILURE bez výjimky. [roadmapa](docs/modularization-roadmap.md), [garance sad](docs/testing.md) a [kontrakt/před-po](docs/stage-6-test-contracts.md). Samostatný produkční guardfix917e310 zachovává pending snapshot a vyžaduje Auth; actualroot6/6testů a browserPASS. Produkce261PASS/0FAIL/0SKIP lokálně (veřejně258/0/3), experiment28PASS/2skutečnéFAIL; celek289/2/0z291, default npm test failuje. Původní regex nahrazen4passingbehavior scénáři; zbývá starýpointer a nově pokrytý latentní staleUID. Nic není přeskočeno pro zelený výsledek. Ostatnírelevantníbrowser regresePASS, pětmodulů i starýcore beze změny. **Neslučovat/nenasazovat, etapu7nezahajovat.**
 

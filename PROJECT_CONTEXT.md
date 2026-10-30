@@ -1,6 +1,6 @@
-# Etapa8a — kandidát v4.51.107 RC
+# Etapa 8a — nasazeno v4.51.107 RC
 
-Dominik,29.10.2026: společný LivescoreReader vlastní čtecí single-flight, background poll a view/dialog epochy. Publikace/heartbeat/OBS beze změny. Produkce106, nesloučeno/nenasazeno.6unit+actualbrowser/OBS/identity/turnaje/exporty PASS, Node275/0/0 lokálně, experiment28/2/0. [Hranice, úklidové zápisy a důkazy](docs/livescore-reader-stage-8a.md).
+Dominik, 30.10.2026: PR47 sloučen merge bb9b0e06b0c82dd0e4a8a74d48eac41dff0dae0d, Pages41103864524 success. Veřejná v107, 23 souborů přesné SHA256, osm modulů, desktop/mobil, navigace a prázdný Livescore/indikátor/nedostupný detail bez JS chyb. Publikovaný kód izolovaně:3→1GET, indikátor2LIVE mimo přehled, deset cyklů/dialogy/close-reopen/A→B/logout/pozdní odpovědi/úklid a obnova identity PASS s mockem. Release a produkce272/0/3 PASS, experiment28/2/0 FAIL: dvě jednotlivě shodné vady, celé CI FAILURE. Živý Auth a naplněný produkční dialog neověřeny. Samostatná8a nevyžaduje8b, žádná duplicitní implementace. Pro8b zůstává přesun vykreslování seznamu/detailu/indikátoru; nezahájeno. Produkční data neměněna. [Deployment, omezení a návrat](docs/deployment-v4.51.107.md). Starší přípravy a zákazy nasazení níže jsou historie před schválením.
 
 # Etapa7a — renderer, kandidát v4.51.106 RC
 

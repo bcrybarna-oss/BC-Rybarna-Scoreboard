@@ -1,10 +1,10 @@
 # Aktuální roadmapa modularizace Poolčítadla
 
-Zadavatel: Dominik. Aktualizace29.10.2026: main b0881d35c41ca6d2580bbf7ce012cfe57ff896c5, produkce106. Etapy6 a7a+7b jsou nasazené. Nyní samostatná8a čtecí reader/koordinátor Livescore, kandidát107, neslučovat/nenasazovat. Podrobné starší rozsahy níže jsou zachovaný plán/historie; další oblast9 nezahájena.
+Zadavatel: Dominik. Aktualizace30.10.2026: produkce107, merge bb9b0e06b0c82dd0e4a8a74d48eac41dff0dae0d, PR47/Pages41103864524 success. Etapy6,7a+7b a samostatná8a čtecí koordinátor Livescore jsou nasazené. Pro8b zůstává vykreslování seznamu/detailu/indikátoru; není podmínkou8a a není zahájené. [Výsledek a omezení](deployment-v4.51.107.md). Starší rozsahy níže jsou zachovaný plán/historie; další oblast9 nezahájena.
 
 ## Výchozí stav a závazná pravidla
 
-Produkční root index.html načítá pět skutečně používaných modulů: FederalStatistics (čisté výpočty a reportové modely), CloudRefresh (automatické appData relace), OwnReports, FederalViewer a AdminReports. Starý test-modular/assets/js/pool-core.js je samostatná experimentální větev, nikoli zdroj produkčního bootstrapu. Žádné slučování těchto dvou implementací naslepo.
+Produkční root index.html načítá osm skutečně používaných modulů: FederalStatistics (čisté výpočty a reportové modely), CloudRefresh (automatické appData relace), OwnReports, FederalViewer, AdminReports, FederalReportRenderer, FederalReportController a LivescoreReader. Starý test-modular/assets/js/pool-core.js je samostatná experimentální větev, nikoli zdroj produkčního bootstrapu. Žádné slučování těchto dvou implementací naslepo.
 
 Každý přesun: jeden vlastník stavu a prostředků, výslovné závislosti, původní tělo odstranit ve stejném PR, žádný tichý fallback. Zachovat práva, payloady a sportovní výsledky. Funkční opravy oddělit od mechanického přesunu a doložit reprodukcí. PR má testy přímo nad produkčním zdrojem, před/po a možnost návratu reverzí bez vracení dat. U každého vydání čerstvý fetch, verze a revize podle AGENTS.md, bez předpokládané automatické výjimky pro stará selhání. Bez produkčních testovacích zápisů.
 

@@ -1,5 +1,13 @@
 # Revize aplikace Poolčítadlo
 
+## Dominik – ověřené nasazení Livescore readeru, etapa 8a (v4.51.107 RC)
+Zadavatel: Dominik
+Datum: 30. 10. 2026
+Změny: PR47 sloučen standardním merge bb9b0e06b0c82dd0e4a8a74d48eac41dff0dae0d. Samostatná8a je produkčně ucelená,8b vykreslování je odložené. Tento následný zápis mění pouze dokumentaci, verzi nezvyšuje.
+Testy: PR/main release PASS, produkce272PASS/0FAIL/3SKIP, experiment28PASS/2FAIL/0SKIP; obě vady jednotlivě reprodukované na výchozím main, celekFAILURE bez ignorování. Veřejných23souborů přesnéSHA256/osm modulů/desktop-mobil/navigace/0JSerrors. Publikovanýkód izolovaně3→1GET/indikátor2LIVE mimo přehled/10cyklů/dialogy/close-reopen/A→B/logout/pozdníodpovědi/úklid PASS; identity/recovery s mockem PASS,6unit PASS. Viz docs/deployment-v4.51.107.md.
+Nasazení: Pages41103864524 success; veřejná v4.51.107 RC odpovídá merge. Produkčnídata neměněna, žádná migrace nebo opakování konzolových oprav.
+Omezení: ŽivýAuth/Rules/naplněnýprodukčnídetail/fyzickýiPhone/OBS neověřeny; veřejnýdetail pouze nedostupnýzápas, plnýdetail s mockovanými daty. ZnáméB/cachelimity a cleanupGET→DELETE mezera trvají. Návrat reverzí kódu s novou verzí bez vracení dat vrátí i původní Auth race. Další část nezahájena.
+
 ## Dominik – čtecí Livescore, etapa8a (v4.51.107 RC)
 Zadavatel: Dominik
 Datum: 29. 10. 2026
