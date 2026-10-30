@@ -3,6 +3,12 @@
 **Zadavatel:** Jaroslav · 30. 10. 2026  
 **Stav:** experimentální kód v PR #48; **nenasazeno**, neověřeno proti skutečnému Facebooku ani Safari iOS. NIKDY NESLUČOVAT DO `main` bez samostatného schválení. Produkční `index.html`, `overlay.html`, Firebase a účty nejsou dotčené.
 
+## Rychlejší nasazení přes Render Blueprint
+
+Ve vývojové větvi je nyní také soubor **`render.yaml`**, který vytváří **samostatnou testovací službu**. V Render Dashboardu lze zvolit **New → Blueprint**, připojit GitHub repozitář a vybrat vývojovou větev `feature/poolcitadlo-live-lab-20261030`; soubor `render.yaml` z této větve nastaví Dockerfile, HTTPS webovou službu, frankfurtský region a vypnuté automatické aktualizace. Při vytváření zadáš pouze tajné `STUDIO_ADMIN_TOKEN` (min. 24 znaků). Nesmíš pro tuto službu použít ostrý web nebo produkční branch. Nepokoušej se slučovat PR #48 jen proto, aby se objevila konfigurace v main.
+
+**Blueprint nabízí bezplatný plán**, který může při převodu videa na FFmpeg nestačit výkonem ani limity odchozího provozu. Pokud by bylo nutné zvýšit výkon, Render může účtovat poplatek – placený plán nikdy nepotvrzuj bez vlastního rozhodnutí o ceně.
+
 ## Co tento prototyp skutečně dělá
 
 Telefon otevře **HTTPS webový server** s testovací stránkou. Prohlížeč po stisknutí **Zapnout kameru** vykresluje obraz + skóre + klubové barvy + vodoznak do HTML `canvas`. Po kliknutí na **Začít odesílat na Facebook** odesílá `MediaRecorder` fragmenty přes zabezpečený `wss://` socket na **stejný server**. Server spustí jeden proces FFmpeg a převede je do H.264 video + AAC **tichý zvuk**, v rozlišení 960×540/20 fps, a pokusí se odeslat na RTMPS adresu uvedenou Facebook Live Producerem.
