@@ -26,7 +26,7 @@ class MockEl {
   querySelectorAll(){return [];}
   remove(){this.removed=true;}
   pause(){this.paused=true;}
-  async play(){this.played=true;}
+  async play(){this.played=true;this.paused=false;if(this.failPlay)throw Object.assign(new Error("blocked"),{name:"NotAllowedError"});}
 }
 
 const ids=[...html.matchAll(/\bid="([^"]+)"/g)].map(m=>m[1]);
@@ -90,6 +90,20 @@ new Function('document','navigator','window',script)(documentMock,{mediaDevices}
   assert.equal(first.track.stopped,true);
   assert.equal(els.cameraVideo.srcObject,null);
 
+  // Camera capture can work while iOS Safari rejects video.play().
+  els.cameraVideo.failPlay=true;
+  await els.startCamera.emit('click');
+  await new Promise(resolve=>setImmediate(resolve));
+  assert.equal(els.status.dataset.kind,'error');
+  assert.equal(els.resumeVideo.hidden,false,'Manual-play fallback must become visible');
+  assert.ok(els.cameraVideo.srcObject,'A playback rejection must not stop captured camera');
+  els.cameraVideo.failPlay=false;
+  await els.resumeVideo.emit('click');
+  await new Promise(resolve=>setImmediate(resolve));
+  assert.equal(els.status.dataset.kind,'ok','Manual retry should recover the preview');
+  assert.equal(els.resumeVideo.hidden,true);
+  await els.stopCamera.emit('click');
+
   let finishPermission;
   acquire=()=>new Promise(resolve=>{finishPermission=resolve;});
   const pending=els.startCamera.emit('click');
@@ -102,5 +116,5 @@ new Function('document','navigator','window',script)(documentMock,{mediaDevices}
   assert.equal(late.track.stopped,true,'Late stream must be closed after page exit');
   assert.equal(els.cameraVideo.srcObject,null,'Late stream must not reattach');
 
-  console.log('PASS camera lab controller: scoreboard, scene switching, color, permissions, teardown, stale camera');
+  console.log('PASS camera lab controller: scoreboard, scene switching, Safari play rejection/retry, permissions, teardown, stale camera');
 })().catch(error=>{console.error(error);process.exitCode=1;});
