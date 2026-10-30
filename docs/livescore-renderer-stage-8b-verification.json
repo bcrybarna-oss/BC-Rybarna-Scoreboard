@@ -1,0 +1,178 @@
+{
+  "date": "2026-10-30",
+  "version": "v4.51.108 RC",
+  "baseline": "c699d94833e636ede62e50b0fc0ef272d4f26290",
+  "production": "v4.51.107 RC",
+  "status": "candidate; not merged/deployed",
+  "clients": [
+    {
+      "viewport": "desktop",
+      "exactPngPairs": 7,
+      "sha256": {
+        "empty": "08ee57225447ec02f08605e5ca4550529a6acfd261ad6c46881c9a4eb076fbe8",
+        "list": "744c945246aee16b0fc34313ba0813e17dd753d8fa36244c23e348f426935e95",
+        "nine": "9be4ff66da07a7fe9c037882dabe374107f3987e2c5b4fa13a3a304a9c7ff952",
+        "straight": "07101646db395151c6f75a61d30cdaa295ce77294634479a675e9208c736e6e4",
+        "solo": "ae1f72f74dc7ba3dba3533bc6a4d8c9531441eae6d628b2806c396d9361475b6",
+        "doubles": "71359fe22a4247796cd7a2f0b006d928c20c8b9dec993b8f88d5283ed207531a",
+        "ended": "6c2959d70f74a99fe44b2b7a83cd5ba9a603ac9c52ddafdff6a7f6923f133254"
+      },
+      "detailTextsEqual": true,
+      "permissionLabelsEqual": true,
+      "callbacks": {
+        "resumeLocalMatch": 1,
+        "openLiveScore": 1,
+        "hideLiveFromThisDevice": 1,
+        "deleteTestMatchCompletely": 1,
+        "deleteLiveMatchFromLivescore": 1,
+        "openTournamentFromLive": 1,
+        "openTournamentLiveScores": 1
+      },
+      "requests": [
+        7,
+        7
+      ],
+      "nodes": [
+        227,
+        227
+      ],
+      "milliseconds100Renders": [
+        127.29999999981374,
+        121
+      ],
+      "listeners": [
+        [
+          "liveMatchesList:click",
+          1
+        ],
+        [
+          "liveTournamentsList:click",
+          1
+        ],
+        [
+          "liveScoreModal:click",
+          1
+        ],
+        [
+          "cleanupStaleLiveBtn:click",
+          1
+        ],
+        [
+          "restoreHiddenLiveBtn:click",
+          1
+        ]
+      ],
+      "metadataInjectionNodes": [
+        2,
+        0
+      ]
+    },
+    {
+      "viewport": "mobile",
+      "exactPngPairs": 7,
+      "sha256": {
+        "empty": "32e6b6ebcb517b21ee05e7a3a98558882019670e3645028d0f5f668c3398ffe7",
+        "list": "bce3c99bf2060249ced0c5ae497b463bd4855ba2297ac8a2a011848ff79c9ab3",
+        "nine": "0db52e96b22a79bee9820c9789f1deb06148af3e97ea95e6bc0cb9b32ee632a2",
+        "straight": "31a2bb88e48cf630ade087e96bd78a1cf56aacb17becfd1a366b494923efded4",
+        "solo": "2caeb2b4c3d87941983fadb84da4fa0d1d6a95c39b52b7d3bcd39683ac8f02be",
+        "doubles": "480a0cf99d653c61caa801667f7819014bffa336a0f927bfc6c114d0427287e2",
+        "ended": "84f66b63fd75ede19147039a516e82cde2c9da873a27fcb616bb99ad54b15504"
+      },
+      "detailTextsEqual": true,
+      "permissionLabelsEqual": true,
+      "callbacks": {
+        "resumeLocalMatch": 1,
+        "openLiveScore": 1,
+        "hideLiveFromThisDevice": 1,
+        "deleteTestMatchCompletely": 1,
+        "deleteLiveMatchFromLivescore": 1,
+        "openTournamentFromLive": 1,
+        "openTournamentLiveScores": 1
+      },
+      "requests": [
+        7,
+        7
+      ],
+      "nodes": [
+        227,
+        227
+      ],
+      "milliseconds100Renders": [
+        133.39999999990687,
+        121.70000000018626
+      ],
+      "listeners": [
+        [
+          "liveMatchesList:click",
+          1
+        ],
+        [
+          "liveTournamentsList:click",
+          1
+        ],
+        [
+          "liveScoreModal:click",
+          1
+        ],
+        [
+          "cleanupStaleLiveBtn:click",
+          1
+        ],
+        [
+          "restoreHiddenLiveBtn:click",
+          1
+        ]
+      ],
+      "metadataInjectionNodes": [
+        2,
+        0
+      ]
+    }
+  ],
+  "node": {
+    "productionPrivate": {
+      "pass": 281,
+      "fail": 0,
+      "skip": 0
+    },
+    "productionPublic": {
+      "pass": 278,
+      "fail": 0,
+      "skip": 3
+    },
+    "experimental": {
+      "pass": 28,
+      "fail": 2,
+      "skip": 0
+    },
+    "allPrivate": {
+      "tests": 311,
+      "pass": 309,
+      "fail": 2,
+      "skip": 0,
+      "exit": 1
+    }
+  },
+  "browser": {
+    "reader8a": true,
+    "identityRecoveryMock": true,
+    "tournament101Quota": true,
+    "bootstrap": true,
+    "streamIsolation": true,
+    "pngPdfExports": true,
+    "pushoutXlsx": true
+  },
+  "exportEnvironment": {
+    "restrictedCandidate": "canceled at PNG download",
+    "restrictedMain": "same canceled at PNG download",
+    "expandedCandidate": "all PNG/PDF/XLSX tests pass",
+    "testAssertionsChanged": false
+  },
+  "limitations": [
+    "Mock Firebase/Auth only",
+    "No production writes",
+    "No physical iPhone/Safari/OBS",
+    "Single-run render timings are not an optimization claim"
+  ]
+}

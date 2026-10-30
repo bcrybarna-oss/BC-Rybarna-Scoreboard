@@ -1043,9 +1043,10 @@
   </div>
 
 <script src="assets/js/federal-statistics.js?v=4.51.98"></script>
-<script src="assets/js/federal-report-renderer.js?v=4.51.107"></script>
-<script src="assets/js/federal-report-controller.js?v=4.51.107"></script>
-<script src="assets/js/livescore-reader.js?v=4.51.107"></script>
+<script src="assets/js/federal-report-renderer.js?v=4.51.108"></script>
+<script src="assets/js/federal-report-controller.js?v=4.51.108"></script>
+<script src="assets/js/livescore-reader.js?v=4.51.108"></script>
+<script src="assets/js/livescore-renderer.js?v=4.51.108"></script>
 <script src="assets/js/cloud-refresh.js?v=4.51.99"></script>
 <script src="assets/js/own-reports.js?v=4.51.102"></script>
 <script src="assets/js/federal-viewer.js?v=4.51.103"></script>
@@ -2611,7 +2612,7 @@ html[data-theme="light"] #leagueSchedule .history-item .muted{
           <span class="by">by</span>
           <span class="club">BC Rybárna</span>
         </div>
-        <small class="modern-brand-version">v4.51.107 RC</small>
+        <small class="modern-brand-version">v4.51.108 RC</small>
       </div>
     </div>
     <div class="nav">
@@ -3225,7 +3226,7 @@ html[data-theme="light"] #leagueSchedule .history-item .muted{
         </div>
         <div class="subpanel" style="min-width:210px;text-align:center;margin:0">
           <div class="muted" style="font-size:10px;font-weight:950;letter-spacing:1px">AKTUÁLNÍ VERZE</div>
-          <div style="font-size:22px;font-weight:950;color:var(--gold2);margin-top:5px">v4.51.107 RC</div>
+          <div style="font-size:22px;font-weight:950;color:var(--gold2);margin-top:5px">v4.51.108 RC</div>
         </div>
       </div>
     </div>
@@ -5990,7 +5991,7 @@ html[data-theme="light"] #leagueSchedule .history-item .muted{
       </div>
 
       <div id="groupPlayoffSeedStatus" class="muted" style="margin-top:12px;min-height:20px"></div>
-      <div class="muted" style="margin-top:4px;font-size:11px">RC v4.51.107</div>
+      <div class="muted" style="margin-top:4px;font-size:11px">RC v4.51.108</div>
       <div class="modal-actions">
         <button id="groupPlayoffSeedApplyBtn" class="btn primary big" type="button">NASADIT DO PLAY-OFF</button>
         <button id="groupPlayoffSeedCancelBtn" class="btn">ZRUŠIT</button>
@@ -6084,6 +6085,7 @@ html[data-theme="light"] #leagueSchedule .history-item .muted{
   if(!window.FederalReportRenderer){
     const error=document.createElement('div');error.id='federalReportRendererLoadError';error.setAttribute('role','alert');error.textContent='Nepodařilo se načíst vykreslování reportů Federal Cupu. Obnovte stránku.';document.body.prepend(error);throw new Error('FEDERAL_REPORT_RENDERER_MODULE_UNAVAILABLE');
   }
+  if(!window.LivescoreRenderer){const error=document.createElement('div');error.id='livescoreRendererLoadError';error.setAttribute('role','alert');error.textContent='Nepodařilo se načíst zobrazení Livescore. Obnovte stránku.';document.body.prepend(error);throw Error('LIVESCORE_RENDERER_MODULE_UNAVAILABLE');}
   if(!window.LivescoreReader){const error=document.createElement('div');error.id='livescoreReaderLoadError';error.setAttribute('role','alert');error.textContent='Nepodařilo se načíst Livescore. Obnovte stránku.';document.body.prepend(error);throw Error('LIVESCORE_READER_MODULE_UNAVAILABLE');}
   if(!window.CloudRefresh){
     const error=document.createElement('div');error.id='cloudRefreshLoadError';error.setAttribute('role','alert');
@@ -6562,6 +6564,10 @@ html[data-theme="light"] #leagueSchedule .history-item .muted{
   const LIVE_HEARTBEAT_MS=30*1000;
   const LIVE_STALE_MS=3*60*1000;
   const LIVE_WARNING_MS=90*1000;
+  const livescoreRenderer=window.LivescoreRenderer.create({
+    elements:Object.fromEntries(["liveNavBtn","modernLiveTile","modernLiveTileText","liveMatchesList","liveTournamentsList","liveScoreModal","liveScoreEditSolo14","liveScoreClose","liveScoreModeLabel","liveScoreTitle","liveScoreMeta","liveScoreP1","liveScoreP2","liveScoreP1Club","liveScoreP2Club","liveScoreValue","liveScoreRace","liveScoreExtra","cleanupStaleLiveBtn","restoreHiddenLiveBtn"].map(id=>[id,$(id)])),page:window,
+    actions:{resume:id=>window.resumeLocalMatch(id),detail:id=>window.openLiveScore(id),hide:id=>window.hideLiveFromThisDevice(id),deleteTest:id=>window.deleteTestMatchCompletely(id),deleteLive:id=>window.deleteLiveMatchFromLivescore(id),tournament:id=>window.openTournamentFromLive(id),tournamentLive:id=>window.openTournamentLiveScores(id),close:closeLiveScore,editSolo:()=>window.editSolo14FromLiveScore(),cleanup:()=>cleanupStaleLiveMatches(true),restoreHidden:()=>window.restoreHiddenLivesOnThisDevice()}
+  });
   const livescoreReader=window.LivescoreReader.create({
     identity:()=>JSON.stringify([cloudAuthenticated,cloudUid,currentUserRole,currentUserPlayerId,currentUserClubId,cloudEmailVerified]),authorize:ensureCloudToken,
     get:()=>cloudLiveMatches,set:rows=>{cloudLiveMatches=rows;},now:()=>Date.now(),staleMs:LIVE_STALE_MS,
@@ -7125,7 +7131,7 @@ html[data-theme="light"] #leagueSchedule .history-item .muted{
     const btn=$('submitReportBtn');if(btn)btn.disabled=true;
     try{
       const id=uid(),p=currentUserPlayerId?data.players?.[currentUserPlayerId]:null;
-      const report={id,createdByUid:cloudUid,createdByPlayerId:currentUserPlayerId||'',createdByName:p?playerSelectionLabel(p):(cloudUserEmail||'Uživatel'),email:cloudUserEmail||'',type,area,description,appVersion:'v4.51.107 RC',createdAt:new Date().toISOString(),updatedAt:new Date().toISOString(),status:'new',adminNote:''};
+      const report={id,createdByUid:cloudUid,createdByPlayerId:currentUserPlayerId||'',createdByName:p?playerSelectionLabel(p):(cloudUserEmail||'Uživatel'),email:cloudUserEmail||'',type,area,description,appVersion:'v4.51.108 RC',createdAt:new Date().toISOString(),updatedAt:new Date().toISOString(),status:'new',adminNote:''};
       await reportRequest(id,'PUT',report);
       try{
         await writeReportUserMirror(report);
@@ -14504,35 +14510,7 @@ $('winnerText').textContent = match.solo14
     return liveUpdatedAgeMs(m)>LIVE_WARNING_MS;
   }
 
-  function updateLiveNavStatus(){
-    const btn=$('liveNavBtn');
-    const modernTile=$('modernLiveTile');
-    const modernText=$('modernLiveTileText');
-    const count=activeLiveMatches().length;
-    const isLive=count>0;
-    const liveTitle=isLive
-      ? ('Právě probíhá '+count+' '+(count===1?'zápas':count<5?'zápasy':'zápasů'))
-      : 'Momentálně není evidovaný žádný LIVE zápas';
-
-    if(btn){
-      btn.classList.toggle('live-active',isLive);
-      btn.innerHTML=isLive
-        ? '<span class="live-nav-dot"></span>LIVESCORE • '+count+' LIVE'
-        : 'Livescore';
-      btn.title=liveTitle;
-    }
-
-    if(modernTile){
-      modernTile.classList.toggle('live-active',isLive);
-      modernTile.title=liveTitle;
-      modernTile.setAttribute('aria-label',isLive ? ('Livescore, '+count+' LIVE') : 'Livescore');
-    }
-    if(modernText){
-      modernText.textContent=isLive
-        ? (count===1 ? 'Právě probíhá 1 zápas LIVE' : 'Právě probíhají '+count+' zápasy LIVE')
-        : 'Živé zápasy a stream';
-    }
-  }
+  function updateLiveNavStatus(){livescoreRenderer.renderNav(activeLiveMatches().length); }
 
   function hiddenLiveIdSet(){
     try{
@@ -14792,95 +14770,15 @@ $('winnerText').textContent = match.solo14
     toast('Rozehraný zápas byl bezpečně obnoven • '+(match.scores?.[0]||0)+':'+(match.scores?.[1]||0)+'.');
   };
 
+  function livescoreDisplayMatch(m){
+    return {id:m.id,p1:liveMatchPlayerName(m,0),p2:liveMatchPlayerName(m,1),s1:liveMatchScore(m,0),s2:liveMatchScore(m,1),discipline:liveMatchDiscipline(m),raceTo:liveMatchRaceTo(m),table:m.tournamentLink?.tableNumber||'',tournamentLinked:!!m.tournamentLink,
+      ghostLabel:m.solo14GhostMode?solo14GhostDifficultyLabel(m,true):'',breakLabel:liveBreakModeLabel(m),started:liveStartedLabel(m),updated:liveUpdatedLabel(m),stale:liveMayBeStale(m)};
+  }
   function renderLive(){
-    const matchesWrap=$('liveMatchesList');
-    const tournamentsWrap=$('liveTournamentsList');
-    if(!matchesWrap || !tournamentsWrap)return;
-
     const matches=activeLiveMatches();
-    updateLiveNavStatus();
-    if(!matches.length){
-      matchesWrap.innerHTML='<div class="muted">Momentálně není rozehraný žádný zápas.</div>';
-    }else{
-      matchesWrap.innerHTML=matches.map(m=>{
-        const p1=esc(liveMatchPlayerName(m,0));
-        const p2=esc(liveMatchPlayerName(m,1));
-        const s1=liveMatchScore(m,0);
-        const s2=liveMatchScore(m,1);
-        const disc=esc(liveMatchDiscipline(m));
-        const rt=liveMatchRaceTo(m);
-        const table=m.tournamentLink?.tableNumber || '';
-        const tournamentName=m.tournamentLink
-          ? esc((data.tournaments||[]).find(t=>t.id===m.tournamentLink.tournamentId)?.name || 'Turnaj')
-          : '';
-        return `<div class="tournament-match">
-          <div style="display:flex;justify-content:space-between;gap:8px;align-items:center;margin-bottom:8px">
-            <span class="tournament-badge gold">${disc||'ZÁPAS'}</span>
-            <span class="muted">${table?'STŮL '+table:(rt?'RACE TO '+rt:'')}</span>
-          </div>
-          <div class="tm-row">
-            <div class="tm-p">${p1}</div>
-            <div class="tm-score">${s1} : ${s2}</div>
-            <div class="tm-p">${p2}</div>
-          </div>
-          ${tournamentName?`<div class="muted" style="margin-top:7px;text-align:center">${tournamentName}</div>`:''}
-          ${m.solo14GhostMode?`<div style="margin-top:7px;text-align:center;font-size:12px;font-weight:950;color:var(--gold2)">${esc(solo14GhostDifficultyLabel(m,true))}</div>`:''}
-          ${liveBreakModeLabel(m)?`<div style="margin-top:7px;text-align:center;font-size:11px;font-weight:950">ROZSTŘEL: ${esc(liveBreakModeLabel(m))}</div>`:''}
-          <div class="muted" style="margin-top:7px;text-align:center;font-size:11px;line-height:1.55">
-            Začátek: <strong>${esc(liveStartedLabel(m))}</strong> • Aktualizováno: <strong>${esc(liveUpdatedLabel(m))}</strong>
-            ${liveMayBeStale(m)?`<div class="live-stale-note">⚠ MOŽNÁ NEAKTUÁLNÍ</div>`:''}
-          </div>
-          <div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-top:10px">
-            ${canResumeIncompleteMatch(m) || (resumableMatchState(m.id) && editableMatchOwnedByCurrentUser(resumableMatchState(m.id)))
-              ? `<button class="btn primary" onclick="resumeLocalMatch('${m.id}')">POKRAČOVAT</button>`
-              : ''}
-            <button class="btn" onclick="openLiveScore('${m.id}')">LIVESCORE</button>
-            <button class="btn" onclick="hideLiveFromThisDevice('${m.id}')">SKRÝT Z LIVE</button>
-            ${currentUserIsSystemAdmin()
-              ? `<button class="btn danger" onclick="deleteTestMatchCompletely('${m.id}')">SMAZAT TEST ZCELA</button>`
-              : ''}
-            ${editableMatchOwnedByCurrentUser(m)
-              ? `<button class="btn danger" onclick="deleteLiveMatchFromLivescore('${m.id}')">SMAZAT Z LIVE</button>`
-              : ''}
-          </div>
-        </div>`;
-      }).join('');
-    }
-
-    const tours=activeLiveTournaments();
-    if(!tours.length){
-      tournamentsWrap.innerHTML='<div class="muted">Momentálně neprobíhá žádný turnaj.</div>';
-    }else{
-      tournamentsWrap.innerHTML=tours.map(t=>{
-        const all=allTournamentMatches(t);
-        const done=all.filter(m=>m.status==='done').length;
-        const linkedLive=matches.filter(m=>m.tournamentLink?.tournamentId===t.id);
-        const playingIds=new Set(linkedLive.map(m=>m.tournamentLink?.tournamentMatchId).filter(Boolean));
-        const playing=Math.max(
-          all.filter(m=>m.status==='playing').length,
-          playingIds.size
-        );
-        const total=all.length;
-        return `<div class="tournament-match">
-          <div style="display:flex;justify-content:space-between;gap:8px;align-items:center">
-            <strong>${esc(t.name||'Turnaj')}</strong>
-            <span class="tournament-badge gold">PROBÍHÁ</span>
-          </div>
-          <div class="muted" style="margin-top:8px">
-            ${esc(tournamentDisciplineSummary(t))} • odehráno ${done}/${total}
-            ${playing?` • právě hraje ${playing}`:''}
-            ${['groups_sko','groups_dko'].includes(t.format) && groupPhaseComplete(t) && !t.playoffStarted
-              ? ' • ČEKÁ NA NASAZENÍ PLAY-OFF'
-              : ''}
-            ${canManageTournament(t)?'':' • pouze ke sledování'}
-          </div>
-          <div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-top:10px">
-            <button class="btn" onclick="openTournamentFromLive('${t.id}')">${canManageTournament(t)?'OTEVŘÍT TURNAJ':'NÁHLED TURNAJE'}</button>
-            <button class="btn primary" onclick="openTournamentLiveScores('${t.id}')">LIVESCORE</button>
-          </div>
-        </div>`;
-      }).join('');
-    }
+    const models=matches.map(m=>({...livescoreDisplayMatch(m),tournamentName:m.tournamentLink?(data.tournaments||[]).find(t=>t.id===m.tournamentLink.tournamentId)?.name||'Turnaj':'',canResume:canResumeIncompleteMatch(m)||(resumableMatchState(m.id)&&editableMatchOwnedByCurrentUser(resumableMatchState(m.id))),canDeleteTest:currentUserIsSystemAdmin(),canDelete:editableMatchOwnedByCurrentUser(m)}));
+    const tournaments=activeLiveTournaments().map(t=>{const all=allTournamentMatches(t),playingIds=new Set(matches.filter(m=>m.tournamentLink?.tournamentId===t.id).map(m=>m.tournamentLink?.tournamentMatchId).filter(Boolean));return {id:t.id,name:t.name,done:all.filter(m=>m.status==='done').length,playing:Math.max(all.filter(m=>m.status==='playing').length,playingIds.size),total:all.length,disciplineSummary:tournamentDisciplineSummary(t),waitingPlayoff:['groups_sko','groups_dko'].includes(t.format)&&groupPhaseComplete(t)&&!t.playoffStarted,canManage:canManageTournament(t)};});
+    livescoreRenderer.renderList({matches:models,tournaments});
   }
 
   window.deleteTestMatchCompletely=async function(matchId){
@@ -15131,136 +15029,18 @@ $('winnerText').textContent = match.solo14
     return {scores,winners};
   }
 
-  function liveMomentumHtml(m,p1,p2){
-    const md=liveMomentumData(m);
-    if(md.scores.length<2){
-      return `<div class="subpanel" style="margin-top:12px;padding:10px;text-align:center">
-        <div style="font-size:12px;font-weight:950">VÝVOJ SKÓRE</div>
-        <div class="muted" style="font-size:11px;margin-top:5px">Průběh rack po racku zatím není k dispozici.</div>
-      </div>`;
-    }
 
-    // Livescore momentum má být statický a čitelný i u dlouhého zápasu.
-    // Zobrazíme začátek + posledních 5 stavů; bez horizontálního scrollování.
-    let displayScores=md.scores.slice();
-    let compacted=false;
-    if(displayScores.length>7){
-      displayScores=[displayScores[0],...displayScores.slice(-5)];
-      compacted=true;
-    }
-    const progressParts=[];
-    displayScores.forEach((x,idx)=>{
-      if(compacted && idx===1){
-        progressParts.push('<span class="muted" style="font-weight:900">…</span>');
-      }
-      progressParts.push(`<span style="white-space:nowrap;font-weight:900">${esc(String(x))}</span>`);
-    });
-    const progress=progressParts.join('<span class="muted" style="padding:0 4px">→</span>');
-    const recent=md.winners.slice(-8);
-    const dotRow=(player,name)=>{
-      const dots=recent.map(w=>`<span title="${esc(name)}${w===player?' vyhrál':' nevyhrál'} rack" style="display:inline-block;width:10px;height:10px;border-radius:50%;margin:0 2px;${w===player?'background:var(--gold2);':'border:1px solid var(--muted);opacity:.38;'}"></span>`).join('');
-      return `<div style="display:flex;align-items:center;justify-content:center;gap:7px;margin-top:4px"><span class="muted" style="font-size:10px;min-width:72px;text-align:right">${esc(name)}</span><span style="white-space:nowrap">${dots}</span></div>`;
-    };
-
-    let streakWinner=null,streak=0;
-    for(let i=md.winners.length-1;i>=0;i--){
-      if(streakWinner===null){streakWinner=md.winners[i];streak=1;}
-      else if(md.winners[i]===streakWinner)streak++;
-      else break;
-    }
-    const streakText=streakWinner===0||streakWinner===1
-      ? `Aktuální série: <strong>${esc(streakWinner===0?p1:p2)} • ${streak} ${streak===1?'rack':'racky'}</strong>`
-      : '';
-
-    return `<div class="subpanel" style="margin-top:12px;padding:10px;text-align:center">
-      <div style="font-size:12px;font-weight:950">VÝVOJ SKÓRE</div>
-      <div style="margin-top:6px;font-size:12px;line-height:1.65;display:flex;align-items:center;justify-content:center;gap:0;flex-wrap:wrap;white-space:normal">${progress}</div>
-      ${recent.length?`<div style="margin-top:7px">${dotRow(0,p1)}${dotRow(1,p2)}</div>`:''}
-      ${streakText?`<div class="muted" style="font-size:11px;margin-top:7px">${streakText}</div>`:''}
-    </div>`;
-  }
 
   function renderLiveScoreModal(){
     const m=activeLiveMatches().find(x=>x.id===liveScoreSelectedId);
-    if(!m){
-      $('liveScoreEditSolo14')?.classList.add('hidden');
-      if($('liveScoreModeLabel'))$('liveScoreModeLabel').textContent='LIVESCORE • POUZE KE SLEDOVÁNÍ';
-      $('liveScoreTitle').textContent='Zápas už není aktivní';
-      $('liveScoreMeta').textContent='';
-      $('liveScoreP1').textContent='—';
-      $('liveScoreP2').textContent='—';
-      $('liveScoreP1Club').textContent='';
-      $('liveScoreP2Club').textContent='';
-      $('liveScoreValue').textContent='—';
-      $('liveScoreRace').textContent='';
-      $('liveScoreExtra').innerHTML='<div class="muted">Zápas už byl ukončen nebo není dostupný.</div>';
-      return;
-    }
-
-    const canSoloEdit=canEditSolo14FromLive(m);
-    $('liveScoreEditSolo14')?.classList.toggle('hidden',!canSoloEdit);
-    if($('liveScoreModeLabel')){
-      $('liveScoreModeLabel').textContent=canSoloEdit
-        ? 'LIVESCORE • TVOJE ROZEHRANÁ 14.1 SÓLO'
-        : 'LIVESCORE • POUZE KE SLEDOVÁNÍ';
-    }
-
-    const p1=liveMatchPlayerName(m,0);
-    const p2=liveMatchPlayerName(m,1);
-    const s1=liveMatchScore(m,0);
-    const s2=liveMatchScore(m,1);
-    const discipline=liveMatchDiscipline(m);
-    const raceTo=liveMatchRaceTo(m);
-
-    $('liveScoreTitle').textContent=(m.tournamentLink?'Turnajový zápas':'Aktuální zápas');
-    $('liveScoreMeta').textContent=[
-      discipline,
-      raceTo ? 'Race to '+raceTo : '',
-      m.solo14GhostMode ? solo14GhostDifficultyLabel(m,true) : '',
-      liveBreakModeLabel(m) ? 'Rozstřel: '+liveBreakModeLabel(m) : '',
-      m.tournamentLink?.tableNumber ? 'Stůl '+m.tournamentLink.tableNumber : ''
-    ].filter(Boolean).join(' • ');
-
-    $('liveScoreP1').textContent=p1;
-    $('liveScoreP2').textContent=p2;
-    $('liveScoreP1Club').textContent=liveMatchPlayerClub(m,0);
-    $('liveScoreP2Club').textContent=liveMatchPlayerClub(m,1);
-    $('liveScoreValue').textContent=s1+' : '+s2;
-    $('liveScoreRace').textContent=raceTo ? 'Race to '+raceTo : '';
-
-    const turnIndex=(typeof m.turn==='number'?m.turn:(typeof m.currentPlayer==='number'?m.currentPlayer:null));
-    const turnText=turnIndex===0 ? p1 : turnIndex===1 ? p2 : '';
-    const clock=(m.clock?.remaining ?? m.shotClockRemaining ?? null);
-    const clockText=(clock!==null && clock!==undefined) ? String(clock)+' s' : '';
-
-    $('liveScoreExtra').innerHTML=`
-      <div style="display:flex;justify-content:${m.useClock?'space-between':'center'};gap:12px;flex-wrap:wrap">
-        <div><span class="muted">Na tahu:</span> <strong>${esc(turnText||'—')}</strong></div>
-        ${m.useClock?`<div><span class="muted">Shot clock:</span> <strong>${esc(clockText||'—')}</strong></div>`:''}
-      </div>
-      <div class="muted" style="margin-top:12px;text-align:center;font-size:12px;line-height:1.6">
-        Začátek: <strong>${esc(liveStartedLabel(m))}</strong><br>
-        Aktualizováno: <strong>${esc(liveUpdatedLabel(m))}</strong>
-        ${liveMayBeStale(m)?`<div class="live-stale-note" style="margin-top:3px">⚠ MOŽNÁ NEAKTUÁLNÍ</div>`:''}
-      </div>
-      ${liveMomentumHtml(m,p1,p2)}
-    `;
+    livescoreRenderer.renderDetail(m?{...livescoreDisplayMatch(m),canSoloEdit:canEditSolo14FromLive(m),club1:liveMatchPlayerClub(m,0),club2:liveMatchPlayerClub(m,1),turnIndex:typeof m.turn==='number'?m.turn:typeof m.currentPlayer==='number'?m.currentPlayer:null,useClock:!!m.useClock,clock:m.clock?.remaining??m.shotClockRemaining??null,momentum:liveMomentumData(m)}:null);
   }
 
-  if($('cleanupStaleLiveBtn')){
-    $('cleanupStaleLiveBtn').onclick=()=>cleanupStaleLiveMatches(true);
-  }
-  if($('restoreHiddenLiveBtn')){
-    $('restoreHiddenLiveBtn').onclick=()=>restoreHiddenLivesOnThisDevice();
-  }
-
-    if($('liveScoreEditSolo14'))$('liveScoreEditSolo14').onclick=editSolo14FromLiveScore;
-
-$('liveScoreClose').onclick=()=>{
+  function closeLiveScore(){
     livescoreReader.dialogChanged();
     $('liveScoreModal').classList.remove('show');
     liveScoreSelectedId=null;
-  };
+  }
 
   // ===== TURNAJOVÝ MÓD =====
   function shuffleArray(arr){

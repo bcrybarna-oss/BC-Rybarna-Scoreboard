@@ -1,5 +1,13 @@
 # Revize aplikace Poolčítadlo
 
+## Dominik – renderer Livescore, etapa 8b (v4.51.108 RC)
+Zadavatel: Dominik
+Datum: 30. 10. 2026
+Změny: Jediný produkční renderer seznamu/detailu/indikátoru. Explicitní display modely a callbacks, původní těla odstraněna, delegované listenery vlastní renderer. Čtení/polling/session zůstává v nezměněném8a. Oddělená oprava escapování textu stolu a race-to doložená reproduktorem.
+Testy: 6novýchunit,14byteověshodnýchPNGpřed/po,13typovýchvstupů,owner/foreign/anonym/adminakce a7callbackůjednou,100renderů/listenery6→6→0 PASS.8a/recovery/OBS/bootstrap/turnaje101/plnáquota/PNG/PDF/XLSX PASS. Produkce281/0/0 lokálně, veřejně278/0/3; experiment28/2/0, celek309/2/0z311exit1. Dvě vady jednotlivě shodné s výchozím main. Omezenýproces zrušil PNG na main i kandidátu; expanded test dokončil exporty, bez oslabení kontrol. Viz docs/livescore-renderer-stage-8b.md.
+Nasazení: Kandidát, nesloučeno/nenasazeno; produkce107.
+Omezení: Živý Auth/Rules a fyzická zařízení nejsou součástí izolovaných testů. Návrat reverzí bez změny dat, další oblast9 nezahájena.
+
 ## Dominik – ověřené nasazení Livescore readeru, etapa 8a (v4.51.107 RC)
 Zadavatel: Dominik
 Datum: 30. 10. 2026
