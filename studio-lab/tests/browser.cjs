@@ -54,7 +54,7 @@ const output=process.env.LIVE_LAB_SCREENSHOTS || '';
    await page.locator('#rightPlus').click();
    assert.equal(await page.locator('#scoreLeftPreview').innerText(),'2');
    assert.equal(await page.locator('#scoreRightPreview').innerText(),'1');
-   await page.locator('#colorLeft').fill('#00aacc');
+   await page.locator('#colorLeft').evaluate(el=>{el.value='#00aacc';el.dispatchEvent(new Event('input',{bubbles:true}));});
    assert.equal(await page.locator('#stage').evaluate(el=>el.style.getPropertyValue('--left')),'#00aacc');
    if(output){
      fs.mkdirSync(output,{recursive:true});
