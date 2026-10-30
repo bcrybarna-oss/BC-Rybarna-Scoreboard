@@ -316,3 +316,5 @@ Následuje zachovaná historie předchozího produkčního vydání:
 Číst AGENTS.md, REVIZE.md, tento soubor a PROJECT_CONTEXT.md; ověřit větev, lokální změny a nové commity na GitHubu. Nové zadání při nejasném autorství přiřadit Dominikovi/Jaroslavovi až po upřesnění. Při dokončení aktualizovat historii i tento stav.
 
 Etapa8a: [Draft PR47](https://github.com/bcrybarna-oss/BC-Rybarna-Scoreboard/pull/47), implementace385e69d, CI40950640897 release/produkcePASS272/0/3, experiment28/2/0FAIL. Finální opakování30navigací: CPU24,73s/heap57,41MB/44requestů/2LIVEčtení podle délky běhu,0JSerrors. Výchozí a předběžná měření zachována v etapové evidenci; ne tvrzení optimalizace. Žádné sloučení/nasazení ani produkčnídata.
+
+Etapa8b,30.10.2026: pushnuto do draft PR49 https://github.com/bcrybarna-oss/BC-Rybarna-Scoreboard/pull/49; implementace7c88d5f, CI41109011712 releasePASS/produkce278PASS,0FAIL,3SKIP/experiment28PASS,2FAIL,0SKIP; celkovéCI FAILURE, obě vady jednotlivě nezměněné. Kandidát108 nesloučen/nenasazen, produkce107 beze změny.
