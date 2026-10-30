@@ -11,6 +11,7 @@
 <style>
 :root{font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;color:#f2f3f6;background:#101319;--gold:#e6bd62;--left:#d9ab44;--right:#357bd3}
 *{box-sizing:border-box}
+[hidden]{display:none!important}
 body{margin:0;min-height:100vh}
 button,input,select{font:inherit}
 button{cursor:pointer}
@@ -30,7 +31,7 @@ h1{font-size:clamp(23px,3vw,34px);margin:4px 0 6px}
 .stage{position:relative;isolation:isolate;aspect-ratio:16/9;min-height:190px;overflow:hidden;border-radius:13px;background:radial-gradient(ellipse at 50% 30%,#315647,#132924 70%,#0b1315);border:1px solid #3e4e4c}
 .stage video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;background:#172721}
 .stage[data-scene="camera"] video{display:block}
-.stage:not([data-scene="camera"]) video{display:none}
+.stage:not([data-scene="camera"]) video{display:block}
 .empty{position:absolute;inset:0;display:grid;place-content:center;text-align:center;color:#c5d3cb;padding:20px;gap:5px}
 .empty strong{font-size:19px}
 .empty span{font-size:12px}
@@ -118,6 +119,7 @@ footer{font-size:11px;color:#9aabbc;line-height:1.6;margin-top:18px}
         <div class="buttons">
           <button class="btn primary" id="startCamera" type="button">Zapnout kameru</button>
           <button class="btn danger" id="stopCamera" type="button" disabled>Vypnout kameru</button>
+          <button class="btn" id="resumeVideo" type="button" hidden>Zobrazit obraz ručně</button>
         </div>
         <div id="status" class="status" role="status" aria-live="polite">Připraveno. Kamera se zapne až po tvém souhlasu.</div>
       </section>
@@ -164,6 +166,7 @@ footer{font-size:11px;color:#9aabbc;line-height:1.6;margin-top:18px}
   const video = byId("cameraVideo");
   const status = byId("status");
   const cameraSelect = byId("cameraSelect");
+  const resumeVideo = byId("resumeVideo");
   const scenes = {
     camera:{label:"Hlavní kamera"},
     soon:{label:"Začínáme",title:"BRZY ZAČÍNÁME",sub:"Přenos začne za chvíli"},
@@ -210,6 +213,7 @@ footer{font-size:11px;color:#9aabbc;line-height:1.6;margin-top:18px}
     stage.classList.toggle("has-camera",!!stream);
   }
   function stopCamera(){
+    resumeVideo.hidden=true;
     // Invalidates an outstanding getUserMedia request after pagehide or replacement.
     cameraGeneration++;
     if(stream){
@@ -236,8 +240,38 @@ footer{font-size:11px;color:#9aabbc;line-height:1.6;margin-top:18px}
       if([...cameraSelect.options].some(o=>o.value===previous))cameraSelect.value=previous;
     }catch(_){ /* Device enumeration is optional. */ }
   }
+  function playPreview(expectedStream){
+    if(!expectedStream || stream!==expectedStream)return;
+    video.muted=true;
+    video.playsInline=true;
+    let playResult;
+    try{playResult=video.play();}
+    catch(error){
+      resumeVideo.hidden=false;
+      info("Kamera je povolená, ale obraz se nespustil. Klepni na Zobrazit obraz ručně. "+(error&&error.name||""),"error");
+      return;
+    }
+    if(playResult && typeof playResult.then==="function"){
+      playResult.then(()=>{
+        if(stream!==expectedStream)return;
+        resumeVideo.hidden=true;
+        info("Kamera je připojená. Obraz se zobrazuje pouze na tomto zařízení.","ok");
+      }).catch(error=>{
+        if(stream!==expectedStream)return;
+        resumeVideo.hidden=false;
+        info("Kamera je povolená, ale Safari nepovolilo automatické přehrání ("+(error&&error.name||"neznámá chyba")+"). Klepni na Zobrazit obraz ručně.","error");
+      });
+    }else{
+      resumeVideo.hidden=true;
+      info("Kamera je připojená. Obraz se zobrazuje pouze na tomto zařízení.","ok");
+    }
+  }
   async function startCamera(){
     if(starting)return;
+    if(window.isSecureContext===false){
+      info("Kamera vyžaduje zabezpečenou adresu HTTPS. Otevři testovací stránku přímo v Safari.","error");
+      return;
+    }
     if(!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia){
       info("Tento prohlížeč nebo adresa nepodporuje kameru. Použij HTTPS a povol přístup ke kameře.","error");
       return;
@@ -255,28 +289,42 @@ footer{font-size:11px;color:#9aabbc;line-height:1.6;margin-top:18px}
       }else{
         videoConstraints.facingMode={ideal:selected==="user"?"user":"environment"};
       }
-      const acquired=await navigator.mediaDevices.getUserMedia({video:videoConstraints,audio:false});
+      let acquired;
+      try{acquired=await navigator.mediaDevices.getUserMedia({video:videoConstraints,audio:false});}
+      catch(error){
+        if(requestGeneration!==cameraGeneration)return;
+        if(error && (error.name==="OverconstrainedError" || error.name==="NotFoundError")){
+          info("Požadovaná kamera není dostupná. Zkouším výchozí kameru…","");
+          acquired=await navigator.mediaDevices.getUserMedia({video:true,audio:false});
+        }else throw error;
+      }
       if(requestGeneration!==cameraGeneration){
         acquired.getTracks().forEach(track=>track.stop());
         return;
       }
       stream=acquired;
       video.srcObject=acquired;
-      try{await video.play();}catch(_){ /* The browser may defer playback until visible. */ }
-      if(requestGeneration!==cameraGeneration)return;
       acquired.getVideoTracks().forEach(track=>{
         track.addEventListener("ended",()=>{
           if(stream===acquired){stopCamera();info("Kamera byla odpojena nebo ji převzala jiná aplikace.","error");}
         });
       });
-      info("Kamera je připojená. Obraz se zobrazuje pouze lokálně.","ok");
+      info("Kamera povolena. Zkouším zobrazit živý obraz…","");
+      playPreview(acquired);
+      // A stalled media element must not prevent buttons from becoming usable.
+      setTimeout(()=>{
+        if(stream===acquired && video.readyState<2){
+          resumeVideo.hidden=false;
+          info("Safari zatím nezobrazilo snímek. Klepni na Zobrazit obraz ručně, případně zkontroluj nastavení kamery pro tento web.","error");
+        }
+      },4500);
       await refreshDevices();
     }catch(error){
       if(requestGeneration!==cameraGeneration)return;
       stopCamera();
       const kind=error&&error.name;
       const guidance=kind==="NotAllowedError"?"Přístup ke kameře nebyl povolen. Zkontroluj oprávnění prohlížeče.":kind==="NotFoundError"?"Na zařízení není dostupná požadovaná kamera.":kind==="OverconstrainedError"?"Požadovaná kamera není dostupná; vyber jinou.":kind==="NotReadableError"?"Kamera je obsazená jinou aplikací.":"Kameru se nepodařilo zapnout. Zkus jinou kameru nebo HTTPS.";
-      info(guidance,"error");
+      info(guidance+(kind?" ("+kind+")":""),"error");
     }finally{
       starting=false;
       controls();
@@ -292,9 +340,17 @@ footer{font-size:11px;color:#9aabbc;line-height:1.6;margin-top:18px}
     });
   });
   document.querySelectorAll("[data-scene-button]").forEach(btn=>{
-    btn.addEventListener("click",()=>{scene=btn.dataset.sceneButton;repaint();});
+    btn.addEventListener("click",()=>{
+      scene=btn.dataset.sceneButton;
+      repaint();
+      if(scene==="camera" && stream && video.paused)playPreview(stream);
+    });
   });
   byId("startCamera").addEventListener("click",startCamera);
+  resumeVideo.addEventListener("click",()=>{
+    if(stream){scene="camera";repaint();playPreview(stream);}
+    else info("Nejdřív zapni kameru.","error");
+  });
   byId("stopCamera").addEventListener("click",()=>{stopCamera();info("Kamera byla vypnutá. Nic se neodesílá.","");});
   cameraSelect.addEventListener("change",()=>{if(stream)startCamera();});
   if(navigator.mediaDevices && navigator.mediaDevices.addEventListener){
