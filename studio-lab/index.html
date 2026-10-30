@@ -170,6 +170,7 @@ footer{font-size:11px;color:#9aabbc;line-height:1.6;margin-top:18px}
   };
   let stream = null;
   let starting = false;
+  let cameraGeneration = 0;
   let scene = "camera";
   let scores = [0,0];
 
@@ -207,6 +208,8 @@ footer{font-size:11px;color:#9aabbc;line-height:1.6;margin-top:18px}
     stage.classList.toggle("has-camera",!!stream);
   }
   function stopCamera(){
+    // Invalidates an outstanding getUserMedia request after pagehide or replacement.
+    cameraGeneration++;
     if(stream){
       stream.getTracks().forEach(track=>track.stop());
       stream=null;
@@ -239,6 +242,7 @@ footer{font-size:11px;color:#9aabbc;line-height:1.6;margin-top:18px}
     }
     starting=true;
     stopCamera();
+    const requestGeneration = cameraGeneration;
     controls();
     info("Žádám o přístup ke kameře…","");
     try{
@@ -250,9 +254,14 @@ footer{font-size:11px;color:#9aabbc;line-height:1.6;margin-top:18px}
         videoConstraints.facingMode={ideal:selected==="user"?"user":"environment"};
       }
       const acquired=await navigator.mediaDevices.getUserMedia({video:videoConstraints,audio:false});
+      if(requestGeneration!==cameraGeneration){
+        acquired.getTracks().forEach(track=>track.stop());
+        return;
+      }
       stream=acquired;
       video.srcObject=acquired;
       try{await video.play();}catch(_){ /* The browser may defer playback until visible. */ }
+      if(requestGeneration!==cameraGeneration)return;
       acquired.getVideoTracks().forEach(track=>{
         track.addEventListener("ended",()=>{
           if(stream===acquired){stopCamera();info("Kamera byla odpojena nebo ji převzala jiná aplikace.","error");}
@@ -261,6 +270,7 @@ footer{font-size:11px;color:#9aabbc;line-height:1.6;margin-top:18px}
       info("Kamera je připojená. Obraz se zobrazuje pouze lokálně.","ok");
       await refreshDevices();
     }catch(error){
+      if(requestGeneration!==cameraGeneration)return;
       stopCamera();
       const kind=error&&error.name;
       const guidance=kind==="NotAllowedError"?"Přístup ke kameře nebyl povolen. Zkontroluj oprávnění prohlížeče.":kind==="NotFoundError"?"Na zařízení není dostupná požadovaná kamera.":kind==="OverconstrainedError"?"Požadovaná kamera není dostupná; vyber jinou.":kind==="NotReadableError"?"Kamera je obsazená jinou aplikací.":"Kameru se nepodařilo zapnout. Zkus jinou kameru nebo HTTPS.";
