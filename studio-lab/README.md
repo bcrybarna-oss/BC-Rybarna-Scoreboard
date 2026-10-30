@@ -36,3 +36,16 @@ Neotevírej aplikaci přes libovolný veřejný HTML proxy/preview server, pokud
 ## Proč existuje samostatná větev
 
 Jde o bezpečný průzkum technického návrhu bez dopadu na ostré Poolčítadlo. Dokud nebude samostatná infrastrukturní a iOS zkouška úspěšná, **neslučovat do main**. Prototyp se může změnit nebo odstranit bez datové migrace.
+
+## Samostatný HTTPS test na iPhonu (bez zásahu do ostré verze)
+
+Každý PR běh `Poolcitalo LIVE laboratory` ověří testovací stránku v Chromium a vytvoří GitHub Actions artifact **poolcitadlo-live-https-package**. Obsahuje pouze `index.html` a `robots.txt`; neobsahuje žádné přihlašovací údaje, Firebase ani serverový kód.
+
+1. Otevři rozpracovaný [PR #48](https://github.com/bcrybarna-oss/BC-Rybarna-Scoreboard/pull/48), přejdi do **Checks** a otevři poslední úspěšný běh **Poolcitalo LIVE laboratory**.
+2. V sekci **Artifacts** stáhni `poolcitadlo-live-https-package` (ZIP; GitHub může vyžadovat přihlášení).
+3. Jako **samostatný nový web** jej nahraj přes [Netlify Drop](https://app.netlify.com/drop). Netlify Drop podporuje ZIP/HTML a přidělí HTTPS adresu. **Nevybírej ani neupravuj existující ostrý web Poolčítadla**. Přesný postup může záviset na přihlášení na Netlify.
+4. HTTPS adresu otevři v Safari na iPhonu, povol kameru, otestuj zadní/přední kameru, přepínání scén a vypnutí.
+
+Tato adresa může být veřejně dostupná komukoli, kdo zná odkaz. V testu se ovšem žádná data neukládají ani neodesílají; veškerý obraz zůstává v prohlížeči. Nepoužívej ji pro ostré přenosy ani skutečnou správu účtů. Testovací kopie se neaktualizuje sama; po změnách je nutné nahrát nový balíček. Kamera musí mít HTTPS oprávnění a otevřenou aktivní stránku. U Netlify je vhodné spravovat zkušební web z vlastního účtu, aby jej bylo možné později vypnout.
+
+**Alternativně** lze připojit samostatnou statickou službu Render k vývojové větvi a nasadit pouze `studio-lab/`; nepublikovat kořen repozitáře ani větev `main`. Nastavení a přihlášení externí služby vyžaduje vlastní autorizaci.
