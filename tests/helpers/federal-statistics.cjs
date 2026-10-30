@@ -20,6 +20,7 @@ function serve(route,transform,cloudTransform){
   const request=route.request(),url=new URL(request.url());
   if(url.pathname==='/assets/js/federal-report-controller.js')return route.fulfill({contentType:'application/javascript',body:fs.readFileSync(path.join(root,'assets/js/federal-report-controller.js'),'utf8')});
   if(url.pathname==='/assets/js/federal-report-renderer.js')return route.fulfill({contentType:'application/javascript',body:fs.readFileSync(path.join(root,'assets/js/federal-report-renderer.js'),'utf8')});
+  if(url.pathname==='/assets/js/livescore-reader.js')return route.fulfill({contentType:'application/javascript',body:fs.readFileSync(path.join(root,'assets/js/livescore-reader.js'),'utf8')});
   const statistics=url.pathname==='/assets/js/federal-statistics.js',xlsx=url.pathname==='/assets/pushout-xlsx.js',cloud=url.pathname==='/assets/js/cloud-refresh.js',reports=url.pathname==='/assets/js/own-reports.js',viewer=url.pathname==='/assets/js/federal-viewer.js',admin=url.pathname==='/assets/js/admin-reports.js';
   if(!statistics&&!xlsx&&!cloud&&!reports&&!viewer&&!admin)return false;
   if(request.method()!=='GET')throw Error('Statistics module is read-only');

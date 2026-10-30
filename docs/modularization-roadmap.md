@@ -1,6 +1,6 @@
 # Aktuální roadmapa modularizace Poolčítadla
 
-Zadavatel: Dominik. Aktualizace **29. 10. 2026**, základ etapy7 `origin/main` / `2d1de22a1c8577ad7642081bb36fde31e3fd6f91`, nasazená v4.51.105 RC. Etapa6 je nasazena s odděleně evidovanými experimentálními vadami. Nyní schválena etapa7; pro přehledný rozsah se realizuje7a (renderer), samostatná7b (controller) zbývá. Starší plány v revizích, PR6 a test-modular README jsou historické podklady. Další oblasti nezahájeny.
+Zadavatel: Dominik. Aktualizace29.10.2026: main b0881d35c41ca6d2580bbf7ce012cfe57ff896c5, produkce106. Etapy6 a7a+7b jsou nasazené. Nyní samostatná8a čtecí reader/koordinátor Livescore, kandidát107, neslučovat/nenasazovat. Podrobné starší rozsahy níže jsou zachovaný plán/historie; další oblast9 nezahájena.
 
 ## Výchozí stav a závazná pravidla
 
@@ -22,7 +22,7 @@ Navržené pořadí6–14 je použitelné jako pořadí oblastí, nikoli jeden P
 - Ověření: pending identity bez editace a bez ztráty snapshotu, správný vlastník a odmítnutí jiného účtu, manuální/automatický login, produkční explicitní resume, preview match-first a tournament fallback, kompletní Node sada a relevantní browser regrese.
 - Dokončeno, když je inventář úplný, každý skutečný fail/skip pojmenovaný a CI výsledek nezkreslený. Případné přetrvávající experimentální selhání znamená nevyřešený experimentální kontrakt, nikoli potvrzení jeho správnosti nebo automatickou výjimku pro release. Viz testing.md a stage-6-test-contracts.md.
 
-## 7. Renderer A1/A2/B a controller exportů
+## 7. Renderer A1/A2/B a controller exportů — nasazeno106, následuje historie rozsahu
 
 Aktuální realizace: **7a**, jediný FederalReportRenderer pro HTML/SVG. Modely a výběr identity se nepřesouvají do rendereru; core předává hotové metriky/výsledky. CSS a layout helpery zůstávají zachované. Větší stavový celek dialogu a asynchronních exportů se nyní nepřibírá: **7b musí samostatně převzít open/close/zoom/fokus, generace relace, font/image čekání, chyby, dočasný DOM a bezpečné60s download URL lease**. Dokončení7a není dokončením7b ani celé etapy7. PDF a XLSX se ověřují jako zachované funkce, nikoli přepisují. Podrobnosti a výsledky: [renderer7a](federal-report-renderer-stage-7a.md). Doložena zděděná mezera dokončení exportu při změně relace bez zavření a asynchronní close→open race;7b je musí řešit samostatnými funkčními testy/commitem, nikoli jen přenést.7a má jediný produkční renderer, pixelovou paritu a žádné nové prostředky.
 
@@ -109,3 +109,5 @@ Každý bod potřebuje samostatný přezkoumatelný PR a výslovné schválení 
 Viz [controller7b](federal-report-controller-stage-7b.md), navazující samostatné PR na7a pro společné nevydané106.
 
 29.10.2026: etapa7a+7b společně nasazena106, merge2b8edcf, nikoli oddělené verze. [Ověření, meze a návrat](deployment-v4.51.106.md). Etapa8 ani další oblast nezahájena.
+
+29.10.2026: zahájena8a, společný produkční reader/koordinátor Livescore, kandidát107 zmain106. [Rozsah, cleanupzápisy, měření a návrat](livescore-reader-stage-8a.md). UIrenderery zůstávají případná8b; oblast9 nezahájena.

@@ -1,5 +1,13 @@
 # Revize aplikace Poolčítadlo
 
+## Dominik – čtecí Livescore, etapa8a (v4.51.107 RC)
+Zadavatel: Dominik
+Datum: 29. 10. 2026
+Změny: Jediný produkční shared reader a koordinátor background/view/dialog. Původní loader/poll odstraněn. Single-flight před Auth, epochy identity a konzumentů. Úklid stale jen vlastník/systemadmin přes explicitní guard.
+Testy: 6unit/actualbrowser PASS, preAuth race3→1GET,10dialog/navigation cyklů a20lifecycle cyklů, own/foreignDELETE ověřeny v mocku. Node275/0/0 lokálně (veřejně272/0/3), experiment28/2/0; celek303/2/0z305.30navigací před/po: CPU28,23→27,20s, heap57,40→57,39MB, intervaly5→5; nový vlastněnýlistener+1. OBS/identity/turnaje101 aPNG/PDF/XLSX PASS. Viz docs/livescore-reader-stage-8a.md.
+Nasazení: Kandidát, nesloučeno/nenasazeno, produkce106.
+Omezení: Seznam a dialog renderer zůstávají core, přesun dalších částí není zahájen. Produkční data neměněna.
+
 ## Dominik – společné ověřené nasazení rendereru a controlleru (v4.51.106 RC)
 Zadavatel: Dominik
 Datum: 29. 10. 2026
@@ -661,3 +669,5 @@ Revize zahrnuje změny z PR #15, ručně otestované a schválené Dominikem. V�
 Funkční změny z PR #15 prošly izolovaným browser testem aktuálního kódu pro Singles, Doubles a Team, včetně breaků, Soft breaku, push outu, undo, reloadu, bodování série a reprodukce B&R. Ruční testování schválil Dominik. Zvýšení čísla verze bylo ověřeno smoke testy a kontrolou diffu.
 
 Celková Node sada PR #15: 60/62; dvě již existující chyby preview-match-reload-recovery nejsou součástí této opravy. Souběžné přepisování celé konfigurace Federal Cupu z více zařízení zůstává známým rizikem. Skutečné Firebase Auth/Rules a nativní mobilní buildy nebyly v této revizi ověřeny. Produkční Firebase data nebyla při vývoji ani testování měněna.
+
+Etapa8a: [Draft PR47](https://github.com/bcrybarna-oss/BC-Rybarna-Scoreboard/pull/47), implementace385e69d, CI40950640897 release/produkcePASS272/0/3, experiment28/2/0FAIL. Finální opakování30navigací: CPU24,73s/heap57,41MB/44requestů/2LIVEčtení podle délky běhu,0JSerrors. Výchozí a předběžná měření zachována v etapové evidenci; ne tvrzení optimalizace. Žádné sloučení/nasazení ani produkčnídata.
