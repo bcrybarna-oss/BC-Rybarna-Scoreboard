@@ -18,6 +18,7 @@ function instrumented(){
 }
 function serve(route,transform,cloudTransform){
   const request=route.request(),url=new URL(request.url());
+  if(url.pathname==='/assets/js/livescore-renderer.js')return route.fulfill({contentType:'application/javascript',body:fs.readFileSync(path.join(root,'assets/js/livescore-renderer.js'),'utf8')});
   if(url.pathname==='/assets/js/federal-report-controller.js')return route.fulfill({contentType:'application/javascript',body:fs.readFileSync(path.join(root,'assets/js/federal-report-controller.js'),'utf8')});
   if(url.pathname==='/assets/js/federal-report-renderer.js')return route.fulfill({contentType:'application/javascript',body:fs.readFileSync(path.join(root,'assets/js/federal-report-renderer.js'),'utf8')});
   if(url.pathname==='/assets/js/livescore-reader.js')return route.fulfill({contentType:'application/javascript',body:fs.readFileSync(path.join(root,'assets/js/livescore-reader.js'),'utf8')});
