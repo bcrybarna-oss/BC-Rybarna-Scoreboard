@@ -29,6 +29,7 @@ Neotevírej aplikaci přes libovolný veřejný HTML proxy/preview server, pokud
 ## Kontrola
 
 - `node studio-lab/tests/smoke.cjs` – základní statické a syntaktické kontroly.
+- `node studio-lab/tests/controller.cjs` – funkční mock test změn skóre, scén, ovládání kamery a dořešení opožděného požadavku po odchodu.
 - Ručně: povolit kameru, přepnout kamery, pozastavit/obnovit scénu, měnit jména/skóre/barvy, vypnout kameru, odebrat oprávnění. Vyzkoušet desktop a poté iPhone přes HTTPS.
 - Po dokončení každé další etapy doplnit bezpečné integrační testy s mockem / odděleným testovacím projektem. Nepoužívat produkční Firebase pro testovací zápisy.
 
