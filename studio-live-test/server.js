@@ -31,7 +31,7 @@ function validateFacebook(serverUrl,streamKey){
   }
   // FFmpeg never invokes a shell. Reject ambiguous whitespace and slash injection.
   if(/\s/.test(serverUrl)||serverUrl.length>300)throw Error('Invalid Facebook destination');
-  return serverUrl.replace(/\/+$/,'/')+'/'+streamKey;
+  return serverUrl.replace(/\/+$/,'')+'/'+streamKey;
 }
 function validPassword(candidate,expected){
   if(typeof candidate!=='string'||typeof expected!=='string')return false;
