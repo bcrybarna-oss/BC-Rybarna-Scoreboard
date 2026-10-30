@@ -45,3 +45,13 @@
 - Vývoj v samostatné větvi `feature/poolcitadlo-live-lab-20261030`. `main`, aktuální `index.html`, `overlay.html`, produkční účty a data se nemění.
 - Testovací HTTPS doména, Firebase a LiveKit nejsou dosud zřízené. Neexistuje zatím veřejný odkaz pro spuštění na iPhonu.
 - `studio-lab/` je samostatná experimentální plocha, nikoliv nový produkční vstup. Pokud bude někdy chtít nasadit kód do hlavního webu, nejprve projít release politikou, verzováním `v4.51.X RC`, bezpečnostním ověřením, dokumentací, CI a výslovným schválením sloučení.
+
+## Experimentální etapa 1A (30. 10. 2026) – omezený MediaRecorder relay
+
+Na samostatné větvi existuje výhradně **testovací** prototyp `studio-live-test/`: iPhone Safari/Chrome skládá kameru a grafický scoreboard do canvas, `MediaRecorder` odesílá fragmentované MP4/WebM přes zabezpečené WebSocket spojení na Node.js službu a FFmpeg převádí výstup do H.264 + **tichého** AAC pro Facebook RTMPS. Jde o **alternativní rychlou technickou zkoušku** vůči plánovanému LiveKit/WebRTC modelu, nikoliv jeho definitivní náhradu. Nelze tvrdit, že bude spolehlivá na fyzickém iPhonu bez ručního testu.
+
+- Kód má jedno vysílání **na celý testovací server**, nikoliv hotovou per-UID správu. Je chráněný `STUDIO_ADMIN_TOKEN`; streamovací klíč se nikdy nevkládá do repozitáře ani do klientské Firebase. Žádné propojení s ostrým skóre.
+- Vše je zcela mimo produkční `index.html`, `overlay.html` a Firebase; propojení Facebook Live není zkontrolováno živým přenosem.
+- CI kontraktně testuje přístup, heslo, účty relací a browser→FFmpeg pomocí **syntetické kamery** a lokálního FLV výstupu; další bránou je Docker build + Render deploy (samostatný testovací web), pak fyzický iPhone a testovací FB Live Producer.
+- Pokud iOS MediaRecorder selže nebo transport není dostatečně stabilní, vrátíme se k plnohodnotnému WebRTC serveru, nikoli k ukládání klíče do veřejného HTML. Pro ostré turnaje se prototyp **nepoužívá**.
+
