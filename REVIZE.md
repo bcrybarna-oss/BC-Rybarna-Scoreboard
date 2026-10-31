@@ -1,5 +1,49 @@
 # Revize aplikace Poolčítadlo
 
+## Dominik – zjednodušení životnosti zápisů výzev bez žurnálu (v4.51.110 RC)
+Zadavatel: Dominik
+Datum: 31. 10. 2026
+Změny: Schválené přepracování PR52 nad samostatným PR51. Odstraněn povinný žurnál/reconcile/GET verified bez náhrady; zachováno pět lokálních oprav. Unknown stopka profilu a trvalé upozornění v instanci aplikace, bez automatickéhoPUT/ověření. Whitelist nových snapshotů/metadat/delt a zachování nesouvisejících polí celoprofilovéhoPUT.
+Testy: Produkce318PASS/0FAIL/0SKIP se soukromými fixture, controller18+kontrakty3PASS. Browser desktop/mobil všech6akcí/pětzávodů/full+deniedstorage/unknownfronta/A-B/setup PASS. Reader/recovery/turnaje101/Livescore/OBS/PNG/PDF/XLSX PASS. Experiment28PASS/2FAIL/0SKIP nezměněný; historický žurnálový audit0PASS/2FAIL se zmrazeným zdrojem samostatně. Standalone notificationPNG tentokrátPASS, historická nestabilita nevyřešena, neníCI. Viz docs/challenges-stage-9b2-lean.md.
+Nasazení: Kandidát110, nic nesloučeno/nenasazeno; produkce109. PR51 zachován samostatný, PR52 přepracován bez změny serverového formátu či Rules. Aplikační commit1bb090c; CI41228939102 releasePASS/produkce315PASS,0FAIL,3SKIP/experiment28PASS,2FAIL,0SKIP; celekFAILURE pouze kvůli experimentu. Následný zápis jen dokumentační.
+Omezení: Upozornění/stopka nepřežijí restart; reload není zrušení ani vyřešení nejasného zápisu. Žádný bezpečný cross-device/retry protokol, živýAuth/Rules/fyzickázařízení neověřeny. Historické vady odstraněného mechanismu nejsou vydávané za opravený žurnál. Návrat celé9b2 reverzí bez dat, ne reinstalací odmítnutého žurnálu;9c nezahájena.
+
+## Dominik – návrh úzké9b2 bez žurnálu a budoucího protokolu (v4.51.110 RC)
+Zadavatel: Dominik
+Datum: 31. 10. 2026
+Změny: Pouze dokumentační návrh. Samostatná9b1, zachování lokálních záruk52 bez mandatory žurnálu/reconcile, explicitní hranice unknown po restartu a whitelisting. Samostatný návrh kanonické atomickéoperace, revize, operationID/receipt, CAS versus transakce a neviděnéID versus terminalfence. Nic ztoho neimplementováno.
+Testy: Izolovaný preloadexperiment7PASS/0FAIL při odpojených journal závislostech;8dalšíchcontroller testů mimoexperiment. Celáaktuální produkčnísada309PASS/2FAIL/3SKIP bezprivátníchfixture, oba novéžurnálovétesty stáleviditelné a nepřesunuté. Nejde o finální browserové ověření dosud nevytvořené zjednodušené aplikace.
+Nasazení: Žádnýmerge/deploy; PR51/52 zůstávají nevydané110, produkce109. Případná samostatná9b1 jako110 znamená propozdější52 novouverzi dle aktuálního main.
+Omezení: Bezperzistence/serverovéevidence nelze po reloadu obnovit konkrétníunknown ani garantovat bezpečnýretry. ŽádnýGETshody není terminalACK. Whitelist celého profilovéhoPUT vyžaduje kompletnímapování, ne tichou ztrátu neznámýchpolí. Produkčnídata, Rules aaplikace bezezměny,9cnezahájena.
+
+
+## Dominik – kontrola žurnálu9b2 a blokující zjištění (v4.51.110 RC)
+Zadavatel: Dominik
+Datum: 31. 10. 2026
+Změny: Pouze revize/testy/dokumentace, aplikace beze změny. Nové testy odhalily nedostatečné ověření nejasnéhoPUT pouhou shodou listu a chybějící whitelist sender metadat. Reálná plná kvóta blokuje všech6akcí; navrženy varianty bez implementace.
+Testy: Chrome desktop/mobileviewport skutečně plnýlocalStorage5242874znaků:6/6odmítnuto,0PUT,koncept aarchivnísentinel zachovány; IndexedDB2048znaků při tomtéž zaplnění uspěl. Nové2produkční regrese FAIL (ne experiment), celá lokálníprodukce312PASS/2FAIL/0SKIP. Dosavadních15controllerunitPASS nezaručuje terminálníACK. Viz docs/challenge-journal-review.md.
+Nasazení: PR52 není schválený k integraci/nasazení žurnálu. Produkce109 beze změny, kandidát110nevydaný; žádnýmerge/deploy/migrace.
+Omezení: Pouze izolovanýChrome/mockAuth/mockFirebase, ne živéRules ani fyzickýiPhone. Neshoda nerozliší neprovedeno/čeká/konflikt; shoda není důkaz dokončení konkrétního požadavku. Žádný bezpečný automatický unblock po nejasnémPUT současný protokol negarantuje; potvrzenky aniarchiv nemazat pro odblokování.9c nezahájena.
+
+
+## Dominik – životnost zápisů výzev, navazující etapa 9b2 (v4.51.110 RC)
+Zadavatel: Dominik
+Datum: 31. 10. 2026
+Změny: Společné dosud nevydané110 s9b1, samostatný navazující PR. Jediný MatchChallengeActions, odstraněná původní persist/canAnswer a mutující těla. Snapshot vstupů a relace, kontrola před prvnímPUT, ochrana novéhoUI, dedup/fronta, bez spekulativníhoaccepted, HTTP odmítnutí versus nejasný výsledek, malý trvalý žurnál a read-only verifikace. Pořadí players čtení/zápisů chráněno revision/barrier. Formáty serveru, Auth/Rules, obecné profilové writery a9c beze změny; konflikty mezi zařízeními pouze návrh.
+Testy: Cílených15unit controlleru PASS,9unit readeru PASS. Pět původních vad zachováno reproduktorem historického main/9b1; browser desktop/mobile po opravě všech pět, šest akcí, payloady,setup a ověření ztracené odpovědi po reloadu bez dalšíhoPUT PASS s mocky. Finální produkční/experimentální a regresní výsledky viz docs/challenges-stage-9b2.md; žádná tvrzení o živýchRules.
+Nasazení: DraftPR52→PR51, kód8a5f3cc. CI41224379252 releasePASS/produkce309PASS,0FAIL,3SKIP/experiment28PASS,2FAIL; celekFAILURE. Nesloučeno a nenasazeno; samotnou9b1 nevydávat. Produkce109 a produkčnídata beze změny.
+Omezení: Mezi zařízeními zůstává whole-profilePUT bez podmíněného konfliktového protokolu. Nejasný nepřítomný/odlišný záznam se nesmí automaticky opakovat. Nedostupné/plné místní úložiště žurnálu zápis bezpečně odmítne bez mazání dat. Známé experimentální vady a samostatná nestabilní browserová PNG parita evidovány zvlášť. Návrat společnou reverzí aplikačních změn s novou verzí, žádná migrace dat; potvrzenky nejasných operací se nemažou automaticky.
+
+
+## Dominik – čtení a životnost výzev, etapa 9b1 (v4.51.110 RC)
+Zadavatel: Dominik
+Datum: 31. 10. 2026
+Změny: Schválený menší rozsah9b1. Jediný MatchChallenges pro cache/merge/global obnovy a společný players GET; původní těla/timery odstraněny. Samostatné opravy úniku přijaté výzvy A do B, pozdního players JSON staré relace a duplicitních GET. Explicitní závislosti, per-UID lokální cache bez mazání starého klíče, životní cyklus/bfcache. Renderer/writers/presence beze změny; A1/9b2/9c nezahájeny.
+Testy:9unit PASS; produkce297/0/0 s privátními exporty, experiment28/2/0 kandidát i výchozí main, dvě jednotlivě doložené vady identity preview. Desktop/mobile skutečného modulu: drafty,3→1GET,A→B,pozdní odpovědi,chyba/retry,předvyplnění zápasu,notifikace9a,20restartů/úklid PASS. Shodné markup/texty nad40,9MB archivem, desktop284,6→285,5ms/mobile362,2→334,4ms za100renderů. Bootstrap11modulů/recovery/turnaje101/Livescore/OBS/PNG/PDF/XLSX PASS. Přísný notification PNG test FAIL se stejnými otisky jako109, nezměněn ani skryt. Viz docs/challenges-stage-9b1.md.
+Nasazení: Kandidát110 v draft PR51, kód2e2e9b4; CI41220896548 releasePASS/produkce294PASS,0FAIL,3SKIP/experiment28PASS,2FAIL,0SKIP; celekFAILURE. Zatím nesloučeno ani nenasazeno, produkce109. Produkčnídata neměněna.
+Omezení: ŽivýAuth/Rules/konflikty zařízení neověřeny. Whole-profile PUT a staré write/form závody ponechány9b2 poA1, žádný nový transakční protokol ani tvrzení o odvolání odeslaného zápisu. Mobilní bell překrytí/PNG nestabilita samostatně. Návrat reverzí aplikace s novou verzí, bez migrace dat.
+
+
 ## Dominik – nasazení centra notifikací, etapa 9a (v4.51.109 RC)
 Zadavatel: Dominik
 Datum: 31. 10. 2026

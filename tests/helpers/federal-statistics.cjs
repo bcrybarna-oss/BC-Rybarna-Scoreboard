@@ -18,6 +18,8 @@ function instrumented(){
 }
 function serve(route,transform,cloudTransform){
   const request=route.request(),url=new URL(request.url());
+  if(url.pathname==='/assets/js/match-challenge-actions.js')return route.fulfill({contentType:'application/javascript',body:fs.readFileSync(path.join(root,'assets/js/match-challenge-actions.js'),'utf8')});
+  if(url.pathname==='/assets/js/match-challenges.js')return route.fulfill({contentType:'application/javascript',body:fs.readFileSync(path.join(root,'assets/js/match-challenges.js'),'utf8')});
   if(url.pathname==='/assets/js/notification-center.js')return route.fulfill({contentType:'application/javascript',body:fs.readFileSync(path.join(root,'assets/js/notification-center.js'),'utf8')});
   if(url.pathname==='/assets/js/livescore-renderer.js')return route.fulfill({contentType:'application/javascript',body:fs.readFileSync(path.join(root,'assets/js/livescore-renderer.js'),'utf8')});
   if(url.pathname==='/assets/js/federal-report-controller.js')return route.fulfill({contentType:'application/javascript',body:fs.readFileSync(path.join(root,'assets/js/federal-report-controller.js'),'utf8')});

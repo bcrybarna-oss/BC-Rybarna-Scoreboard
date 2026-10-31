@@ -1,6 +1,22 @@
 # Aktuální roadmapa modularizace Poolčítadla
 
-Zadavatel: Dominik. Aktualizace31.10.2026: produkce109, PR50 merge26c98fdc5309bf5b047c6ef91fcb4c1de87e1205/Pages41217198366 success. Etapy6,7,8 a9a jsou nasazené.9b/9c nejsou zahájené. [Funkční ověření, PNG selhání a omezení](deployment-v4.51.109.md). Starší přípravy níže jsou historie.
+## Aktuální stav9b2 po schváleném zjednodušení (31.10.2026)
+
+[Implementace a ověření](challenges-stage-9b2-lean.md) jsou nyní aktuální; níže zachované žurnálové návrhy jsou historie. PR51 zůstává samostatný, PR52 přepracován nad ním, nevydané110/prod109. Povinný journal/reconcile/GET verified odstraněny, pět lokálních oprav a read/write bariéra zachovány. Nejasný výsledek drží pouze paměťovou stopku profilu a nedismissovatelné upozornění při navigaci, nikoli po restartu. Žádný nový serverový protokol ani9c. Lokální produkce318/0/0 a cílené browserové/regresní kontroly PASS; experiment28/2/0 a historický žurnálový audit0/2 zvlášť. Nic neslučovat/nenasazovat.
+
+Zadavatel: Dominik. Aktualizace31.10.2026: produkce109, PR50 merge26c98fdc5309bf5b047c6ef91fcb4c1de87e1205/Pages41217198366 success. Etapy6,7,8 a9a jsou nasazené.9b1 je nyní schválená implementace kandidáta110 (nesloučeno/nenasazeno); A1/9b2/9c nezahájeny. [Funkční ověření, PNG selhání a omezení](deployment-v4.51.109.md). Starší přípravy níže jsou historie.
+
+### Aktuální příprava 9b2 — společné vydání110, nic nasazeno
+
+Dominik31.10.2026 výslovně schválil úzkou9b2 navazující na9b1: [controller zápisových akcí](challenges-stage-9b2.md). Obě části zůstávají společné nevydané110; samotnou9b1 nevydávat. Místo plošného Auth A1 je nyní schválen pouze nezbytný operační ticket+guard před prvním zápisem a při jeho dokončení; celé přihlášení se nepřesouvá. Serverové konflikty/CAS se podle nového zadání pouze [navrhují](challenges-write-conflict-proposal.md), neimplementují. Historická podmínka dokončit celéA1 před9b2 je tímto zpřesněna;9c/ostatníA1 práce nezačínají.
+
+### Aktuální příprava 9b1 (kandidát110)
+
+Dominik schválil menší samostatný rozsah čtení/cache/globálních obnov. [Mapování, opravy proti main, měření a omezení](challenges-stage-9b1.md). Renderer a serverové mutace zůstávají v aplikaci pro9b2; nejde o dokončení jejich zápisového kontraktu. Před9b2 nadále A1.9c se nemění. Kandidát není sloučen ani nasazen; produkce109.
+
+### Nové zadání — návrh úzké9b2 bez žurnálu (zatím neimplementovat)
+
+[Posouzení a plán](challenge-write-simplification-proposal.md):9b1 samostatná, z52 ponechat proven-lokálníguardy/dedup/pořadí a návrh pravdivéhounknownUI bezpovinnéhožurnálu/GETověření. Zbývá explicitní hranice restartu a kompletníwhitelist. Současné2selhávajícížurnálovétesty zůstávají viditelné; přesun pouze jejich mechanismověneplatnéčásti se záchovánímreprodukcí až poimplementaci, nikoli nyní. [Budoucíserverovýprotokol](challenges-write-conflict-proposal.md) samostatnějen návrh. Staršíplán společného110 zůstává historický, pořadíbudoucíchvydání vyžaduje aktuálnífetch/verzi. Nic nesloučeno/nenasazeno.9cnezačíná.
 
 ## Historie přípravy 8b — nyní nasazeno108
 
@@ -63,7 +79,7 @@ Současný core kombinuje firebaseSignIn/firebaseRefreshAuth, ověření e-mailu
 Aktuální rozdělení31.10.2026 podle skutečných závislostí nahrazuje původní pracovní9a–9e:
 
 - **9a — centrum notifikací (nasazeno109):** model událostí, řazení/limit30, DOM, lokální přečtení v existujícím UID-scoped JSON, globální vlastník a zrušení odloženého UI efektu. Žádný nový síťový loader. Provider výzev zůstává explicitní závislost. [Mapa a hranice](notifications-stage-9a.md).
-- **9b — výzvy, až nové zadání:**9b1 vlastník cache a globálních obnov, single-flight sdíleného hráčského čtení a relace/opožděné odpovědi;9b2 transakce odeslat/přijmout/odmítnout/zrušit/protinávrh/odehráno a formulářové callbacky. Tyto části mohou být samostatně nasaditelné PR. Před9b2 je nutná A1 hranice identity+token/request; neprovádět pouhý přesun původních nehlídaných PUT.
+- **9b — výzvy:** [9b1 implementována v kandidátu110, čeká na kontrolu](challenges-stage-9b1.md). Výslovně schváleno jako menší samostatné PR, produkce stále109.9b1 vlastník cache a globálních obnov, single-flight sdíleného hráčského čtení a relace/opožděné odpovědi;9b2 transakce odeslat/přijmout/odmítnout/zrušit/protinávrh/odehráno a formulářové callbacky. Tyto části mohou být samostatně nasaditelné PR. Před9b2 je nutná A1 hranice identity+token/request; neprovádět pouhý přesun původních nehlídaných PUT.
 - **9c — přítomnost, až nové zadání:** ucelený session/device vlastník GET+PUT/DELETE, aktivity, visibility,30s heartbeat a5s render/warmup. Oddělit jen po zavedení stejné A1 hranice; případné rozdělení menších PR zachová jednoho vlastníka. Samostatný GET bez ochrany souvisejícího writeru by nechal životnost napůl.
 - Pořadí:9a odstraní soukromý UI/local-write závod bez zásahu do serverového transportu;9b stabilizuje zdroj výzev a zápisové identity;9c pak použije stabilní session/device kontrakt. Pouhé přejmenování těchto oblastí není dokončení jejich původních vad.
 - Zachovat30s výzvy/1200ms warmup a30s presence/5s render-start; globální služby nekončí běžnou navigací. Režim podmíněný viditelností se nepřenáší naslepo mezi službami. Žádné Rules, migrace nebo nový notifikační systém.

@@ -1,0 +1,182 @@
+{
+  "date": "2026-10-31",
+  "baseMain": "fade611557a33a8145b8c0251883946e1bf7b968",
+  "base51": "fde56cee21a1f0ea074fb3572e71187e5e27216a",
+  "version": "v4.51.110 RC",
+  "deployment": "not merged or deployed",
+  "production": {
+    "pass": 318,
+    "fail": 0,
+    "skip": 0,
+    "privateFixtures": 3
+  },
+  "experimental": {
+    "pass": 28,
+    "fail": 2,
+    "skip": 0,
+    "unchangedFromMain": true
+  },
+  "historicalJournalAudit": {
+    "pass": 0,
+    "fail": 2,
+    "command": "node --test tests/audits/challenge-journal-regressions.cjs",
+    "fixtureLfSha256": "57f604cb6d2fefea9cffc5fc5632a06292e319ecf6a446d67e28bd0949b4f637",
+    "productionLoaded": false
+  },
+  "standaloneNotificationPng": {
+    "desktop": "PASS",
+    "mobile": "PASS",
+    "githubCI": false,
+    "historicalInstabilityFixed": false
+  },
+  "browser": [
+    {
+      "viewport": "desktop",
+      "allFiveCases": "PASS",
+      "actions": [
+        "send",
+        "accept",
+        "decline",
+        "cancel",
+        "counter",
+        "played"
+      ],
+      "writes": 21,
+      "reads": 9,
+      "unknownBlocksWithoutRetry": true,
+      "warningSurvivesNavigation": true,
+      "warningNotPersistedAcrossReload": true,
+      "storageCases": [
+        {
+          "kind": "send",
+          "status": "saved",
+          "puts": 1
+        },
+        {
+          "kind": "accept",
+          "status": "saved",
+          "puts": 1
+        },
+        {
+          "kind": "decline",
+          "status": "saved",
+          "puts": 1
+        },
+        {
+          "kind": "cancel",
+          "status": "saved",
+          "puts": 1
+        },
+        {
+          "kind": "counter",
+          "status": "saved",
+          "puts": 1
+        },
+        {
+          "kind": "played",
+          "status": "saved",
+          "puts": 1
+        }
+      ],
+      "capacity": {
+        "keys": 99
+      },
+      "deniedStorage": "saved, new draft preserved",
+      "jsErrors": [],
+      "liveAuth": false,
+      "liveRules": false
+    },
+    {
+      "viewport": "mobile",
+      "allFiveCases": "PASS",
+      "actions": [
+        "send",
+        "accept",
+        "decline",
+        "cancel",
+        "counter",
+        "played"
+      ],
+      "writes": 21,
+      "reads": 12,
+      "unknownBlocksWithoutRetry": true,
+      "warningSurvivesNavigation": true,
+      "warningNotPersistedAcrossReload": true,
+      "storageCases": [
+        {
+          "kind": "send",
+          "status": "saved",
+          "puts": 1
+        },
+        {
+          "kind": "accept",
+          "status": "saved",
+          "puts": 1
+        },
+        {
+          "kind": "decline",
+          "status": "saved",
+          "puts": 1
+        },
+        {
+          "kind": "cancel",
+          "status": "saved",
+          "puts": 1
+        },
+        {
+          "kind": "counter",
+          "status": "saved",
+          "puts": 1
+        },
+        {
+          "kind": "played",
+          "status": "saved",
+          "puts": 1
+        }
+      ],
+      "capacity": {
+        "keys": 99
+      },
+      "deniedStorage": "saved, new draft preserved",
+      "jsErrors": [],
+      "liveAuth": false,
+      "liveRules": false
+    }
+  ],
+  "regressionsPassed": [
+    "reader9b1",
+    "bootstrap12",
+    "recoveryMockAuth",
+    "tournaments101",
+    "livescoreReader",
+    "streamOBS",
+    "A1A2B_PNG_PDF",
+    "SinglesDoublesTeam_XLSX"
+  ],
+  "limitations": [
+    "warning and stop state do not survive reload",
+    "no terminal confirmation from GET",
+    "no cross-device conflict protection",
+    "no live Auth or Rules test",
+    "production unchanged",
+    "9c not started"
+  ],
+  "applicationCommit": "1bb090c9ff2c5291aa3ee74e28df493ca20de231",
+  "githubCI": {
+    "run": 41228939102,
+    "url": "https://github.com/bcrybarna-oss/BC-Rybarna-Scoreboard/actions/runs/41228939102",
+    "release": "PASS",
+    "production": {
+      "pass": 315,
+      "fail": 0,
+      "skip": 3
+    },
+    "experimental": {
+      "pass": 28,
+      "fail": 2,
+      "skip": 0
+    },
+    "overall": "FAILURE",
+    "reason": "unchanged experimental defects; no production failure"
+  }
+}
