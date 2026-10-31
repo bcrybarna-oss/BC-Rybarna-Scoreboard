@@ -2,6 +2,8 @@
 
 Dominik,31.10.2026: centrum notifikací oddělené do jediného produkčního modulu s explicitními podklady, identitou, lokálním úložištěm a callbacks. Neprovádí Firebase čtení/zápisy ani polling. Stav přečtení zachovává UID formát, hlídá vlastníka před zápisem, ruší zastaralé UI akce a scroll. Výzvy/presence zmapované pro9b/9c, jejich přesun nezahájen. Produkce108, kandidát109 nesloučen/nenasazen.7unit/2shodnáPNG/text/payload/6→0listenerů a předchozíregrese PASS. Produkce288/0/0 lokálně (veřejně285/0/3), experiment28/2/0 nezměněný, celekFAIL. [Rozsah, mapa a ověření](docs/notifications-stage-9a.md).
 
+Draft [PR50](https://github.com/bcrybarna-oss/BC-Rybarna-Scoreboard/pull/50), implementace2089a1a/quota test3593624. CI41216425108 releasePASS/produkce285PASS,0FAIL,3SKIP/experiment28PASS,2FAIL,0SKIP; celekFAILURE, dvě preview vady jednotlivě nezměněné. Kandidát109 nesloučen/nenasazen; další část9 nezahájena.
+
 # Etapa 8b — nasazeno v4.51.108 RC
 
 Dominik,30.10.2026: PR49 sloučen merge d2ed8be97dfd124713b7e35c3ab986d74b237eca, Pages41110008447 success. Veřejná108/24souborů přesnéSHA256/devětmodulů/reader+renderer/desktop-mobil/navigace/prázdnýLivescore+indikátor/nedostupnýdetail+rychléclose-reopen/0JSerrors. Publikovanýkód izolovaně8a souběh/pozdníodpovědi/A→B/logout/úklid, naplněnýrenderer/14shodnýchPNG/7akcíjednou/bezrůstulistenerů/escapovánístolu+race-to, recovery/streamOBS/PNG/PDF/XLSX PASS. ReleasePR/mainPASS, produkce278/0/3, experiment28/2/0 jednotlivě nezměněný, celéCI FAILURE. ŽiváAuth/Rules/naplněnáprodukčnírelace/fyzickázařízení neověřeny; produkčnídata neměněna ani nemigrována. [Deployment a návrat](docs/deployment-v4.51.108.md). Další část/etapa9 nezahájena. Následující přípravy a zákazy nasazení jsou historie před schválením.

@@ -5,7 +5,7 @@ Zadavatel: Dominik
 Datum: 31. 10. 2026
 Změny: Jediný produkční NotificationCenter, původní event/read/renderer těla a listenery odstraněné. Explicitní identity/storage/DOM/provider/callbacks, globální vlastník bez nového pollingu. Samostatně doložené opravy starého A clicku zapisujícího read-state účtuB a odloženého scrollu po změně relace. Formáty a frekvence výzev/presence beze změny.
 Testy:7unit PASS,2byteověshodnéPNG/text/read-payload před/po desktop-mobil; staleA→B zápis1→0 a pozdníscroll1→0.100renderů/listenery beze růstu,20start-stop/bfcache/úklid6→0. Produkce288/0/0 lokálně (veřejně285/0/3), experiment28/2/0 nezměněný; celek316/2/0z318exit1.8a/8b/identity/turnaje101/OBS/PNG/PDF/XLSX PASS.21těl výzev/transportu/presence nezměněno. Viz docs/notifications-stage-9a.md.
-Nasazení: Kandidát109, nesloučeno/nenasazeno, produkce108.
+Nasazení: Kandidát109 pushnutý do draft PR50, implementace2089a1a a quota test3593624; CI41216425108 releasePASS/produkce285PASS,0FAIL,3SKIP/experiment28PASS,2FAIL, celekFAILURE. Nesloučeno/nenasazeno, produkce108.
 Omezení: ŽivýAuth/Rules/fyzickázařízení neověřeny.9b/9c a jejich síťové/zápisové závody neřešené tímto widgetem; před serverovými mutacemi nutná A1 hranice. Produkčnídata beze změny, návrat reverzí bez migrace.
 
 ## Dominik – ověřené nasazení rendereru Livescore, etapa 8b (v4.51.108 RC)

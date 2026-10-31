@@ -61,4 +61,6 @@ Roadmapa/STATUS/CONTEXT/REVIZE aktualizované; kandidát109 neznamená nasazenou
 
 Návrat reverzí celého PR vrátí původní funkce/listenery i bootstrap bez importu nebo vracení dat; read-state JSON zůstává kompatibilní. Případné vydání reverze vyžaduje novou verzi a release/regrese podle AGENTS. Vrátí i potvrzenou stale-click/scroll vadu, proto posoudit úzce vymezený hotfix. Nemaže se úložiště, cache ani archiv.
 
-[Sanitizovaná evidence](notifications-stage-9a-verification.json). [Desktop](screenshots/notifications-9a-desktop.png), [mobil](screenshots/notifications-9a-mobile.png). Kompletní logy/před-po PNG/reproduktor jsou místně v output/stage9a. PR/CI bude doplněné po pushi; nic neslučovat ani nenasazovat.
+[Sanitizovaná evidence](notifications-stage-9a-verification.json). [Desktop](screenshots/notifications-9a-desktop.png), [mobil](screenshots/notifications-9a-mobile.png). Kompletní logy/před-po PNG/reproduktor jsou místně v output/stage9a.
+
+Pushnuto do [draft PR50](https://github.com/bcrybarna-oss/BC-Rybarna-Scoreboard/pull/50), implementace `2089a1a36da73596267304c9340d5d049764c717`, rozšířený quota test `3593624cf09317dbccc41f859ba4a04309e242bd`. [CI41216425108](https://github.com/bcrybarna-oss/BC-Rybarna-Scoreboard/actions/runs/41216425108): release PASS, produkce285PASS/0FAIL/3SKIP, experiment28PASS/2FAIL/0SKIP (jednotlivě preview50/155), celekFAILURE. Tato následná aktualizace je pouze dokumentační. Nic neslučovat ani nenasazovat.
