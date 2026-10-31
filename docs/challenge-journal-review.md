@@ -1,3 +1,5 @@
+> Historický podklad. Aktuální schválenou implementaci, testy a omezení popisuje [zjednodušená9b2](challenges-stage-9b2-lean.md); tento doklad zůstává beze změn pro audit.
+
 # Revize trvalého žurnálu výzev — nasazení blokováno
 
 Dominik,31.10.2026. Kontrolovaný aplikační commit `8a5f3cc`, dokumentační head `b36e697`. PR52 navazuje na51, společné nevydané110, produkce109. Pět již přijatých oprav závodů se touto kontrolou neruší; žurnál **není schválený k nasazení**. Aplikační kód, práva, Rules a data se v této revizi nemění. Nové testy odhalují dvě další vady; nejde o dvě staré experimentální chyby.

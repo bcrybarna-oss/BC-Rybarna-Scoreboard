@@ -1,3 +1,5 @@
+> Historický podklad. Aktuální schválenou implementaci, testy a omezení popisuje [zjednodušená9b2](challenges-stage-9b2-lean.md); tento doklad zůstává beze změn pro audit.
+
 # Blokující následná revize žurnálu
 
 [Audit31.10.2026](challenge-journal-review.md) odhalil neakceptované omezení při plné kvótě a dvě vady žurnálu. Pět oprav závodů zůstává přijato, **tento PR však není připravený k integraci/nasazení**. Následující předání a tehdejšíPASS výsledky jsou zachované historické ověření s nedostatečným kontraktem GETshody, nikoli aktuální záruka žurnálu.

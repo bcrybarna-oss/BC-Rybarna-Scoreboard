@@ -1,21 +1,6 @@
 'use strict';
-// Newly exposed journal safety requirements. Tests intentionally reveal current implementation gaps.
-const test=require('node:test'),assert=require('node:assert/strict'),api=require('../assets/js/match-challenge-actions.js');
-const clone=x=>JSON.parse(JSON.stringify(x));
-function harness(){const entries=new Map();let requestBody=null,remote={id:'profile-A',ownerUid:'A',name:'Original profile'};
- const input={challenge:{id:'challenge-1',senderUid:'A',recipientUid:'B',senderPlayerId:'profile-A',recipientPlayerId:'profile-B',status:'pending',discipline:'9-ball',raceTo:5,flexibleTime:true,note:'Synthetic note'}};
- const controller=api.create({identity:()=>({authenticated:true,uid:'A',profileId:'profile-A',scope:'player'}),profile:()=>({id:'profile-A',ownerUid:'A',name:'Original profile'}),nowIso:()=> '2026-10-31T19:00:00.123Z',operationId:()=> 'receipt-1',journal:{keys:()=>[...entries.keys()],getItem:k=>entries.get(k)||null,setItem:(k,v)=>entries.set(k,v),removeItem:k=>entries.delete(k)},authorize:async()=>true,beginWrite:()=>()=>{},write:async body=>{requestBody=clone(body);throw Error('lost response; request may still arrive');},readProfile:async()=>clone(remote),commit(){},refresh:async()=>{}});
- return {controller,entries,input,get body(){return requestBody;},set remote(value){remote=value;}};
-}
-test('journal must not clear an unresolved PUT or claim terminal verification merely because one leaf currently matches',async()=>{
- const h=harness();const first=await h.controller.run('send',h.input);assert.equal(first.status,'unknown');assert.equal(h.entries.size,1);
- // Another client has the same leaf, but newer unrelated profile data. The original whole-profile PUT is not known to be terminal.
- h.remote={...h.body,name:'Newer profile edited elsewhere'};const observed=await h.controller.run('send',h.input);
- assert.notEqual(observed.verified,true,'GET equality establishes current state only; operationId is absent from server and original PUT can still arrive');
- assert.equal(h.entries.size,1,'unresolved original request must retain its journal marker');h.controller.dispose();
-});
-test('journal must whitelist challenge fields instead of copying injected credential properties from a cached sender record',async()=>{
- const h=harness();h.input.challenge.idToken='FAKE_TOKEN_SENTINEL';h.input.challenge.password='FAKE_PASSWORD_SENTINEL';await h.controller.run('send',h.input);const receipt=JSON.parse([...h.entries.values()][0]);
- assert.equal(Object.hasOwn(receipt.value,'idToken'),false,'out-of-schema credential property must not enter durable journal');
- assert.equal(Object.hasOwn(receipt.value,'password'),false,'out-of-schema credential property must not enter durable journal');h.controller.dispose();
-});
+// Replacement contract after approved removal of journal. Historical failures remain in tests/audits/.
+const test=require('node:test'),assert=require('node:assert/strict'),api=require('../assets/js/match-challenge-actions.js'),fs=require('node:fs');
+test('production has no journal, persistence, reconciliation GET, verified inference or replay dependency',()=>{const source=fs.readFileSync('assets/js/match-challenge-actions.js','utf8'),html=fs.readFileSync('index.html','utf8');assert.doesNotMatch(source,/localStorage|sessionStorage|indexedDB|readJournal|reconcile|readProfile|verified|operationId/);assert.doesNotMatch(html,/poolcitadlo_challenge_pending_write_v1|PLAYER_VERIFY_|result\.verified/);assert.match(html,/matchChallengeUnknownNotice/);assert.doesNotMatch(html,/fixtures\/challenge-actions-journal/);});
+test('new owned snapshots and serialized delta whitelist credential extras without deleting unrelated server fields',()=>{const challenge={id:'c',senderUid:'A',senderPlayerId:'a',recipientUid:'B',recipientPlayerId:'b',status:'pending',idToken:'FAKE_TOKEN',password:'FAKE_PASSWORD',extra:{secret:1}};const projected=api.projectChallenge(challenge);assert.equal(Object.hasOwn(projected,'idToken'),false);assert.equal(Object.hasOwn(projected,'password'),false);assert.equal(Object.hasOwn(projected,'extra'),false);const profile={id:'a',ownerUid:'A',future:{untouched:[false,0,null]},matchChallengesSent:{other:{id:'other',metadata:'keep'},c:{id:'c',legacyServerTag:'keep'}}};const before=JSON.stringify(profile),body=JSON.parse(api.serializeProfile(profile,{field:'matchChallengesSent',id:'c',value:challenge}));assert.equal(JSON.stringify(profile),before);assert.deepEqual(body.future,profile.future);assert.deepEqual(body.matchChallengesSent.other,profile.matchChallengesSent.other);assert.equal(body.matchChallengesSent.c.legacyServerTag,'keep');assert.doesNotMatch(JSON.stringify(body),/FAKE_TOKEN|FAKE_PASSWORD|"secret"/);});
+test('historical removed-journal fixture remains exact and is never loaded by production',()=>{const crypto=require('crypto'),raw=fs.readFileSync('tests/fixtures/challenge-actions-journal-213f87f.js');assert.equal(crypto.createHash('sha256').update(raw.toString('utf8').replace(/\r\n/g,'\n')).digest('hex'),'57f604cb6d2fefea9cffc5fc5632a06292e319ecf6a446d67e28bd0949b4f637');assert.match(fs.readFileSync('tests/audits/challenge-journal-regressions.cjs','utf8'),/fixtures\/challenge-actions-journal-213f87f/);});

@@ -1,5 +1,9 @@
 # Aktuální roadmapa modularizace Poolčítadla
 
+## Aktuální stav9b2 po schváleném zjednodušení (31.10.2026)
+
+[Implementace a ověření](challenges-stage-9b2-lean.md) jsou nyní aktuální; níže zachované žurnálové návrhy jsou historie. PR51 zůstává samostatný, PR52 přepracován nad ním, nevydané110/prod109. Povinný journal/reconcile/GET verified odstraněny, pět lokálních oprav a read/write bariéra zachovány. Nejasný výsledek drží pouze paměťovou stopku profilu a nedismissovatelné upozornění při navigaci, nikoli po restartu. Žádný nový serverový protokol ani9c. Lokální produkce318/0/0 a cílené browserové/regresní kontroly PASS; experiment28/2/0 a historický žurnálový audit0/2 zvlášť. Nic neslučovat/nenasazovat.
+
 Zadavatel: Dominik. Aktualizace31.10.2026: produkce109, PR50 merge26c98fdc5309bf5b047c6ef91fcb4c1de87e1205/Pages41217198366 success. Etapy6,7,8 a9a jsou nasazené.9b1 je nyní schválená implementace kandidáta110 (nesloučeno/nenasazeno); A1/9b2/9c nezahájeny. [Funkční ověření, PNG selhání a omezení](deployment-v4.51.109.md). Starší přípravy níže jsou historie.
 
 ### Aktuální příprava 9b2 — společné vydání110, nic nasazeno

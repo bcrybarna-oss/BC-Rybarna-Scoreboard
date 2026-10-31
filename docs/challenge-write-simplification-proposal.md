@@ -1,3 +1,5 @@
+> Historický podklad. Aktuální schválenou implementaci, testy a omezení popisuje [zjednodušená9b2](challenges-stage-9b2-lean.md); tento doklad zůstává beze změn pro audit.
+
 # Návrh zjednodušení9b2 bez povinného žurnálu
 
 Zadavatel: Dominik,31.10.2026. **Pouze návrh, bez změn aplikace nebo testových sad.** PR51/9b1 a PR52/9b2 nejsou sloučené ani nasazené. Main zůstává fade611/produkce109, pracovní head213f87f. Pět oprav závodů je přijato, návrh jejich zjednodušeného vydání čeká na rozhodnutí.
