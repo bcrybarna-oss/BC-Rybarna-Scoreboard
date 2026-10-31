@@ -160,5 +160,23 @@
     "no live Auth or Rules test",
     "production unchanged",
     "9c not started"
-  ]
+  ],
+  "applicationCommit": "1bb090c9ff2c5291aa3ee74e28df493ca20de231",
+  "githubCI": {
+    "run": 41228939102,
+    "url": "https://github.com/bcrybarna-oss/BC-Rybarna-Scoreboard/actions/runs/41228939102",
+    "release": "PASS",
+    "production": {
+      "pass": 315,
+      "fail": 0,
+      "skip": 3
+    },
+    "experimental": {
+      "pass": 28,
+      "fail": 2,
+      "skip": 0
+    },
+    "overall": "FAILURE",
+    "reason": "unchanged experimental defects; no production failure"
+  }
 }

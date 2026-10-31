@@ -45,3 +45,5 @@ Stávající PUT celého profilu není změněn na nový protokol. Bezstavový s
 ## Návrat a vydání
 
 PR51 zůstává samostatný beze změny větve. PR52 nad ním stále tvoří nevydaný kandidát110; neslučovat ani nenasazovat bez dalšího zadání. Při případném samostatném vydání51 je nutné přepočítat verzi52 z čerstvého main. Návrat této aplikační změny reverzí bez vracení dat; nevracet do produkce odmítnutý povinný žurnál jen reverzí zjednodušovacího commitu. Pro návrat ke stavu9b1 revertovat celou9b2 v pořadí závislostí a před vydáním spustit release/regrese; při již vydané verzi nové číslo podle AGENTS. Žádná migrace/oprava uložených zápasů.
+
+CI aplikačního commitu `1bb090c9ff2c5291aa3ee74e28df493ca20de231`: [run41228939102](https://github.com/bcrybarna-oss/BC-Rybarna-Scoreboard/actions/runs/41228939102) — Release PASS, produkce315PASS/0FAIL/3SKIP (tři soukromé exporty chybí vCI), experiment28PASS/2FAIL/0SKIP. Celý workflow FAILURE jen kvůli oběma nezměněným experimentálním vadám, žádná nová produkční regrese. Tento následný zápis mění pouze dokumentaci.
