@@ -10,6 +10,10 @@ Dominik31.10.2026 výslovně schválil úzkou9b2 navazující na9b1: [controller
 
 Dominik schválil menší samostatný rozsah čtení/cache/globálních obnov. [Mapování, opravy proti main, měření a omezení](challenges-stage-9b1.md). Renderer a serverové mutace zůstávají v aplikaci pro9b2; nejde o dokončení jejich zápisového kontraktu. Před9b2 nadále A1.9c se nemění. Kandidát není sloučen ani nasazen; produkce109.
 
+### Nové zadání — návrh úzké9b2 bez žurnálu (zatím neimplementovat)
+
+[Posouzení a plán](challenge-write-simplification-proposal.md):9b1 samostatná, z52 ponechat proven-lokálníguardy/dedup/pořadí a návrh pravdivéhounknownUI bezpovinnéhožurnálu/GETověření. Zbývá explicitní hranice restartu a kompletníwhitelist. Současné2selhávajícížurnálovétesty zůstávají viditelné; přesun pouze jejich mechanismověneplatnéčásti se záchovánímreprodukcí až poimplementaci, nikoli nyní. [Budoucíserverovýprotokol](challenges-write-conflict-proposal.md) samostatnějen návrh. Staršíplán společného110 zůstává historický, pořadíbudoucíchvydání vyžaduje aktuálnífetch/verzi. Nic nesloučeno/nenasazeno.9cnezačíná.
+
 ## Historie přípravy 8b — nyní nasazeno108
 
 Dominik,30.10.2026: samostatný kandidát108 odděluje renderer Livescore seznamu/detailu/indikátoru. 8a a předchozí produkční moduly zachované, žádné Firebase/storage/polling v rendereru. [Rozsah, ověření a návrat](livescore-renderer-stage-8b.md). Neslučovat/nenasazovat, etapu9 nezahajovat. Starší údaj „8b nezahájena“ v záznamu nasazení107 výše je historie.

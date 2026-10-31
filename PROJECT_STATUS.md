@@ -1,3 +1,7 @@
+# Návrh zjednodušení9b2 — bez implementace
+
+Dominik,31.10.2026: [návrh](docs/challenge-write-simplification-proposal.md) zachovává samostatnou9b1 a z52 pouze lokální životnost/pořadíakcí; povinnýžurnál/reconcile mají být po schválení odstraněny beznáhradyretry. Izolovaný experiment7vybranýchkontrolPASS prokazuje oddělitelnost, nikoli hotovouaplikaci. Zbývá schválit hranici unknownupozornění přesreload, whitelist včetněvalidace profilovéobálky a finálníregrese. Dvěprodukčnívady dnešníhožurnálu stáleFAIL, testy aniaplikace nezměněny. [Budoucí serverovýprotokol](docs/challenges-write-conflict-proposal.md) jen návrh, žádná změnaRules/dat. PR51/52 neslučovat aninasazovat, produkce109 a nevydanýkandidát110;9cnezahájena.
+
 # Revize žurnálu9b2 — integrace a nasazení blokovány
 
 Dominik,31.10.2026: pět oprav závodů přijato, ale nový trvalý žurnál není schválen k nasazení. Skutečně plnýlocalStorage blokuje všech6akcí (desktop/mobile,0PUT). GETshoda neprokazuje ukončení původníhoPUT; controller přesto vracíverified a maže potvrzenku. Sender záznam nemá whitelist extra polí. Nové2produkční testy FAIL, ostatních312lokálněPASS; nejde o dvě známé experimentální vady. **Aplikační kód nezměněn, nic nesloučeno/nenasazeno.** [Přesný audit, varianty a doporučení](docs/challenge-journal-review.md). Produkce109, společný nevydanýkandidát110. Historická předání níže nejsou aktuální souhlas s nasazením žurnálu.9c nezahájena.

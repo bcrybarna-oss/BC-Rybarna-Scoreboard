@@ -1,5 +1,14 @@
 # Revize aplikace Poolčítadlo
 
+## Dominik – návrh úzké9b2 bez žurnálu a budoucího protokolu (v4.51.110 RC)
+Zadavatel: Dominik
+Datum: 31. 10. 2026
+Změny: Pouze dokumentační návrh. Samostatná9b1, zachování lokálních záruk52 bez mandatory žurnálu/reconcile, explicitní hranice unknown po restartu a whitelisting. Samostatný návrh kanonické atomickéoperace, revize, operationID/receipt, CAS versus transakce a neviděnéID versus terminalfence. Nic ztoho neimplementováno.
+Testy: Izolovaný preloadexperiment7PASS/0FAIL při odpojených journal závislostech;8dalšíchcontroller testů mimoexperiment. Celáaktuální produkčnísada309PASS/2FAIL/3SKIP bezprivátníchfixture, oba novéžurnálovétesty stáleviditelné a nepřesunuté. Nejde o finální browserové ověření dosud nevytvořené zjednodušené aplikace.
+Nasazení: Žádnýmerge/deploy; PR51/52 zůstávají nevydané110, produkce109. Případná samostatná9b1 jako110 znamená propozdější52 novouverzi dle aktuálního main.
+Omezení: Bezperzistence/serverovéevidence nelze po reloadu obnovit konkrétníunknown ani garantovat bezpečnýretry. ŽádnýGETshody není terminalACK. Whitelist celého profilovéhoPUT vyžaduje kompletnímapování, ne tichou ztrátu neznámýchpolí. Produkčnídata, Rules aaplikace bezezměny,9cnezahájena.
+
+
 ## Dominik – kontrola žurnálu9b2 a blokující zjištění (v4.51.110 RC)
 Zadavatel: Dominik
 Datum: 31. 10. 2026
