@@ -1,5 +1,13 @@
 # Revize aplikace Poolčítadlo
 
+## Dominik – nasazení centra notifikací, etapa 9a (v4.51.109 RC)
+Zadavatel: Dominik
+Datum: 31. 10. 2026
+Změny: PR50 sloučen standardním merge26c98fdc5309bf5b047c6ef91fcb4c1de87e1205. Tento zápis je pouze dokumentační, nemění aplikaci/verzi.9b nezahájena.
+Testy: ReleasePR/mainPASS, produkce285PASS/0FAIL/3SKIP, experiment28PASS/2FAIL/0SKIP jednotlivě shodný s main; celekFAILURE. Veřejných25souborů přesnéSHA256/10modulů/desktop-mobil/0JSerrors/0read-statezápisů. Izolovaná funkčníacceptanceA-B/payloady/jednaakce/stale/scroll/úklid/7unit a8a/recovery/OBS/PNG/PDF/XLSX PASS. Přísnýbrowser PNG test FAIL i po opakování:33pixelů/131376,maxdelta18, otisky se mezi108/109 prohodí. Nebyl oslaben ani započten do experimentálních vad. Viz docs/deployment-v4.51.109.md.
+Nasazení: Pages41217198366 success, veřejná v4.51.109 RC odpovídá merge. Produkčnídata neměněna ani nemigrována, produkčnínotifikace nebyly označené jako přečtené.
+Omezení: ŽivýAuth/Rules/privátníprodukčníobsah/fyzickýiPhone/OBS neověřeny. Mobilnípřekrytíbell panelem totožné s108, mimo panel se zavře. BitováPNGparita negarantována; funkčníregrese neprokázána.9b/9c cache/síťovémezery a B/cachelimity trvají. Návrat reverzí s novou verzí bez dat vrátí i stale-click/scroll vady; posoudit užšíhotfix.
+
 ## Dominik – centrum notifikací, etapa 9a (v4.51.109 RC)
 Zadavatel: Dominik
 Datum: 31. 10. 2026

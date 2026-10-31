@@ -1,18 +1,18 @@
 # Aktuální roadmapa modularizace Poolčítadla
 
-Zadavatel: Dominik. Aktualizace30.10.2026: produkce108, PR49 merge d2ed8be97dfd124713b7e35c3ab986d74b237eca/Pages41110008447 success. Etapy6,7a+7b,8a a8b jsou nasazené. Livescore má jediný reader a renderer s oddělenými odpovědnostmi. [Ověření, omezení a návrat](deployment-v4.51.108.md). Další oblast9 není zahájená; starší přípravy níže jsou historie.
+Zadavatel: Dominik. Aktualizace31.10.2026: produkce109, PR50 merge26c98fdc5309bf5b047c6ef91fcb4c1de87e1205/Pages41217198366 success. Etapy6,7,8 a9a jsou nasazené.9b/9c nejsou zahájené. [Funkční ověření, PNG selhání a omezení](deployment-v4.51.109.md). Starší přípravy níže jsou historie.
 
 ## Historie přípravy 8b — nyní nasazeno108
 
 Dominik,30.10.2026: samostatný kandidát108 odděluje renderer Livescore seznamu/detailu/indikátoru. 8a a předchozí produkční moduly zachované, žádné Firebase/storage/polling v rendereru. [Rozsah, ověření a návrat](livescore-renderer-stage-8b.md). Neslučovat/nenasazovat, etapu9 nezahajovat. Starší údaj „8b nezahájena“ v záznamu nasazení107 výše je historie.
 
-## Aktuální práce 9a
+## Historie přípravy 9a — nyní nasazeno109
 
 Dominik,31.10.2026: kandidát109, nesloučen/nenasazen. Rozdělení9a/9b/9c níže je aktuální plán; pouze9a implementována. Historický zákaz etapy9 v záznamu nasazení108 byl nahrazen tímto zadáním.
 
 ## Výchozí stav a závazná pravidla
 
-Produkční root index.html načítá devět skutečně používaných modulů: FederalStatistics (čisté výpočty a reportové modely), CloudRefresh (automatické appData relace), OwnReports, FederalViewer, AdminReports, FederalReportRenderer, FederalReportController, LivescoreReader a LivescoreRenderer. Starý test-modular/assets/js/pool-core.js je samostatná experimentální větev, nikoli zdroj produkčního bootstrapu. Žádné slučování těchto dvou implementací naslepo.
+Produkční root index.html načítá deset skutečně používaných modulů: FederalStatistics (čisté výpočty a reportové modely), CloudRefresh (automatické appData relace), OwnReports, FederalViewer, AdminReports, FederalReportRenderer, FederalReportController, LivescoreReader, LivescoreRenderer a NotificationCenter. Starý test-modular/assets/js/pool-core.js je samostatná experimentální větev, nikoli zdroj produkčního bootstrapu. Žádné slučování těchto dvou implementací naslepo.
 
 Každý přesun: jeden vlastník stavu a prostředků, výslovné závislosti, původní tělo odstranit ve stejném PR, žádný tichý fallback. Zachovat práva, payloady a sportovní výsledky. Funkční opravy oddělit od mechanického přesunu a doložit reprodukcí. PR má testy přímo nad produkčním zdrojem, před/po a možnost návratu reverzí bez vracení dat. U každého vydání čerstvý fetch, verze a revize podle AGENTS.md, bez předpokládané automatické výjimky pro stará selhání. Bez produkčních testovacích zápisů.
 
@@ -62,7 +62,7 @@ Současný core kombinuje firebaseSignIn/firebaseRefreshAuth, ověření e-mailu
 
 Aktuální rozdělení31.10.2026 podle skutečných závislostí nahrazuje původní pracovní9a–9e:
 
-- **9a — centrum notifikací (nyní kandidát109):** model událostí, řazení/limit30, DOM, lokální přečtení v existujícím UID-scoped JSON, globální vlastník a zrušení odloženého UI efektu. Žádný nový síťový loader. Provider výzev zůstává explicitní závislost. [Mapa a hranice](notifications-stage-9a.md).
+- **9a — centrum notifikací (nasazeno109):** model událostí, řazení/limit30, DOM, lokální přečtení v existujícím UID-scoped JSON, globální vlastník a zrušení odloženého UI efektu. Žádný nový síťový loader. Provider výzev zůstává explicitní závislost. [Mapa a hranice](notifications-stage-9a.md).
 - **9b — výzvy, až nové zadání:**9b1 vlastník cache a globálních obnov, single-flight sdíleného hráčského čtení a relace/opožděné odpovědi;9b2 transakce odeslat/přijmout/odmítnout/zrušit/protinávrh/odehráno a formulářové callbacky. Tyto části mohou být samostatně nasaditelné PR. Před9b2 je nutná A1 hranice identity+token/request; neprovádět pouhý přesun původních nehlídaných PUT.
 - **9c — přítomnost, až nové zadání:** ucelený session/device vlastník GET+PUT/DELETE, aktivity, visibility,30s heartbeat a5s render/warmup. Oddělit jen po zavedení stejné A1 hranice; případné rozdělení menších PR zachová jednoho vlastníka. Samostatný GET bez ochrany souvisejícího writeru by nechal životnost napůl.
 - Pořadí:9a odstraní soukromý UI/local-write závod bez zásahu do serverového transportu;9b stabilizuje zdroj výzev a zápisové identity;9c pak použije stabilní session/device kontrakt. Pouhé přejmenování těchto oblastí není dokončení jejich původních vad.

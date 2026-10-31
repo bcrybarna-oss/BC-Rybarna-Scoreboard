@@ -1,6 +1,6 @@
-# Etapa 9a — kandidát v4.51.109 RC
+# Etapa 9a — nasazeno v4.51.109 RC
 
-Dominik,31.10.2026: centrum notifikací oddělené do jediného produkčního modulu s explicitními podklady, identitou, lokálním úložištěm a callbacks. Neprovádí Firebase čtení/zápisy ani polling. Stav přečtení zachovává UID formát, hlídá vlastníka před zápisem, ruší zastaralé UI akce a scroll. Výzvy/presence zmapované pro9b/9c, jejich přesun nezahájen. Produkce108, kandidát109 nesloučen/nenasazen.7unit/2shodnáPNG/text/payload/6→0listenerů a předchozíregrese PASS. Produkce288/0/0 lokálně (veřejně285/0/3), experiment28/2/0 nezměněný, celekFAIL. [Rozsah, mapa a ověření](docs/notifications-stage-9a.md).
+Dominik,31.10.2026: PR50 sloučen merge26c98fdc5309bf5b047c6ef91fcb4c1de87e1205, Pages41217198366 success. Veřejná109/25souborů přesnéSHA256/10modulů/centrum desktop-mobil/0JSerrors/0read-statezápisů. Publikovanýkód izolovaně funkčníA-B/payloady/jednaakce/staleclick/scroll/20restartů/úklid,7unit a8a/recovery/streamOBS/PNG/PDF/XLSX PASS. PřísnáPNGparita widgetu FAIL:33pixelů/131376,maxkanál18, stejné2otisky se prohodily mezi108/109; kontrola nezměněna. Mobilnípanel překrývábell stejnějako108, zavření mimo funguje. ReleasePR/mainPASS, produkce285/0/3, experiment28/2/0 nezměněný; celekFAILURE. ŽivýAuth/Rules/privátníprodukčníobsah/fyzickázařízení neověřeny. Produkčnídata neměněna, notifikace neoznačeny. [Výsledky, omezení a návrat](docs/deployment-v4.51.109.md).9b nezahájena. Starší přípravy níže jsou historie před schválením.
 
 # Etapa 8b — nasazeno v4.51.108 RC
 
