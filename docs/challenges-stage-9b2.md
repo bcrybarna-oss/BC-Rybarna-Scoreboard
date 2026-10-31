@@ -2,6 +2,8 @@
 
 Zadavatel: Dominik. Datum: 31.10.2026. Základ: nevydaná9b1 `fde56cee21a1f0ea074fb3572e71187e5e27216a` / PR51, main `fade611557a33a8145b8c0251883946e1bf7b968`, produkce109. Samostatný navazující PR, **společné dosud nevydané v4.51.110 RC**. Samotnou9b1 neslučovat ani nenasazovat; nejprve integrace obou částí a nové schválení společného vydání.9c nezačíná.
 
+Draft [PR #52](https://github.com/bcrybarna-oss/BC-Rybarna-Scoreboard/pull/52) → větev [PR #51](https://github.com/bcrybarna-oss/BC-Rybarna-Scoreboard/pull/51), aplikační commit `8a5f3ccdef1ec4cb3ce145546d0a1f6f0e1ae671`. [CI 41224379252](https://github.com/bcrybarna-oss/BC-Rybarna-Scoreboard/actions/runs/41224379252): Release PASS, produkční **309 PASS / 0 FAIL / 3 SKIP**, experimentální **28 PASS / 2 FAIL / 0 SKIP**, celek FAILURE. Lokálně se všemi exporty312PASS/0FAIL/0SKIP. Samostatná PNG browserová kontrola tentokrát desktop/mobile PASS, její historická nestabilita není opravena ani součástí CI. Obě části nesloučeny a nenasazeny.
+
 ## Hranice
 
 Jediný produkční `MatchChallengeActions` vlastní joby, kopii vstupů, ticket relace, deduplikaci, frontu pro profil, výsledek zápisu a ověření nejasného výsledku. Nemá skrytý přístup k DOM, tokenům ani globálním datům. Dostává explicitní identity/profile/authorize/write/readProfile/commit/refresh/journal/operationId/nowIso. Žádné vlastní intervaly ani DOM listenery. Ověřovací GET má AbortController a guard; odeslaný PUT se při změně účtu neabortuje ani neoznačuje jako vrácený.

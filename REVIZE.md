@@ -5,7 +5,7 @@ Zadavatel: Dominik
 Datum: 31. 10. 2026
 Změny: Společné dosud nevydané110 s9b1, samostatný navazující PR. Jediný MatchChallengeActions, odstraněná původní persist/canAnswer a mutující těla. Snapshot vstupů a relace, kontrola před prvnímPUT, ochrana novéhoUI, dedup/fronta, bez spekulativníhoaccepted, HTTP odmítnutí versus nejasný výsledek, malý trvalý žurnál a read-only verifikace. Pořadí players čtení/zápisů chráněno revision/barrier. Formáty serveru, Auth/Rules, obecné profilové writery a9c beze změny; konflikty mezi zařízeními pouze návrh.
 Testy: Cílených15unit controlleru PASS,9unit readeru PASS. Pět původních vad zachováno reproduktorem historického main/9b1; browser desktop/mobile po opravě všech pět, šest akcí, payloady,setup a ověření ztracené odpovědi po reloadu bez dalšíhoPUT PASS s mocky. Finální produkční/experimentální a regresní výsledky viz docs/challenges-stage-9b2.md; žádná tvrzení o živýchRules.
-Nasazení: Nesloučeno a nenasazeno; samotnou9b1 nevydávat. Produkce109 a produkčnídata beze změny.
+Nasazení: DraftPR52→PR51, kód8a5f3cc. CI41224379252 releasePASS/produkce309PASS,0FAIL,3SKIP/experiment28PASS,2FAIL; celekFAILURE. Nesloučeno a nenasazeno; samotnou9b1 nevydávat. Produkce109 a produkčnídata beze změny.
 Omezení: Mezi zařízeními zůstává whole-profilePUT bez podmíněného konfliktového protokolu. Nejasný nepřítomný/odlišný záznam se nesmí automaticky opakovat. Nedostupné/plné místní úložiště žurnálu zápis bezpečně odmítne bez mazání dat. Známé experimentální vady a samostatná nestabilní browserová PNG parita evidovány zvlášť. Návrat společnou reverzí aplikačních změn s novou verzí, žádná migrace dat; potvrzenky nejasných operací se nemažou automaticky.
 
 

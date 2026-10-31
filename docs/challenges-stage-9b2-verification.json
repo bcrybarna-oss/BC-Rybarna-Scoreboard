@@ -129,5 +129,27 @@
   "liveRules": false,
   "productionDataChanged": false,
   "conditionalProtocolImplemented": false,
-  "deployment": "not merged, not deployed"
+  "deployment": "not merged, not deployed",
+  "pr": {
+    "number": 52,
+    "basePr": 51,
+    "baseBranch": "refactor/challenges-reader-9b1",
+    "headBranch": "fix/challenges-write-lifecycle-9b2"
+  },
+  "ci": {
+    "run": 41224379252,
+    "commit": "8a5f3ccdef1ec4cb3ce145546d0a1f6f0e1ae671",
+    "release": "PASS",
+    "production": {
+      "pass": 309,
+      "fail": 0,
+      "skip": 3
+    },
+    "experimental": {
+      "pass": 28,
+      "fail": 2,
+      "skip": 0
+    },
+    "overall": "failure"
+  }
 }
