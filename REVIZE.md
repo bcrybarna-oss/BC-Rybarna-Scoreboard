@@ -1,5 +1,13 @@
 # Revize aplikace Poolčítadlo
 
+## Dominik – společné nasazení čtení a životnosti akcí výzev (v4.51.110 RC)
+Zadavatel: Dominik
+Datum: 31. 10. 2026
+Změny: Schválená integracePR52→PR51 merge32017de, společný main5e14d7948a3f3a1ddcd206de538d412956b5813f bez souběžné změny nebo konfliktu. Žádná samostatná9b1 ani změna dat/Rules. Tento následný commit jen dokumentuje skutečné nasazení a ověření, nemění aplikaci/verzi.
+Testy: ReleasePR/mainPASS; CI315PASS/0FAIL/3SKIP, lokálně318/0/0; experiment28/2/0nezměněný, celekFAILURE. Historický odstraněnýžurnál audit0/2 samostatně. Cílenýbrowser9b1/9b2 na integraci i publikovanémkódu desktop/mobil PASS. Veřejných27souborů přesnýSHA256/12modulů/0JSerrors/0zápisů. Mockované recovery/turnaje101/Livescore/OBS/skutečnéPNG/PDF/XLSX PASS.9a fixture mobil nejprveFAIL0≠4; při izolaci9a consumeru od prázdného mockserveru9b PASS bezezměny assertions/PNGtolerance. Lokální CRLFextrakce passwordtestu nejprveFAIL, poLFbezzměnycommitu5/5+318/0/0PASS. Viz docs/deployment-v4.51.110.md.
+Nasazení: Pages41229438687 build/deploy/report success, veřejná110 odpovídá merge5e14d79. PR51 i52 sloučeny, žádné ruční opakování deploye; dokumentace následně.
+Omezení: Unknown stopka/varování nepřežijí restart; reload neruší PUT. Serverovýprotokol/cross-devicekonflikty neřešené, žádnýGET-ACK/retry/žurnál. ŽivýAuth/Rules/fyzickázařízení/reálnéOBS neověřeny. PNGnestabilita/bell/B/cache zůstávají samostatně. Návrat reverzí celého merge s novou verzí bez vracení dat;9cnezahájena.
+
 ## Dominik – zjednodušení životnosti zápisů výzev bez žurnálu (v4.51.110 RC)
 Zadavatel: Dominik
 Datum: 31. 10. 2026

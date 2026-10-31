@@ -1,5 +1,9 @@
 # Aktuální roadmapa modularizace Poolčítadla
 
+## Nasazeno společné9b1 +9b2 ve v4.51.110 RC
+
+Dominik31.10.2026: PR52→51 integrace32017de, společný main5e14d79/Pages41229438687 success. [Deployment a důkazy](deployment-v4.51.110.md). Reader/cache/obnovy a zjednodušené lokální zápisové guardy jsou produkční; starý povinný žurnál/GETverified nejsou. Unknown upozornění/stopka pouze do restartu, budoucí serverovýprotokol/CAS jen samostatný návrh. Veřejná anonymní kontrola oddělena od izolovaných publikovaných scénářů s mock Auth/Rules; experimentální2vady a historický audit2vady vykázány odděleně.9cnezahájena, další část vyžaduje nové zadání. Následující přípravy/zákazy jsou historie.
+
 ## Aktuální stav9b2 po schváleném zjednodušení (31.10.2026)
 
 [Implementace a ověření](challenges-stage-9b2-lean.md) jsou nyní aktuální; níže zachované žurnálové návrhy jsou historie. PR51 zůstává samostatný, PR52 přepracován nad ním, nevydané110/prod109. Povinný journal/reconcile/GET verified odstraněny, pět lokálních oprav a read/write bariéra zachovány. Nejasný výsledek drží pouze paměťovou stopku profilu a nedismissovatelné upozornění při navigaci, nikoli po restartu. Žádný nový serverový protokol ani9c. Lokální produkce318/0/0 a cílené browserové/regresní kontroly PASS; experiment28/2/0 a historický žurnálový audit0/2 zvlášť. Nic neslučovat/nenasazovat.
