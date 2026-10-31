@@ -1,0 +1,224 @@
+{
+  "date": "2026-10-31",
+  "candidate": "v4.51.109 RC",
+  "production": "v4.51.108 RC",
+  "baseline": "8aa29fdd637fefb94f2fa86257896ad70e6a8e80",
+  "status": "not merged/deployed",
+  "scope": "9a notification model/UI/local UID read state only; no cloud reads or writes",
+  "clients": [
+    {
+      "viewport": "desktop",
+      "pngSha256": "3ddcfff143d1e7f9ed776e39be817b3d7601754f15c59c0f69b938cf06ae5e72",
+      "exactPngMatch": true,
+      "normalPayloadsEqual": true,
+      "staleWrites": [
+        1,
+        0
+      ],
+      "lateScroll": [
+        1,
+        0
+      ],
+      "milliseconds100Renders": [
+        12.599999994039536,
+        9.899999991059303
+      ],
+      "connectedDomClickListeners": [
+        7,
+        4
+      ],
+      "candidateListenersAfter100": 4,
+      "mockBackgroundGets": [
+        4,
+        4
+      ]
+    },
+    {
+      "viewport": "mobile",
+      "pngSha256": "19ee6435847cacd5c666547e6b8d515c281bc736319a599bb941c43e5feb1010",
+      "exactPngMatch": true,
+      "normalPayloadsEqual": true,
+      "staleWrites": [
+        1,
+        0
+      ],
+      "lateScroll": [
+        1,
+        0
+      ],
+      "milliseconds100Renders": [
+        11,
+        11.100000008940697
+      ],
+      "connectedDomClickListeners": [
+        7,
+        4
+      ],
+      "candidateListenersAfter100": 4,
+      "mockBackgroundGets": [
+        4,
+        4
+      ]
+    }
+  ],
+  "resources": {
+    "ownedListeners": 6,
+    "afterStop": 0,
+    "intervals": 0,
+    "maximumScrollTimeouts": 1
+  },
+  "node": {
+    "productionPrivate": {
+      "pass": 288,
+      "fail": 0,
+      "skip": 0
+    },
+    "productionPublic": {
+      "pass": 285,
+      "fail": 0,
+      "skip": 3
+    },
+    "experimental": {
+      "pass": 28,
+      "fail": 2,
+      "skip": 0
+    },
+    "allPrivate": {
+      "tests": 318,
+      "pass": 316,
+      "fail": 2,
+      "skip": 0,
+      "exit": 1
+    }
+  },
+  "regressions": {
+    "livescore8a8b": true,
+    "identityRecovery": true,
+    "tournament101Quota": true,
+    "streamObs": true,
+    "bootstrap20Scenarios": true,
+    "pngPdfExports": true,
+    "xlsxExports": true
+  },
+  "sourceAudit": {
+    "challengeCacheRemainingGap": {
+      "account": "B",
+      "nextAcceptedId": "private-A",
+      "scope": "actual unchanged function with isolated A cache, not production data"
+    },
+    "unchanged": [
+      {
+        "name": "cacheSave",
+        "sha256": "d9aad59315066a4991ed736c9cffc7636c341843c6acce2c60e8f8a0f332df29",
+        "unchanged": true
+      },
+      {
+        "name": "cacheLoad",
+        "sha256": "acb53e03653823efd66c8c70293edae26c36cf616d39ad1d1d93782dd610c383",
+        "unchanged": true
+      },
+      {
+        "name": "challengeObjects",
+        "sha256": "5cd07c0574209ec5fc9dc2354492402d8dc2c0c63637c114c5288982061fd947",
+        "unchanged": true
+      },
+      {
+        "name": "mergedChallenge",
+        "sha256": "73e576e8b980e57431163cd3b38ba06c27ccf1855eb2e15b1f9f8154f19a941b",
+        "unchanged": true
+      },
+      {
+        "name": "allChallengesFromPlayers",
+        "sha256": "011271dab5fc6d8aeba1f591998b59a99d895ec2dc05f322b852a4c019f32e11",
+        "unchanged": true
+      },
+      {
+        "name": "rebuildFromPlayers",
+        "sha256": "3fe3301e6f443dc89cf8133837002aae8ab58a18233772b40f98ec2862d7e99f",
+        "unchanged": true
+      },
+      {
+        "name": "load",
+        "sha256": "f6eaaa001f0617e7c99417c74e4cc41640dd2778505fcad1b277e1e0631ac64e",
+        "unchanged": true
+      },
+      {
+        "name": "render",
+        "sha256": "04e258c07ff9ce002413c29586be169981217b7e3a02ae9600685d4908979ce3",
+        "unchanged": true
+      },
+      {
+        "name": "renderHome",
+        "sha256": "8efd0356b9f33bd2e6c0b9bd0e049c5fcdc6ecf3427e875ad99efa1e7f90f715",
+        "unchanged": true
+      },
+      {
+        "name": "persist",
+        "sha256": "02bb05aee3c45ebb3d4dfdb515fdf00fe8c64f8e8e1d63798e1136b36b012dd8",
+        "unchanged": true
+      },
+      {
+        "name": "nextAccepted",
+        "sha256": "3e0eaf31f6fe094decbf281f5631b241630ff389928b4124ed891bfaa0c59759",
+        "unchanged": true
+      },
+      {
+        "name": "window.sendMatchChallenge",
+        "sha256": "3c9f239b6691cfa9c42896af1890b614ebca7369964952493d2cf6772cb9d941",
+        "unchanged": true
+      },
+      {
+        "name": "window.acceptMatchChallenge",
+        "sha256": "05d0783ec41ebef30f597cd46144ae52eb666a66915a39f5f0feb16253824d05",
+        "unchanged": true
+      },
+      {
+        "name": "window.declineMatchChallenge",
+        "sha256": "5ffdddd5a56f86038474a9508ccf835da05b8c3f8df5882d8280ac5918bb9c36",
+        "unchanged": true
+      },
+      {
+        "name": "window.cancelMatchChallenge",
+        "sha256": "28fe4ff9213ccf2453dd76f62846c9d61064deeac91caffe0f887ede0270ea8f",
+        "unchanged": true
+      },
+      {
+        "name": "window.saveMatchChallengeCounter",
+        "sha256": "100fa4ae3d20ffa903df540b70c0b49ba471045f52dbe23dc975a1d49989da9d",
+        "unchanged": true
+      },
+      {
+        "name": "window.completeScheduledChallengeForMatch",
+        "sha256": "f45a3b9fc85e6df891551d36b72967475fa70d82e4fb6df48ae94e07e2e93a7d",
+        "unchanged": true
+      },
+      {
+        "name": "loadSecurePlayers",
+        "sha256": "2dc0d6b7a9cbcb59c23cb8346869f55ef074bce886a666b3f502a162961eced2",
+        "unchanged": true
+      },
+      {
+        "name": "saveSecurePlayer",
+        "sha256": "ab23fd794153decf94725a23634a5c2ddb9143ec018f3af0b3d3638165a7ac70",
+        "unchanged": true
+      },
+      {
+        "name": "securePlayerRequest",
+        "sha256": "fed34cd2313386ce46187ef557ae56269fb16e8c97324c131a2ef29014d19cd4",
+        "unchanged": true
+      },
+      {
+        "name": "presence IIFE",
+        "sha256": "640211ba8d1c55a702d2221898b60bb7bbaae956c312b398a42f3b1ecd525d47",
+        "unchanged": true
+      }
+    ]
+  },
+  "limitations": [
+    "Mock Auth and endpoints only",
+    "Challenge provider held stable, other background services paused for notification widget comparison",
+    "No live Rules or physical devices",
+    "9b/9c transport and cache gaps remain unchanged",
+    "No production data changes"
+  ]
+}
