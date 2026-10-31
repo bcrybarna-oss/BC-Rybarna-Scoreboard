@@ -1,0 +1,437 @@
+{
+  "date": "2026-10-31",
+  "version": "v4.51.111 RC",
+  "merge": "6fb8c7dd72506376d7e45af421e9f872e937d1e5",
+  "prHead": "0ea21f9f7d1868948e37a94c3f0012c081e5dffc",
+  "pages": {
+    "run": 41231980016,
+    "conclusion": "success"
+  },
+  "CI": {
+    "prRun": 41231698063,
+    "mainRun": 41231980320,
+    "release": "PASS",
+    "production": {
+      "pass": 325,
+      "fail": 0,
+      "skip": 3
+    },
+    "experimental": {
+      "pass": 28,
+      "fail": 2,
+      "skip": 0
+    },
+    "overall": "FAILURE",
+    "reason": "two unchanged experimental defects"
+  },
+  "productionLocal": {
+    "pass": 328,
+    "fail": 0,
+    "skip": 0
+  },
+  "historicalJournalAudit": {
+    "pass": 0,
+    "fail": 2,
+    "scope": "frozen removed implementation; audit evidence, not current production tests"
+  },
+  "public": {
+    "version": "v4.51.111 RC",
+    "merge": "6fb8c7dd72506376d7e45af421e9f872e937d1e5",
+    "url": "https://bcrybarna-oss.github.io/BC-Rybarna-Scoreboard/",
+    "files": {
+      "index.html": {
+        "status": 200,
+        "sha256": "fd90bf3cf871ce62c661a013ad91ef6534715053f34fb5eb44b944fbc5ab3ba5",
+        "bytes": 1627162
+      },
+      "overlay.html": {
+        "status": 200,
+        "sha256": "54ad8de46f5b1051bb601b4f2340ce5bec71f5d8f03860c7b1e2d2977eadd73d",
+        "bytes": 20885
+      },
+      "assets/pushout-xlsx.js": {
+        "status": 200,
+        "sha256": "5e4436656444c3f87b2c8550414b49070eb7d8974455e321425388bc639ae874",
+        "bytes": 7977
+      },
+      "assets/federal-report-billiards.webp": {
+        "status": 200,
+        "sha256": "2a8d73c1b0a5ecd07597b993f0da5ed22b7c30bba6023448b8069d154bf3e228",
+        "bytes": 74790
+      },
+      "assets/federal-report-pool-logo.png": {
+        "status": 200,
+        "sha256": "c28fd81775d4013e2b58716d6f8ef1a92691f4d5d4c0b8b2ba1b0d3a3a12c593",
+        "bytes": 220520
+      },
+      "assets/pushout-sports-logo-yellow.png": {
+        "status": 200,
+        "sha256": "049c2b4648a2e6106c5c41459c346689915256f62330ee17129b4484fc8314ff",
+        "bytes": 44487
+      },
+      "bc-rybarna-logo.png": {
+        "status": 200,
+        "sha256": "5ad8dccc37f3426e189916f5e5bce61fa922f82d8757283832ac01d224f1f083",
+        "bytes": 131525
+      },
+      "assets/poolcitadlo-logo.webp": {
+        "status": 200,
+        "sha256": "7f9caff46b1924186ef7d6a42b6b9079ee9ace9e7875d8f688e9fdc83bd488db",
+        "bytes": 27896
+      },
+      "assets/federal-cup/flag-sk-flat.svg": {
+        "status": 200,
+        "sha256": "659b2c072f05d05e8b5d38caa878626459ac652c6dc02359094b423a4ae1d6ee",
+        "bytes": 1543
+      },
+      "assets/federal-cup/flag-cz-flat.svg": {
+        "status": 200,
+        "sha256": "172aa188241c3f5fbd95d7881095d65e2b681f105fb867923709cc09a5dcc3a0",
+        "bytes": 222
+      },
+      "assets/federal-cup/flag-sk-cloth.svg": {
+        "status": 200,
+        "sha256": "cf8cc9a9fec2f76db4ba3cf6f66c303488cb7ad738aba6dc8afe7535a7a968e7",
+        "bytes": 3230
+      },
+      "assets/federal-cup/flag-cz-cloth.svg": {
+        "status": 200,
+        "sha256": "e83808ab2c0c8a5a6b2dde63c44c8e22416ca0a38c00b468136643baca2064e8",
+        "bytes": 1910
+      },
+      "assets/federal-cup/flag-sk-cloth.png": {
+        "status": 200,
+        "sha256": "27faf3b6b76a07b4793ddadb3f549d104ef5c91256c300ad3d24d4dd25a9111a",
+        "bytes": 717340
+      },
+      "assets/federal-cup/flag-cz-cloth.png": {
+        "status": 200,
+        "sha256": "e6485509db399555689fe7b9e23aa1e9e70b27a28e3ca8f1ac2ad38c505cc7fb",
+        "bytes": 641363
+      },
+      "assets/federal-cup/gold-trophy.png": {
+        "status": 200,
+        "sha256": "d4c8ec993c1e20d16508e3f96aade23dc217593597ed3649ca7bc777f85c29c7",
+        "bytes": 1854457
+      },
+      "assets/js/federal-statistics.js": {
+        "status": 200,
+        "sha256": "7e1cae131f79f6bf5bdd2c417fe5b4272408c361053024a6e5f1c411a9ea7d21",
+        "bytes": 48112
+      },
+      "assets/js/cloud-refresh.js": {
+        "status": 200,
+        "sha256": "ac53937d949b561a52b379c32f468bc2e927ad3a78e2295184a231dcf6da98b7",
+        "bytes": 3453
+      },
+      "assets/js/own-reports.js": {
+        "status": 200,
+        "sha256": "44be6dc2526ecd6deff8461b08bbb8a8f4789a691d2aa456663feeebb160a3d5",
+        "bytes": 4001
+      },
+      "assets/js/federal-viewer.js": {
+        "status": 200,
+        "sha256": "18c56c268fb394cab25225dfd032b1401b109254d4142c4f2db976ce7f2234c8",
+        "bytes": 2210
+      },
+      "assets/js/admin-reports.js": {
+        "status": 200,
+        "sha256": "7d294f2c634ef567db20352ce85b3d8a0aad4abd829d8d4a3ca6e8dd625d3070",
+        "bytes": 5004
+      },
+      "assets/js/federal-report-renderer.js": {
+        "status": 200,
+        "sha256": "d971eee277927874208b9a6d35d0e5d901277d9beb266a4112e4b3e5f051bc7d",
+        "bytes": 13756
+      },
+      "assets/js/federal-report-controller.js": {
+        "status": 200,
+        "sha256": "c26836da7d6ec3c24cb3e1ef2216f124b592bdbd94d4b93299dd0eb73f3c4a0a",
+        "bytes": 10652
+      },
+      "assets/js/livescore-reader.js": {
+        "status": 200,
+        "sha256": "db9f55386b0e1016fd6ad636f7d77de0357795e72ccdf2387b6e63ba06758772",
+        "bytes": 3638
+      },
+      "assets/js/livescore-renderer.js": {
+        "status": 200,
+        "sha256": "282e580a04dd0ce845211bdd918b6d0dd2921dd65d3b24a68be62839be794047",
+        "bytes": 12486
+      },
+      "assets/js/notification-center.js": {
+        "status": 200,
+        "sha256": "d381bb944a2fd3507b02048201a46e80ec2b608e3a4ef5082310cc13c2a8369f",
+        "bytes": 7748
+      },
+      "assets/js/match-challenges.js": {
+        "status": 200,
+        "sha256": "1fa899ec87b438b7bb10c4f00db78d1d46e56bcabccbd1721c5d7abcb5f3faee",
+        "bytes": 6680
+      },
+      "assets/js/match-challenge-actions.js": {
+        "status": 200,
+        "sha256": "a76a693208098ae1649a8b14fd213af18e58196472fc5a2a1ccfc50b9466bdcc",
+        "bytes": 10841
+      },
+      "assets/js/online-presence.js": {
+        "status": 200,
+        "sha256": "c9d65d7783a3ab0014d93d01c5ae12f9668fe02b817874e091f2c278e1c2677a",
+        "bytes": 7441
+      }
+    },
+    "clients": [
+      {
+        "mode": "desktop",
+        "authenticated": false,
+        "modulesLoaded": 13,
+        "badgeBefore": "Livescore",
+        "badgeAfter": "Livescore",
+        "liveText": "Livescore\nZOBRAZIT SKRYTÉ\nREFRESH\nAktuálně rozehrané zápasy a probíhající turnaje. Aktivní zápas posílá heartbeat každých 30 s, takže se nesmaže ani při dlouhém racku bez změny skóre.\nProbíhající zápasy\nMomentálně není rozehraný žádný zápas.\nProbíhající turnaje\nMomentálně neprobíhá žádný turnaj.",
+        "cycles": 5,
+        "errors": [],
+        "consoleErrors": [],
+        "blocked": [],
+        "detail": "No authorized live record in clean anonymous session; functional populated dialog verified separately with isolated fixtures."
+      },
+      {
+        "mode": "mobile",
+        "authenticated": false,
+        "modulesLoaded": 13,
+        "badgeBefore": "Livescore",
+        "badgeAfter": "Livescore",
+        "liveText": "Livescore\nZOBRAZIT SKRYTÉ\nREFRESH\nAktuálně rozehrané zápasy a probíhající turnaje. Aktivní zápas posílá heartbeat každých 30 s, takže se nesmaže ani při dlouhém racku bez změny skóre.\nProbíhající zápasy\nMomentálně není rozehraný žádný zápas.\nProbíhající turnaje\nMomentálně neprobíhá žádný turnaj.",
+        "cycles": 5,
+        "errors": [],
+        "consoleErrors": [],
+        "blocked": [],
+        "detail": "No authorized live record in clean anonymous session; functional populated dialog verified separately with isolated fixtures."
+      }
+    ]
+  },
+  "publishedMockPresence": [
+    {
+      "mode": "desktop",
+      "render100Ms": 2.699999988079071,
+      "beforeRender100Ms": 0.8999999910593033,
+      "png": "b405c7a49bb815d2e25cda26a5804e59fb1025b1e358968d2edf575f4a640996",
+      "beforePng": "b405c7a49bb815d2e25cda26a5804e59fb1025b1e358968d2edf575f4a640996",
+      "snap": {
+        "active": true,
+        "disposed": false,
+        "epoch": 2,
+        "intervals": 2,
+        "timeouts": 1,
+        "listeners": 8,
+        "pending": false
+      },
+      "end": {
+        "active": false,
+        "disposed": false,
+        "epoch": 14,
+        "intervals": 0,
+        "timeouts": 0,
+        "listeners": 0,
+        "pending": false
+      },
+      "writes": 13,
+      "gets": 12,
+      "liveAuth": false,
+      "liveRules": false,
+      "errors": []
+    },
+    {
+      "mode": "mobile",
+      "render100Ms": 2.7999999970197678,
+      "beforeRender100Ms": 2.7999999970197678,
+      "png": "e6f3c12c5d1720425f0adb08e457deaa586574e1a099ed943853f72d0b6d37e6",
+      "beforePng": "e6f3c12c5d1720425f0adb08e457deaa586574e1a099ed943853f72d0b6d37e6",
+      "snap": {
+        "active": true,
+        "disposed": false,
+        "epoch": 2,
+        "intervals": 2,
+        "timeouts": 1,
+        "listeners": 8,
+        "pending": false
+      },
+      "end": {
+        "active": false,
+        "disposed": false,
+        "epoch": 14,
+        "intervals": 0,
+        "timeouts": 0,
+        "listeners": 0,
+        "pending": false
+      },
+      "writes": 13,
+      "gets": 12,
+      "liveAuth": false,
+      "liveRules": false,
+      "errors": []
+    }
+  ],
+  "publishedMockChallengeReader": {
+    "clients": [
+      {
+        "mode": "desktop",
+        "requests": 11,
+        "concurrentReads": 1,
+        "render100Ms": 47,
+        "resources": {
+          "active": true,
+          "disposed": false,
+          "intervals": 1,
+          "timeouts": 1,
+          "listeners": 2,
+          "pending": false
+        },
+        "jsErrors": [],
+        "writes": [],
+        "scheduledMatch": "accepted"
+      },
+      {
+        "mode": "mobile",
+        "requests": 11,
+        "concurrentReads": 1,
+        "render100Ms": 41.79999999701977,
+        "resources": {
+          "active": true,
+          "disposed": false,
+          "intervals": 1,
+          "timeouts": 1,
+          "listeners": 2,
+          "pending": false
+        },
+        "jsErrors": [],
+        "writes": [],
+        "scheduledMatch": "accepted"
+      }
+    ],
+    "unchangedBodies": [
+      "saveSecurePlayer",
+      "securePlayerRequest"
+    ]
+  },
+  "publishedMockChallengeActions": [
+    {
+      "viewport": "desktop",
+      "allFiveCases": "PASS",
+      "actions": [
+        "send",
+        "accept",
+        "decline",
+        "cancel",
+        "counter",
+        "played"
+      ],
+      "writes": 21,
+      "reads": 8,
+      "unknownBlocksWithoutRetry": true,
+      "warningSurvivesNavigation": true,
+      "warningNotPersistedAcrossReload": true,
+      "storageCases": [
+        {
+          "kind": "send",
+          "status": "saved",
+          "puts": 1
+        },
+        {
+          "kind": "accept",
+          "status": "saved",
+          "puts": 1
+        },
+        {
+          "kind": "decline",
+          "status": "saved",
+          "puts": 1
+        },
+        {
+          "kind": "cancel",
+          "status": "saved",
+          "puts": 1
+        },
+        {
+          "kind": "counter",
+          "status": "saved",
+          "puts": 1
+        },
+        {
+          "kind": "played",
+          "status": "saved",
+          "puts": 1
+        }
+      ],
+      "capacity": {
+        "keys": 100
+      },
+      "deniedStorage": "saved, new draft preserved",
+      "jsErrors": [],
+      "liveAuth": false,
+      "liveRules": false
+    },
+    {
+      "viewport": "mobile",
+      "allFiveCases": "PASS",
+      "actions": [
+        "send",
+        "accept",
+        "decline",
+        "cancel",
+        "counter",
+        "played"
+      ],
+      "writes": 21,
+      "reads": 8,
+      "unknownBlocksWithoutRetry": true,
+      "warningSurvivesNavigation": true,
+      "warningNotPersistedAcrossReload": true,
+      "storageCases": [
+        {
+          "kind": "send",
+          "status": "saved",
+          "puts": 1
+        },
+        {
+          "kind": "accept",
+          "status": "saved",
+          "puts": 1
+        },
+        {
+          "kind": "decline",
+          "status": "saved",
+          "puts": 1
+        },
+        {
+          "kind": "cancel",
+          "status": "saved",
+          "puts": 1
+        },
+        {
+          "kind": "counter",
+          "status": "saved",
+          "puts": 1
+        },
+        {
+          "kind": "played",
+          "status": "saved",
+          "puts": 1
+        }
+      ],
+      "capacity": {
+        "keys": 100
+      },
+      "deniedStorage": "saved, new draft preserved",
+      "jsErrors": [],
+      "liveAuth": false,
+      "liveRules": false
+    }
+  ],
+  "notificationConsumer": "PASS desktop/mobile exact PNG/text/payload using consistent isolated fixture; assertions unchanged; historical instability not fixed; not GitHub CI",
+  "bootstrap": "13 modules and missing module scenarios PASS",
+  "productionWrites": 0,
+  "liveAuthenticatedSession": false,
+  "liveRulesVerified": false,
+  "stage9": "complete in accepted scope; server limitations tracked separately",
+  "stage10": "not started"
+}

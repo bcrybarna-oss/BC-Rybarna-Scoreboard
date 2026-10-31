@@ -1,5 +1,13 @@
 # Revize aplikace Poolčítadlo
 
+## Dominik – ověřené nasazení přítomnosti a uzavření etapy9 (v4.51.111 RC)
+Zadavatel: Dominik
+Datum: 31. 10. 2026
+Změny: PR53 standardně sloučen merge6fb8c7dd72506376d7e45af421e9f872e937d1e5 po čerstvém main110/release/CI, bez konfliktů nebo souběžné změny. Etapa9a/9b/9c dokončena v přijatém rozsahu; serverové omezení evidováno samostatně, etapa10nezahájena. Tento následný commit mění pouze dokumentaci.
+Testy: PR/mainreleasePASS, produkce325PASS/0FAIL/3SKIP (lokálně328/0/0), experiment28/2/0 jednotlivě nezměněný; celekFAILURE. Historický žurnálaudit0/2 samostatný důkaz, nikoli současná implementace. Veřejných28souborů přesnýSHA256/13modulů/dostupnýonline dialog desktop-mobil/0JSerrors/0produkčníchzápisů. Publikovanýkód izolovaně presence/payload/session/visibility/neaktivita/síť/VYZVAT/úklid a9a/9b/bootstrap PASS; viz docs/deployment-v4.51.111.md.
+Nasazení: Pages41231980016 success, veřejná111 odpovídá merge6fb8c7d, bez ručního opakovánídeploye. Produkční přítomnost ani jinádata neměněna, žádná migrace.
+Omezení: ŽivýAuth/Rules/privátníživýseznam/fyzickýtelefon neověřeny. Stop neodvolá serverovýPUT/DELETE; serverovélease/CAS a bezpečnýprotokolvýzev včetně unknownpo restartu zůstávají samostatnéúkoly. PNGnestabilita/bell nezměněny. Návrat reverzíceléhomergesnovouverzí bez vracenídat, vrátí i původnízávody; etapa10nezahájena.
+
 ## Dominik – online přítomnost, etapa9c (v4.51.111 RC)
 Zadavatel: Dominik
 Datum: 31. 10. 2026

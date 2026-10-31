@@ -1,5 +1,17 @@
 # Aktuální roadmapa modularizace Poolčítadla
 
+## Aktuální stav — etapa9 dokončena v přijatém rozsahu (v4.51.111 RC)
+
+Dominik31.10.2026:9a NotificationCenter (109),9b1 MatchChallenges a zjednodušená9b2 MatchChallengeActions (společná110),9c OnlinePresence (111) jsou nasazené. PR53 merge6fb8c7d/Pages41231980016 success; [ověření a návrat](deployment-v4.51.111.md). Jedna produkční implementace každé oblasti, jasní vlastníci prostředků a sessionguardy, původní těla odstraněna. Veřejná anonymní kontrola oddělená od izolovaných publikovaných zápisových scénářů. Žádné produkční testovací zápisy, etapa10 **nezahájena** a vyžaduje nové zadání. Historické přípravy/zákazy níže nejsou aktuální stav.
+
+### Samostatné serverové a ověřovací úkoly mimo dokončený rozsah9
+
+- **S1 — bezpečný protokol výzev:** whole-profilePUT, souběh zařízení, atomická hranice, identita operace a průkazný terminální výsledek; [samostatný návrh](challenges-write-conflict-proposal.md). Zatím neimplementovat. Unknown stopka/varování současného klienta nepřežijí restart; reload není odvolání PUT ani bezpečný retry.
+- **S2 — serverová lifetime přítomnosti:** posoudit lease/onDisconnect/CAS proti stávajícím Rules a device cestám; zneplatnění klientského ticketu neodvolá odeslanýPUT/DELETE. Stávající freshness zůstává, nový protokol neimplementován a neskrývá se pod přesunem9c.
+- **V1 — živý Auth/Rules integrační test:** pouze samostatný testovací projekt/emulátor a schválené scénáře, ne produkční účty či data. Mockované PASS nenahrazuje živéověření.
+
+Tyto úkoly se automaticky nepřidávají do etapy10 ani nejsou označeny za vyřešené nasazením9c. Samostatná PNG nestabilita/mobilníbell a dřívější PDF/cache úkoly zůstávají mimo přesuny kódu.
+
 ## Etapa9c — připravený kandidát111, nenasazeno
 
 Dominik31.10.2026: [OnlinePresence](online-presence-stage-9c.md) uzavírá oblast9 jediným vlastníkem globální přítomnosti, rendereru a prostředků. Adaptéry identity/autorizace a VYZVAT zůstávají aplikaci; oprava A→B čekajícího ticketu a staleodpovědí samostatně doložená. Žádný nový serverovýprotokol, Rules, cache ani etapa10. Produkce110 zachována, kandidát111 pouze PR; testy328/0/0 a desktop/mobilparita/úklid/9a/9bPASS, experiment2vady a historickýaudit2vady odděleně. Další oblast vyžaduje nové zadání. Starší „9cnezahájena“ níže je historie před tímto zadáním.
@@ -82,7 +94,7 @@ Současný core kombinuje firebaseSignIn/firebaseRefreshAuth, ověření e-mailu
 - Rizika/ověření: expirace tokenu během odpovědi, stejné UID po reloginu, A→B, 401/403, neověřený e-mail, lokální offline ownerless versus účetní zápas, falešné lokální role, opožděný lookup. Browser mocky plus případné serverové Rules testy jen v testovacím projektu; živáAuth není automaticky ověřená.
 - Dokončení: jediný vlastník relace a capability API, žádný credential revival po logoutu, práva a datové formáty zachovány, žádná kopie politik v core a modulu. Bez schválení neměnit Firebase Rules ani skutečné uživatele.
 
-## 9. Výzvy, notifikace a online přítomnost
+## 9. Výzvy, notifikace a online přítomnost — dokončeno v přijatém rozsahu, serverové úkoly S1/S2/V1 zvlášť
 
 Aktuální rozdělení31.10.2026 podle skutečných závislostí nahrazuje původní pracovní9a–9e:
 

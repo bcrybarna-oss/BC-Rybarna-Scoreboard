@@ -1,3 +1,7 @@
+# Nasazeno a ověřeno v4.51.111 RC — etapa9 dokončena v přijatém rozsahu
+
+Aktuální verze: **v4.51.111 RC**. Dominik,31.10.2026: PR53 merge **6fb8c7dd72506376d7e45af421e9f872e937d1e5**, Pages41231980016 success. Veřejných28souborů přesnýSHA256/13modulů/desktop-mobil/dostupnýonline dialog/0JSerrors/0produkčníchzápisů. Publikovanýkód izolovaně presence lifecycle/session/visible-hidden/neaktivita/síť/payloady/VYZVAT/úklid i9a/9b regrese PASS. ReleasePR/mainPASS, produkce325/0/3 vCI (lokálně328/0/0), experiment28/2/0nezměněný; celekFAILURE. Historický žurnálaudit0/2 pouze důkaz odstraněné implementace, mimo současnouprodukci. ŽivýAuth/Rules neověřeny. Odeslanýzápis není stopem odvolaný; serverovélifetime/CAS/unknownpo restartu aRulesověření jsou samostatné úkoly mimo uzavřenouetapu9. [Nasazení, rozsah, omezení a návrat](docs/deployment-v4.51.111.md). Produkčnídata bezezměny, etapa10nezahájena. Následující přípravy jsou historie před schválenýmnasazením.
+
 # Etapa9c — online přítomnost, kandidát v4.51.111 RC
 
 Aktuální verze: **v4.51.111 RC**. Produkce: **v4.51.110 RC**.
