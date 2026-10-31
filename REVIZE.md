@@ -5,7 +5,7 @@ Zadavatel: Dominik
 Datum: 31. 10. 2026
 Změny: Schválený menší rozsah9b1. Jediný MatchChallenges pro cache/merge/global obnovy a společný players GET; původní těla/timery odstraněny. Samostatné opravy úniku přijaté výzvy A do B, pozdního players JSON staré relace a duplicitních GET. Explicitní závislosti, per-UID lokální cache bez mazání starého klíče, životní cyklus/bfcache. Renderer/writers/presence beze změny; A1/9b2/9c nezahájeny.
 Testy:9unit PASS; produkce297/0/0 s privátními exporty, experiment28/2/0 kandidát i výchozí main, dvě jednotlivě doložené vady identity preview. Desktop/mobile skutečného modulu: drafty,3→1GET,A→B,pozdní odpovědi,chyba/retry,předvyplnění zápasu,notifikace9a,20restartů/úklid PASS. Shodné markup/texty nad40,9MB archivem, desktop284,6→285,5ms/mobile362,2→334,4ms za100renderů. Bootstrap11modulů/recovery/turnaje101/Livescore/OBS/PNG/PDF/XLSX PASS. Přísný notification PNG test FAIL se stejnými otisky jako109, nezměněn ani skryt. Viz docs/challenges-stage-9b1.md.
-Nasazení: Kandidát110, samostatná větev; zatím nesloučeno ani nenasazeno, produkce109. Produkčnídata neměněna.
+Nasazení: Kandidát110 v draft PR51, kód2e2e9b4; CI41220896548 releasePASS/produkce294PASS,0FAIL,3SKIP/experiment28PASS,2FAIL,0SKIP; celekFAILURE. Zatím nesloučeno ani nenasazeno, produkce109. Produkčnídata neměněna.
 Omezení: ŽivýAuth/Rules/konflikty zařízení neověřeny. Whole-profile PUT a staré write/form závody ponechány9b2 poA1, žádný nový transakční protokol ani tvrzení o odvolání odeslaného zápisu. Mobilní bell překrytí/PNG nestabilita samostatně. Návrat reverzí aplikace s novou verzí, bez migrace dat.
 
 

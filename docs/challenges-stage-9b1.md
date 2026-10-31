@@ -2,6 +2,8 @@
 
 Zadavatel: Dominik. Datum: 31. 10. 2026. Výchozí main `fade611557a33a8145b8c0251883946e1bf7b968` (produkce v4.51.109 RC). Kandidát **v4.51.110 RC**, samostatný PR, nesloučeno a nenasazeno. Menší rozsah 9b1 byl výslovně schválen po zmapování; nejde o dokončení celé 9b.
 
+Draft [PR #51](https://github.com/bcrybarna-oss/BC-Rybarna-Scoreboard/pull/51), aplikační commit `2e2e9b4ee85c219e7a8f53e9bf7f4011dd074fae`. [CI 41220896548](https://github.com/bcrybarna-oss/BC-Rybarna-Scoreboard/actions/runs/41220896548): Release PASS, produkční sada **294 PASS / 0 FAIL / 3 SKIP**, experimentální **28 PASS / 2 FAIL / 0 SKIP**. Celé CI FAILURE kvůli dvěma jednotlivě potvrzeným experimentálním vadám; browserový strict PNG FAIL se vykazuje samostatně. Žádné kontroly nebyly vypnuty. Nesloučeno/nenasazeno.
+
 ## Hranice a mapa
 
 | Oblast | Vlastník po změně | Závislosti / životnost |

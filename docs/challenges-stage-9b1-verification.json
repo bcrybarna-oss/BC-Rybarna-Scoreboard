@@ -153,5 +153,21 @@
     ]
   },
   "deployment": "not merged, not deployed",
-  "liveAuth": false
+  "liveAuth": false,
+  "ci": {
+    "run": 41220896548,
+    "commit": "2e2e9b4ee85c219e7a8f53e9bf7f4011dd074fae",
+    "release": "PASS",
+    "production": {
+      "pass": 294,
+      "fail": 0,
+      "skip": 3
+    },
+    "experimental": {
+      "pass": 28,
+      "fail": 2,
+      "skip": 0
+    },
+    "overall": "failure"
+  }
 }
