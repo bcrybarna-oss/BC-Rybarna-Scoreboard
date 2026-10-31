@@ -1043,10 +1043,11 @@
   </div>
 
 <script src="assets/js/federal-statistics.js?v=4.51.98"></script>
-<script src="assets/js/federal-report-renderer.js?v=4.51.108"></script>
-<script src="assets/js/federal-report-controller.js?v=4.51.108"></script>
-<script src="assets/js/livescore-reader.js?v=4.51.108"></script>
-<script src="assets/js/livescore-renderer.js?v=4.51.108"></script>
+<script src="assets/js/federal-report-renderer.js?v=4.51.109"></script>
+<script src="assets/js/federal-report-controller.js?v=4.51.109"></script>
+<script src="assets/js/livescore-reader.js?v=4.51.109"></script>
+<script src="assets/js/livescore-renderer.js?v=4.51.109"></script>
+<script src="assets/js/notification-center.js?v=4.51.109"></script>
 <script src="assets/js/cloud-refresh.js?v=4.51.99"></script>
 <script src="assets/js/own-reports.js?v=4.51.102"></script>
 <script src="assets/js/federal-viewer.js?v=4.51.103"></script>
@@ -2612,7 +2613,7 @@ html[data-theme="light"] #leagueSchedule .history-item .muted{
           <span class="by">by</span>
           <span class="club">BC Rybárna</span>
         </div>
-        <small class="modern-brand-version">v4.51.108 RC</small>
+        <small class="modern-brand-version">v4.51.109 RC</small>
       </div>
     </div>
     <div class="nav">
@@ -3226,7 +3227,7 @@ html[data-theme="light"] #leagueSchedule .history-item .muted{
         </div>
         <div class="subpanel" style="min-width:210px;text-align:center;margin:0">
           <div class="muted" style="font-size:10px;font-weight:950;letter-spacing:1px">AKTUÁLNÍ VERZE</div>
-          <div style="font-size:22px;font-weight:950;color:var(--gold2);margin-top:5px">v4.51.108 RC</div>
+          <div style="font-size:22px;font-weight:950;color:var(--gold2);margin-top:5px">v4.51.109 RC</div>
         </div>
       </div>
     </div>
@@ -5991,7 +5992,7 @@ html[data-theme="light"] #leagueSchedule .history-item .muted{
       </div>
 
       <div id="groupPlayoffSeedStatus" class="muted" style="margin-top:12px;min-height:20px"></div>
-      <div class="muted" style="margin-top:4px;font-size:11px">RC v4.51.108</div>
+      <div class="muted" style="margin-top:4px;font-size:11px">RC v4.51.109</div>
       <div class="modal-actions">
         <button id="groupPlayoffSeedApplyBtn" class="btn primary big" type="button">NASADIT DO PLAY-OFF</button>
         <button id="groupPlayoffSeedCancelBtn" class="btn">ZRUŠIT</button>
@@ -6085,6 +6086,7 @@ html[data-theme="light"] #leagueSchedule .history-item .muted{
   if(!window.FederalReportRenderer){
     const error=document.createElement('div');error.id='federalReportRendererLoadError';error.setAttribute('role','alert');error.textContent='Nepodařilo se načíst vykreslování reportů Federal Cupu. Obnovte stránku.';document.body.prepend(error);throw new Error('FEDERAL_REPORT_RENDERER_MODULE_UNAVAILABLE');
   }
+  if(!window.NotificationCenter){const error=document.createElement('div');error.id='notificationCenterLoadError';error.setAttribute('role','alert');error.textContent='Nepodařilo se načíst upozornění. Obnovte stránku.';document.body.prepend(error);throw Error('NOTIFICATION_CENTER_MODULE_UNAVAILABLE');}
   if(!window.LivescoreRenderer){const error=document.createElement('div');error.id='livescoreRendererLoadError';error.setAttribute('role','alert');error.textContent='Nepodařilo se načíst zobrazení Livescore. Obnovte stránku.';document.body.prepend(error);throw Error('LIVESCORE_RENDERER_MODULE_UNAVAILABLE');}
   if(!window.LivescoreReader){const error=document.createElement('div');error.id='livescoreReaderLoadError';error.setAttribute('role','alert');error.textContent='Nepodařilo se načíst Livescore. Obnovte stránku.';document.body.prepend(error);throw Error('LIVESCORE_READER_MODULE_UNAVAILABLE');}
   if(!window.CloudRefresh){
@@ -7131,7 +7133,7 @@ html[data-theme="light"] #leagueSchedule .history-item .muted{
     const btn=$('submitReportBtn');if(btn)btn.disabled=true;
     try{
       const id=uid(),p=currentUserPlayerId?data.players?.[currentUserPlayerId]:null;
-      const report={id,createdByUid:cloudUid,createdByPlayerId:currentUserPlayerId||'',createdByName:p?playerSelectionLabel(p):(cloudUserEmail||'Uživatel'),email:cloudUserEmail||'',type,area,description,appVersion:'v4.51.108 RC',createdAt:new Date().toISOString(),updatedAt:new Date().toISOString(),status:'new',adminNote:''};
+      const report={id,createdByUid:cloudUid,createdByPlayerId:currentUserPlayerId||'',createdByName:p?playerSelectionLabel(p):(cloudUserEmail||'Uživatel'),email:cloudUserEmail||'',type,area,description,appVersion:'v4.51.109 RC',createdAt:new Date().toISOString(),updatedAt:new Date().toISOString(),status:'new',adminNote:''};
       await reportRequest(id,'PUT',report);
       try{
         await writeReportUserMirror(report);
@@ -8484,6 +8486,7 @@ html[data-theme="light"] #leagueSchedule .history-item .muted{
   }
 
   function refreshAccountUI(){
+    window.syncNotificationIdentity?.();
     const el=$('accountPlayerStatus');
     const btn=$('myPlayerProfileBtn');
     const adminBtn=$('adminNavBtn');
@@ -28917,141 +28920,15 @@ function renderStats(){
     try{await persist(ch);}catch(e){console.warn('Complete challenge:',e);}
   };
 
-  const NOTIFICATION_READ_KEY='poolcitadlo_notification_read_v1';
-
-  function notificationReadMap(){
-    var uid=currentUid();
-    if(!uid)return {};
-    try{
-      var all=JSON.parse(localStorage.getItem(NOTIFICATION_READ_KEY)||'{}');
-      return (all&&typeof all==='object'&&all[uid]&&typeof all[uid]==='object')?all[uid]:{};
-    }catch(e){return {};}
-  }
-
-  function saveNotificationReadMap(map){
-    var uid=currentUid();
-    if(!uid)return;
-    try{
-      var all=JSON.parse(localStorage.getItem(NOTIFICATION_READ_KEY)||'{}');
-      if(!all||typeof all!=='object'||Array.isArray(all))all={};
-      all[uid]=map||{};
-      localStorage.setItem(NOTIFICATION_READ_KEY,JSON.stringify(all));
-    }catch(e){}
-  }
-
-  function notificationEventKey(ch,type){
-    var stamp=ch.responseUpdatedAt||ch.updatedAt||ch.acceptedAt||ch.createdAt||'';
-    return [ch.id,type,stamp].join('|');
-  }
-
-  function notificationEvents(){
-    if(!cloudAuthenticated||!currentUid())return [];
-    var me=currentUid(),rows=[];
-    cache.forEach(function(ch){
-      if(!ch||!isMine(ch))return;
-      var opponent=playerNameById(otherPlayerId(ch));
-      var meta=String(ch.discipline||'').toUpperCase()+' · Race to '+Number(ch.raceTo||1)+(ch.date||ch.flexibleTime?' · '+formatDate(ch):'');
-
-      if(ch.status==='pending'&&ch.recipientUid===me){
-        rows.push({
-          key:notificationEventKey(ch,'challenge_pending'),challengeId:ch.id,
-          title:opponent+' tě vyzval k zápasu',meta:meta,
-          ts:ch.updatedAt||ch.createdAt||''
-        });
-        return;
-      }
-
-      if(ch.status==='countered'&&ch.counterByUid&&ch.counterByUid!==me){
-        rows.push({
-          key:notificationEventKey(ch,'challenge_counter'),challengeId:ch.id,
-          title:opponent+' navrhl jiný termín',meta:meta,
-          ts:ch.responseUpdatedAt||ch.updatedAt||''
-        });
-        return;
-      }
-
-      if(ch.status==='accepted'&&ch.senderUid===me){
-        rows.push({
-          key:notificationEventKey(ch,'challenge_accepted'),challengeId:ch.id,
-          title:opponent+' přijal výzvu k zápasu',meta:meta,
-          ts:ch.acceptedAt||ch.responseUpdatedAt||ch.updatedAt||''
-        });
-        return;
-      }
-
-      if(ch.status==='declined'&&ch.senderUid===me){
-        rows.push({
-          key:notificationEventKey(ch,'challenge_declined'),challengeId:ch.id,
-          title:opponent+' odmítl tvoji výzvu',meta:meta,
-          ts:ch.responseUpdatedAt||ch.updatedAt||''
-        });
-      }
-    });
-    rows.sort(function(a,b){return new Date(b.ts||0)-new Date(a.ts||0)});
-    return rows.slice(0,30);
-  }
-
-  function renderNotificationCenter(){
-    var bell=q('notificationBellBtn'),count=q('notificationCount'),list=q('notificationList');
-    if(!bell||!count||!list)return;
-    if(!cloudAuthenticated||!currentUid()){
-      count.classList.add('hidden');count.textContent='0';bell.classList.remove('has-unread');
-      list.innerHTML='<div class="notification-empty">Po přihlášení se zde zobrazí upozornění.</div>';
-      return;
-    }
-    var read=notificationReadMap(),events=notificationEvents();
-    var unread=events.filter(function(n){return !read[n.key]}).length;
-    count.textContent=unread>99?'99+':String(unread);
-    count.classList.toggle('hidden',!unread);
-    bell.classList.toggle('has-unread',!!unread);
-    list.innerHTML=events.length?events.map(function(n){
-      return '<button type="button" class="notification-item '+(!read[n.key]?'unread':'')+'" data-notification-key="'+esc2(n.key)+'" data-challenge-id="'+esc2(n.challengeId)+'">'+
-        '<div class="notification-item-title">'+esc2(n.title)+'</div>'+
-        '<div class="notification-item-meta">'+esc2(n.meta)+'</div>'+
-      '</button>';
-    }).join(''):'<div class="notification-empty">Nemáš žádná upozornění.</div>';
-
-    list.querySelectorAll('[data-notification-key]').forEach(function(el){
-      el.addEventListener('click',function(){
-        var map=notificationReadMap();
-        map[this.dataset.notificationKey]=Date.now();
-        saveNotificationReadMap(map);
-        renderNotificationCenter();
-        q('notificationPanel')?.classList.add('hidden');
-        q('notificationBellBtn')?.setAttribute('aria-expanded','false');
-        showScreen('challenges');
-        setTimeout(function(){
-          var target=q('matchChallengeIncomingList')||q('matchChallengesContent');
-          target?.scrollIntoView({behavior:'smooth',block:'start'});
-        },100);
-      });
-    });
-  }
-
-  function markAllNotificationsRead(){
-    var map=notificationReadMap();
-    notificationEvents().forEach(function(n){map[n.key]=Date.now()});
-    saveNotificationReadMap(map);
-    renderNotificationCenter();
-  }
-
+  const notificationCenter=window.NotificationCenter.create({
+    elements:Object.fromEntries(['notificationBellBtn','notificationCount','notificationList','notificationPanel','notificationMarkAllBtn'].map(id=>[id,q(id)])),
+    identity:()=>({authenticated:cloudAuthenticated,uid:currentUid(),scope:JSON.stringify([currentUserPlayerId,currentUserRole,cloudEmailVerified])}),challenges:()=>cache,playerName:playerNameById,formatDate,
+    storage:{getItem:key=>localStorage.getItem(key),setItem:(key,value)=>localStorage.setItem(key,value)},now:Date.now,document,page:window,setTimeout:window.setTimeout.bind(window),clearTimeout:window.clearTimeout.bind(window),openChallenges:()=>showScreen('challenges'),challengesVisible:()=>!!q('screen-challenges')?.classList.contains('active'),scrollChallenges:()=>{(q('matchChallengeIncomingList')||q('matchChallengesContent'))?.scrollIntoView({behavior:'smooth',block:'start'});}
+  });
+  function renderNotificationCenter(){notificationCenter.render();}
   window.renderNotificationCenter=renderNotificationCenter;
-
-  q('notificationBellBtn')?.addEventListener('click',function(e){
-    e.stopPropagation();
-    var panel=q('notificationPanel');
-    if(!panel)return;
-    var opening=panel.classList.contains('hidden');
-    panel.classList.toggle('hidden',!opening);
-    this.setAttribute('aria-expanded',opening?'true':'false');
-    if(opening)renderNotificationCenter();
-  });
-  q('notificationPanel')?.addEventListener('click',function(e){e.stopPropagation()});
-  q('notificationMarkAllBtn')?.addEventListener('click',function(){markAllNotificationsRead()});
-  document.addEventListener('click',function(){
-    q('notificationPanel')?.classList.add('hidden');
-    q('notificationBellBtn')?.setAttribute('aria-expanded','false');
-  });
+  window.syncNotificationIdentity=()=>{notificationCenter.syncIdentity();};
+  notificationCenter.start();
 
   window.openMatchChallengesScreen=function(){
     render();

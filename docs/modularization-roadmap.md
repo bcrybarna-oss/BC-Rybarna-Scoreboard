@@ -6,6 +6,10 @@ Zadavatel: Dominik. Aktualizace30.10.2026: produkce108, PR49 merge d2ed8be97dfd1
 
 Dominik,30.10.2026: samostatný kandidát108 odděluje renderer Livescore seznamu/detailu/indikátoru. 8a a předchozí produkční moduly zachované, žádné Firebase/storage/polling v rendereru. [Rozsah, ověření a návrat](livescore-renderer-stage-8b.md). Neslučovat/nenasazovat, etapu9 nezahajovat. Starší údaj „8b nezahájena“ v záznamu nasazení107 výše je historie.
 
+## Aktuální práce 9a
+
+Dominik,31.10.2026: kandidát109, nesloučen/nenasazen. Rozdělení9a/9b/9c níže je aktuální plán; pouze9a implementována. Historický zákaz etapy9 v záznamu nasazení108 byl nahrazen tímto zadáním.
+
 ## Výchozí stav a závazná pravidla
 
 Produkční root index.html načítá devět skutečně používaných modulů: FederalStatistics (čisté výpočty a reportové modely), CloudRefresh (automatické appData relace), OwnReports, FederalViewer, AdminReports, FederalReportRenderer, FederalReportController, LivescoreReader a LivescoreRenderer. Starý test-modular/assets/js/pool-core.js je samostatná experimentální větev, nikoli zdroj produkčního bootstrapu. Žádné slučování těchto dvou implementací naslepo.
@@ -48,7 +52,7 @@ Aktuální realizace: **7a**, jediný FederalReportRenderer pro HTML/SVG. Modely
 
 Současný core kombinuje firebaseSignIn/firebaseRefreshAuth, ověření e-mailu, persistence relace, lookup profilu/role, token pro REST, modální UI a počáteční datový merge. editableMatchOwnedByCurrentUser, currentUserIsSystemAdmin, canManageTournament/Series a profilová práva nejsou totéž co transportní přihlášení. Firebase Rules zůstávají skutečnou serverovou ochranou; skrytí tlačítka ji nenahrazuje.
 
-- **A1 — relace a identity:** malý samostatný PR před první zapisující podetapou9. Vlastník credentials a jejich persistence, epoch/UID, token refresh single-flight, stop/logout a pozdní odpovědi. Konzumenti dostávají snapshot identity + generation a authorize(requestContext); tokeny se neexportují do UI ani logů. Zachovat admin session-only a explicitní offline režim.
+- **A1 — relace a identity:** malý samostatný PR před první serverově zapisující podetapou9 (9b2/9c);9a lokální read-state používá zachycené UID a synchronní guard bez credentials. Vlastník credentials a jejich persistence, epoch/UID, token refresh single-flight, stop/logout a pozdní odpovědi. Konzumenti dostávají snapshot identity + generation a authorize(requestContext); tokeny se neexportují do UI ani logů. Zachovat admin session-only a explicitní offline režim.
 - **A2 — capabilities/ownership:** samostatný čistý modul nad ověřenou identitou a explicitním kontextem profilu/turnaje/série. Zachovat creator, skutečné Singles/Doubles účastníky, správce turnaje a system admin podle současných pravidel. Nepřidávat oprávnění a nesjednotit bez důkazu odlišná práva.
 - **A3 — login orchestrace/UI:** samostatně až po A1 a jasné hranici dat10. Volá identity→ověření→profil/role→load/merge; explicitní resume zůstane explicitní. Experimentální automatický match/tournament návrat není automaticky produkční funkcí. Reset hesla/registrace/verify-email mají vlastní autorizované transakce.
 - Rizika/ověření: expirace tokenu během odpovědi, stejné UID po reloginu, A→B, 401/403, neověřený e-mail, lokální offline ownerless versus účetní zápas, falešné lokální role, opožděný lookup. Browser mocky plus případné serverové Rules testy jen v testovacím projektu; živáAuth není automaticky ověřená.
@@ -56,11 +60,15 @@ Současný core kombinuje firebaseSignIn/firebaseRefreshAuth, ověření e-mailu
 
 ## 9. Výzvy, notifikace a online přítomnost
 
-- Tři oblasti rozdělit:9a čtení/řazení notifikací a scoped renderer;9b lifecycle výzev a jejich čtení;9c samostatné mutace výzev;9d presence GET;9e presence PUT/DELETE a aktivita zařízení. Ne jeden velký PR.
-- Závislosti: A1/A2, cloud transportní adaptéry, profilové identity, plánované zápasy a události dokumentu. Současné30s intervaly/1200ms warm-up,5s render/start musí mít jednoznačného vlastníka. Presence je relace/zařízení, nikoli jen jedna obrazovka.
-- Rizika: duplicitní notifikace a výzvy, pozdní mazání presence jiného účtu, automatické zápisy po logoutu nebo v anonymním režimu, ztráta potvrzení akce.
-- Ověření: dvě relace, více panelů/tabů, logout/reconnect/visibility, opakovaná init, dedup notifikací, právě jeden zápis každé akce a idempotence při ztrátě potvrzení, výhradně izolovaná data.
-- Dokončení: vlastník každého zdroje a mutačního jobu, nepřibývající prostředky, zachované role/pravidla, pozdní výsledky izolované podle identity. Čtecí a zapisující opravy se nemají zaměnit za čistý přesun.
+Aktuální rozdělení31.10.2026 podle skutečných závislostí nahrazuje původní pracovní9a–9e:
+
+- **9a — centrum notifikací (nyní kandidát109):** model událostí, řazení/limit30, DOM, lokální přečtení v existujícím UID-scoped JSON, globální vlastník a zrušení odloženého UI efektu. Žádný nový síťový loader. Provider výzev zůstává explicitní závislost. [Mapa a hranice](notifications-stage-9a.md).
+- **9b — výzvy, až nové zadání:**9b1 vlastník cache a globálních obnov, single-flight sdíleného hráčského čtení a relace/opožděné odpovědi;9b2 transakce odeslat/přijmout/odmítnout/zrušit/protinávrh/odehráno a formulářové callbacky. Tyto části mohou být samostatně nasaditelné PR. Před9b2 je nutná A1 hranice identity+token/request; neprovádět pouhý přesun původních nehlídaných PUT.
+- **9c — přítomnost, až nové zadání:** ucelený session/device vlastník GET+PUT/DELETE, aktivity, visibility,30s heartbeat a5s render/warmup. Oddělit jen po zavedení stejné A1 hranice; případné rozdělení menších PR zachová jednoho vlastníka. Samostatný GET bez ochrany souvisejícího writeru by nechal životnost napůl.
+- Pořadí:9a odstraní soukromý UI/local-write závod bez zásahu do serverového transportu;9b stabilizuje zdroj výzev a zápisové identity;9c pak použije stabilní session/device kontrakt. Pouhé přejmenování těchto oblastí není dokončení jejich původních vad.
+- Zachovat30s výzvy/1200ms warmup a30s presence/5s render-start; globální služby nekončí běžnou navigací. Režim podmíněný viditelností se nepřenáší naslepo mezi službami. Žádné Rules, migrace nebo nový notifikační systém.
+- Ověření každé části: skutečný produkční modul, dvě relace a více tabů, logout/reconnect/visibility, init/stop, dedup požadavků, jedno provedení akce a zachycený vlastník/payload před odesláním. Odeslaný zápis nelze logoutem odvolat. Skutečné zápisy jen do izolovaných dat.
+- Dokončení: jeden vlastník každého prostředku a mutačního jobu, staré tělo odstraněné, výsledky bez souběhu původní implementace.9a negarantuje starý globální securePlayers transport, výzvy ani presence; jejich známé mezery jsou uvedené v mapě.
 
 ## 10. Datová vrstva
 
