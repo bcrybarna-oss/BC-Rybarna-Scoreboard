@@ -1,3 +1,7 @@
+# Blokující následná revize žurnálu
+
+[Audit31.10.2026](challenge-journal-review.md) odhalil neakceptované omezení při plné kvótě a dvě vady žurnálu. Pět oprav závodů zůstává přijato, **tento PR však není připravený k integraci/nasazení**. Následující předání a tehdejšíPASS výsledky jsou zachované historické ověření s nedostatečným kontraktem GETshody, nikoli aktuální záruka žurnálu.
+
 # Etapa 9b2 — úzká oprava životnosti zápisů výzev
 
 Zadavatel: Dominik. Datum: 31.10.2026. Základ: nevydaná9b1 `fde56cee21a1f0ea074fb3572e71187e5e27216a` / PR51, main `fade611557a33a8145b8c0251883946e1bf7b968`, produkce109. Samostatný navazující PR, **společné dosud nevydané v4.51.110 RC**. Samotnou9b1 neslučovat ani nenasazovat; nejprve integrace obou částí a nové schválení společného vydání.9c nezačíná.

@@ -1,5 +1,14 @@
 # Revize aplikace Poolčítadlo
 
+## Dominik – kontrola žurnálu9b2 a blokující zjištění (v4.51.110 RC)
+Zadavatel: Dominik
+Datum: 31. 10. 2026
+Změny: Pouze revize/testy/dokumentace, aplikace beze změny. Nové testy odhalily nedostatečné ověření nejasnéhoPUT pouhou shodou listu a chybějící whitelist sender metadat. Reálná plná kvóta blokuje všech6akcí; navrženy varianty bez implementace.
+Testy: Chrome desktop/mobileviewport skutečně plnýlocalStorage5242874znaků:6/6odmítnuto,0PUT,koncept aarchivnísentinel zachovány; IndexedDB2048znaků při tomtéž zaplnění uspěl. Nové2produkční regrese FAIL (ne experiment), celá lokálníprodukce312PASS/2FAIL/0SKIP. Dosavadních15controllerunitPASS nezaručuje terminálníACK. Viz docs/challenge-journal-review.md.
+Nasazení: PR52 není schválený k integraci/nasazení žurnálu. Produkce109 beze změny, kandidát110nevydaný; žádnýmerge/deploy/migrace.
+Omezení: Pouze izolovanýChrome/mockAuth/mockFirebase, ne živéRules ani fyzickýiPhone. Neshoda nerozliší neprovedeno/čeká/konflikt; shoda není důkaz dokončení konkrétního požadavku. Žádný bezpečný automatický unblock po nejasnémPUT současný protokol negarantuje; potvrzenky aniarchiv nemazat pro odblokování.9c nezahájena.
+
+
 ## Dominik – životnost zápisů výzev, navazující etapa 9b2 (v4.51.110 RC)
 Zadavatel: Dominik
 Datum: 31. 10. 2026
