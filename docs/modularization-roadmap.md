@@ -1,5 +1,9 @@
 # Aktuální roadmapa modularizace Poolčítadla
 
+## Etapa9c — připravený kandidát111, nenasazeno
+
+Dominik31.10.2026: [OnlinePresence](online-presence-stage-9c.md) uzavírá oblast9 jediným vlastníkem globální přítomnosti, rendereru a prostředků. Adaptéry identity/autorizace a VYZVAT zůstávají aplikaci; oprava A→B čekajícího ticketu a staleodpovědí samostatně doložená. Žádný nový serverovýprotokol, Rules, cache ani etapa10. Produkce110 zachována, kandidát111 pouze PR; testy328/0/0 a desktop/mobilparita/úklid/9a/9bPASS, experiment2vady a historickýaudit2vady odděleně. Další oblast vyžaduje nové zadání. Starší „9cnezahájena“ níže je historie před tímto zadáním.
+
 ## Nasazeno společné9b1 +9b2 ve v4.51.110 RC
 
 Dominik31.10.2026: PR52→51 integrace32017de, společný main5e14d79/Pages41229438687 success. [Deployment a důkazy](deployment-v4.51.110.md). Reader/cache/obnovy a zjednodušené lokální zápisové guardy jsou produkční; starý povinný žurnál/GETverified nejsou. Unknown upozornění/stopka pouze do restartu, budoucí serverovýprotokol/CAS jen samostatný návrh. Veřejná anonymní kontrola oddělena od izolovaných publikovaných scénářů s mock Auth/Rules; experimentální2vady a historický audit2vady vykázány odděleně.9cnezahájena, další část vyžaduje nové zadání. Následující přípravy/zákazy jsou historie.

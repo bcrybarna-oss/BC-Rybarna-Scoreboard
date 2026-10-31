@@ -1043,13 +1043,14 @@
   </div>
 
 <script src="assets/js/federal-statistics.js?v=4.51.98"></script>
-<script src="assets/js/federal-report-renderer.js?v=4.51.110"></script>
-<script src="assets/js/federal-report-controller.js?v=4.51.110"></script>
-<script src="assets/js/livescore-reader.js?v=4.51.110"></script>
-<script src="assets/js/livescore-renderer.js?v=4.51.110"></script>
-<script src="assets/js/match-challenge-actions.js?v=4.51.110"></script>
-<script src="assets/js/match-challenges.js?v=4.51.110"></script>
-<script src="assets/js/notification-center.js?v=4.51.110"></script>
+<script src="assets/js/federal-report-renderer.js?v=4.51.111"></script>
+<script src="assets/js/federal-report-controller.js?v=4.51.111"></script>
+<script src="assets/js/livescore-reader.js?v=4.51.111"></script>
+<script src="assets/js/livescore-renderer.js?v=4.51.111"></script>
+<script src="assets/js/online-presence.js?v=4.51.111"></script>
+<script src="assets/js/match-challenge-actions.js?v=4.51.111"></script>
+<script src="assets/js/match-challenges.js?v=4.51.111"></script>
+<script src="assets/js/notification-center.js?v=4.51.111"></script>
 <script src="assets/js/cloud-refresh.js?v=4.51.99"></script>
 <script src="assets/js/own-reports.js?v=4.51.102"></script>
 <script src="assets/js/federal-viewer.js?v=4.51.103"></script>
@@ -2615,7 +2616,7 @@ html[data-theme="light"] #leagueSchedule .history-item .muted{
           <span class="by">by</span>
           <span class="club">BC Rybárna</span>
         </div>
-        <small class="modern-brand-version">v4.51.110 RC</small>
+        <small class="modern-brand-version">v4.51.111 RC</small>
       </div>
     </div>
     <div class="nav">
@@ -3234,7 +3235,7 @@ html[data-theme="light"] #leagueSchedule .history-item .muted{
         </div>
         <div class="subpanel" style="min-width:210px;text-align:center;margin:0">
           <div class="muted" style="font-size:10px;font-weight:950;letter-spacing:1px">AKTUÁLNÍ VERZE</div>
-          <div style="font-size:22px;font-weight:950;color:var(--gold2);margin-top:5px">v4.51.110 RC</div>
+          <div style="font-size:22px;font-weight:950;color:var(--gold2);margin-top:5px">v4.51.111 RC</div>
         </div>
       </div>
     </div>
@@ -6003,7 +6004,7 @@ html[data-theme="light"] #leagueSchedule .history-item .muted{
       </div>
 
       <div id="groupPlayoffSeedStatus" class="muted" style="margin-top:12px;min-height:20px"></div>
-      <div class="muted" style="margin-top:4px;font-size:11px">RC v4.51.110</div>
+      <div class="muted" style="margin-top:4px;font-size:11px">RC v4.51.111</div>
       <div class="modal-actions">
         <button id="groupPlayoffSeedApplyBtn" class="btn primary big" type="button">NASADIT DO PLAY-OFF</button>
         <button id="groupPlayoffSeedCancelBtn" class="btn">ZRUŠIT</button>
@@ -7146,7 +7147,7 @@ html[data-theme="light"] #leagueSchedule .history-item .muted{
     const btn=$('submitReportBtn');if(btn)btn.disabled=true;
     try{
       const id=uid(),p=currentUserPlayerId?data.players?.[currentUserPlayerId]:null;
-      const report={id,createdByUid:cloudUid,createdByPlayerId:currentUserPlayerId||'',createdByName:p?playerSelectionLabel(p):(cloudUserEmail||'Uživatel'),email:cloudUserEmail||'',type,area,description,appVersion:'v4.51.110 RC',createdAt:new Date().toISOString(),updatedAt:new Date().toISOString(),status:'new',adminNote:''};
+      const report={id,createdByUid:cloudUid,createdByPlayerId:currentUserPlayerId||'',createdByName:p?playerSelectionLabel(p):(cloudUserEmail||'Uživatel'),email:cloudUserEmail||'',type,area,description,appVersion:'v4.51.111 RC',createdAt:new Date().toISOString(),updatedAt:new Date().toISOString(),status:'new',adminNote:''};
       await reportRequest(id,'PUT',report);
       try{
         await writeReportUserMirror(report);
@@ -8498,6 +8499,7 @@ html[data-theme="light"] #leagueSchedule .history-item .muted{
 
   function refreshAccountUI(){
     window.syncNotificationIdentity?.();
+    window.syncOnlinePresence?.();
     securePlayersReader.syncIdentity();
     window.syncMatchChallengeIdentity?.();
     window.syncMatchChallengeActions?.();
@@ -28875,8 +28877,11 @@ function renderStats(){
   q('matchChallengeCounterSave')?.addEventListener('click',window.saveMatchChallengeCounter);
   q('profileChallengeBtn')?.addEventListener('click',function(){window.openChallengeForPlayer(this.dataset.playerId||'')});
 
-  window.poolPresenceContext=async function(){
-    if(!cloudAuthenticated||!cloudUid||!await ensureCloudToken())return null;
+  window.poolPresenceIdentity=()=>({authenticated:cloudAuthenticated,uid:cloudUid,profileId:currentUserPlayerId||'',scope:JSON.stringify([currentUserRole,cloudEmailVerified,cloudUserEmail])});
+  window.poolPresenceContext=async function(request={}){
+    const initial=JSON.stringify(window.poolPresenceIdentity());
+    const current=()=>JSON.stringify(window.poolPresenceIdentity())===initial&&(!request.current||request.current());
+    if(!cloudAuthenticated||!cloudUid||!await ensureCloudToken({current})||!current())return null;
     const p=currentUserPlayerId&&data.players?.[currentUserPlayerId];
     return {uid:cloudUid,token:cloudIdToken,db:FIREBASE_DB,playerId:currentUserPlayerId||'',name:p?playerDisplayName(p):'Registrovaný uživatel',isAdminAccount:isMainAdminEmail(cloudUserEmail)||currentUserRole==='system_admin'};
   };
@@ -29815,47 +29820,15 @@ function renderStats(){
 <div id="onlineUsersDialog" class="modal"><div class="modal-card" style="max-width:560px;text-align:left"><h2>Aktivní hráči</h2><label style="display:flex;align-items:center;gap:10px"><input type="checkbox" id="onlineUsersVisible" style="width:auto">Zobrazovat můj online stav</label><div id="onlineUsersAdminNote" class="muted hidden" style="margin-top:6px">Administrátorský účet se mezi online hráči nezobrazuje.</div><div id="onlineUsersList" style="margin-top:14px"></div><button type="button" class="btn" id="onlineUsersClose" style="margin-top:15px">ZAVŘÍT</button></div></div>
 <script>
 (function(){
-const KEY='pool_online_visible', DEVICE='pool_online_device';
-let last=Date.now(),rows=null,writing=false,device='',viewerUid='',viewerIsAdmin=false;
-try{device=sessionStorage.getItem(DEVICE)||('d'+Math.random().toString(36).slice(2));sessionStorage.setItem(DEVICE,device);}catch(e){device='d'+Math.random().toString(36).slice(2);}
-function visible(){try{return localStorage.getItem(KEY)!=='0'}catch(e){return true}}
-function escName(s){return String(s||'Hráč').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
-function render(){
- const stat=document.getElementById('modernClubStats');
- if(stat&&!document.getElementById('onlineUsersTile')){
- const tile=document.createElement('button');tile.type='button';tile.className='modern-stat';tile.id='onlineUsersTile';tile.innerHTML='<b><span class="presence-dot"></span><span id="onlineUsersCount">—</span></b><span>Právě online · zobrazit hráče</span>';stat.appendChild(tile);
- }
- const count=document.getElementById('onlineUsersCount'),list=document.getElementById('onlineUsersList'),check=document.getElementById('onlineUsersVisible');
- if(check){check.checked=visible();check.closest('label')?.classList.toggle('hidden',viewerIsAdmin)}
- document.getElementById('onlineUsersAdminNote')?.classList.toggle('hidden',!viewerIsAdmin);
- const active=[],away=[],now=Date.now();
- if(rows)Object.values(rows).forEach(group=>Object.values(group||{}).forEach(r=>{if(!r||!r.visible||!String(r.playerId||'').trim()||r.isAdminAccount===true||now-Number(r.updatedAt)>90000)return;const age=now-Number(r.lastInputAt);if(age<300000)active.push(r);else if(age<900000)away.push(r)}));
- const unique=arr=>[...new Map(arr.map(r=>[r.uid,r])).values()];
- const a=unique(active),w=unique(away).filter(r=>!a.some(x=>x.uid===r.uid));
- if(count)count.textContent=rows===null?'—':a.length;
- if(list){list.innerHTML=rows===null?'<p class="muted">Online seznam není dostupný. Zkontrolujte oprávnění Firebase.</p>':(a.map(r=>row(r,'🟢 Online')).join('')+w.map(r=>row(r,'🟡 Pryč')).join('')||'<p class="muted">Nikdo právě není online.</p>')}
- function row(r,status){const own=r.uid===viewerUid;const canInvite=!own&&!!r.playerId;return '<div class="presence-row"><div><strong>'+escName(r.name)+(own?' (ty)':'')+'</strong><div class="muted">'+status+'</div></div>'+(canInvite?'<button class="btn" data-presence-player="'+escName(r.playerId)+'">VYZVAT</button>':'')+'</div>'}
-}
-async function tick(){
- const ctx=await window.poolPresenceContext?.();if(!ctx){rows=null;viewerUid='';viewerIsAdmin=false;render();return}viewerUid=ctx.uid;viewerIsAdmin=!!ctx.isAdminAccount;
- if(!writing){writing=true;try{
- const path='presence/'+encodeURIComponent(ctx.uid)+'/'+encodeURIComponent(device),age=Date.now()-last;
- const p=ctx.playerId;
- const body={uid:ctx.uid,playerId:String(p||''),name:ctx.name,isAdminAccount:!!ctx.isAdminAccount,updatedAt:Date.now(),lastInputAt:last,visible:visible(),watching:document.hidden};
- await fetch(ctx.db+'/'+path+'.json?auth='+encodeURIComponent(ctx.token),{method:(ctx.isAdminAccount||!p||!visible()||age>900000)?'DELETE':'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
- }catch(e){}finally{writing=false}}
- try{const r=await fetch(ctx.db+'/presence.json?auth='+encodeURIComponent(ctx.token),{cache:'no-store'});if(!r.ok)throw Error('presence');rows=await r.json()||{}}catch(e){rows=null}
- render();
-}
-['pointerdown','keydown','touchstart'].forEach(n=>document.addEventListener(n,()=>{last=Date.now()},{passive:true}));
-document.addEventListener('click',e=>{
- if(e.target.closest('#onlineUsersTile')){document.getElementById('onlineUsersDialog').classList.add('show');render()}
- if(e.target.closest('#onlineUsersClose'))document.getElementById('onlineUsersDialog').classList.remove('show');
- const b=e.target.closest('[data-presence-player]');if(b){document.getElementById('onlineUsersDialog').classList.remove('show');if(typeof window.openChallengeForPlayer==='function')window.openChallengeForPlayer(b.dataset.presencePlayer)}
-});
-document.addEventListener('change',e=>{if(e.target.id==='onlineUsersVisible'){try{localStorage.setItem(KEY,e.target.checked?'1':'0')}catch(x){}tick()}});
-document.addEventListener('visibilitychange',()=>{if(!document.hidden){last=Date.now();tick()}});
-setInterval(tick,30000);setInterval(render,5000);setTimeout(tick,5000);
+ if(!window.OnlinePresence){const e=document.createElement('div');e.id='onlinePresenceLoadError';e.setAttribute('role','alert');e.textContent='Nepodařilo se načíst online přítomnost. Obnovte stránku.';document.body.prepend(e);throw Error('ONLINE_PRESENCE_MODULE_UNAVAILABLE');}
+ const presence=window.OnlinePresence.create({
+  identity:()=>window.poolPresenceIdentity(),context:request=>window.poolPresenceContext(request),document,page:window,now:Date.now,random:Math.random,
+  storage:{getItem:key=>localStorage.getItem(key),setItem:(key,value)=>localStorage.setItem(key,value)},sessionStorage:{getItem:key=>sessionStorage.getItem(key),setItem:(key,value)=>sessionStorage.setItem(key,value)},
+  write:(ctx,path,method,body)=>fetch(ctx.db+'/'+path+'.json?auth='+encodeURIComponent(ctx.token),{method,headers:{'Content-Type':'application/json'},body:JSON.stringify(body)}),
+  read:(ctx,signal)=>fetch(ctx.db+'/presence.json?auth='+encodeURIComponent(ctx.token),{cache:'no-store',signal}),
+  invite:playerId=>window.openChallengeForPlayer?.(playerId),setInterval:window.setInterval.bind(window),clearInterval:window.clearInterval.bind(window),setTimeout:window.setTimeout.bind(window),clearTimeout:window.clearTimeout.bind(window)
+ });
+ window.syncOnlinePresence=()=>presence.syncIdentity();presence.start();
 })();
 </script>
 <script>

@@ -1,0 +1,116 @@
+{
+  "date": "2026-10-31",
+  "base": "45ae20a13899c74f633364c63be2ff87252d8a81",
+  "candidate": "v4.51.111 RC",
+  "production": "v4.51.110 RC",
+  "nodeProduction": {
+    "pass": 328,
+    "fail": 0,
+    "skip": 0,
+    "privateFixtures": 3
+  },
+  "experimental": {
+    "pass": 28,
+    "fail": 2,
+    "skip": 0,
+    "unchanged": true
+  },
+  "historicalJournalAudit": {
+    "pass": 0,
+    "fail": 2,
+    "currentImplementation": false
+  },
+  "browser": [
+    {
+      "mode": "desktop",
+      "render100Ms": 2.2000000029802322,
+      "beforeRender100Ms": 1.0999999940395355,
+      "png": "b405c7a49bb815d2e25cda26a5804e59fb1025b1e358968d2edf575f4a640996",
+      "beforePng": "b405c7a49bb815d2e25cda26a5804e59fb1025b1e358968d2edf575f4a640996",
+      "snap": {
+        "active": true,
+        "disposed": false,
+        "epoch": 2,
+        "intervals": 2,
+        "timeouts": 1,
+        "listeners": 8,
+        "pending": false
+      },
+      "end": {
+        "active": false,
+        "disposed": false,
+        "epoch": 14,
+        "intervals": 0,
+        "timeouts": 0,
+        "listeners": 0,
+        "pending": false
+      },
+      "writes": 13,
+      "gets": 12,
+      "liveAuth": false,
+      "liveRules": false,
+      "errors": []
+    },
+    {
+      "mode": "mobile",
+      "render100Ms": 1,
+      "beforeRender100Ms": 0.9000000059604645,
+      "png": "e6f3c12c5d1720425f0adb08e457deaa586574e1a099ed943853f72d0b6d37e6",
+      "beforePng": "e6f3c12c5d1720425f0adb08e457deaa586574e1a099ed943853f72d0b6d37e6",
+      "snap": {
+        "active": true,
+        "disposed": false,
+        "epoch": 2,
+        "intervals": 2,
+        "timeouts": 1,
+        "listeners": 8,
+        "pending": false
+      },
+      "end": {
+        "active": false,
+        "disposed": false,
+        "epoch": 14,
+        "intervals": 0,
+        "timeouts": 0,
+        "listeners": 0,
+        "pending": false
+      },
+      "writes": 13,
+      "gets": 12,
+      "liveAuth": false,
+      "liveRules": false,
+      "errors": []
+    }
+  ],
+  "notificationConsumer": {
+    "first": "FAIL mobile missing opponent name: mock players GET returned null",
+    "consistentMockAndIsolatedReader": "PASS desktop/mobile exact PNG/text/payload, expectations unchanged",
+    "githubCI": false,
+    "historicalPngInstabilityFixed": false
+  },
+  "regressions": [
+    "9b1 desktop/mobile PASS",
+    "9b2 desktop/mobile PASS",
+    "13-module bootstrap/missing modules PASS"
+  ],
+  "deployment": "not merged, not deployed",
+  "liveAuth": false,
+  "liveRules": false,
+  "applicationCommit": "1fc9d101a3bc322264c0ac77472f6aa7e27d9ac2",
+  "PR": 53,
+  "CI": {
+    "run": 41231612140,
+    "release": "PASS",
+    "production": {
+      "pass": 325,
+      "fail": 0,
+      "skip": 3
+    },
+    "experimental": {
+      "pass": 28,
+      "fail": 2,
+      "skip": 0
+    },
+    "overall": "FAILURE"
+  }
+}
