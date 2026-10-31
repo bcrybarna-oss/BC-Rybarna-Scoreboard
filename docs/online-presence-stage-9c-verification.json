@@ -95,5 +95,22 @@
   ],
   "deployment": "not merged, not deployed",
   "liveAuth": false,
-  "liveRules": false
+  "liveRules": false,
+  "applicationCommit": "1fc9d101a3bc322264c0ac77472f6aa7e27d9ac2",
+  "PR": 53,
+  "CI": {
+    "run": 41231612140,
+    "release": "PASS",
+    "production": {
+      "pass": 325,
+      "fail": 0,
+      "skip": 3
+    },
+    "experimental": {
+      "pass": 28,
+      "fail": 2,
+      "skip": 0
+    },
+    "overall": "FAILURE"
+  }
 }

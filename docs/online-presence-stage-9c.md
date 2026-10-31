@@ -28,10 +28,14 @@ Starý read/JSON po A→B či stop nesmí přepsat nového vlastníka; čtení s
 - Samostatná9a consumer kontrola nejprve mobilFAIL: prázdný mock players GET odstranil jméno soupeře. Konzistentní mock hráčů a zastavený vedlejší9b reader ve fixture: desktop/mobil přesnáPNG/text/payload parita PASS. Assertions/tolerance ani produkční notifikace nebyly změněny. Reprodukovatelný adaptér tests/helpers/notification-consumer-isolation.cjs; původní raw test i známá PNGnestabilita a mobilní bell overlay zůstávají samostatně mimoCI.
 - Experiment **28PASS/2FAIL/0SKIP**, jednotlivě nezměněné preview50 (pendingAuth neoddělí editaci) a preview155 (staleUID bezAuth). Workflow/core/tests nezměněny; experiment není produkčně načítán. Historický audit odstraněného žurnálu **0PASS/2FAIL**, samostatný důkaz zmrazené implementace, nikoli test9c nebo dvě experimentální vady.
 
-ŽivýAuth, skutečnéRules, fyzickázařízení a serverové souběhy neověřeny. Testy jsou izolované; cache/ostatní oblasti nejsou opravované. Release gate a finálníCI budou ověřeny před předánímPR.
+ŽivýAuth, skutečnéRules, fyzickázařízení a serverové souběhy neověřeny. Testy jsou izolované; cache/ostatní oblasti nejsou opravované. Release gate a produkčníCI prošly; odkazy níže.
 
 ## Reprodukce a návrat
 
 Z kořene repozitáře: node --test tests/online-presence.test.cjs; node tests/online-presence-browser.cjs; node tests/match-challenges-browser.cjs; node tests/match-challenge-actions-browser.cjs; node tests/helpers/notification-consumer-isolation.cjs; node tests/federal-module-browser.cjs; npm run test:production; npm run test:experimental. Browser potřebuje Playwright/Chrome (místní NODE_PATH dle runtime), skutečné privátní fixtures jen pro tři rozšířené Node kontroly. Audit zvlášť node --test tests/audits/challenge-journal-regressions.cjs (exit1 záměrně dokládá původní vady, není PASS).
 
 Návrat reverzí celého9c PR bez vracení dat, s novou verzí pokud bude kandidát mezitím nasazen. Vrátí i původní klientské závody, proto zvážit cílený hotfix. Žádná data se nemigrují ani nemažou. Před vydáním znovu fetch/main/release/regrese; nyní pouze PR a čekání na schválení.
+
+Poznámka k síti: za probíhajícího řetězce se další periodický tick sdílí, nepřidává druhý požadavek. Nový síťový timeout se nezavádí; dlouho neodpovídající transport čeká na síťový výsledek nebo změnu relace/stop (odeslaný zápis nelze klientsky odvolat).
+
+Draft [PR53](https://github.com/bcrybarna-oss/BC-Rybarna-Scoreboard/pull/53), aplikační commit `1fc9d101a3bc322264c0ac77472f6aa7e27d9ac2`. [CI41231612140](https://github.com/bcrybarna-oss/BC-Rybarna-Scoreboard/actions/runs/41231612140): Release PASS, produkce325PASS/0FAIL/3SKIP, experiment28PASS/2FAIL/0SKIP; celéCI FAILURE pouze kvůli oběma nezměněným experimentálním vadám. Následný zápis pouze dokumentační; nesloučeno/nenasazeno.

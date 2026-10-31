@@ -5,7 +5,7 @@ Zadavatel: Dominik
 Datum: 31. 10. 2026
 Změny: Jediný produkční OnlinePresence vlastní stav/render/čtení/publikaci/viditelnost/časovače/listenery; původní tělo odstraněno bez fallbacku, explicitní adaptéry a VYZVATcallback. Zachována pravidla30s/5s/startup5s/90s/5min/15min, payload a oprávnění. Odděleně opraveno čekání na autorizaci měnícíA→B a opožděné výsledky staré relace; single-flight a úklid. Výzvovýprotokol/Rules/cache bezezměny.
 Testy: Produkce328PASS/0FAIL/0SKIP s privátními exporty;10novýchunitPASS. Browser desktop/mobil přesnáPNGparita a životnost/session/visible/hidden/admin/inaktivita/síť/úklid PASS;9b1/9b2/13modulovýbootstrap PASS.9a consumer s konzistentním mockem PASS, původní nekonzistentnífixture mobilFAIL evidován. Experiment28/2/0 nezměněný a historický žurnálaudit0/2 odděleně. Viz docs/online-presence-stage-9c.md.
-Nasazení: Kandidát111, samostatný PR; nesloučeno/nenasazeno. Produkce110, produkční přítomnost ani jiná data neměněna; finálníCI bude doplněno po pushi.
+Nasazení: Kandidát111, samostatný PR; nesloučeno/nenasazeno. Produkce110, produkční přítomnost ani jiná data neměněna; DraftPR53, kód1fc9d10; CI41231612140 releasePASS/produkce325PASS,0FAIL,3SKIP/experiment28PASS,2FAIL,0SKIP; celekFAILURE pouze kvůli experimentu. Následný zápis jen dokumentace.
 Omezení: ŽivýAuth/Rules/fyzickázařízení neověřeny. Odeslaný starýPUT nelze odvolat klientskýmstopem; serverovélease/CAS jen samostatnýnávrh. Návrat reverzí bez dat s verzí dle aktuálního main; PNGnestabilita/bell a unknownvýzevpo restartu zůstávají, etapa10nezahájena.
 
 ## Dominik – společné nasazení čtení a životnosti akcí výzev (v4.51.110 RC)
