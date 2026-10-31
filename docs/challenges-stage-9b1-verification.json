@@ -1,0 +1,157 @@
+{
+  "clients": [
+    {
+      "mode": "desktop",
+      "requests": 12,
+      "concurrentReads": 1,
+      "render100Ms": 191.09999999403954,
+      "resources": {
+        "active": true,
+        "disposed": false,
+        "intervals": 1,
+        "timeouts": 1,
+        "listeners": 2,
+        "pending": false
+      },
+      "jsErrors": [],
+      "writes": [],
+      "scheduledMatch": "accepted"
+    },
+    {
+      "mode": "mobile",
+      "requests": 11,
+      "concurrentReads": 1,
+      "render100Ms": 161.1000000089407,
+      "resources": {
+        "active": true,
+        "disposed": false,
+        "intervals": 1,
+        "timeouts": 1,
+        "listeners": 2,
+        "pending": false
+      },
+      "jsErrors": [],
+      "writes": [],
+      "scheduledMatch": "accepted"
+    }
+  ],
+  "unchangedBodies": [
+    "persist",
+    "window.sendMatchChallenge",
+    "window.acceptMatchChallenge",
+    "window.declineMatchChallenge",
+    "window.cancelMatchChallenge",
+    "window.counterMatchChallenge",
+    "window.saveMatchChallengeCounter",
+    "window.startScheduledMatch",
+    "window.completeScheduledChallengeForMatch",
+    "window.poolPresenceContext",
+    "saveSecurePlayer",
+    "securePlayerRequest"
+  ],
+  "comparison": {
+    "baseline": "fade611557a33a8145b8c0251883946e1bf7b968",
+    "baselineDefects": {
+      "acceptedFromAVisibleUnderB": true,
+      "lateAResponseOverwritesB": true
+    },
+    "archiveBytes": 40913440,
+    "archiveProfiles": 26,
+    "archiveMatches": 189,
+    "syntheticProfilesAdded": 3,
+    "clients": [
+      {
+        "viewport": "desktop",
+        "exactMarkup": true,
+        "measurements": [
+          {
+            "before": true,
+            "median100RebuildRenderMs": 284.6000000089407,
+            "samples": [
+              302.09999999403954,
+              301.40000000596046,
+              315.6000000089407,
+              284.6000000089407,
+              281,
+              250.19999998807907,
+              276.5
+            ]
+          },
+          {
+            "before": false,
+            "median100RebuildRenderMs": 285.5,
+            "samples": [
+              285.5,
+              268.79999999701977,
+              295.59999999403954,
+              297.90000000596046,
+              282,
+              264.29999999701977,
+              290.70000000298023
+            ]
+          }
+        ]
+      },
+      {
+        "viewport": "mobile",
+        "exactMarkup": true,
+        "measurements": [
+          {
+            "before": true,
+            "median100RebuildRenderMs": 362.20000000298023,
+            "samples": [
+              286.59999999403954,
+              281.79999999701977,
+              304.80000001192093,
+              423.5,
+              417,
+              373.59999999403954,
+              362.20000000298023
+            ]
+          },
+          {
+            "before": false,
+            "median100RebuildRenderMs": 334.3999999910593,
+            "samples": [
+              351.70000000298023,
+              330.29999999701977,
+              347.1000000089407,
+              313.3999999910593,
+              330.79999999701977,
+              334.3999999910593,
+              345.79999999701977
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "node": {
+    "production": {
+      "pass": 297,
+      "fail": 0,
+      "skip": 0
+    },
+    "experimentalCandidate": {
+      "pass": 28,
+      "fail": 2,
+      "skip": 0
+    },
+    "experimentalBaseline": {
+      "pass": 28,
+      "fail": 2,
+      "skip": 0
+    }
+  },
+  "strictNotificationPNG": {
+    "status": "FAIL",
+    "baseline": "known v109 instability",
+    "unchangedTest": true,
+    "hashes": [
+      "52f2700d3f5bb33f61fe686b7bb75e00ecebb16b69201f2149c7333289228852",
+      "3ddcfff143d1e7f9ed776e39be817b3d7601754f15c59c0f69b938cf06ae5e72"
+    ]
+  },
+  "deployment": "not merged, not deployed",
+  "liveAuth": false
+}

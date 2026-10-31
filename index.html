@@ -1043,11 +1043,12 @@
   </div>
 
 <script src="assets/js/federal-statistics.js?v=4.51.98"></script>
-<script src="assets/js/federal-report-renderer.js?v=4.51.109"></script>
-<script src="assets/js/federal-report-controller.js?v=4.51.109"></script>
-<script src="assets/js/livescore-reader.js?v=4.51.109"></script>
-<script src="assets/js/livescore-renderer.js?v=4.51.109"></script>
-<script src="assets/js/notification-center.js?v=4.51.109"></script>
+<script src="assets/js/federal-report-renderer.js?v=4.51.110"></script>
+<script src="assets/js/federal-report-controller.js?v=4.51.110"></script>
+<script src="assets/js/livescore-reader.js?v=4.51.110"></script>
+<script src="assets/js/livescore-renderer.js?v=4.51.110"></script>
+<script src="assets/js/match-challenges.js?v=4.51.110"></script>
+<script src="assets/js/notification-center.js?v=4.51.110"></script>
 <script src="assets/js/cloud-refresh.js?v=4.51.99"></script>
 <script src="assets/js/own-reports.js?v=4.51.102"></script>
 <script src="assets/js/federal-viewer.js?v=4.51.103"></script>
@@ -2613,7 +2614,7 @@ html[data-theme="light"] #leagueSchedule .history-item .muted{
           <span class="by">by</span>
           <span class="club">BC Rybárna</span>
         </div>
-        <small class="modern-brand-version">v4.51.109 RC</small>
+        <small class="modern-brand-version">v4.51.110 RC</small>
       </div>
     </div>
     <div class="nav">
@@ -3227,7 +3228,7 @@ html[data-theme="light"] #leagueSchedule .history-item .muted{
         </div>
         <div class="subpanel" style="min-width:210px;text-align:center;margin:0">
           <div class="muted" style="font-size:10px;font-weight:950;letter-spacing:1px">AKTUÁLNÍ VERZE</div>
-          <div style="font-size:22px;font-weight:950;color:var(--gold2);margin-top:5px">v4.51.109 RC</div>
+          <div style="font-size:22px;font-weight:950;color:var(--gold2);margin-top:5px">v4.51.110 RC</div>
         </div>
       </div>
     </div>
@@ -5992,7 +5993,7 @@ html[data-theme="light"] #leagueSchedule .history-item .muted{
       </div>
 
       <div id="groupPlayoffSeedStatus" class="muted" style="margin-top:12px;min-height:20px"></div>
-      <div class="muted" style="margin-top:4px;font-size:11px">RC v4.51.109</div>
+      <div class="muted" style="margin-top:4px;font-size:11px">RC v4.51.110</div>
       <div class="modal-actions">
         <button id="groupPlayoffSeedApplyBtn" class="btn primary big" type="button">NASADIT DO PLAY-OFF</button>
         <button id="groupPlayoffSeedCancelBtn" class="btn">ZRUŠIT</button>
@@ -6086,6 +6087,7 @@ html[data-theme="light"] #leagueSchedule .history-item .muted{
   if(!window.FederalReportRenderer){
     const error=document.createElement('div');error.id='federalReportRendererLoadError';error.setAttribute('role','alert');error.textContent='Nepodařilo se načíst vykreslování reportů Federal Cupu. Obnovte stránku.';document.body.prepend(error);throw new Error('FEDERAL_REPORT_RENDERER_MODULE_UNAVAILABLE');
   }
+  if(!window.MatchChallenges){const error=document.createElement('div');error.id='matchChallengesLoadError';error.setAttribute('role','alert');error.textContent='Nepodařilo se načíst výzvy k zápasu. Obnovte stránku.';document.body.prepend(error);throw Error('MATCH_CHALLENGES_MODULE_UNAVAILABLE');}
   if(!window.NotificationCenter){const error=document.createElement('div');error.id='notificationCenterLoadError';error.setAttribute('role','alert');error.textContent='Nepodařilo se načíst upozornění. Obnovte stránku.';document.body.prepend(error);throw Error('NOTIFICATION_CENTER_MODULE_UNAVAILABLE');}
   if(!window.LivescoreRenderer){const error=document.createElement('div');error.id='livescoreRendererLoadError';error.setAttribute('role','alert');error.textContent='Nepodařilo se načíst zobrazení Livescore. Obnovte stránku.';document.body.prepend(error);throw Error('LIVESCORE_RENDERER_MODULE_UNAVAILABLE');}
   if(!window.LivescoreReader){const error=document.createElement('div');error.id='livescoreReaderLoadError';error.setAttribute('role','alert');error.textContent='Nepodařilo se načíst Livescore. Obnovte stránku.';document.body.prepend(error);throw Error('LIVESCORE_READER_MODULE_UNAVAILABLE');}
@@ -7133,7 +7135,7 @@ html[data-theme="light"] #leagueSchedule .history-item .muted{
     const btn=$('submitReportBtn');if(btn)btn.disabled=true;
     try{
       const id=uid(),p=currentUserPlayerId?data.players?.[currentUserPlayerId]:null;
-      const report={id,createdByUid:cloudUid,createdByPlayerId:currentUserPlayerId||'',createdByName:p?playerSelectionLabel(p):(cloudUserEmail||'Uživatel'),email:cloudUserEmail||'',type,area,description,appVersion:'v4.51.109 RC',createdAt:new Date().toISOString(),updatedAt:new Date().toISOString(),status:'new',adminNote:''};
+      const report={id,createdByUid:cloudUid,createdByPlayerId:currentUserPlayerId||'',createdByName:p?playerSelectionLabel(p):(cloudUserEmail||'Uživatel'),email:cloudUserEmail||'',type,area,description,appVersion:'v4.51.110 RC',createdAt:new Date().toISOString(),updatedAt:new Date().toISOString(),status:'new',adminNote:''};
       await reportRequest(id,'PUT',report);
       try{
         await writeReportUserMirror(report);
@@ -7913,15 +7915,13 @@ html[data-theme="light"] #leagueSchedule .history-item .muted{
     try{if(typeof window.renderModernHome==='function')window.renderModernHome();}catch(e){}
   }
 
-  async function loadSecurePlayers(){
-    if(!await ensureCloudToken()) throw new Error('NO_AUTH');
-    const r=await fetch(cloudUrl('players')+'&t='+Date.now(),{cache:'no-store'});
-    if(!r.ok) throw new Error('PLAYERS_READ_'+r.status);
-    const players=await r.json()||{};
-    data.players=players;
-    try{if(typeof window.renderModernHome==='function')window.renderModernHome();}catch(e){}
-    return players;
-  }
+  const securePlayersReader=window.MatchChallenges.createPlayersReader({
+    identity:()=>({authenticated:cloudAuthenticated,uid:cloudUid,scope:JSON.stringify([currentUserPlayerId,currentUserRole,cloudEmailVerified])}),
+    ensureToken:context=>ensureCloudToken(context),
+    request:signal=>fetch(cloudUrl('players')+'&t='+Date.now(),{cache:'no-store',signal}),
+    apply:players=>{data.players=players;try{window.renderModernHome?.();}catch(e){}}
+  });
+  function loadSecurePlayers(){return securePlayersReader.read();}
 
   async function saveSecurePlayer(player){
     if(!player||!player.id) throw new Error('PLAYER_INVALID');
@@ -8487,6 +8487,8 @@ html[data-theme="light"] #leagueSchedule .history-item .muted{
 
   function refreshAccountUI(){
     window.syncNotificationIdentity?.();
+    securePlayersReader.syncIdentity();
+    window.syncMatchChallengeIdentity?.();
     const el=$('accountPlayerStatus');
     const btn=$('myPlayerProfileBtn');
     const adminBtn=$('adminNavBtn');
@@ -28548,9 +28550,9 @@ function renderStats(){
   };
 
 (function(){
+  // View alias only: MatchChallenges owns cache lifetime; legacy actions keep their mutable row references until 9b2.
   var cache=[];
   var counterChallengeId=null;
-  var LOCAL_KEY='poolcitadlo_match_challenges_cache_v1';
 
   function q(id){return document.getElementById(id)}
   function esc2(v){return String(v==null?'':v).replace(/[&<>"']/g,function(m){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]})}
@@ -28570,73 +28572,18 @@ function renderStats(){
     var txt=isNaN(d)?ch.date:d.toLocaleDateString('cs-CZ',{day:'numeric',month:'numeric',year:'numeric'});
     return txt+(ch.time?' · '+ch.time:'');
   }
-  function cacheSave(){
-    try{localStorage.setItem(LOCAL_KEY,JSON.stringify(cache.filter(isMine)));}catch(e){}
-  }
-  function cacheLoad(){
-    try{
-      var x=JSON.parse(localStorage.getItem(LOCAL_KEY)||'[]');
-      if(Array.isArray(x))cache=x.filter(Boolean);
-    }catch(e){}
-  }
-
-  function challengeObjects(obj){
-    return obj&&typeof obj==='object'&&!Array.isArray(obj)?Object.values(obj).filter(Boolean):[];
-  }
-
-  function mergedChallenge(base,response){
-    var b=JSON.parse(JSON.stringify(base||{}));
-    if(!response)return b;
-    var bt=new Date(b.updatedAt||b.createdAt||0).getTime()||0;
-    var rt=new Date(response.updatedAt||0).getTime()||0;
-    if(rt<bt)return b;
-    ['status','flexibleTime','date','time','venue','note','counterByUid','acceptedAt','playedMatchId','playedAt'].forEach(function(k){
-      if(response[k]!==undefined)b[k]=response[k];
-    });
-    b.responseUpdatedAt=response.updatedAt||'';
-    return b;
-  }
-
-  function allChallengesFromPlayers(){
-    var rows=[];
-    Object.values(data.players||{}).forEach(function(sender){
-      challengeObjects(sender?.matchChallengesSent).forEach(function(base){
-        if(!base||!base.id)return;
-        var recipient=data.players?.[base.recipientPlayerId];
-        var response=recipient?.matchChallengeResponses?.[base.id]||null;
-        rows.push(mergedChallenge(base,response));
-      });
-    });
-    return rows;
-  }
-
-  function rebuildFromPlayers(){
-    var mineId=String(currentUserPlayerId||'');
-    var mineUid=currentUid();
-    var rows=allChallengesFromPlayers().filter(function(ch){
-      return String(ch.senderUid||'')===mineUid || String(ch.recipientUid||'')===mineUid ||
-        String(ch.senderPlayerId||'')===mineId || String(ch.recipientPlayerId||'')===mineId;
-    });
-    rows.sort(function(a,b){return new Date(b.updatedAt||b.responseUpdatedAt||b.createdAt||0)-new Date(a.updatedAt||a.responseUpdatedAt||a.createdAt||0)});
-    cache=rows;
-    cacheSave();
-    return cache;
-  }
-
-  async function load(force){
-    cacheLoad();
-    if(!cloudAuthenticated||!cloudUid){
-      render();renderHome();return cache;
-    }
-    try{
-      if(force)await loadSecurePlayers();
-      rebuildFromPlayers();
-    }catch(e){
-      console.warn('Match challenges load:',e);
-    }
-    render();renderHome();
-    return cache;
-  }
+  const challengeReader=window.MatchChallenges.create({
+    identity:()=>({authenticated:cloudAuthenticated,uid:currentUid(),scope:JSON.stringify([currentUserPlayerId,currentUserRole,cloudEmailVerified])}),
+    players:()=>data.players,readPlayers:loadSecurePlayers,
+    storage:{getItem:key=>localStorage.getItem(key),setItem:(key,value)=>localStorage.setItem(key,value)},
+    cacheChanged:rows=>{cache=rows;},render:()=>{render();renderHome();},error:error=>console.warn('Match challenges load:',error),
+    page:window,hidden:()=>document.hidden,setTimeout:window.setTimeout.bind(window),clearTimeout:window.clearTimeout.bind(window),setInterval:window.setInterval.bind(window),clearInterval:window.clearInterval.bind(window),onDispose:()=>securePlayersReader.dispose()
+  });
+  function cacheLoad(){challengeReader.syncIdentity();}
+  function allChallengesFromPlayers(){return challengeReader.all();}
+  function rebuildFromPlayers(){return challengeReader.rebuild();}
+  function load(force){return challengeReader.refresh(force);}
+  window.syncMatchChallengeIdentity=()=>{challengeReader.syncIdentity();render();renderHome();};
 
   function linkedOpponents(){
     var mine=myPlayer();
@@ -28684,6 +28631,7 @@ function renderStats(){
   }
 
   function render(){
+    cacheLoad();
     var content=q('matchChallengesContent'),notice=q('matchChallengesLoginNotice');
     var ready=!!(cloudAuthenticated&&cloudUid&&currentUserPlayerId&&myPlayer());
     if(content)content.classList.toggle('hidden',!ready);
@@ -28747,6 +28695,7 @@ function renderStats(){
   }
 
   function renderHome(){
+    cacheLoad();
     var tileText=q('modernChallengeTileText'),badge=q('modernChallengeBadge'),panel=q('modernScheduledMatchPanel'),body=q('modernScheduledMatchBody'),title=q('modernScheduledMatchTitle');
     var incoming=cache.filter(function(ch){
       return (ch.status==='pending'&&ch.recipientUid===currentUid()) ||
@@ -28960,11 +28909,7 @@ function renderStats(){
     return {uid:cloudUid,token:cloudIdToken,db:FIREBASE_DB,playerId:currentUserPlayerId||'',name:p?playerDisplayName(p):'Registrovaný uživatel',isAdminAccount:isMainAdminEmail(cloudUserEmail)||currentUserRole==='system_admin'};
   };
   cacheLoad();renderHome();renderNotificationCenter();
-  setTimeout(function(){
-    if(cloudAuthenticated)loadSecurePlayers().then(function(){load(false)}).catch(function(){load(false)});
-    else load(false);
-  },1200);
-  setInterval(function(){if(!document.hidden&&cloudAuthenticated)load(false)},30000);
+  challengeReader.start();
 })();
 
 // === FEDERAL CUP 2026 ========================================================
