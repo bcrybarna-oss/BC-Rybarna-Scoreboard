@@ -1,0 +1,479 @@
+{
+  "reviewedCommit": "b36e6973519f5d71cb42dc9a51e07ba1addc0053",
+  "applicationChanged": false,
+  "deploymentDecision": "BLOCKED: full-localStorage availability, non-terminal GET verification and sender-field whitelist",
+  "nodeAudit": {
+    "sizes": [
+      {
+        "kind": "send",
+        "keyChars": 161,
+        "jsonChars": 893,
+        "utf8Bytes": 1057,
+        "utf16EstimateBytes": 2108,
+        "fields": [
+          "uid",
+          "profileId",
+          "id",
+          "kind",
+          "field",
+          "value",
+          "journalId"
+        ],
+        "valueFields": [
+          "id",
+          "senderUid",
+          "recipientUid",
+          "senderPlayerId",
+          "recipientPlayerId",
+          "status",
+          "discipline",
+          "raceTo",
+          "flexibleTime",
+          "date",
+          "time",
+          "venue",
+          "note",
+          "isPublic",
+          "createdAt",
+          "updatedAt",
+          "acceptedAt",
+          "playedMatchId"
+        ]
+      },
+      {
+        "kind": "accept",
+        "keyChars": 161,
+        "jsonChars": 663,
+        "utf8Bytes": 827,
+        "utf16EstimateBytes": 1648,
+        "fields": [
+          "uid",
+          "profileId",
+          "id",
+          "kind",
+          "field",
+          "value",
+          "journalId"
+        ],
+        "valueFields": [
+          "id",
+          "status",
+          "flexibleTime",
+          "date",
+          "time",
+          "venue",
+          "note",
+          "counterByUid",
+          "acceptedAt",
+          "playedMatchId",
+          "playedAt",
+          "updatedAt"
+        ]
+      },
+      {
+        "kind": "decline",
+        "keyChars": 161,
+        "jsonChars": 640,
+        "utf8Bytes": 804,
+        "utf16EstimateBytes": 1602,
+        "fields": [
+          "uid",
+          "profileId",
+          "id",
+          "kind",
+          "field",
+          "value",
+          "journalId"
+        ],
+        "valueFields": [
+          "id",
+          "status",
+          "flexibleTime",
+          "date",
+          "time",
+          "venue",
+          "note",
+          "counterByUid",
+          "acceptedAt",
+          "playedMatchId",
+          "playedAt",
+          "updatedAt"
+        ]
+      },
+      {
+        "kind": "cancel",
+        "keyChars": 161,
+        "jsonChars": 640,
+        "utf8Bytes": 804,
+        "utf16EstimateBytes": 1602,
+        "fields": [
+          "uid",
+          "profileId",
+          "id",
+          "kind",
+          "field",
+          "value",
+          "journalId"
+        ],
+        "valueFields": [
+          "id",
+          "status",
+          "flexibleTime",
+          "date",
+          "time",
+          "venue",
+          "note",
+          "counterByUid",
+          "acceptedAt",
+          "playedMatchId",
+          "playedAt",
+          "updatedAt"
+        ]
+      },
+      {
+        "kind": "counter",
+        "keyChars": 161,
+        "jsonChars": 664,
+        "utf8Bytes": 826,
+        "utf16EstimateBytes": 1650,
+        "fields": [
+          "uid",
+          "profileId",
+          "id",
+          "kind",
+          "field",
+          "value",
+          "journalId"
+        ],
+        "valueFields": [
+          "id",
+          "status",
+          "flexibleTime",
+          "date",
+          "time",
+          "venue",
+          "note",
+          "counterByUid",
+          "acceptedAt",
+          "playedMatchId",
+          "playedAt",
+          "updatedAt"
+        ]
+      },
+      {
+        "kind": "played",
+        "keyChars": 161,
+        "jsonChars": 697,
+        "utf8Bytes": 861,
+        "utf16EstimateBytes": 1716,
+        "fields": [
+          "uid",
+          "profileId",
+          "id",
+          "kind",
+          "field",
+          "value",
+          "journalId"
+        ],
+        "valueFields": [
+          "id",
+          "status",
+          "flexibleTime",
+          "date",
+          "time",
+          "venue",
+          "note",
+          "counterByUid",
+          "acceptedAt",
+          "playedMatchId",
+          "playedAt",
+          "updatedAt"
+        ]
+      },
+      {
+        "kind": "send-long-note",
+        "noteChars": 300,
+        "keyChars": 161,
+        "jsonChars": 1178,
+        "utf8Bytes": 1639,
+        "utf16EstimateBytes": 2678
+      },
+      {
+        "kind": "send-long-note",
+        "noteChars": 1000,
+        "keyChars": 161,
+        "jsonChars": 1878,
+        "utf8Bytes": 3039,
+        "utf16EstimateBytes": 4078
+      },
+      {
+        "kind": "send-long-note",
+        "noteChars": 10000,
+        "keyChars": 161,
+        "jsonChars": 10878,
+        "utf8Bytes": 21039,
+        "utf16EstimateBytes": 22078
+      },
+      {
+        "kind": "send-long-note",
+        "noteChars": 100000,
+        "keyChars": 161,
+        "jsonChars": 100878,
+        "utf8Bytes": 201039,
+        "utf16EstimateBytes": 202078
+      }
+    ],
+    "cases": [
+      {
+        "test": "full quota send",
+        "status": "rejected",
+        "code": "CHALLENGE_JOURNAL_UNAVAILABLE",
+        "puts": 0
+      },
+      {
+        "test": "full quota accept",
+        "status": "rejected",
+        "code": "CHALLENGE_JOURNAL_UNAVAILABLE",
+        "puts": 0
+      },
+      {
+        "test": "full quota decline",
+        "status": "rejected",
+        "code": "CHALLENGE_JOURNAL_UNAVAILABLE",
+        "puts": 0
+      },
+      {
+        "test": "full quota cancel",
+        "status": "rejected",
+        "code": "CHALLENGE_JOURNAL_UNAVAILABLE",
+        "puts": 0
+      },
+      {
+        "test": "full quota counter",
+        "status": "rejected",
+        "code": "CHALLENGE_JOURNAL_UNAVAILABLE",
+        "puts": 0
+      },
+      {
+        "test": "full quota played",
+        "status": "rejected",
+        "code": "CHALLENGE_JOURNAL_UNAVAILABLE",
+        "puts": 0
+      },
+      {
+        "test": "storage denied keys",
+        "status": "rejected",
+        "code": "CHALLENGE_JOURNAL_UNAVAILABLE",
+        "puts": 0,
+        "markers": 0
+      },
+      {
+        "test": "storage denied getItem",
+        "status": "rejected",
+        "code": "CHALLENGE_JOURNAL_UNAVAILABLE",
+        "puts": 1,
+        "markers": 1
+      },
+      {
+        "test": "storage denied removeItem",
+        "status": "saved",
+        "puts": 1,
+        "markers": 1
+      },
+      {
+        "test": "HTTP 200",
+        "status": "saved",
+        "markers": 0
+      },
+      {
+        "test": "HTTP 403",
+        "status": "rejected",
+        "markers": 0
+      },
+      {
+        "test": "HTTP 408",
+        "status": "unknown",
+        "markers": 1
+      },
+      {
+        "test": "HTTP 503",
+        "status": "unknown",
+        "markers": 1
+      },
+      {
+        "test": "reload missing vs conflicting data",
+        "missing": "unconfirmed",
+        "different": "unconfirmed",
+        "puts": 0,
+        "markers": 1
+      },
+      {
+        "test": "transient match does not prove original request finished",
+        "returned": {
+          "status": "saved",
+          "verified": true,
+          "id": "challenge_22222222-2222-4222-8222-222222222222",
+          "kind": "accept"
+        },
+        "journalRemovedBeforeLateOriginal": true,
+        "laterWholeProfileOverwrite": true,
+        "puts": 1
+      },
+      {
+        "test": "different UID and profile",
+        "readsOfForeignMarker": 0,
+        "ownPUTs": 1,
+        "foreignMarkerPreserved": true
+      },
+      {
+        "test": "same UID, different profile",
+        "readsOfForeignMarker": 0,
+        "ownPUTs": 1,
+        "foreignMarkerPreserved": true
+      },
+      {
+        "test": "artificial out-of-schema credential fields on cached sender challenge",
+        "copiedIntoJournal": true,
+        "realRuntimeCredentialsTested": false
+      }
+    ]
+  },
+  "browserAudit": [
+    {
+      "viewport": "desktop",
+      "localStorage": {
+        "characters": 5242874,
+        "keys": 98
+      },
+      "results": [
+        [
+          "send",
+          {
+            "status": "rejected",
+            "code": "CHALLENGE_JOURNAL_UNAVAILABLE"
+          }
+        ],
+        [
+          "accept",
+          {
+            "status": "rejected",
+            "code": "CHALLENGE_JOURNAL_UNAVAILABLE"
+          }
+        ],
+        [
+          "decline",
+          {
+            "status": "rejected",
+            "code": "CHALLENGE_JOURNAL_UNAVAILABLE"
+          }
+        ],
+        [
+          "cancel",
+          {
+            "status": "rejected",
+            "code": "CHALLENGE_JOURNAL_UNAVAILABLE"
+          }
+        ],
+        [
+          "counter",
+          {
+            "status": "rejected",
+            "code": "CHALLENGE_JOURNAL_UNAVAILABLE"
+          }
+        ],
+        [
+          "played",
+          {
+            "status": "rejected",
+            "code": "CHALLENGE_JOURNAL_UNAVAILABLE"
+          }
+        ]
+      ],
+      "sentinel": "ARCHIVE_UNCHANGED",
+      "toast": "Nelze bezpečně uchovat stav operace v tomto prohlížeči. Výzva nebyla odeslána.",
+      "notes": "KEEP DRAFT",
+      "puts": 0,
+      "errors": [],
+      "indexedDBDespiteFullLocalStorage": {
+        "ok": true,
+        "characters": 2048
+      }
+    },
+    {
+      "viewport": "mobile",
+      "localStorage": {
+        "characters": 5242874,
+        "keys": 98
+      },
+      "results": [
+        [
+          "send",
+          {
+            "status": "rejected",
+            "code": "CHALLENGE_JOURNAL_UNAVAILABLE"
+          }
+        ],
+        [
+          "accept",
+          {
+            "status": "rejected",
+            "code": "CHALLENGE_JOURNAL_UNAVAILABLE"
+          }
+        ],
+        [
+          "decline",
+          {
+            "status": "rejected",
+            "code": "CHALLENGE_JOURNAL_UNAVAILABLE"
+          }
+        ],
+        [
+          "cancel",
+          {
+            "status": "rejected",
+            "code": "CHALLENGE_JOURNAL_UNAVAILABLE"
+          }
+        ],
+        [
+          "counter",
+          {
+            "status": "rejected",
+            "code": "CHALLENGE_JOURNAL_UNAVAILABLE"
+          }
+        ],
+        [
+          "played",
+          {
+            "status": "rejected",
+            "code": "CHALLENGE_JOURNAL_UNAVAILABLE"
+          }
+        ]
+      ],
+      "sentinel": "ARCHIVE_UNCHANGED",
+      "toast": "Nelze bezpečně uchovat stav operace v tomto prohlížeči. Výzva nebyla odeslána.",
+      "notes": "KEEP DRAFT",
+      "puts": 0,
+      "errors": [],
+      "indexedDBDespiteFullLocalStorage": {
+        "ok": true,
+        "characters": 2048
+      }
+    }
+  ],
+  "existingControllerTests": {
+    "pass": 15,
+    "fail": 0
+  },
+  "newProductionRegressions": {
+    "pass": 0,
+    "fail": 2
+  },
+  "productionWithPrivateFixtures": {
+    "pass": 312,
+    "fail": 2,
+    "skip": 0
+  },
+  "liveAuth": false,
+  "liveFirebaseRules": false,
+  "productionWrites": 0
+}

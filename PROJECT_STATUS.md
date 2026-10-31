@@ -1,3 +1,23 @@
+# Aktuální zjednodušená9b2 — implementováno, nenasazeno
+
+Dominik,31.10.2026: schválená zjednodušená implementace v existujícím PR52 nad samostatným nezměněným PR51, kandidát **v4.51.110 RC**, produkce **v4.51.109 RC**. Povinný žurnál/reconcile/GET verified odstraněny bez náhrady úložištěm či retry. Pět oprav zachováno; unknown zastaví frontu profilu a drží pravdivé upozornění při navigaci, odděleně A/B. **Po restartu stopka ani upozornění nepřežijí; nejasné zápisy a konflikty zařízení nejsou vyřešené.** Whitelisted vlastní snapshoty/delty, neprůhledná nesouvisející serverová pole zachována při legacy celoprofilovémPUT. Lokální produkce318/0/0, browser desktop/mobil včetně plného/nedostupného storage a exportní regrese PASS. Experiment28/2/0; historický audit odstraněného žurnálu0/2 samostatně; standalone notificationPNG tentokrátPASS, jeho nestabilita neřešená a není vCI. [Kontrakt, testy, omezení a návrat](docs/challenges-stage-9b2-lean.md). Nic nesloučeno/nenasazeno, žádná produkční data/Rules,9c nezahájena. Následující starší návrhy a žurnálová implementace jsou historie, nikoli aktuální kontrakt.
+
+CI aplikačního commitu `1bb090c9ff2c5291aa3ee74e28df493ca20de231`: [run41228939102](https://github.com/bcrybarna-oss/BC-Rybarna-Scoreboard/actions/runs/41228939102) — Release PASS, produkce315PASS/0FAIL/3SKIP (tři soukromé exporty chybí vCI), experiment28PASS/2FAIL/0SKIP. Celý workflow FAILURE jen kvůli oběma nezměněným experimentálním vadám, žádná nová produkční regrese. Tento následný zápis mění pouze dokumentaci.
+
+# Návrh zjednodušení9b2 — bez implementace
+
+Dominik,31.10.2026: [návrh](docs/challenge-write-simplification-proposal.md) zachovává samostatnou9b1 a z52 pouze lokální životnost/pořadíakcí; povinnýžurnál/reconcile mají být po schválení odstraněny beznáhradyretry. Izolovaný experiment7vybranýchkontrolPASS prokazuje oddělitelnost, nikoli hotovouaplikaci. Zbývá schválit hranici unknownupozornění přesreload, whitelist včetněvalidace profilovéobálky a finálníregrese. Dvěprodukčnívady dnešníhožurnálu stáleFAIL, testy aniaplikace nezměněny. [Budoucí serverovýprotokol](docs/challenges-write-conflict-proposal.md) jen návrh, žádná změnaRules/dat. PR51/52 neslučovat aninasazovat, produkce109 a nevydanýkandidát110;9cnezahájena.
+
+# Revize žurnálu9b2 — integrace a nasazení blokovány
+
+Dominik,31.10.2026: pět oprav závodů přijato, ale nový trvalý žurnál není schválen k nasazení. Skutečně plnýlocalStorage blokuje všech6akcí (desktop/mobile,0PUT). GETshoda neprokazuje ukončení původníhoPUT; controller přesto vracíverified a maže potvrzenku. Sender záznam nemá whitelist extra polí. Nové2produkční testy FAIL, ostatních312lokálněPASS; nejde o dvě známé experimentální vady. **Aplikační kód nezměněn, nic nesloučeno/nenasazeno.** [Přesný audit, varianty a doporučení](docs/challenge-journal-review.md). Produkce109, společný nevydanýkandidát110. Historická předání níže nejsou aktuální souhlas s nasazením žurnálu.9c nezahájena.
+
+# Etapa 9b2 — společný kandidát v4.51.110 RC s 9b1
+
+Aktuální verze: **v4.51.110 RC**. Produkce zůstává **v4.51.109 RC**. Dominik,31.10.2026: schválená úzká oprava zápisových akcí, samostatná navazující větev/PR na9b1. Obě části vydat pouze společně; samotnou9b1 neslučovat ani nenasazovat. Zachycené vstupy a UID/profil/generace, jediný controller, dedup/serializace, odmítnutí versus nejasný výsledek, místní trvalý žurnál a ověření bez slepéhoPUT, pořadí čtení vůči zápisům. Bez změny Auth politiky, Rules a serverových datových formátů. [Rozsah a výsledky](docs/challenges-stage-9b2.md), [samostatný návrh konfliktů](docs/challenges-write-conflict-proposal.md).9c nezahájena. Následující záznamy9b1 jsou zachovaná historie; její původní zápisové mezery jsou nyní řešeny výslovně schválenou9b2.
+
+Draft [PR #52](https://github.com/bcrybarna-oss/BC-Rybarna-Scoreboard/pull/52) → větev [PR #51](https://github.com/bcrybarna-oss/BC-Rybarna-Scoreboard/pull/51), aplikační commit `8a5f3ccdef1ec4cb3ce145546d0a1f6f0e1ae671`. [CI 41224379252](https://github.com/bcrybarna-oss/BC-Rybarna-Scoreboard/actions/runs/41224379252): Release PASS, produkční **309 PASS / 0 FAIL / 3 SKIP**, experimentální **28 PASS / 2 FAIL / 0 SKIP**, celek FAILURE. Lokálně se všemi exporty312PASS/0FAIL/0SKIP. Samostatná PNG browserová kontrola tentokrát desktop/mobile PASS, její historická nestabilita není opravena ani součástí CI. Obě části nesloučeny a nenasazeny.
+
 # Etapa 9b1 — kandidát v4.51.110 RC
 
 Aktuální verze: **v4.51.110 RC**. Produkce zůstává **v4.51.109 RC**; tato etapa není sloučena ani nasazena.

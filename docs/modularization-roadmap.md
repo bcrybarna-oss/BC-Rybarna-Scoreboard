@@ -1,10 +1,22 @@
 # Aktuální roadmapa modularizace Poolčítadla
 
+## Aktuální stav9b2 po schváleném zjednodušení (31.10.2026)
+
+[Implementace a ověření](challenges-stage-9b2-lean.md) jsou nyní aktuální; níže zachované žurnálové návrhy jsou historie. PR51 zůstává samostatný, PR52 přepracován nad ním, nevydané110/prod109. Povinný journal/reconcile/GET verified odstraněny, pět lokálních oprav a read/write bariéra zachovány. Nejasný výsledek drží pouze paměťovou stopku profilu a nedismissovatelné upozornění při navigaci, nikoli po restartu. Žádný nový serverový protokol ani9c. Lokální produkce318/0/0 a cílené browserové/regresní kontroly PASS; experiment28/2/0 a historický žurnálový audit0/2 zvlášť. Nic neslučovat/nenasazovat.
+
 Zadavatel: Dominik. Aktualizace31.10.2026: produkce109, PR50 merge26c98fdc5309bf5b047c6ef91fcb4c1de87e1205/Pages41217198366 success. Etapy6,7,8 a9a jsou nasazené.9b1 je nyní schválená implementace kandidáta110 (nesloučeno/nenasazeno); A1/9b2/9c nezahájeny. [Funkční ověření, PNG selhání a omezení](deployment-v4.51.109.md). Starší přípravy níže jsou historie.
+
+### Aktuální příprava 9b2 — společné vydání110, nic nasazeno
+
+Dominik31.10.2026 výslovně schválil úzkou9b2 navazující na9b1: [controller zápisových akcí](challenges-stage-9b2.md). Obě části zůstávají společné nevydané110; samotnou9b1 nevydávat. Místo plošného Auth A1 je nyní schválen pouze nezbytný operační ticket+guard před prvním zápisem a při jeho dokončení; celé přihlášení se nepřesouvá. Serverové konflikty/CAS se podle nového zadání pouze [navrhují](challenges-write-conflict-proposal.md), neimplementují. Historická podmínka dokončit celéA1 před9b2 je tímto zpřesněna;9c/ostatníA1 práce nezačínají.
 
 ### Aktuální příprava 9b1 (kandidát110)
 
 Dominik schválil menší samostatný rozsah čtení/cache/globálních obnov. [Mapování, opravy proti main, měření a omezení](challenges-stage-9b1.md). Renderer a serverové mutace zůstávají v aplikaci pro9b2; nejde o dokončení jejich zápisového kontraktu. Před9b2 nadále A1.9c se nemění. Kandidát není sloučen ani nasazen; produkce109.
+
+### Nové zadání — návrh úzké9b2 bez žurnálu (zatím neimplementovat)
+
+[Posouzení a plán](challenge-write-simplification-proposal.md):9b1 samostatná, z52 ponechat proven-lokálníguardy/dedup/pořadí a návrh pravdivéhounknownUI bezpovinnéhožurnálu/GETověření. Zbývá explicitní hranice restartu a kompletníwhitelist. Současné2selhávajícížurnálovétesty zůstávají viditelné; přesun pouze jejich mechanismověneplatnéčásti se záchovánímreprodukcí až poimplementaci, nikoli nyní. [Budoucíserverovýprotokol](challenges-write-conflict-proposal.md) samostatnějen návrh. Staršíplán společného110 zůstává historický, pořadíbudoucíchvydání vyžaduje aktuálnífetch/verzi. Nic nesloučeno/nenasazeno.9cnezačíná.
 
 ## Historie přípravy 8b — nyní nasazeno108
 
