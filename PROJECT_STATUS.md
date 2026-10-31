@@ -1,3 +1,7 @@
+# Etapa 9b2 — společný kandidát v4.51.110 RC s 9b1
+
+Aktuální verze: **v4.51.110 RC**. Produkce zůstává **v4.51.109 RC**. Dominik,31.10.2026: schválená úzká oprava zápisových akcí, samostatná navazující větev/PR na9b1. Obě části vydat pouze společně; samotnou9b1 neslučovat ani nenasazovat. Zachycené vstupy a UID/profil/generace, jediný controller, dedup/serializace, odmítnutí versus nejasný výsledek, místní trvalý žurnál a ověření bez slepéhoPUT, pořadí čtení vůči zápisům. Bez změny Auth politiky, Rules a serverových datových formátů. [Rozsah a výsledky](docs/challenges-stage-9b2.md), [samostatný návrh konfliktů](docs/challenges-write-conflict-proposal.md).9c nezahájena. Následující záznamy9b1 jsou zachovaná historie; její původní zápisové mezery jsou nyní řešeny výslovně schválenou9b2.
+
 # Etapa 9b1 — kandidát v4.51.110 RC
 
 Aktuální verze: **v4.51.110 RC**. Produkce zůstává **v4.51.109 RC**; tato etapa není sloučena ani nasazena.

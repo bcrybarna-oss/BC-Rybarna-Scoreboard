@@ -1,0 +1,133 @@
+{
+  "baseMain": "fade611557a33a8145b8c0251883946e1bf7b968",
+  "base9b1": "fde56cee21a1f0ea074fb3572e71187e5e27216a",
+  "version": "v4.51.110 RC",
+  "release": "unreleased joint 9b1+9b2",
+  "before": {
+    "scope": "Historical main/pre-fix 9b1 writer bodies in identical isolated harness, with candidate cache provider; no live Firebase or Auth",
+    "main": {
+      "sameAccountOldReadAfterWrite": {
+        "successfulPUTs": 1,
+        "newChallengeDisappearsFromLocalView": true
+      },
+      "failedAcceptance": {
+        "optimisticStatusRemains": "accepted",
+        "retryRequests": 1
+      },
+      "doubleCounterClick": {
+        "requests": 2
+      },
+      "freshActionAfterSwitch": {
+        "credentialOwner": "B",
+        "path": "/players/b.json",
+        "payloadSender": "B"
+      },
+      "switchDuringPreSendAwait": {
+        "credentialOwner": "B",
+        "path": "/players/a.json",
+        "payloadSender": "A",
+        "mismatch": true
+      },
+      "switchAfterPUT": {
+        "originalCredentialOwner": "A",
+        "originalPath": "/players/a.json",
+        "newBDraftCleared": true,
+        "freshBViewOverwritten": true,
+        "foreignCacheRows": 0
+      }
+    },
+    "candidate": {
+      "sameAccountOldReadAfterWrite": {
+        "successfulPUTs": 1,
+        "newChallengeDisappearsFromLocalView": true
+      },
+      "failedAcceptance": {
+        "optimisticStatusRemains": "accepted",
+        "retryRequests": 1
+      },
+      "doubleCounterClick": {
+        "requests": 2
+      },
+      "freshActionAfterSwitch": {
+        "credentialOwner": "B",
+        "path": "/players/b.json",
+        "payloadSender": "B"
+      },
+      "switchDuringPreSendAwait": {
+        "credentialOwner": "B",
+        "path": "/players/a.json",
+        "payloadSender": "A",
+        "mismatch": true
+      },
+      "switchAfterPUT": {
+        "originalCredentialOwner": "A",
+        "originalPath": "/players/a.json",
+        "newBDraftCleared": true,
+        "freshBViewOverwritten": true,
+        "foreignCacheRows": 0
+      }
+    }
+  },
+  "browser": [
+    {
+      "viewport": "desktop",
+      "allFiveCases": "PASS",
+      "actions": [
+        "send",
+        "accept",
+        "decline",
+        "cancel",
+        "counter",
+        "played"
+      ],
+      "writes": 11,
+      "reads": 3,
+      "unknownVerifiedWithoutSecondPUT": true,
+      "jsErrors": [],
+      "liveAuth": false,
+      "liveRules": false
+    },
+    {
+      "viewport": "mobile",
+      "allFiveCases": "PASS",
+      "actions": [
+        "send",
+        "accept",
+        "decline",
+        "cancel",
+        "counter",
+        "played"
+      ],
+      "writes": 11,
+      "reads": 3,
+      "unknownVerifiedWithoutSecondPUT": true,
+      "jsErrors": [],
+      "liveAuth": false,
+      "liveRules": false
+    }
+  ],
+  "node": {
+    "controller": 15,
+    "reader": 9,
+    "production": {
+      "pass": 312,
+      "fail": 0,
+      "skip": 0
+    },
+    "experimental": {
+      "pass": 28,
+      "fail": 2,
+      "skip": 0
+    }
+  },
+  "notificationPng": {
+    "suite": "standalone browser, not GitHub CI",
+    "thisRun": "PASS desktop/mobile",
+    "knownInstability": "still open; historical109/9b1 FAIL, test unchanged"
+  },
+  "liveAuth": false,
+  "liveRules": false,
+  "productionDataChanged": false,
+  "conditionalProtocolImplemented": false,
+  "deployment": "not merged, not deployed"
+}
