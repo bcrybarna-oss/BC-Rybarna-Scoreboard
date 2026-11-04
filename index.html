@@ -1043,14 +1043,14 @@
   </div>
 
 <script src="assets/js/federal-statistics.js?v=4.51.98"></script>
-<script src="assets/js/federal-report-renderer.js?v=4.51.112"></script>
-<script src="assets/js/federal-report-controller.js?v=4.51.112"></script>
-<script src="assets/js/livescore-reader.js?v=4.51.112"></script>
-<script src="assets/js/livescore-renderer.js?v=4.51.112"></script>
-<script src="assets/js/online-presence.js?v=4.51.112"></script>
-<script src="assets/js/match-challenge-actions.js?v=4.51.112"></script>
-<script src="assets/js/match-challenges.js?v=4.51.112"></script>
-<script src="assets/js/notification-center.js?v=4.51.112"></script>
+<script src="assets/js/federal-report-renderer.js?v=4.51.113"></script>
+<script src="assets/js/federal-report-controller.js?v=4.51.113"></script>
+<script src="assets/js/livescore-reader.js?v=4.51.113"></script>
+<script src="assets/js/livescore-renderer.js?v=4.51.113"></script>
+<script src="assets/js/online-presence.js?v=4.51.113"></script>
+<script src="assets/js/match-challenge-actions.js?v=4.51.113"></script>
+<script src="assets/js/match-challenges.js?v=4.51.113"></script>
+<script src="assets/js/notification-center.js?v=4.51.113"></script>
 <script src="assets/js/cloud-refresh.js?v=4.51.99"></script>
 <script src="assets/js/own-reports.js?v=4.51.102"></script>
 <script src="assets/js/federal-viewer.js?v=4.51.103"></script>
@@ -3157,7 +3157,7 @@ html[data-theme="light"] #leagueSchedule .history-item .muted{
           <span class="by">by</span>
           <span class="club">BC Rybárna</span>
         </div>
-        <small class="modern-brand-version">v4.51.112 RC</small>
+        <small class="modern-brand-version">v4.51.113 RC</small>
       </div>
     </div>
     <div class="nav">
@@ -3776,7 +3776,7 @@ html[data-theme="light"] #leagueSchedule .history-item .muted{
         </div>
         <div class="subpanel" style="min-width:210px;text-align:center;margin:0">
           <div class="muted" style="font-size:10px;font-weight:950;letter-spacing:1px">AKTUÁLNÍ VERZE</div>
-          <div style="font-size:22px;font-weight:950;color:var(--gold2);margin-top:5px">v4.51.112 RC</div>
+          <div style="font-size:22px;font-weight:950;color:var(--gold2);margin-top:5px">v4.51.113 RC</div>
         </div>
       </div>
     </div>
@@ -6546,7 +6546,7 @@ html[data-theme="light"] #leagueSchedule .history-item .muted{
       </div>
 
       <div id="groupPlayoffSeedStatus" class="muted" style="margin-top:12px;min-height:20px"></div>
-      <div class="muted" style="margin-top:4px;font-size:11px">RC v4.51.112</div>
+      <div class="muted" style="margin-top:4px;font-size:11px">RC v4.51.113</div>
       <div class="modal-actions">
         <button id="groupPlayoffSeedApplyBtn" class="btn primary big" type="button">NASADIT DO PLAY-OFF</button>
         <button id="groupPlayoffSeedCancelBtn" class="btn">ZRUŠIT</button>
@@ -7689,7 +7689,7 @@ html[data-theme="light"] #leagueSchedule .history-item .muted{
     const btn=$('submitReportBtn');if(btn)btn.disabled=true;
     try{
       const id=uid(),p=currentUserPlayerId?data.players?.[currentUserPlayerId]:null;
-      const report={id,createdByUid:cloudUid,createdByPlayerId:currentUserPlayerId||'',createdByName:p?playerSelectionLabel(p):(cloudUserEmail||'Uživatel'),email:cloudUserEmail||'',type,area,description,appVersion:'v4.51.112 RC',createdAt:new Date().toISOString(),updatedAt:new Date().toISOString(),status:'new',adminNote:''};
+      const report={id,createdByUid:cloudUid,createdByPlayerId:currentUserPlayerId||'',createdByName:p?playerSelectionLabel(p):(cloudUserEmail||'Uživatel'),email:cloudUserEmail||'',type,area,description,appVersion:'v4.51.113 RC',createdAt:new Date().toISOString(),updatedAt:new Date().toISOString(),status:'new',adminNote:''};
       await reportRequest(id,'PUT',report);
       try{
         await writeReportUserMirror(report);
@@ -8409,10 +8409,23 @@ html[data-theme="light"] #leagueSchedule .history-item .muted{
     return changed;
   }
 
+  // Dashboard smí ukázat konečný počet teprve po úspěšném načtení CELÉ
+  // zabezpečené větve /matches pro právě přihlášený účet. Offline cache
+  // může obsahovat jen část zápasů (např. 102 místo 199).
+  let dashboardMatchesLoadedUid=null,dashboardMatchesFailedUid=null;
   let secureMatchesLoad=null,secureMatchesLoadUid=null;
   function loadSecureMatches(){
     if(secureMatchesLoad&&secureMatchesLoadUid===cloudUid)return secureMatchesLoad;
-    const pending=readSecureMatches().finally(()=>{
+    const requestedUid=cloudUid;
+    const pending=readSecureMatches().catch(error=>{
+      // Opožděná chyba starého účtu nesmí ovlivnit aktuální přihlášení.
+      if(requestedUid && cloudAuthenticated && cloudUid===requestedUid &&
+         dashboardMatchesLoadedUid!==requestedUid){
+        dashboardMatchesFailedUid=requestedUid;
+        try{window.renderModernHome?.();}catch(e){}
+      }
+      throw error;
+    }).finally(()=>{
       if(secureMatchesLoad===pending){secureMatchesLoad=null;secureMatchesLoadUid=null;}
     });
     secureMatchesLoad=pending;secureMatchesLoadUid=cloudUid;
@@ -8437,6 +8450,10 @@ html[data-theme="light"] #leagueSchedule .history-item .muted{
         .forEach(m=>secureMatchRequest(m.id,'PUT',m).catch(e=>console.warn('Historical metadata repair save:',e)));
     }
     try{localStorage.setItem(DB_KEY,JSON.stringify(data));}catch(e){}
+    // Nastavit až po úplném Firebase GET, dekódování a zpracování výsledků.
+    // Jediné definitivní číslo pochází z této atomicky načtené kolekce.
+    dashboardMatchesLoadedUid=requestUid;
+    dashboardMatchesFailedUid=null;
     setTimeout(maybeShowPendingResultConfirmation,80);
     try{if(typeof window.renderModernHome==='function')window.renderModernHome();}catch(e){}
     return data.matches;
@@ -9087,6 +9104,8 @@ html[data-theme="light"] #leagueSchedule .history-item .muted{
     window.stopFederalCupViewer?.();
     cloudReports=[];
     cloudAuthenticated=false;
+    dashboardMatchesLoadedUid=null;
+    dashboardMatchesFailedUid=null;
     cloudIdToken='';
     cloudTokenExpiresAt=0;
     cloudUid='';
@@ -9099,6 +9118,7 @@ html[data-theme="light"] #leagueSchedule .history-item .muted{
     if(ownReportsSync){renderMyReports();if($('reportSubmitInfo'))$('reportSubmitInfo').textContent='';}
     try{refreshAccountUI();}catch(e){}
     try{updateLoggedInUserBadge();}catch(e){}
+    try{window.renderModernHome?.();}catch(e){}
   }
 
   async function ensureCloudToken(refreshRequest=null){
@@ -29094,6 +29114,8 @@ function renderStats(){
         recentMatches:recentMatches,
         stats:{
           completedMatches:completed.length,
+          completedMatchesReady:!!cloudAuthenticated && !!cloudUid && dashboardMatchesLoadedUid===cloudUid,
+          completedMatchesFailed:!!cloudAuthenticated && !!cloudUid && dashboardMatchesFailedUid===cloudUid && dashboardMatchesLoadedUid!==cloudUid,
           activePlayers:players.length,
           mostPlayedDiscipline:String(mostPlayed),
           tournaments:Array.isArray(data?.tournaments)?data.tournaments.length:0
@@ -29109,7 +29131,7 @@ function renderStats(){
         isSystemAdmin:false,
         players:[],
         recentMatches:[],
-        stats:{completedMatches:0,activePlayers:0,mostPlayedDiscipline:'—',tournaments:0}
+        stats:{completedMatches:0,completedMatchesReady:false,completedMatchesFailed:false,activePlayers:0,mostPlayedDiscipline:'—',tournaments:0}
       };
     }
   };
@@ -30167,8 +30189,14 @@ function renderStats(){
 
     if(stats){
       var x=s.stats||{};
+      var completedReady=x.completedMatchesReady===true;
+      var completedFailed=x.completedMatchesFailed===true;
+      var completedValue=completedReady?String(Number(x.completedMatches||0)):(completedFailed?'—':'Načítám…');
+      var completedLabel=completedReady?'Dokončených zápasů'
+        :(completedFailed?'Historie dočasně nedostupná'
+          :(s.cloudAuthenticated?'Načítám kompletní historii':'Dokončené zápasy z cloudu'));
       stats.innerHTML=
-        '<div class="modern-stat"><b>'+Number(x.completedMatches||0)+'</b><span>Dokončených zápasů</span></div>'+
+        '<div class="modern-stat" aria-live="polite"><b'+(completedReady?'':' style="font-size:17px;letter-spacing:0"')+'>'+completedValue+'</b><span>'+completedLabel+'</span></div>'+
         '<div class="modern-stat"><b>'+Number(x.activePlayers||0)+'</b><span>Aktivních hráčů</span></div>'+
         '<div class="modern-stat"><b>'+Number(x.tournaments||0)+'</b><span>Turnajů v databázi</span></div>'+
         '<button type="button" class="modern-stat" id="onlineUsersTile" aria-label="Zobrazit aktivní hráče"><b><span class="presence-dot"></span><span id="onlineUsersCount">'+(document.getElementById('onlineUsersCount')?.textContent||'—')+'</span></b><span>Právě online · zobrazit hráče</span></button>';
