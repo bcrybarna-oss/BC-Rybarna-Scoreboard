@@ -1,5 +1,13 @@
 # Revize aplikace Poolčítadlo
 
+## Jaroslav – přesný počet dokončených zápasů po cloudovém načtení (v4.51.113 RC)
+Zadavatel: Jaroslav
+Datum: 4. 11. 2026
+Změny: Oprava domovské dlaždice „Dokončených zápasů“. Příčinou přeskoku 102 → 199 bylo okamžité zobrazení neúplné lokální historie data.matches, kterou následně nahradil jeden kompletní GET zabezpečené Firebase větve /matches. Domovská karta nově zobrazí číslo pouze po úspěšném načtení celé zabezpečené historie pro právě přihlášený cloudUid. Při přihlašování uvádí „Načítám…“; odhlášený vidí pomlčku s výzvou k přihlášení; při chybě cloudu bez dříve potvrzené historie text „Historie dočasně nedostupná“. Opožděný výsledek/cizí identita nesmí potvrdit počet; odhlášení resetuje readiness. Data, pravidla Firebase, přihlášení, ukládání zápasů a ostatní statistiky se nemění. Aktivní vydání v index.html včetně cache query aktualizováno na 113.
+Testy: Přidán izolovaný Node kontrakt tests/modern-home-complete-match-count.test.cjs se scénáři cache 102 → cloud 199, selhání a opakovaný pokus, výměna identity a odhlášený uživatel; bez kontaktu se skutečnou databází. Release gate, produkční regression a případná browser kontrola čekají na výsledek PR CI. Starší dvě experimentální chyby obnovy identity z test-modular zůstávají mimo tento úkol.
+Nasazení: Kandidát v4.51.113 RC ve větvi fix/home-match-count-cloud-ready-v451113; čeká na kontrolu a sloučení. Aktuálně nasazeno v4.51.112 RC, produkční data a pravidla beze změny.
+Omezení: Úplný počet nelze získat před dokončením síťového požadavku, proto se záměrně nezobrazuje neúplné lokální číslo. Vypočítaný počet odpovídá definici „Dokončených zápasů“ používané na dashboardu (status complete); fyzický telefon s živým Firebase přihlášením není otestován.
+
 ## Jaroslav – kompaktní mobilní počítání všech disciplín (v4.51.112 RC)
 Zadavatel: Jaroslav
 Datum: 4. 11. 2026
