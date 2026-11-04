@@ -48,8 +48,43 @@ const html=fs.readFileSync(path.join(__dirname,'../test/mobile-other-disciplines
    assert.equal(await page.locator('[data-act="tag-bank"]').getAttribute('aria-pressed'),'false',discipline+' undo removes bank');
    assert.equal(await page.locator('#turn').textContent(),beforeTurn,discipline+' undo of tag keeps player');
   }
+  await page.locator('#mode').selectOption('14');
+  const legal=page.locator('[data-act="break14ok"]');
+  const openingFoul=page.locator('[data-act="foul2"]');
+  assert.equal(await openingFoul.count(),1,'initial −2 foul is offered before opening');
+  await legal.click();
+  assert.equal(await openingFoul.count(),0,'legal opening break hides −2');
+  assert.equal(await page.locator('#s0').textContent(),'0');
+  await page.locator('#undoTop').click();
+  assert.equal(await openingFoul.count(),1,'undo restores opening choices');
+  await page.locator('[data-act="rack"]').click();
+  assert.equal(await openingFoul.count(),0,'first +14 hides opening break choices');
+  await page.locator('#undoTop').click();
+  assert.equal(await openingFoul.count(),1,'undo after +14 restores opening choices');
+  await openingFoul.click();
+  assert.equal(await page.locator('#s0').textContent(),'-2');
+  assert.equal(await openingFoul.count(),0,'−2 opening foul is offered only once');
   assert.deepEqual(errors,[]);
-  console.log('PASS standalone preview selection, JUMP/BANK toggle invariants, controls, screen width, 0 JS errors / no network');
+
+  const soloHtml=fs.readFileSync(path.join(__dirname,'../test/solo14-mobile-compact-preview.html'),'utf8');
+  const solo=await browser.newPage({viewport:{width:390,height:844}});
+  const soloErrors=[];solo.on('pageerror',e=>soloErrors.push(e.message));
+  await solo.setContent(soloHtml);
+  assert.equal(await solo.locator('#breakFoul').isVisible(),true);
+  await solo.locator('#breakOk').click();
+  assert.equal(await solo.locator('#breakFoul').isVisible(),false,'solo legal break hides foul');
+  await solo.locator('#undo').click();
+  assert.equal(await solo.locator('#breakFoul').isVisible(),true,'solo UNDO restores opening');
+  await solo.locator('#add').click();
+  assert.equal(await solo.locator('#breakFoul').isVisible(),false,'solo +14 hides foul');
+  await solo.locator('#undo').click();
+  assert.equal(await solo.locator('#breakFoul').isVisible(),true,'solo +14 undo restores opening');
+  await solo.locator('#breakFoul').click();
+  assert.equal(await solo.locator('#breakFoul').isVisible(),false,'solo opening foul is one-shot');
+  assert.equal(await solo.locator('#total').textContent(),'-2');
+  assert.deepEqual(soloErrors,[]);
+  await solo.close();
+  console.log('PASS standalone preview selection, JUMP/BANK and 14.1 opening-break invariants, controls, screen width, 0 JS errors / no network');
   await page.close();
  }finally{await browser.close();}
 })().catch(e=>{console.error(e);process.exitCode=1});
