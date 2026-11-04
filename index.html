@@ -3117,6 +3117,30 @@ html[data-theme="light"] #leagueSchedule .history-item .muted{
 }
 </style>
 
+
+<style id="opening-break-141-mobile-v451112">
+/* Trojice UNDO / legal break / opening foul je vidět jen do prvního zápisu. */
+@media(max-width:700px) and (orientation:portrait){
+  body:has(#screen-match.active #solo14ScoreRow:not(.hidden)) #screen-match
+  .fourteen-utility-grid:has(#openingBreakOk14:not(.hidden)){
+    grid-template-columns:minmax(0,.7fr) minmax(0,1.2fr) minmax(0,1.4fr)!important;
+  }
+  body:has(#screen-match.active #classic14Overview:not(.hidden)) #screen-match
+  .fourteen-utility-grid:has(#openingBreakOk14:not(.hidden)){
+    grid-template-columns:minmax(0,.7fr) minmax(0,1.2fr) minmax(0,1.4fr)!important;
+  }
+  body:has(#screen-match.active #solo14ScoreRow:not(.hidden)) #screen-match
+  .fourteen-utility-grid:not(:has(#openingBreakOk14:not(.hidden))),
+  body:has(#screen-match.active #classic14Overview:not(.hidden)) #screen-match
+  .fourteen-utility-grid:not(:has(#openingBreakOk14:not(.hidden))){
+    grid-template-columns:1fr!important;
+  }
+  #screen-match .fourteen-utility-grid #openingBreakOk14,
+  #screen-match .fourteen-utility-grid #openingBreakFoul14{
+    font-size:10px!important;line-height:1.1;
+  }
+}
+</style>
 </head>
 <body>
 
@@ -4998,6 +5022,7 @@ html[data-theme="light"] #leagueSchedule .history-item .muted{
 
             <div class="fourteen-utility-grid">
               <button id="undo14Btn" class="btn">↶ UNDO</button>
+              <button id="openingBreakOk14" class="btn primary">✓ ÚVODNÍ BREAK OK</button>
               <button id="openingBreakFoul14" class="btn danger">ÚVODNÍ BREAK • FAUL −2</button>
             </div>
 
@@ -12067,7 +12092,9 @@ const isFourteen=match.discipline==='14.1' && !simpleCounter;
       }
       if(!match.consecutiveFouls14) match.consecutiveFouls14=[0,0];
       $('foulInfo14').textContent='Po sobě jdoucí fauly – '+match.playerNames[0]+': '+match.consecutiveFouls14[0]+' | '+match.playerNames[1]+': '+match.consecutiveFouls14[1];
-      $('openingBreakFoul14').classList.toggle('hidden', !match.openingBreakAvailable14);
+      const openingBreakActive=openingBreakAvailableForAction14(match);
+      $('openingBreakOk14').classList.toggle('hidden', !openingBreakActive);
+      $('openingBreakFoul14').classList.toggle('hidden', !openingBreakActive);
     }
     renderFourteenInningsHistory();
     $('manualBreaker').classList.toggle('hidden',simpleCounter || match.discipline==='14.1' || match.ghostMode || match.winnerTableMode || (match.federalCupLink && !match.isBreakShot && !match.federalTeam?.pending));
@@ -14434,8 +14461,28 @@ const isFourteen=match.discipline==='14.1' && !simpleCounter;
     autosaveCurrent();
   };
 
+  // Rozstřel je jednorázová fáze. U starších obnovených zápasů chraň
+  // i stav, kde historický příznak zůstal true po prvním náběhu / +14.
+  function openingBreakAvailableForAction14(m){
+    return !!m && m.discipline==='14.1' && !m.endedAt &&
+      m.openingBreakAvailable14===true &&
+      !(m.inningsHistory14||[]).length &&
+      Number(m.reracksInInning14||0)===0 &&
+      Number(m.ballsOnTable??15)===15;
+  }
+
+  $('openingBreakOk14').onclick=()=>{
+    if(!openingBreakAvailableForAction14(match))return;
+    addActionEvent('14.1 • úvodní rozstřel bez faulu • pokračování hry');
+    match.openingBreakAvailable14=false;
+    match.isBreakShot=false;
+    if(match.useClock)resetClock(false,true);
+    renderMatch();
+    autosaveCurrent();
+  };
+
   $('openingBreakFoul14').onclick=()=>{
-    if(!match || match.discipline!=='14.1' || !match.openingBreakAvailable14) return;
+    if(!openingBreakAvailableForAction14(match))return;
     match.isBreakShot=false;
     const i=match.turn;
     addActionEvent('14.1 • faul na úvodním rozstřelu • '+match.playerNames[i]+' −2 body');
@@ -14471,15 +14518,16 @@ const isFourteen=match.discipline==='14.1' && !simpleCounter;
 
     const before=match.ballsOnTable;
 
-    // Každý nový trojúhelník přidá do výpočtového stavu přesně 14 nových koulí.
-    // Koule, které už na stole jsou, se nijak neodečítají.
-    // Příklad: stav 3 -> nový trojúhelník -> 17.
-    match.ballsOnTable=before+14;
-
-    match.reracksInInning14++;
+    // Zapsání prvního +14 je nevratně po úvodním strku; při UNDO
+    // obnovíme i příznak úvodního rozstřelu ze správného snapshotu.
+    // Výpočtový stav zvyšujeme o 14, existující koule se neodečítají.
     addActionEvent(
-      '14.1 • nový trojúhelník +14 • výpočtový stav '+before+' → '+match.ballsOnTable
+      '14.1 • nový trojúhelník +14 • výpočtový stav '+before+' → '+(before+14)
     );
+    match.ballsOnTable=before+14;
+    match.reracksInInning14++;
+    match.openingBreakAvailable14=false;
+    match.isBreakShot=false;
     renderMatch();
     autosaveCurrent();
   };
