@@ -1,0 +1,61 @@
+<!doctype html><html lang="cs"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#090909"><title>Mobilní počítadlo • test disciplín</title>
+<style>
+:root{--gold:#f0ce73;--muted:#a9a9af;--border:#363538}*{box-sizing:border-box}html{color-scheme:dark}body{background:#090909;color:#f3f1ee;font-family:system-ui,-apple-system,'Segoe UI',sans-serif;margin:0}button,select{font:inherit}button{cursor:pointer;touch-action:manipulation}button:active{transform:scale(.985)}main{max-width:540px;margin:auto;padding:6px 7px calc(12px + env(safe-area-inset-bottom))}.head{display:flex;align-items:center;justify-content:space-between;border:1px solid #49402b;border-radius:12px;background:#060606;min-height:46px;padding:4px 8px}.head strong{color:var(--gold);font-size:13px}.head button{min-height:32px;font-size:11px}.test{margin:5px 0;color:#ada9a0;font-size:10px;text-align:center}.choice{width:100%;min-height:42px;border:1px solid #65542e;color:#f8d987;background:#17140d;border-radius:10px;padding:5px 10px;font-weight:800;margin-bottom:5px}.card{border:1px solid #343434;border-radius:12px;background:linear-gradient(#141414,#0b0b0b);padding:6px}.meta{font-size:10px;font-weight:900;text-align:center;color:var(--gold);margin-bottom:3px;letter-spacing:.7px}.turn{font-size:11px;text-align:center;margin-bottom:4px}.scoregrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:4px}.side{border:1px solid #3e3e43;border-radius:10px;padding:5px 4px;text-align:center}.who{font-weight:900;font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.value{font-size:43px;font-weight:950;line-height:1;margin:4px 0;color:white}.gold{color:var(--gold)}.bsmall{font-size:9px;color:var(--gold)}.bar{display:grid;grid-template-columns:1fr auto;align-items:center;gap:5px;margin:5px 0;padding:4px;border:1px solid #353535;border-radius:9px}.btn{background:#191919;color:#f4f4f4;border:1px solid #3c3c3c;border-radius:8px;font-weight:850;min-height:44px;padding:5px 4px;font-size:11px;line-height:1.1}.btn.primary{background:linear-gradient(#f3d476,#d7b958);color:#1c1309;border-color:#f0d073}.btn.danger{background:#2c1212;color:#ffe1e1;border-color:#743030}.bar .btn{min-height:36px}.grid2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:5px}.grid3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:5px}.panel{border:1px solid #353539;border-radius:10px;padding:6px;margin-top:5px;background:#0d0d0e}.panel h3{font-size:10px;letter-spacing:.4px;color:var(--gold);margin:0 0 5px}.panel .row{margin-top:5px}.mini{font-size:10px!important;min-height:44px!important}.breakPanel{border:1px solid #665221;background:#171306;border-radius:9px;padding:6px;text-align:center;margin:5px 0}.points14{font-size:31px;font-weight:950;color:var(--gold)}.tinyStat{display:grid;grid-template-columns:repeat(3,1fr);gap:5px;margin-bottom:5px}.tinyStat span{font-size:9px;border:1px solid #333;border-radius:7px;padding:4px;text-align:center;color:#aaa}.tinyStat strong{font-size:14px;color:white;display:block}.footer{margin-top:8px;border:1px solid #303030;border-radius:10px;padding:7px;font-size:11px;color:#aaa}.footer strong{color:var(--gold)}.buttons .btn{font-size:11px}.status{font-size:10px;text-align:center;color:#b9b4a8;padding:4px}.modal{position:fixed;inset:0;background:#000b;display:none;align-items:center;justify-content:center;padding:16px}.modal.show{display:flex}.modal>div{width:100%;max-width:330px;padding:16px;border-radius:14px;background:#151515;border:1px solid #ad8c44}.modal input{width:100%;font-size:17px;padding:9px;background:#101010;color:white;border:1px solid #777;border-radius:8px;margin:8px 0}.modal .grid2{margin-top:6px}
+</style></head><body><main><div class="head"><strong>🎱 Poolčítadlo • TEST</strong><button class="btn" id="reset">↻ RESET</button></div>
+<div class="test">v4.51.112 RC • samostatná ukázka • bez přihlášení a ukládání</div>
+<select class="choice" id="mode" aria-label="Vyber disciplínu">
+<option value="simple">Jednoduché počítadlo • 9-ball</option>
+<option value="8">8-ball • rozšířené</option>
+<option value="9">9-ball • rozšířené</option>
+<option value="10">10-ball • rozšířené</option>
+<option value="ghost">9-ball • Ghost</option>
+<option value="14">14.1 • klasický zápas</option>
+<option value="winner">Vítěz na stole • 9-ball</option>
+</select>
+<div class="card"><div class="meta" id="meta">9-BALL • DO 7</div><div class="turn" id="turn">Na tahu: Jaroslav Tichý</div>
+<div class="scoregrid" id="scoregrid"><div class="side"><div class="who">Jaroslav Tichý</div><div class="value" id="s0">0</div><div class="bsmall">🎱 BREAK</div></div><div class="side"><div class="who" id="who2">Dominik Mencl</div><div class="value" id="s1">0</div><div class="bsmall" id="info2">HRÁČ 2</div></div></div>
+<div class="bar"><button class="btn primary" id="sound">🔊 COME ON BABY</button><button class="btn" id="undoTop">↶ UNDO</button></div>
+<div id="modeContent"></div><div class="footer"><strong>Průběh:</strong> <span id="last">Zatím žádný zápis.</span></div>
+</div><div class="status">Tento náhled slouží k ověření velikosti a rozmístění tlačítek. Není propojen s ostrým počítadlem.</div></main>
+<div class="modal" id="modal"><div><strong>14.1 • Konec náběhu</strong><p>Kolik koulí zůstalo na stole?</p><input id="leftBalls" type="number" min="0" max="15" value="15"><div class="grid2"><button class="btn" id="dismiss">ZPĚT</button><button class="btn primary" id="confirm">POTVRDIT</button></div></div></div>
+<script>
+(()=>{'use strict';const $=id=>document.getElementById(id);
+let state={s:[0,0],turn:0,balls:15,innings:0,high:0,history:[],step:'break'},pending='';
+const modes={simple:'9-BALL • JEDNODUCHÉ',8:'8-BALL • ROZŠÍŘENÉ',9:'9-BALL • ROZŠÍŘENÉ',10:'10-BALL • ROZŠÍŘENÉ',ghost:'9-BALL • GHOST',14:'14.1 • DO 100',winner:'VÍTĚZ NA STOLE • 9-BALL'};
+function btn(label,action,kind=''){return '<button class="btn '+kind+'" data-act="'+action+'">'+label+'</button>'}
+function modeRender(){let m=$('mode').value;$('meta').textContent=modes[m];$('who2').textContent=m==='ghost'?'GHOST':'Dominik Mencl';$('info2').textContent=m==='winner'?'ČEKÁ NA STŘÍDÁNÍ':m==='ghost'?'LEHKÁ ÚROVEŇ':'HRÁČ 2';$('s0').textContent=state.s[0];$('s1').textContent=state.s[1];$('turn').textContent=m==='ghost'?'Ghost • Rack '+(state.innings+1):'Na tahu: '+(state.turn===0?'Jaroslav Tichý':'Dominik Mencl');let h='';
+if(m==='simple'){
+ h='<section class="panel"><h3>JEDNODUCHÉ POČÍTADLO • PŘIČTI BOD</h3><div class="grid2">'+btn('+1 HRÁČ 1','+0','primary')+btn('+1 HRÁČ 2','+1','primary')+'</div><div class="row">'+btn('⭐ ČISTÁ HRA','clean','primary')+'</div><h3 style="margin-top:7px">DOHRÁVKA</h3><div class="grid2">'+btn('DOHRÁVKA • HRÁČ 1','+0')+btn('DOHRÁVKA • HRÁČ 2','+1')+'</div></section>';
+}else if(m==='ghost'){
+ h='<section class="panel"><h3>GHOST MÓD • VÝSLEDEK RACKU</h3><div class="grid2">'+btn('ČISTĚ DOHRÁNO<br><small>+2 HRÁČ</small>','ghost+2','primary')+btn('DOHRÁVKA S BIH<br><small>+1 HRÁČ</small>','ghost+1')+btn('ESO Z BREAKU<br><small>+2 HRÁČ</small>','ghost+2','primary')+btn('FAUL Z BREAKU<br><small>+1 GHOST</small>','ghost-1','danger')+btn('SOFT BREAK<br><small>+1 GHOST</small>','ghost-1','danger')+btn('NEDOHRÁNO<br><small>+1 GHOST</small>','ghost-1','danger')+btn('DRY BREAK<br><small>+1 GHOST</small>','ghost-1','danger')+'</div></section>';
+}else if(m==='14'){
+ h='<div class="tinyStat"><span>NÁBĚHY<strong>'+state.innings+'</strong></span><span>HIGH RUN<strong>'+state.high+'</strong></span><span>KOULE<strong>'+state.balls+'</strong></span></div><section class="panel"><div class="breakPanel">NA STOLE: <span class="points14">'+state.balls+'</span></div>'+btn('+14 • NOVÝ TROJÚHELNÍK','rack','primary')+'<div class="grid3 row">'+btn('MISS','end-miss')+btn('SAFE','end-safe')+btn('FAUL −1','end-foul','danger')+'</div><div class="grid2 row">'+btn('↶ UNDO','undo')+btn('ÚVODNÍ BREAK • FAUL −2','foul2','danger')+'</div></section>';
+}else{
+ const breakButtons=btn('✓ BREAK OK','begin','primary')+btn('DRY BREAK','begin','danger')+btn('FAUL Z BREAKU','begin','danger')+(m==='9'||m==='winner'?btn('SOFT BREAK','begin','danger'):'');
+ const regular=btn('ČISTÝ STRK','shot','primary')+btn('FAUL','shot','danger')+btn('JISTOTA','shot')+btn('MISS','shot')+btn('JUMP SHOT','shot')+btn('BANK SHOT','shot')+btn('ČISTÁ HRA','+turn','primary')+btn('DOHRÁVKA','+turn','primary');
+ h='<section class="panel"><h3>'+ (state.step==='break'?'ROZSTŘEL':'AKTUÁLNÍ HERNÍ AKCE') +'</h3><div class="grid2">'+(state.step==='break'?breakButtons:regular)+'</div><div class="grid3 row">'+btn('ZMĚNIT HRÁČE','switch')+btn('OPRAVIT SKÓRE','fix')+btn('UNDO','undo')+'</div></section>';
+ if(m==='8')h+='<section class="panel"><h3>8-BALL • VÝSLEDEK RACKU</h3><div class="grid2">'+[0,1].map(i=>'<div><div style="font-size:10px;text-align:center;padding:4px">'+(i?'Dominik Mencl':'Jaroslav Tichý')+'</div>'+btn('VYHRÁL RACK','+'+i,'primary')+'<div class="grid2 row">'+btn('ČISTÁ','+'+i)+btn('DOHRÁVKA','+'+i)+'</div></div>').join('')+'</div></section>';
+ if(m==='winner')h+='<div class="status">Čekající hráč: třetí hráč • střídání po racku</div>';
+}
+$('modeContent').innerHTML=h;
+document.querySelectorAll('#modeContent [data-act]').forEach(el=>el.onclick=()=>action(el.dataset.act));
+}
+function save(){state.history.push(JSON.stringify({...state,history:[]}))}
+function action(a){let m=$('mode').value;
+ if(a==='undo'){let h=state.history.pop();if(h){let prev=JSON.parse(h);state={...prev,history:state.history};$('last').textContent='Poslední změna vrácena';}return modeRender()}
+ save();
+ if(a==='+0'||a==='+1'){state.s[Number(a.slice(-1))]+=1;state.innings++}
+ else if(a==='+turn'||a==='clean'){state.s[state.turn]++;state.innings++}
+ else if(a.startsWith('ghost')){state.s[a.endsWith('2')?0:a.endsWith('+1')?0:1]+=a.endsWith('2')?2:1;state.innings++}
+ else if(a==='rack'){state.s[state.turn]+=14;state.balls=15}
+ else if(a==='foul2'){state.s[state.turn]-=2}
+ else if(a.startsWith('end-')){state.history.pop();pending=a;$('leftBalls').value=state.balls;$('modal').classList.add('show');return}
+ else if(a==='begin'){state.step='play'}
+ else if(a==='switch'||a==='shot'){state.turn=1-state.turn}
+ else if(a==='fix'){state.history.pop();$('last').textContent='Oprava skóre je v plné aplikaci';return}
+ state.balls=Math.max(0,Math.min(15,state.balls));$('last').textContent='Zapsáno: '+a;modeRender();
+}
+$('dismiss').onclick=()=>{$('modal').classList.remove('show')};$('confirm').onclick=()=>{save();const left=Number($('leftBalls').value);if(!Number.isFinite(left)||left<0||left>15)return;const run=state.balls-left+(pending==='end-foul'?-1:0);state.s[state.turn]+=run;state.high=Math.max(state.high,run);state.innings++;state.balls=left;state.turn=1-state.turn;$('last').textContent='Konec náběhu • '+run+' bodů';$('modal').classList.remove('show');modeRender()};
+$('undoTop').onclick=()=>action('undo');$('sound').onclick=()=>{$('last').textContent='Zvukové tlačítko • ukázka'};$('reset').onclick=()=>{state={s:[0,0],turn:0,balls:15,innings:0,high:0,history:[],step:'break'};modeRender();$('last').textContent='Testovací skóre vynulováno'};$('mode').onchange=()=>{$('reset').click()};modeRender();
+})();
+</script></body></html>
