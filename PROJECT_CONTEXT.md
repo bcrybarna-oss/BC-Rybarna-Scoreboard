@@ -1,3 +1,11 @@
+# Kandidát v4.51.113 RC – počítadlo zápasů neukazuje neúplnou cache (Jaroslav, 4. 11. 2026)
+
+Oprava hlavní stránky odděluje „počet lokálně načtených zápasů“ od „ověřený počet všech dokončených zápasů z cloudu“. V index.html `loadSecureMatches()` / `readSecureMatches()` načítají celou zabezpečenou /matches větev. Proměnná `dashboardMatchesLoadedUid` se nastaví až po úspěšném zpracování výsledku Firebase GET, `dashboardMatchesFailedUid` označuje chybu nezískaného cloudového seznamu pro aktuální UID. `getModernDashboardSnapshot().stats.completedMatchesReady` a `.completedMatchesFailed` předávají stav do `renderModernHome()`, které místo předčasné lokální 102 vypíše „Načítám…“ a po úspěchu ověřený počet 199 (konkrétní počty jsou pouze uživatelský příklad, nikde v kódu nejsou napevno). Změna cloudUid zneplatní předchozí úspěch; `clearRuntimeCloudIdentity()` stav resetuje. Opožděná chyba cizí relace nesmí přepsat aktuální stav. Záměrně bez nového cloudového endpointu a bez duplicitních síťových požadavků: jeden plný GET zůstává zdrojem všech zápasů.
+
+Izolované Node testy: `tests/modern-home-complete-match-count.test.cjs` spouští reálnou funkci z index.html s fake Firebase a DOM; reálná produkční data nepoužívá. Kandidát 113 zatím není součástí produkce, viz PROJECT_STATUS a REVIZE. PR #55 CI ověřilo release gate PASS, produkční Node 341 PASS / 0 FAIL / 3 SKIP a samostatné Chrome mobilní kontroly PASS; dvě starší experimentální identity chyby přetrvávají. Fyzický iPhone zatím neověřen. Další nasazení až po přezkoumání a schválení.
+
+---
+
 # Nasazeno v4.51.112 RC — mobilní počítadla (Jaroslav, 4. 11. 2026)
 
 **Aktuální zdroj dalšího vývoje je `main` v4.51.112 RC.** [PR #54](https://github.com/bcrybarna-oss/BC-Rybarna-Scoreboard/pull/54) sloučen metodou merge jako `1f1d2d5f835827ce68c88ea9b3c1201618350d3b`; [GitHub Pages 41812770171](https://github.com/bcrybarna-oss/BC-Rybarna-Scoreboard/actions/runs/41812770171) potvrdily build/deploy SUCCESS. Čistě dokumentační commity vydání nemění. Detail testů, omezení a rollback: [docs/deployment-v4.51.112.md](docs/deployment-v4.51.112.md). Výchozí v4.51.111 z 31. 10. 2026 je historie, nikoli aktuální produkce.
