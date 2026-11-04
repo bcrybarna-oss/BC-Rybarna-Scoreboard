@@ -1,0 +1,27 @@
+name: Mobile scoring layout (isolated browser)
+on:
+  pull_request:
+    paths:
+      - 'index.html'
+      - 'tests/*mobile-layout-browser.cjs'
+      - 'tests/mobile-preview-browser.cjs'
+      - 'test/mobile-other-disciplines-preview.html'
+      - '.github/workflows/mobile-scoring-layout.yml'
+  workflow_dispatch:
+
+jobs:
+  mobile-layout:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install isolated Playwright runtime
+        run: npm install --no-save --ignore-scripts playwright@1.62.1
+      - name: Run mobile layout browser acceptance tests
+        run: |
+          node tests/other-disciplines-mobile-layout-browser.cjs
+          node tests/solo14-mobile-layout-browser.cjs
+          node tests/mobile-preview-browser.cjs

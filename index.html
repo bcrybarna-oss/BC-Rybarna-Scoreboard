@@ -1043,14 +1043,14 @@
   </div>
 
 <script src="assets/js/federal-statistics.js?v=4.51.98"></script>
-<script src="assets/js/federal-report-renderer.js?v=4.51.111"></script>
-<script src="assets/js/federal-report-controller.js?v=4.51.111"></script>
-<script src="assets/js/livescore-reader.js?v=4.51.111"></script>
-<script src="assets/js/livescore-renderer.js?v=4.51.111"></script>
-<script src="assets/js/online-presence.js?v=4.51.111"></script>
-<script src="assets/js/match-challenge-actions.js?v=4.51.111"></script>
-<script src="assets/js/match-challenges.js?v=4.51.111"></script>
-<script src="assets/js/notification-center.js?v=4.51.111"></script>
+<script src="assets/js/federal-report-renderer.js?v=4.51.112"></script>
+<script src="assets/js/federal-report-controller.js?v=4.51.112"></script>
+<script src="assets/js/livescore-reader.js?v=4.51.112"></script>
+<script src="assets/js/livescore-renderer.js?v=4.51.112"></script>
+<script src="assets/js/online-presence.js?v=4.51.112"></script>
+<script src="assets/js/match-challenge-actions.js?v=4.51.112"></script>
+<script src="assets/js/match-challenges.js?v=4.51.112"></script>
+<script src="assets/js/notification-center.js?v=4.51.112"></script>
 <script src="assets/js/cloud-refresh.js?v=4.51.99"></script>
 <script src="assets/js/own-reports.js?v=4.51.102"></script>
 <script src="assets/js/federal-viewer.js?v=4.51.103"></script>
@@ -2600,7 +2600,548 @@ html[data-theme="light"] #leagueSchedule .history-item .muted{
 
 
 .stats-table th.resafe-label,#safetyEscapeResafeBtn{text-transform:none}
-</style></head>
+</style>
+
+<style id="solo14-mobile-compact-v451112">
+/* Jen aktivní sólo 14.1 na mobilu. Žádná změna herní logiky ani ostatních disciplín. */
+@media (max-width:700px) and (orientation:portrait){
+  body:has(#screen-match.active #solo14ScoreRow:not(.hidden)) .app{
+    padding:5px 7px calc(8px + env(safe-area-inset-bottom)) !important;
+  }
+  body:has(#screen-match.active #solo14ScoreRow:not(.hidden)) .theme-corner{
+    display:none!important;
+  }
+  body:has(#screen-match.active #solo14ScoreRow:not(.hidden)) header.brand{
+    display:flex!important;
+    flex-direction:row!important;
+    align-items:center!important;
+    position:static!important;
+    padding:4px 6px!important;
+    gap:0!important;
+    border-radius:12px!important;
+    min-height:46px;
+  }
+  body:has(#screen-match.active #solo14ScoreRow:not(.hidden)) header.brand .brand-title{
+    display:none!important;
+  }
+  body:has(#screen-match.active #solo14ScoreRow:not(.hidden)) header.brand .nav{
+    display:flex!important;
+    grid-column:auto!important;
+    width:100%!important;
+    justify-content:space-between!important;
+    gap:4px!important;
+    flex-wrap:nowrap!important;
+    align-items:center;
+  }
+  body:has(#screen-match.active #solo14ScoreRow:not(.hidden)) header .nav #modernAccountInline{
+    min-width:0;
+    max-width:120px;
+    padding:0 5px;
+  }
+  body:has(#screen-match.active #solo14ScoreRow:not(.hidden)) header .nav #modernLoggedInUserBadge{
+    font-size:10px;
+  }
+  body:has(#screen-match.active #solo14ScoreRow:not(.hidden)) #screen-match{
+    margin-top:4px!important;
+  }
+  body:has(#screen-match.active #solo14ScoreRow:not(.hidden)) #screen-match > .card{
+    padding:6px!important;
+    border-radius:12px!important;
+  }
+  body:has(#screen-match.active #solo14ScoreRow:not(.hidden)) #screen-match .match-top{
+    grid-template-columns:minmax(0,1fr)!important;
+    grid-template-areas:"meta" "p1"!important;
+    gap:3px!important;
+    margin-bottom:5px!important;
+    justify-content:stretch!important;
+  }
+  body:has(#screen-match.active #solo14ScoreRow:not(.hidden)) #screen-match .center-stack{
+    grid-area:meta;
+    width:100%!important;
+    max-width:none!important;
+    padding:0!important;
+    margin:0!important;
+    text-align:center;
+  }
+  body:has(#screen-match.active #solo14ScoreRow:not(.hidden)) #screen-match #matchMeta{
+    font-size:11px!important;
+    line-height:1.1;
+    margin:0;
+  }
+  /* Stejný hráč už je vypsán na kartě; zbytečný duplicitní nadpis odstranit. */
+  body:has(#screen-match.active #solo14ScoreRow:not(.hidden)) #screen-match #turnText{
+    display:none!important;
+  }
+  body:has(#screen-match.active #solo14ScoreRow:not(.hidden)) #screen-match #player1Card{
+    grid-area:p1;
+    max-width:none!important;
+    padding:6px!important;
+    border-radius:12px!important;
+    margin:0!important;
+  }
+  body:has(#screen-match.active #solo14ScoreRow:not(.hidden)) #screen-match .player-head{
+    justify-content:flex-start;
+    gap:6px;
+    min-height:24px;
+  }
+  body:has(#screen-match.active #solo14ScoreRow:not(.hidden)) #screen-match .player-head .avatar{
+    width:25px!important;
+    height:25px!important;
+    min-width:25px!important;
+    font-size:10px!important;
+  }
+  body:has(#screen-match.active #solo14ScoreRow:not(.hidden)) #screen-match .player-name{
+    min-height:0!important;
+    font-size:14px!important;
+    line-height:1.15;
+    text-align:left;
+    white-space:nowrap;
+    text-overflow:ellipsis;
+    overflow:hidden;
+    display:block!important;
+  }
+  body:has(#screen-match.active #solo14ScoreRow:not(.hidden)) #screen-match #p1Subname{
+    display:none!important;
+  }
+  body:has(#screen-match.active #solo14ScoreRow:not(.hidden)) #screen-match #solo14ScoreRow{
+    display:grid;
+    grid-template-columns:repeat(2,minmax(0,1fr))!important;
+    gap:5px;
+    margin:5px 0 0!important;
+  }
+  body:has(#screen-match.active #solo14ScoreRow:not(.hidden)) #screen-match #solo14ScoreRow.ghost-enabled{
+    grid-template-columns:repeat(3,minmax(0,1fr))!important;
+  }
+  body:has(#screen-match.active #solo14ScoreRow:not(.hidden)) #screen-match #solo14ScoreRow.ghost-enabled .solo14-score-tile:last-child{
+    grid-column:auto!important;
+  }
+  body:has(#screen-match.active #solo14ScoreRow:not(.hidden)) #screen-match .solo14-score-tile{
+    border-radius:9px;
+    padding:5px 3px;
+    min-height:59px;
+  }
+  body:has(#screen-match.active #solo14ScoreRow:not(.hidden)) #screen-match .solo14-score-label{
+    font-size:9px!important;
+    line-height:1.15;
+    letter-spacing:0;
+  }
+  body:has(#screen-match.active #solo14ScoreRow:not(.hidden)) #screen-match .solo14-score-value{
+    font-size:clamp(31px,10vw,43px)!important;
+    line-height:1;
+    margin-top:1px;
+  }
+  body:has(#screen-match.active #solo14ScoreRow:not(.hidden)) #screen-match #solo14GhostLevel{
+    font-size:9px!important;
+    line-height:1.15!important;
+    margin-top:2px!important;
+  }
+  body:has(#screen-match.active #solo14ScoreRow:not(.hidden)) #screen-match #player1Card .badge-row{
+    margin-top:3px;
+    gap:3px;
+    min-height:0;
+  }
+  body:has(#screen-match.active #solo14ScoreRow:not(.hidden)) #screen-match #player1Card .badge-row .badge{
+    font-size:9px!important;
+    padding:2px 6px;
+  }
+  body:has(#screen-match.active #solo14ScoreRow:not(.hidden)) #screen-match #solo14StatsPanel{
+    padding:5px!important;
+    margin:0 0 5px!important;
+    border-radius:10px;
+  }
+  body:has(#screen-match.active #solo14ScoreRow:not(.hidden)) #screen-match #solo14StatsPanel .solo14-stats-title{
+    display:none;
+  }
+  body:has(#screen-match.active #solo14ScoreRow:not(.hidden)) #screen-match #solo14StatsPanel .solo14-stats-grid{
+    gap:4px;
+  }
+  body:has(#screen-match.active #solo14ScoreRow:not(.hidden)) #screen-match #solo14StatsPanel .solo14-stat{
+    border-radius:7px;
+    padding:4px 2px;
+    min-width:0;
+  }
+  body:has(#screen-match.active #solo14ScoreRow:not(.hidden)) #screen-match #solo14StatsPanel .solo14-stat-label{
+    font-size:8px;
+    line-height:1.1;
+  }
+  body:has(#screen-match.active #solo14ScoreRow:not(.hidden)) #screen-match #solo14StatsPanel .solo14-stat-value{
+    font-size:16px;
+    line-height:1.1;
+    margin-top:2px;
+  }
+  body:has(#screen-match.active #solo14ScoreRow:not(.hidden)) #screen-match #specialSoundPanel{
+    margin:0 0 5px!important;
+    padding:4px!important;
+    border-radius:10px;
+  }
+  body:has(#screen-match.active #solo14ScoreRow:not(.hidden)) #screen-match #specialSoundBtn{
+    min-height:33px!important;
+    padding:5px 8px!important;
+    font-size:12px!important;
+  }
+  /* Druhé UNDO je redundantní; funkční UNDO zůstává přímo u herních akcí. */
+  body:has(#screen-match.active #solo14ScoreRow:not(.hidden)) #screen-match #specialSoundPanel > div{
+    display:none!important;
+  }
+  body:has(#screen-match.active #solo14ScoreRow:not(.hidden)) #screen-match #fourteenPanel{
+    margin-top:0!important;
+    gap:0;
+  }
+  body:has(#screen-match.active #solo14ScoreRow:not(.hidden)) #screen-match .fourteen-action-card{
+    padding:6px!important;
+    border-radius:11px!important;
+  }
+  body:has(#screen-match.active #solo14ScoreRow:not(.hidden)) #screen-match .fourteen-action-title{
+    display:none;
+  }
+  body:has(#screen-match.active #solo14ScoreRow:not(.hidden)) #screen-match #addRack14{
+    min-height:46px!important;
+    font-size:15px!important;
+    line-height:1.1;
+    padding:7px 5px!important;
+    border-radius:9px;
+  }
+  body:has(#screen-match.active #solo14ScoreRow:not(.hidden)) #screen-match .fourteen-end-grid{
+    grid-template-columns:repeat(3,minmax(0,1fr))!important;
+    gap:5px;
+    margin-top:6px;
+  }
+  body:has(#screen-match.active #solo14ScoreRow:not(.hidden)) #screen-match .fourteen-end-grid .btn{
+    min-height:48px!important;
+    font-size:14px!important;
+    line-height:1.1;
+    padding:5px 2px!important;
+    border-radius:9px;
+  }
+  body:has(#screen-match.active #solo14ScoreRow:not(.hidden)) #screen-match .fourteen-utility-grid{
+    grid-template-columns:minmax(0,0.8fr) minmax(0,1.4fr)!important;
+    gap:5px;
+    margin-top:6px;
+    padding-top:0;
+    border-top:0;
+  }
+  body:has(#screen-match.active #solo14ScoreRow:not(.hidden)) #screen-match .fourteen-utility-grid .btn{
+    min-height:44px!important;
+    font-size:11px!important;
+    line-height:1.15;
+    padding:5px 4px!important;
+    border-radius:9px;
+    white-space:normal;
+  }
+  /* Vysvětlení zůstává v desktopové verzi a návodu; při hraní jen zabírá místo. */
+  body:has(#screen-match.active #solo14ScoreRow:not(.hidden)) #screen-match .fourteen-info{
+    display:none;
+  }
+  body:has(#screen-match.active #solo14ScoreRow:not(.hidden)) #screen-match #fourteenInningsHistoryPanel{
+    margin-top:7px!important;
+    padding:7px!important;
+  }
+}
+</style>
+
+<style id="other-disciplines-mobile-compact-v451112">
+/* Druhá část 112: stejná úspora místa v ostatních herních módech.
+   Konkrétně NIKDY neplatí pro solo14ScoreRow, které má vlastní pravidla. */
+@media (max-width:700px) and (orientation:portrait){
+  body:has(#screen-match.active #solo14ScoreRow.hidden) .app{
+    padding:5px 7px calc(8px + env(safe-area-inset-bottom))!important;
+  }
+  body:has(#screen-match.active #solo14ScoreRow.hidden) .theme-corner{display:none!important}
+  body:has(#screen-match.active #solo14ScoreRow.hidden) header.brand{
+    display:flex!important;flex-direction:row!important;align-items:center!important;
+    position:static!important;padding:4px 6px!important;gap:0!important;
+    border-radius:12px!important;min-height:46px;
+  }
+  body:has(#screen-match.active #solo14ScoreRow.hidden) header.brand .brand-title{display:none!important}
+  body:has(#screen-match.active #solo14ScoreRow.hidden) header.brand .nav{
+    display:flex!important;grid-column:auto!important;width:100%!important;
+    justify-content:space-between!important;gap:4px!important;flex-wrap:nowrap!important;
+    align-items:center;
+  }
+  body:has(#screen-match.active #solo14ScoreRow.hidden) header .nav #modernAccountInline{
+    min-width:0;max-width:120px;padding:0 5px;
+  }
+  body:has(#screen-match.active #solo14ScoreRow.hidden) header .nav #modernLoggedInUserBadge{font-size:10px}
+  body:has(#screen-match.active #solo14ScoreRow.hidden) #screen-match{margin-top:4px!important}
+  body:has(#screen-match.active #solo14ScoreRow.hidden) #screen-match > .card{
+    padding:6px!important;border-radius:12px!important;
+  }
+  body:has(#screen-match.active #solo14ScoreRow.hidden) #screen-match .match-top{
+    grid-template-columns:repeat(2,minmax(0,1fr))!important;
+    grid-template-areas:"meta meta" "p1 p2"!important;
+    gap:4px!important;margin-bottom:5px!important;
+    justify-content:stretch!important;
+  }
+  body:has(#screen-match.active #solo14ScoreRow.hidden) #screen-match .center-stack{
+    grid-area:meta!important;width:100%!important;max-width:none!important;
+    margin:0!important;padding:0!important;
+    text-align:center;
+  }
+  body:has(#screen-match.active #solo14ScoreRow.hidden) #screen-match .match-meta{
+    font-size:10px!important;line-height:1.1;
+  }
+  body:has(#screen-match.active #solo14ScoreRow.hidden) #screen-match #matchDescription{
+    font-size:10px!important;margin-top:2px!important;
+  }
+  body:has(#screen-match.active #solo14ScoreRow.hidden) #screen-match #turnText{
+    font-size:11px!important;margin-top:2px!important;line-height:1.15;
+  }
+  body:has(#screen-match.active #solo14ScoreRow.hidden) #screen-match .player{
+    width:100%!important;max-width:none!important;padding:5px 4px!important;
+    border-radius:10px!important;
+  }
+  body:has(#screen-match.active #solo14ScoreRow.hidden) #screen-match .player-head{
+    display:flex;gap:4px;align-items:center;justify-content:center;min-height:26px;
+  }
+  body:has(#screen-match.active #solo14ScoreRow.hidden) #screen-match .avatar{
+    width:27px!important;height:27px!important;min-width:27px!important;flex:0 0 27px;
+    font-size:11px!important;
+  }
+  body:has(#screen-match.active #solo14ScoreRow.hidden) #screen-match .player-name{
+    font-size:12px!important;line-height:1.1;min-height:0;
+    max-height:2.2em;white-space:normal;overflow:hidden;overflow-wrap:anywhere;
+    display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;
+  }
+  body:has(#screen-match.active #solo14ScoreRow.hidden) #screen-match .player-subname{
+    font-size:9px!important;line-height:1.05;
+  }
+  body:has(#screen-match.active #solo14ScoreRow.hidden) #screen-match .score{
+    font-size:clamp(36px,11vw,46px)!important;line-height:.95;margin:3px 0!important;
+  }
+  body:has(#screen-match.active #solo14ScoreRow.hidden) #screen-match .score-adjust{
+    margin:2px 0 3px!important;gap:4px;
+  }
+  body:has(#screen-match.active #solo14ScoreRow.hidden) #screen-match .score-adjust .btn{
+    min-height:44px!important;width:46px!important;font-size:22px!important;
+    border-radius:9px;padding:5px!important;
+  }
+  body:has(#screen-match.active #solo14ScoreRow.hidden) #screen-match .badge-row{
+    margin-top:1px;gap:3px;min-height:0;
+  }
+  body:has(#screen-match.active #solo14ScoreRow.hidden) #screen-match .badge-row .badge{
+    font-size:8px!important;padding:2px 5px!important;
+  }
+  body:has(#screen-match.active #solo14ScoreRow.hidden) #screen-match .clock{
+    width:90px!important;height:44px!important;aspect-ratio:auto!important;
+    font-size:29px!important;margin:3px auto!important;border-radius:9px;
+  }
+  body:has(#screen-match.active #solo14ScoreRow.hidden) #screen-match .clock-actions{
+    gap:4px;flex-wrap:nowrap;
+  }
+  body:has(#screen-match.active #solo14ScoreRow.hidden) #screen-match .clock-actions .btn{
+    flex:1 1 0;min-width:0;min-height:36px!important;padding:4px 2px!important;
+    font-size:9px!important;line-height:1.1;
+  }
+  body:has(#screen-match.active #solo14ScoreRow.hidden) #screen-match #specialSoundPanel{
+    margin:0 0 5px!important;padding:4px!important;border-radius:9px;
+    display:grid;grid-template-columns:minmax(0,1fr) auto;gap:5px;align-items:center;
+  }
+  body:has(#screen-match.active #solo14ScoreRow.hidden) #screen-match #specialSoundBtn{
+    min-height:36px!important;font-size:11px!important;padding:5px 3px!important;
+  }
+  body:has(#screen-match.active #solo14ScoreRow.hidden) #screen-match #specialSoundPanel > div{
+    margin-top:0!important;
+  }
+  body:has(#screen-match.active #solo14ScoreRow.hidden) #screen-match #fullUndoBtn{
+    min-height:36px!important;font-size:11px!important;padding:5px 8px!important;
+  }
+  /* Jednoduchý 8/9/10: +1, čistá, dohrávky, undo bez velkých mezer. */
+  body:has(#screen-match.active #simpleCounterActions:not(.hidden)) #simpleCounterActions .subpanel{
+    margin:0!important;padding:6px!important;border-radius:10px;
+  }
+  body:has(#screen-match.active #simpleCounterActions:not(.hidden)) #simpleCounterActions .subpanel > .muted{
+    margin-bottom:4px!important;font-size:10px!important;
+  }
+  body:has(#screen-match.active #simpleCounterActions:not(.hidden)) #simpleCounterActions .subpanel > .hr{
+    margin:5px 0!important;
+  }
+  body:has(#screen-match.active #simpleCounterActions:not(.hidden)) #simpleCounterActions .grid.two{
+    grid-template-columns:repeat(2,minmax(0,1fr));gap:5px;
+  }
+  body:has(#screen-match.active #simpleCounterActions:not(.hidden)) #simpleCounterActions .btn{
+    min-height:44px!important;font-size:11px!important;padding:5px 4px!important;
+    border-radius:8px;
+  }
+  body:has(#screen-match.active #simpleCounterActions:not(.hidden)) #simpleCounterActions #simpleBreakRunBtn{
+    margin-bottom:3px!important;
+  }
+  body:has(#screen-match.active #simpleCounterActions:not(.hidden)) #simpleCounterActions .subpanel > div[style*="margin-top:10px"]{
+    margin-top:4px!important;
+  }
+  /* 8/9/10 rozšířené: jen kontextová tlačítka z JS, každé s dotykovou výškou. */
+  body:has(#screen-match.active #normalActions:not(.hidden)) #normalActions .action-grid{
+    grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:5px!important;margin-top:0!important;
+  }
+  body:has(#screen-match.active #normalActions:not(.hidden)) #normalActions .action-grid .btn{
+    min-height:44px!important;font-size:11px!important;line-height:1.12;
+    padding:5px 3px!important;border-radius:8px;
+  }
+  body:has(#screen-match.active #normalActions:not(.hidden)) #normalActions .action-grid .btn span{
+    font-size:8px!important;line-height:1.1;margin-top:2px!important;
+  }
+  body:has(#screen-match.active #normalActions:not(.hidden)) #normalActions .footer-actions{
+    margin-top:5px!important;gap:5px!important;flex-wrap:nowrap;
+  }
+  body:has(#screen-match.active #normalActions:not(.hidden)) #normalActions .footer-actions .btn{
+    flex:1;min-width:0;min-height:44px!important;font-size:10px!important;
+    line-height:1.12;padding:5px 3px!important;
+  }
+  /* Výsledek 8-ball: hráči vedle sebe, nikoli pod sebou. */
+  body:has(#screen-match.active #eightBallResultPanel:not(.hidden)) #eightBallResultPanel{
+    padding:5px!important;margin:5px 0!important;
+  }
+  body:has(#screen-match.active #eightBallResultPanel:not(.hidden)) #eightBallResultPanel .eightball-result-grid{
+    grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:5px;
+  }
+  body:has(#screen-match.active #eightBallResultPanel:not(.hidden)) #eightBallResultPanel .eightball-result-side{
+    padding:5px;border-radius:9px;
+  }
+  body:has(#screen-match.active #eightBallResultPanel:not(.hidden)) #eightBallResultPanel .eightball-result-name{
+    font-size:11px;margin-bottom:4px;
+  }
+  body:has(#screen-match.active #eightBallResultPanel:not(.hidden)) #eightBallResultPanel .eightball-result-main{
+    min-height:44px!important;font-size:10px!important;padding:5px 2px!important;
+  }
+  body:has(#screen-match.active #eightBallResultPanel:not(.hidden)) #eightBallResultPanel .eightball-result-mini{
+    gap:4px;margin-top:4px;
+  }
+  body:has(#screen-match.active #eightBallResultPanel:not(.hidden)) #eightBallResultPanel .eightball-result-mini .btn{
+    min-height:44px!important;font-size:9px!important;padding:4px 2px!important;
+  }
+  /* Ghost 8/9/10: všech sedm druhů výsledků na čtyřech řádcích. */
+  body:has(#screen-match.active #ghostActions:not(.hidden)) #ghostActions > .subpanel{
+    margin:0!important;padding:6px!important;border-radius:10px;
+  }
+  body:has(#screen-match.active #ghostActions:not(.hidden)) #ghostActions > .subpanel > div:first-child{
+    margin-bottom:4px!important;gap:5px;
+  }
+  body:has(#screen-match.active #ghostActions:not(.hidden)) #ghostActions > .subpanel > div:nth-child(2){
+    margin-bottom:3px!important;font-size:9px!important;
+  }
+  body:has(#screen-match.active #ghostActions:not(.hidden)) #ghostActions > .subpanel > div[style*="display:grid"]{
+    grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:5px!important;
+  }
+  body:has(#screen-match.active #ghostActions:not(.hidden)) #ghostActions > .subpanel > div[style*="display:grid"] > .btn{
+    min-height:46px!important;font-size:10px!important;line-height:1.07;
+    padding:4px 3px!important;border-radius:8px;
+  }
+  body:has(#screen-match.active #ghostActions:not(.hidden)) #ghostActions > .subpanel > div[style*="display:grid"] > .btn span{
+    font-size:9px!important;margin-top:2px!important;line-height:1.05;
+  }
+  body:has(#screen-match.active #ghostActions:not(.hidden)) #ghostScoringHelpBtn{
+    min-height:32px!important;font-size:10px!important;padding:5px!important;
+    margin-top:5px!important;
+  }
+  /* Klasická 14.1: původní skóre hráčů již nahoře; nezobrazovat jeho duplikát.
+     Statistiky náběhů a aktuální koule zůstávají dostupné. */
+  body:has(#screen-match.active #classic14Overview:not(.hidden)) #classic14Overview{
+    margin:0 0 5px!important;padding:5px!important;border-radius:10px;
+  }
+  body:has(#screen-match.active #classic14Overview:not(.hidden)) #classic14Overview > .solo14-score-row{
+    display:none!important;
+  }
+  body:has(#screen-match.active #classic14Overview:not(.hidden)) #classic14Overview .solo14-stats-title{
+    display:none!important;
+  }
+  body:has(#screen-match.active #classic14Overview:not(.hidden)) #classic14Overview .solo14-stats-grid{
+    gap:4px;
+  }
+  body:has(#screen-match.active #classic14Overview:not(.hidden)) #classic14Overview .solo14-stat{
+    padding:3px 2px;border-radius:7px;
+  }
+  body:has(#screen-match.active #classic14Overview:not(.hidden)) #classic14Overview .solo14-stat-label{font-size:8px}
+  body:has(#screen-match.active #classic14Overview:not(.hidden)) #classic14Overview .solo14-stat-value{
+    font-size:14px;line-height:1.1;margin-top:1px;
+  }
+  body:has(#screen-match.active #classic14Overview:not(.hidden)) #fourteenPanel{
+    grid-template-columns:1fr!important;gap:5px!important;margin-top:0!important;
+  }
+  body:has(#screen-match.active #classic14Overview:not(.hidden)) #fourteenPanel .fourteen-status-card{
+    flex-direction:row!important;justify-content:center!important;
+    min-height:42px!important;padding:4px!important;border-radius:9px;
+    gap:8px;flex-wrap:wrap;
+  }
+  body:has(#screen-match.active #classic14Overview:not(.hidden)) #fourteenPanel .fourteen-kicker{
+    font-size:10px;letter-spacing:0;
+  }
+  body:has(#screen-match.active #classic14Overview:not(.hidden)) #fourteenPanel .fourteen-balls{
+    font-size:32px!important;line-height:1;margin:0!important;
+  }
+  body:has(#screen-match.active #classic14Overview:not(.hidden)) #fourteenPanel .fourteen-balls-label{
+    display:none!important;
+  }
+  body:has(#screen-match.active #classic14Overview:not(.hidden)) #fourteenPanel #foulInfo14{
+    font-size:9px!important;padding:2px 5px!important;margin:0!important;
+  }
+  body:has(#screen-match.active #classic14Overview:not(.hidden)) #fourteenPanel .fourteen-action-card{
+    padding:6px!important;border-radius:9px;
+  }
+  body:has(#screen-match.active #classic14Overview:not(.hidden)) #fourteenPanel .fourteen-action-title{
+    display:none!important;
+  }
+  body:has(#screen-match.active #classic14Overview:not(.hidden)) #fourteenPanel #addRack14{
+    min-height:44px!important;font-size:13px!important;padding:5px!important;
+  }
+  body:has(#screen-match.active #classic14Overview:not(.hidden)) #fourteenPanel .fourteen-end-grid{
+    grid-template-columns:repeat(3,minmax(0,1fr))!important;gap:5px;margin-top:5px!important;
+  }
+  body:has(#screen-match.active #classic14Overview:not(.hidden)) #fourteenPanel .fourteen-end-grid .btn{
+    min-height:44px!important;font-size:13px!important;padding:4px 2px!important;
+  }
+  body:has(#screen-match.active #classic14Overview:not(.hidden)) #fourteenPanel .fourteen-utility-grid{
+    grid-template-columns:1fr 1.5fr!important;gap:5px;
+    border-top:0;padding:0;margin-top:5px;
+  }
+  body:has(#screen-match.active #classic14Overview:not(.hidden)) #fourteenPanel .fourteen-utility-grid .btn{
+    min-height:44px!important;font-size:10px!important;padding:4px!important;line-height:1.1;
+  }
+  body:has(#screen-match.active #classic14Overview:not(.hidden)) #fourteenPanel .fourteen-info{
+    display:none!important;
+  }
+  /* V detailním 8/9/10 stačí opravná akce a malá mřížka koulí. */
+  body:has(#screen-match.active #solo14ScoreRow.hidden) #rackBallStatePanel:not(.hidden){
+    margin:0 0 5px!important;padding:4px!important;border-radius:9px;
+  }
+  body:has(#screen-match.active #solo14ScoreRow.hidden) #rackBallStatePanel .btn{
+    min-height:32px!important;padding:4px!important;font-size:10px!important;margin:3px!important;
+  }
+  body:has(#screen-match.active #solo14ScoreRow.hidden) #rackBallStateBalls{
+    gap:3px!important;
+  }
+  body:has(#screen-match.active #solo14ScoreRow.hidden) #screen-match > .card > .footer-actions{
+    margin-top:7px!important;gap:5px!important;
+  }
+  body:has(#screen-match.active #solo14ScoreRow.hidden) #screen-match > .card > .footer-actions .btn{
+    min-height:44px!important;padding:5px 6px!important;font-size:10px!important;
+  }
+}
+</style>
+
+
+<style id="opening-break-141-mobile-v451112">
+/* Trojice UNDO / legal break / opening foul je vidět jen do prvního zápisu. */
+@media(max-width:700px) and (orientation:portrait){
+  body:has(#screen-match.active #solo14ScoreRow:not(.hidden)) #screen-match
+  .fourteen-utility-grid:has(#openingBreakOk14:not(.hidden)){
+    grid-template-columns:minmax(0,.7fr) minmax(0,1.2fr) minmax(0,1.4fr)!important;
+  }
+  body:has(#screen-match.active #classic14Overview:not(.hidden)) #screen-match
+  .fourteen-utility-grid:has(#openingBreakOk14:not(.hidden)){
+    grid-template-columns:minmax(0,.7fr) minmax(0,1.2fr) minmax(0,1.4fr)!important;
+  }
+  body:has(#screen-match.active #solo14ScoreRow:not(.hidden)) #screen-match
+  .fourteen-utility-grid:not(:has(#openingBreakOk14:not(.hidden))),
+  body:has(#screen-match.active #classic14Overview:not(.hidden)) #screen-match
+  .fourteen-utility-grid:not(:has(#openingBreakOk14:not(.hidden))){
+    grid-template-columns:1fr!important;
+  }
+  #screen-match .fourteen-utility-grid #openingBreakOk14,
+  #screen-match .fourteen-utility-grid #openingBreakFoul14{
+    font-size:10px!important;line-height:1.1;
+  }
+}
+</style>
+</head>
 <body>
 
 <div class="app">
@@ -2616,7 +3157,7 @@ html[data-theme="light"] #leagueSchedule .history-item .muted{
           <span class="by">by</span>
           <span class="club">BC Rybárna</span>
         </div>
-        <small class="modern-brand-version">v4.51.111 RC</small>
+        <small class="modern-brand-version">v4.51.112 RC</small>
       </div>
     </div>
     <div class="nav">
@@ -3235,7 +3776,7 @@ html[data-theme="light"] #leagueSchedule .history-item .muted{
         </div>
         <div class="subpanel" style="min-width:210px;text-align:center;margin:0">
           <div class="muted" style="font-size:10px;font-weight:950;letter-spacing:1px">AKTUÁLNÍ VERZE</div>
-          <div style="font-size:22px;font-weight:950;color:var(--gold2);margin-top:5px">v4.51.111 RC</div>
+          <div style="font-size:22px;font-weight:950;color:var(--gold2);margin-top:5px">v4.51.112 RC</div>
         </div>
       </div>
     </div>
@@ -4481,6 +5022,7 @@ html[data-theme="light"] #leagueSchedule .history-item .muted{
 
             <div class="fourteen-utility-grid">
               <button id="undo14Btn" class="btn">↶ UNDO</button>
+              <button id="openingBreakOk14" class="btn primary">✓ ÚVODNÍ BREAK OK</button>
               <button id="openingBreakFoul14" class="btn danger">ÚVODNÍ BREAK • FAUL −2</button>
             </div>
 
@@ -6004,7 +6546,7 @@ html[data-theme="light"] #leagueSchedule .history-item .muted{
       </div>
 
       <div id="groupPlayoffSeedStatus" class="muted" style="margin-top:12px;min-height:20px"></div>
-      <div class="muted" style="margin-top:4px;font-size:11px">RC v4.51.111</div>
+      <div class="muted" style="margin-top:4px;font-size:11px">RC v4.51.112</div>
       <div class="modal-actions">
         <button id="groupPlayoffSeedApplyBtn" class="btn primary big" type="button">NASADIT DO PLAY-OFF</button>
         <button id="groupPlayoffSeedCancelBtn" class="btn">ZRUŠIT</button>
@@ -7147,7 +7689,7 @@ html[data-theme="light"] #leagueSchedule .history-item .muted{
     const btn=$('submitReportBtn');if(btn)btn.disabled=true;
     try{
       const id=uid(),p=currentUserPlayerId?data.players?.[currentUserPlayerId]:null;
-      const report={id,createdByUid:cloudUid,createdByPlayerId:currentUserPlayerId||'',createdByName:p?playerSelectionLabel(p):(cloudUserEmail||'Uživatel'),email:cloudUserEmail||'',type,area,description,appVersion:'v4.51.111 RC',createdAt:new Date().toISOString(),updatedAt:new Date().toISOString(),status:'new',adminNote:''};
+      const report={id,createdByUid:cloudUid,createdByPlayerId:currentUserPlayerId||'',createdByName:p?playerSelectionLabel(p):(cloudUserEmail||'Uživatel'),email:cloudUserEmail||'',type,area,description,appVersion:'v4.51.112 RC',createdAt:new Date().toISOString(),updatedAt:new Date().toISOString(),status:'new',adminNote:''};
       await reportRequest(id,'PUT',report);
       try{
         await writeReportUserMirror(report);
@@ -11550,7 +12092,9 @@ const isFourteen=match.discipline==='14.1' && !simpleCounter;
       }
       if(!match.consecutiveFouls14) match.consecutiveFouls14=[0,0];
       $('foulInfo14').textContent='Po sobě jdoucí fauly – '+match.playerNames[0]+': '+match.consecutiveFouls14[0]+' | '+match.playerNames[1]+': '+match.consecutiveFouls14[1];
-      $('openingBreakFoul14').classList.toggle('hidden', !match.openingBreakAvailable14);
+      const openingBreakActive=openingBreakAvailableForAction14(match);
+      $('openingBreakOk14').classList.toggle('hidden', !openingBreakActive);
+      $('openingBreakFoul14').classList.toggle('hidden', !openingBreakActive);
     }
     renderFourteenInningsHistory();
     $('manualBreaker').classList.toggle('hidden',simpleCounter || match.discipline==='14.1' || match.ghostMode || match.winnerTableMode || (match.federalCupLink && !match.isBreakShot && !match.federalTeam?.pending));
@@ -13842,7 +14386,6 @@ const isFourteen=match.discipline==='14.1' && !simpleCounter;
 
   $('confirmBalls14').onclick=()=>{
     if(!match || match.discipline!=='14.1') return;
-    match.isBreakShot=false;
     const before=match.ballsOnTable;
     const remaining=parseInt($('ballsRemaining14').value,10);
     if(isNaN(remaining)){ toast('Zadej počet koulí na stole.'); return; }
@@ -13853,6 +14396,7 @@ const isFourteen=match.discipline==='14.1' && !simpleCounter;
     const potted=before-remaining;
 
     addActionEvent('14.1 náběh • '+match.playerNames[i]+' • '+reason.toUpperCase()+' • zahráno '+potted+' • na stole '+remaining);
+    match.isBreakShot=false;
     match.scores[i]+=potted;
     match.stats[i].innings14=(match.stats[i].innings14||0)+1;
     match.stats[i].highRun14=Math.max(match.stats[i].highRun14||0,potted);
@@ -13917,11 +14461,31 @@ const isFourteen=match.discipline==='14.1' && !simpleCounter;
     autosaveCurrent();
   };
 
-  $('openingBreakFoul14').onclick=()=>{
-    if(!match || match.discipline!=='14.1' || !match.openingBreakAvailable14) return;
+  // Rozstřel je jednorázová fáze. U starších obnovených zápasů chraň
+  // i stav, kde historický příznak zůstal true po prvním náběhu / +14.
+  function openingBreakAvailableForAction14(m){
+    return !!m && m.discipline==='14.1' && !m.endedAt &&
+      m.openingBreakAvailable14===true &&
+      !(m.inningsHistory14||[]).length &&
+      Number(m.reracksInInning14||0)===0 &&
+      Number(m.ballsOnTable??15)===15;
+  }
+
+  $('openingBreakOk14').onclick=()=>{
+    if(!openingBreakAvailableForAction14(match))return;
+    addActionEvent('14.1 • úvodní rozstřel bez faulu • pokračování hry');
+    match.openingBreakAvailable14=false;
     match.isBreakShot=false;
+    if(match.useClock)resetClock(false,true);
+    renderMatch();
+    autosaveCurrent();
+  };
+
+  $('openingBreakFoul14').onclick=()=>{
+    if(!openingBreakAvailableForAction14(match))return;
     const i=match.turn;
     addActionEvent('14.1 • faul na úvodním rozstřelu • '+match.playerNames[i]+' −2 body');
+    match.isBreakShot=false;
     match.scores[i]-=2;
     match.stats[i].fouls++;
     match.stats[i].openingBreakFouls14=(match.stats[i].openingBreakFouls14||0)+1;
@@ -13954,15 +14518,16 @@ const isFourteen=match.discipline==='14.1' && !simpleCounter;
 
     const before=match.ballsOnTable;
 
-    // Každý nový trojúhelník přidá do výpočtového stavu přesně 14 nových koulí.
-    // Koule, které už na stole jsou, se nijak neodečítají.
-    // Příklad: stav 3 -> nový trojúhelník -> 17.
-    match.ballsOnTable=before+14;
-
-    match.reracksInInning14++;
+    // Zapsání prvního +14 je nevratně po úvodním strku; při UNDO
+    // obnovíme i příznak úvodního rozstřelu ze správného snapshotu.
+    // Výpočtový stav zvyšujeme o 14, existující koule se neodečítají.
     addActionEvent(
-      '14.1 • nový trojúhelník +14 • výpočtový stav '+before+' → '+match.ballsOnTable
+      '14.1 • nový trojúhelník +14 • výpočtový stav '+before+' → '+(before+14)
     );
+    match.ballsOnTable=before+14;
+    match.reracksInInning14++;
+    match.openingBreakAvailable14=false;
+    match.isBreakShot=false;
     renderMatch();
     autosaveCurrent();
   };
