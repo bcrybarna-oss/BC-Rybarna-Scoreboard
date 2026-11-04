@@ -4,8 +4,8 @@
 Zadavatel: Jaroslav
 Datum: 4. 11. 2026
 Změny: Pouze aktivní mobilní portrait mód sólo 14.1: kompaktní hlavička, zmenšené skóre hráč/Ghost/koule, drobné statistiky, jediný UNDO a trojice MISS/SAFE/FAUL vedle sebe; +14 a faul z úvodního breaku zůstávají dosažitelné bez přesouvání obrazovky. Odstraněn pouze redundantní text v herním pohledu, historie, události a ukládání zůstávají. Vše omezeno CSS :has na aktivní sólo 14.1; jiné disciplíny, desktop, obchodní logika a data beze změn. Aktivní označení verze aplikace i asset cache query sjednoceno na 112.
-Testy: Přidán izolovaný Playwright kontrakt tests/solo14-mobile-layout.test.cjs pro 390×844, sólo, sólo+Ghost a neaktivní pravidla mimo sólo. Spuštění v CI / fyzický iPhone a živé herní akce se ověří před schválením sloučení; v době zápisu bez lokálního browser runtime. Dosavadní produkční a experimentální regrese zatím nezměřeny pro tuto větev.
-Nasazení: Kandidát 112 v samostatné vývojové větvi feature/solo14-mobile-compact-v451112; main a produkce zůstávají v4.51.111 RC, žádný deploy ani produkční zápis.
+Testy: CI pull requestu #54: release PASS, produkční Node 328 PASS / 0 FAIL / 3 SKIP (3 nové statické kontrakty v tests/solo14-mobile-layout.test.cjs), experimentální 28 PASS / 2 FAIL / 0 SKIP se stejnými již existujícími vadami obnovy identity; celý workflow FAILURE kvůli experimentu. Připraven nezávislý Playwright browser kontrakt tests/solo14-mobile-layout-browser.cjs (390×844, sólo, Ghost, izolace), ale v CI ani na fyzickém iPhone nebyl spuštěn. Reálné kliky a vizuální geometrie čekají na ověření.
+Nasazení: Kandidát 112 v draft PR #54, větev feature/solo14-mobile-compact-v451112, release test PASS; main a produkce zůstávají v4.51.111 RC, žádný deploy ani produkční zápis.
 Omezení: Cíleno na portrait do 700 CSS px; při malé výšce či zvětšeném systémovém písmu může být potřeba posouvání. Otevřený modální dialog po skončení náběhu je samostatná interakce. Ověření na skutečném iPhone a dopady na přístupnost nebyly dokončeny.
 
 
