@@ -14386,7 +14386,6 @@ const isFourteen=match.discipline==='14.1' && !simpleCounter;
 
   $('confirmBalls14').onclick=()=>{
     if(!match || match.discipline!=='14.1') return;
-    match.isBreakShot=false;
     const before=match.ballsOnTable;
     const remaining=parseInt($('ballsRemaining14').value,10);
     if(isNaN(remaining)){ toast('Zadej počet koulí na stole.'); return; }
@@ -14397,6 +14396,7 @@ const isFourteen=match.discipline==='14.1' && !simpleCounter;
     const potted=before-remaining;
 
     addActionEvent('14.1 náběh • '+match.playerNames[i]+' • '+reason.toUpperCase()+' • zahráno '+potted+' • na stole '+remaining);
+    match.isBreakShot=false;
     match.scores[i]+=potted;
     match.stats[i].innings14=(match.stats[i].innings14||0)+1;
     match.stats[i].highRun14=Math.max(match.stats[i].highRun14||0,potted);
@@ -14483,9 +14483,9 @@ const isFourteen=match.discipline==='14.1' && !simpleCounter;
 
   $('openingBreakFoul14').onclick=()=>{
     if(!openingBreakAvailableForAction14(match))return;
-    match.isBreakShot=false;
     const i=match.turn;
     addActionEvent('14.1 • faul na úvodním rozstřelu • '+match.playerNames[i]+' −2 body');
+    match.isBreakShot=false;
     match.scores[i]-=2;
     match.stats[i].fouls++;
     match.stats[i].openingBreakFouls14=(match.stats[i].openingBreakFouls14||0)+1;
