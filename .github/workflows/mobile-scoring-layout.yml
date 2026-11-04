@@ -4,6 +4,8 @@ on:
     paths:
       - 'index.html'
       - 'tests/*mobile-layout-browser.cjs'
+      - 'tests/mobile-preview-browser.cjs'
+      - 'test/mobile-other-disciplines-preview.html'
       - '.github/workflows/mobile-scoring-layout.yml'
   workflow_dispatch:
 
@@ -22,3 +24,4 @@ jobs:
         run: |
           node tests/other-disciplines-mobile-layout-browser.cjs
           node tests/solo14-mobile-layout-browser.cjs
+          node tests/mobile-preview-browser.cjs
