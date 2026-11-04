@@ -43,7 +43,7 @@ const rects=page=>page.evaluate(()=>{
     score:rect('#solo14TotalScore'),balls:rect('#solo14BallsTop'),
     addRack:rect('#addRack14'),miss:rect('#endMiss14'),
     safe:rect('#endSafe14'),foul:rect('#endFoul14'),
-    undo:rect('#undo14Btn'),breakFoul:rect('#openingBreakFoul14'),
+    undo:rect('#undo14Btn'),breakOk:rect('#openingBreakOk14'),breakFoul:rect('#openingBreakFoul14'),
     viewport:innerHeight,scrollWidth:document.documentElement.scrollWidth,innerWidth,
     endColumns:getComputedStyle(document.querySelector('.fourteen-end-grid')).gridTemplateColumns.split(' ').length,
     utilityColumns:getComputedStyle(document.querySelector('.fourteen-utility-grid')).gridTemplateColumns.split(' ').length,
@@ -60,10 +60,10 @@ test('Mobile solo 14.1: score, +14, MISS, SAFE, FAUL and UNDO share a portrait s
     const r=await rects(page);
     assert.equal(r.compactHead,'none','large theme header must not consume match space');
     assert.equal(r.endColumns,3,'MISS, SAFE and FAUL must share one row');
-    assert.equal(r.utilityColumns,2,'UNDO and break foul must share one row');
+    assert.equal(r.utilityColumns,3,'UNDO, legal opening break and opening foul share a single row');
     assert.equal(r.ghostColumns,2,'solo without ghost has two score tiles');
     assert.ok(r.score.bottom<r.addRack.top,'score remains above actions');
-    for(const id of ['addRack','miss','safe','foul','undo','breakFoul']){
+    for(const id of ['addRack','miss','safe','foul','undo','breakOk','breakFoul']){
       assert.ok(r[id].height>=44,id+' must be touch sized');
       assert.ok(r[id].bottom<=r.viewport-6,id+' must fit screen: '+JSON.stringify(r));
     }
@@ -93,5 +93,6 @@ test('Classic 14.1 has its own compact layout outside solo mode',async()=>{
     const r=await rects(page);
     assert.equal(r.compactHead,'none','all match modes use compact mobile navigation');
     assert.equal(r.endColumns,3,'ordinary 14.1 gets compact three-across end buttons');
+    assert.equal(r.utilityColumns,3,'both 14.1 modes have a compact opening break decision row');
   }finally{await browser.close();}
 });
