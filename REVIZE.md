@@ -1,5 +1,14 @@
 # Revize aplikace Poolčítadlo
 
+## Jaroslav – kompaktní mobilní počítání sólo 14.1 (v4.51.112 RC)
+Zadavatel: Jaroslav
+Datum: 4. 11. 2026
+Změny: Pouze aktivní mobilní portrait mód sólo 14.1: kompaktní hlavička, zmenšené skóre hráč/Ghost/koule, drobné statistiky, jediný UNDO a trojice MISS/SAFE/FAUL vedle sebe; +14 a faul z úvodního breaku zůstávají dosažitelné bez přesouvání obrazovky. Odstraněn pouze redundantní text v herním pohledu, historie, události a ukládání zůstávají. Vše omezeno CSS :has na aktivní sólo 14.1; jiné disciplíny, desktop, obchodní logika a data beze změn. Aktivní označení verze aplikace i asset cache query sjednoceno na 112.
+Testy: Přidán izolovaný Playwright kontrakt tests/solo14-mobile-layout.test.cjs pro 390×844, sólo, sólo+Ghost a neaktivní pravidla mimo sólo. Spuštění v CI / fyzický iPhone a živé herní akce se ověří před schválením sloučení; v době zápisu bez lokálního browser runtime. Dosavadní produkční a experimentální regrese zatím nezměřeny pro tuto větev.
+Nasazení: Kandidát 112 v samostatné vývojové větvi feature/solo14-mobile-compact-v451112; main a produkce zůstávají v4.51.111 RC, žádný deploy ani produkční zápis.
+Omezení: Cíleno na portrait do 700 CSS px; při malé výšce či zvětšeném systémovém písmu může být potřeba posouvání. Otevřený modální dialog po skončení náběhu je samostatná interakce. Ověření na skutečném iPhone a dopady na přístupnost nebyly dokončeny.
+
+
 ## Dominik – ověřené nasazení přítomnosti a uzavření etapy9 (v4.51.111 RC)
 Zadavatel: Dominik
 Datum: 31. 10. 2026
