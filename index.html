@@ -8412,14 +8412,14 @@ html[data-theme="light"] #leagueSchedule .history-item .muted{
   // Dashboard smí ukázat konečný počet teprve po úspěšném načtení CELÉ
   // zabezpečené větve /matches pro právě přihlášený účet. Offline cache
   // může obsahovat jen část zápasů (např. 102 místo 199).
-  let dashboardMatchesLoadedUid=null,dashboardMatchesFailedUid=null;
   let secureMatchesLoad=null,secureMatchesLoadUid=null;
+  let dashboardMatchesLoadedUid=null,dashboardMatchesFailedUid=null;
   function loadSecureMatches(){
     if(secureMatchesLoad&&secureMatchesLoadUid===cloudUid)return secureMatchesLoad;
     const requestedUid=cloudUid;
     const pending=readSecureMatches().catch(error=>{
       // Opožděná chyba starého účtu nesmí ovlivnit aktuální přihlášení.
-      if(requestedUid && cloudAuthenticated && cloudUid===requestedUid &&
+      if(requestedUid && cloudUid===requestedUid &&
          dashboardMatchesLoadedUid!==requestedUid){
         dashboardMatchesFailedUid=requestedUid;
         try{window.renderModernHome?.();}catch(e){}
