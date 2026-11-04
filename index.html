@@ -30191,10 +30191,10 @@ function renderStats(){
       var x=s.stats||{};
       var completedReady=x.completedMatchesReady===true;
       var completedFailed=x.completedMatchesFailed===true;
-      var completedValue=completedReady?String(Number(x.completedMatches||0)):(completedFailed?'—':'Načítám…');
+      var completedValue=completedReady?String(Number(x.completedMatches||0)):(completedFailed||!s.cloudAuthenticated?'—':'Načítám…');
       var completedLabel=completedReady?'Dokončených zápasů'
         :(completedFailed?'Historie dočasně nedostupná'
-          :(s.cloudAuthenticated?'Načítám kompletní historii':'Dokončené zápasy z cloudu'));
+          :(s.cloudAuthenticated?'Načítám kompletní historii':'Přihlas se pro počet zápasů'));
       stats.innerHTML=
         '<div class="modern-stat" aria-live="polite"><b'+(completedReady?'':' style="font-size:17px;letter-spacing:0"')+'>'+completedValue+'</b><span>'+completedLabel+'</span></div>'+
         '<div class="modern-stat"><b>'+Number(x.activePlayers||0)+'</b><span>Aktivních hráčů</span></div>'+
