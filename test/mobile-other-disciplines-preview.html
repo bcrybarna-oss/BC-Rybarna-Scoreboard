@@ -20,7 +20,7 @@
 <div class="modal" id="modal"><div><strong>14.1 • Konec náběhu</strong><p>Kolik koulí zůstalo na stole?</p><input id="leftBalls" type="number" min="0" max="15" value="15"><div class="grid2"><button class="btn" id="dismiss">ZPĚT</button><button class="btn primary" id="confirm">POTVRDIT</button></div></div></div>
 <script>
 (()=>{'use strict';const $=id=>document.getElementById(id);
-let state={s:[0,0],turn:0,balls:15,innings:0,high:0,history:[],step:'break',shotTag:null},pending='';
+let state={s:[0,0],turn:0,balls:15,innings:0,high:0,history:[],step:'break',shotTag:null,opening14:true},pending='';
 const modes={simple:'9-BALL • JEDNODUCHÉ',8:'8-BALL • ROZŠÍŘENÉ',9:'9-BALL • ROZŠÍŘENÉ',10:'10-BALL • ROZŠÍŘENÉ',ghost:'9-BALL • GHOST',14:'14.1 • DO 100',winner:'VÍTĚZ NA STOLE • 9-BALL'};
 function btn(label,action,kind=''){return '<button class="btn '+kind+'" data-act="'+action+'">'+label+'</button>'}
 function modeRender(){let m=$('mode').value;$('meta').textContent=modes[m];$('who2').textContent=m==='ghost'?'GHOST':'Dominik Mencl';$('info2').textContent=m==='winner'?'ČEKÁ NA STŘÍDÁNÍ':m==='ghost'?'LEHKÁ ÚROVEŇ':'HRÁČ 2';$('s0').textContent=state.s[0];$('s1').textContent=state.s[1];$('turn').textContent=m==='ghost'?'Ghost • Rack '+(state.innings+1):'Na tahu: '+(state.turn===0?'Jaroslav Tichý':'Dominik Mencl');let h='';
@@ -29,7 +29,7 @@ if(m==='simple'){
 }else if(m==='ghost'){
  h='<section class="panel"><h3>GHOST MÓD • VÝSLEDEK RACKU</h3><div class="grid2">'+btn('ČISTĚ DOHRÁNO<br><small>+2 HRÁČ</small>','ghost+2','primary')+btn('DOHRÁVKA S BIH<br><small>+1 HRÁČ</small>','ghost+1')+btn('ESO Z BREAKU<br><small>+2 HRÁČ</small>','ghost+2','primary')+btn('FAUL Z BREAKU<br><small>+1 GHOST</small>','ghost-1','danger')+btn('SOFT BREAK<br><small>+1 GHOST</small>','ghost-1','danger')+btn('NEDOHRÁNO<br><small>+1 GHOST</small>','ghost-1','danger')+btn('DRY BREAK<br><small>+1 GHOST</small>','ghost-1','danger')+'</div></section>';
 }else if(m==='14'){
- h='<div class="tinyStat"><span>NÁBĚHY<strong>'+state.innings+'</strong></span><span>HIGH RUN<strong>'+state.high+'</strong></span><span>KOULE<strong>'+state.balls+'</strong></span></div><section class="panel"><div class="breakPanel">NA STOLE: <span class="points14">'+state.balls+'</span></div>'+btn('+14 • NOVÝ TROJÚHELNÍK','rack','primary')+'<div class="grid3 row">'+btn('MISS','end-miss')+btn('SAFE','end-safe')+btn('FAUL −1','end-foul','danger')+'</div><div class="grid2 row">'+btn('↶ UNDO','undo')+btn('ÚVODNÍ BREAK • FAUL −2','foul2','danger')+'</div></section>';
+ h='<div class="tinyStat"><span>NÁBĚHY<strong>'+state.innings+'</strong></span><span>HIGH RUN<strong>'+state.high+'</strong></span><span>KOULE<strong>'+state.balls+'</strong></span></div><section class="panel"><div class="breakPanel">NA STOLE: <span class="points14">'+state.balls+'</span></div>'+btn('+14 • NOVÝ TROJÚHELNÍK','rack','primary')+'<div class="grid3 row">'+btn('MISS','end-miss')+btn('SAFE','end-safe')+btn('FAUL −1','end-foul','danger')+'</div><div class="'+(state.opening14?'grid3':'grid2')+' row">'+btn('↶ UNDO','undo')+(state.opening14?btn('✓ ÚVODNÍ BREAK OK','break14ok','primary')+btn('ÚVODNÍ BREAK • FAUL −2','foul2','danger'):'')+'</div></section>';
 }else{
  const breakButtons=btn('✓ BREAK OK','begin','primary')+btn('DRY BREAK','begin','danger')+btn('FAUL Z BREAKU','begin','danger')+(m==='9'||m==='winner'?btn('SOFT BREAK','begin','danger'):'');
  const regular=btn('ČISTÝ STRK','clean-shot','primary')+btn('FAUL','foul','danger')+btn('JISTOTA','safe')+btn('MISS','miss')+btn((state.shotTag==='jump'?'✓ ':'')+'JUMP SHOT','tag-jump',state.shotTag==='jump'?'active':'')+btn((state.shotTag==='bank'?'✓ ':'')+'BANK SHOT','tag-bank',state.shotTag==='bank'?'active':'')+btn('ČISTÁ HRA','+turn','primary')+btn('DOHRÁVKA','+turn','primary');
@@ -43,13 +43,15 @@ document.querySelectorAll('#modeContent [data-act]').forEach(el=>{el.onclick=()=
 function save(){state.history.push(JSON.stringify({...state,history:[]}))}
 function action(a){let m=$('mode').value;
  if(a==='undo'){let h=state.history.pop();if(h){let prev=JSON.parse(h);state={...prev,history:state.history};$('last').textContent='Poslední změna vrácena';}return modeRender()}
+ if((a==='foul2'||a==='break14ok')&&(!state.opening14||m!=='14'))return;
  if(a==='tag-jump'||a==='tag-bank'){save();const tag=a.slice(4);state.shotTag=state.shotTag===tag?null:tag;$('last').textContent=state.shotTag?'Označen strk: '+state.shotTag.toUpperCase()+' • hráč zůstává na tahu':'Označení strku vypnuto';return modeRender()}
  save();
  if(a==='+0'||a==='+1'){state.s[Number(a.slice(-1))]+=1;state.innings++}
  else if(a==='+turn'||a==='clean'){state.s[state.turn]++;state.innings++}
  else if(a.startsWith('ghost')){state.s[a.endsWith('2')?0:a.endsWith('+1')?0:1]+=a.endsWith('2')?2:1;state.innings++}
- else if(a==='rack'){state.s[state.turn]+=14;state.balls=15}
- else if(a==='foul2'){state.s[state.turn]-=2}
+ else if(a==='rack'){state.s[state.turn]+=14;state.balls=15;state.opening14=false}
+ else if(a==='foul2'){state.s[state.turn]-=2;state.opening14=false}
+ else if(a==='break14ok'){state.opening14=false}
  else if(a.startsWith('end-')){state.history.pop();pending=a;$('leftBalls').value=state.balls;$('modal').classList.add('show');return}
  else if(a==='begin'){state.step='play';state.shotTag=null}
  else if(a==='switch'||a==='foul'||a==='safe'||a==='miss'){state.turn=1-state.turn;state.shotTag=null}
@@ -57,7 +59,7 @@ function action(a){let m=$('mode').value;
  else if(a==='fix'){state.history.pop();$('last').textContent='Oprava skóre je v plné aplikaci';return}
  state.balls=Math.max(0,Math.min(15,state.balls));$('last').textContent='Zapsáno: '+a;modeRender();
 }
-$('dismiss').onclick=()=>{$('modal').classList.remove('show')};$('confirm').onclick=()=>{save();const left=Number($('leftBalls').value);if(!Number.isFinite(left)||left<0||left>15)return;const run=state.balls-left+(pending==='end-foul'?-1:0);state.s[state.turn]+=run;state.high=Math.max(state.high,run);state.innings++;state.balls=left;state.turn=1-state.turn;$('last').textContent='Konec náběhu • '+run+' bodů';$('modal').classList.remove('show');modeRender()};
-$('undoTop').onclick=()=>action('undo');$('sound').onclick=()=>{$('last').textContent='Zvukové tlačítko • ukázka'};$('reset').onclick=()=>{state={s:[0,0],turn:0,balls:15,innings:0,high:0,history:[],step:'break',shotTag:null};modeRender();$('last').textContent='Testovací skóre vynulováno'};$('mode').onchange=()=>{$('reset').click()};modeRender();
+$('dismiss').onclick=()=>{$('modal').classList.remove('show')};$('confirm').onclick=()=>{save();const left=Number($('leftBalls').value);if(!Number.isFinite(left)||left<0||left>15)return;const run=state.balls-left+(pending==='end-foul'?-1:0);state.s[state.turn]+=run;state.high=Math.max(state.high,run);state.innings++;state.balls=left;state.turn=1-state.turn;state.opening14=false;$('last').textContent='Konec náběhu • '+run+' bodů';$('modal').classList.remove('show');modeRender()};
+$('undoTop').onclick=()=>action('undo');$('sound').onclick=()=>{$('last').textContent='Zvukové tlačítko • ukázka'};$('reset').onclick=()=>{state={s:[0,0],turn:0,balls:15,innings:0,high:0,history:[],step:'break',shotTag:null,opening14:true};modeRender();$('last').textContent='Testovací skóre vynulováno'};$('mode').onchange=()=>{$('reset').click()};modeRender();
 })();
 </script></body></html>
