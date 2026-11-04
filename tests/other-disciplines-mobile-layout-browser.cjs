@@ -33,6 +33,14 @@ async function show(page,mode){
       'actionJumpBtn','actionBankBtn','actionRunoutBtn','actionBreakRunBtn'])show(id);
   }
   if(mode==='eightball'){show('eightBallResultPanel');}
+  if(mode==='winner'){show('normalActions');show('winnerTablePanel');for(const id of ['actionLegalBtn','actionFoulBtn','actionSafeBtn','actionMissBtn'])show(id);}
+  if(mode==='normal-clock'){show('normalActions');show('clockWrap');for(const id of ['actionLegalBtn','actionFoulBtn','actionSafeBtn','actionMissBtn','actionJumpBtn','actionBankBtn'])show(id);}
+  if(mode==='normal-detailed'){
+    show('normalActions');show('rackBallStatePanel');
+    for(const id of ['actionLegalBtn','actionFoulBtn','actionSafeBtn','actionMissBtn','actionJumpBtn','actionBankBtn'])show(id);
+    const grid=document.getElementById('rackBallStateBalls');
+    grid.innerHTML=Array.from({length:10},(_,i)=>'<span class="badge">'+(i+1)+'</span>').join('');
+  }
   // Keep full width name profile and bottom history but no test data.
  },mode);
 }
@@ -59,7 +67,10 @@ async function measure(page,ids){
    ['normal',['p1Score','p2Score','actionLegalBtn','actionFoulBtn','actionSafeBtn','actionMissBtn','undoBtn']],
    ['eightball',['p1Score','p2Score','eightBallWin0','eightBallWin1','eightBallClean0','eightBallRunout1']],
    ['ghost',['p1Score','p2Score','ghostCleanRunoutBtn','ghostBIHRunoutBtn','ghostAceBtn','ghostFailedRackBtn']],
-   ['classic14',['p1Score','p2Score','ballsOnTableDisplay','addRack14','endMiss14','endSafe14','endFoul14','undo14Btn']]
+   ['classic14',['p1Score','p2Score','ballsOnTableDisplay','addRack14','endMiss14','endSafe14','endFoul14','undo14Btn']],
+   ['winner',['p1Score','p2Score','wtWaitingName','actionLegalBtn','actionFoulBtn']],
+   ['normal-clock',['p1Score','p2Score','clock','clockStartStop','actionLegalBtn','actionFoulBtn','actionMissBtn']],
+   ['normal-detailed',['p1Score','p2Score','rackBallStateBalls','actionLegalBtn','actionFoulBtn','actionMissBtn']]
   ];
   for(const [mode,ids] of cases){
    const page=await browser.newPage({viewport:{width:390,height:844},deviceScaleFactor:2});
