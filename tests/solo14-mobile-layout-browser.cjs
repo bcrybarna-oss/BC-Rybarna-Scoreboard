@@ -84,13 +84,14 @@ test('Solo against Ghost keeps all 3 score tiles on one mobile row',async()=>{
   }finally{await browser.close();}
 });
 
-test('Compact rules are inactive outside solo 14.1',async()=>{
+test('Classic 14.1 has its own compact layout outside solo mode',async()=>{
   const browser=await chromium.launch({channel:'chrome',headless:true});
   try{
     const page=await browser.newPage({viewport:{width:390,height:844}});
     await fixture(page,{solo:false});
+    await page.locator('#classic14Overview').evaluate(e=>e.classList.remove('hidden'));
     const r=await rects(page);
-    assert.notEqual(r.compactHead,'none');
-    assert.equal(r.endColumns,1,'ordinary 14.1 keeps its existing layout');
+    assert.equal(r.compactHead,'none','all match modes use compact mobile navigation');
+    assert.equal(r.endColumns,3,'ordinary 14.1 gets compact three-across end buttons');
   }finally{await browser.close();}
 });
