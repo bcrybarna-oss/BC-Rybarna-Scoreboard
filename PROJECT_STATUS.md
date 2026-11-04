@@ -1,3 +1,11 @@
+# Rozpracováno – v4.51.113 RC: načtení skutečného počtu dokončených zápasů (Jaroslav, 4. 11. 2026)
+
+Aktuální verze: **v4.51.113 RC** (kandidát pouze v samostatné větvi **fix/home-match-count-cloud-ready-v451113**). Ostrá produkce stále **v4.51.112 RC**. Příčina hlášeného skoku **102 → 199**: hlavní dashboard dosud vykresloval dokončené zápasy ze zařízení před dokončením zabezpečeného GET /matches. Změna drží číslo ve stavu „Načítám…“, dokud Firebase neposkytne kompletní výsledek pro aktuální cloudUid; před synchronizací nic neprezentuje jako konečný počet. Chyba sítě ukáže dostupnostní stav, po úspěšném retry celé číslo. Přepnutí či odhlášení identity zruší připravenost počtu. Žádné výpočty skóre a data nebyly změněny.
+
+Testy: izolované Node testy tests/modern-home-complete-match-count.test.cjs – simulovaný local cache 102 a cloud 199, síťové selhání/retry, přepnutí účtu a signed-out. Release verze zvýšena 112 → 113; čeká na GitHub CI a prověření. Nenasazovat bez kontroly regresí a potvrzení zadavatelem. Při dalším pokračování Dominika/AI větev zkontrolovat vůči čerstvému main; neslučovat automaticky bez ověření. Dosavadní verze 112 je níže zdokumentovaná jako nasazená.
+
+---
+
 # Nasazeno v4.51.112 RC — kompaktní mobilní ovládání všech disciplín (Jaroslav, 4. 11. 2026)
 
 Aktuální verze: **v4.51.112 RC**. Stav: **sloučeno do main, GitHub Pages nasazení aplikace úspěšné** (merge 1f1d2d5).
