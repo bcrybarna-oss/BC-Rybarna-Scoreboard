@@ -14,7 +14,7 @@ function extract(start,end){
   assert.ok(j>i,'missing end '+end);
   return html.slice(i,j);
 }
-const loader=extract('  let dashboardMatchesLoadedUid=null,dashboardMatchesFailedUid=null;',
+const loader=extract('  let secureMatchesLoad=null,secureMatchesLoadUid=null;',
   '  async function saveSecureMatch(savedMatch){');
 const snapshot=extract('  window.getModernDashboardSnapshot=function(){',
   '  window.refreshModernDashboardCloud=async function(){');
