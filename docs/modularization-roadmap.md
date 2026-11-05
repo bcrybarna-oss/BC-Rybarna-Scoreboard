@@ -2,7 +2,7 @@
 
 ## Aktuální návrh etapy10 — pouze mapa a rozdělení (5.11.2026)
 
-Výchozí main22a5bcc je **v4.51.112 RC**, včetně Jaroslavova PR54 a oprav úvodní14.1/UNDO. Etapa9 zůstává dokončená v přijatém rozsahu. [Aktuální mapa datových toků, návrh10a–10g a testovací prostředí](data-layer-stage-10-plan.md) zpřesňuje pořadí podle skutečného kódu: nejprve již chráněný společný read hráčů, nikoli univerzální REST framework. Zatím žádná aplikační implementace ani opravy D1–D5, žádný merge/deploy nebo změna verze. Starší obecný plán10 níže označen jako historie. S1/S2/V1/F1/F2 a reportB beze změny, neimplicitní součást10.
+Výchozí main22a5bcc je **v4.51.112 RC**, včetně Jaroslavova PR54 a oprav úvodní14.1/UNDO. Etapa9 zůstává dokončená v přijatém rozsahu. [Aktuální mapa datových toků, návrh10a–10g a testovací prostředí](data-layer-stage-10-plan.md) zpřesňuje pořadí podle skutečného kódu: nejprve již chráněný společný read hráčů, nikoli univerzální REST framework. Zatím žádná aplikační implementace ani opravy D1–D5, žádný merge/deploy nebo změna verze. Starší obecný plán10 níže označen jako historie. Otevřený Jaroslavův PR55 (kandidát113, cloud-readiness počtu zápasů) není vbaseline; před implementací načíst nový main a zachovat případné přibylé readiness flagy/testy. S1/S2/V1/F1/F2 a reportB beze změny, neimplicitní součást10.
 
 ## Aktuální stav — etapa9 dokončena v přijatém rozsahu (v4.51.111 RC)
 

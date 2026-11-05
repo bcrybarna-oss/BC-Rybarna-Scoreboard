@@ -2,6 +2,8 @@
 
 Aktuální verze: **v4.51.112 RC**. Dominik: pouze dokumentační návrh z čerstvého origin/main `22a5bcc00126fd998809ea935d298e7b986524b2`. Zachováno celé Jaroslavovo vydání112 (PR54), včetně mobilního ovládání a úvodního breaku14.1/UNDO, i všech13 nasazených modulů. [Mapa, návrh10a–10g a Auth/Rules plán](docs/data-layer-stage-10-plan.md). Doporučená první10a je samostatný PlayersReadRepository ze stávajícího sdíleného readeru; lifecycle modulů a write-barrier9b2 se nepřesouvají k obrazovkám ani nezdvojují. Šest izolovaných reprodukcí dokládá pět stávajících vad D1–D5 a read→repair vedlejší účinek R1; žádná z nich není zde opravena. Aplikace, Rules, cache, data a testové sady beze změny; verze se kvůli dokumentaci nezvyšuje. Nic nesloučeno/nenasazeno. Implementace10a čeká na samostatné schválení. Následující záznamy nasazení zůstávají historie a zdroj dosavadních výsledků.
 
+Draft [PR56](https://github.com/bcrybarna-oss/BC-Rybarna-Scoreboard/pull/56), [CI42081370602](https://github.com/bcrybarna-oss/BC-Rybarna-Scoreboard/actions/runs/42081370602): releasePASS/produkce336PASS,0FAIL,3SKIP/experiment28PASS,2FAIL,0SKIP; celekFAILURE jen kvůli nezměněnému experimentu. Otevřený Jaroslavův PR55 (kandidát113/cloud-readiness počtu zápasů) evidován jako nesloučený souběh, do tohoto PR nepřibírán; před implementací znovu fetch a zachovat jeho stav/testy, bude-li sloučen.
+
 # Nasazeno v4.51.112 RC — kompaktní mobilní ovládání všech disciplín (Jaroslav, 4. 11. 2026)
 
 Aktuální verze: **v4.51.112 RC**. Stav: **sloučeno do main, GitHub Pages nasazení aplikace úspěšné** (merge 1f1d2d5).
