@@ -1,0 +1,71 @@
+{
+  "base": "22a5bcc00126fd998809ea935d298e7b986524b2",
+  "sourceSha256": "36e2c61442a932829fedbc4835e5d1685fddd374bdc9ae314b661932dfc2d46a",
+  "network": "all mocked; no real Firebase or Auth",
+  "productionDataChanged": false,
+  "applicationModified": false,
+  "interpretation": "Reproduced baseline behaviors, no fixes implemented",
+  "findings": [
+    {
+      "id": "D1",
+      "function": "securePlayerRequest",
+      "scenario": "A command waits for authorization; account switches to B before first dispatch",
+      "observed": {
+        "dispatchActor": "B",
+        "target": "players/profile-A",
+        "method": "PUT"
+      },
+      "rulesResult": "NOT tested; real Rules may deny, successful production write is not claimed"
+    },
+    {
+      "id": "D2",
+      "function": "saveSecurePlayer",
+      "scenario": "A PUT dispatched; switch to B; then A ACK completes",
+      "observed": {
+        "currentActor": "B",
+        "oldProfileInsertedIntoCurrentMap": true
+      },
+      "serverWriteRevoked": false
+    },
+    {
+      "id": "D3",
+      "function": "loadSecureTournaments",
+      "scenario": "A JSON delayed; B becomes current and has a newer local view",
+      "observed": {
+        "currentActor": "B",
+        "currentTournament": "old-A",
+        "serverWrites": 0
+      },
+      "meaning": "stale application state, not a demonstrated Rules bypass"
+    },
+    {
+      "id": "D4",
+      "function": "readSecureMatches",
+      "scenario": "old A JSON delayed across A-B-A; UID matches again in a new session",
+      "observed": {
+        "oldSnapshotAccepted": true,
+        "sessionGenerationChecked": false
+      }
+    },
+    {
+      "id": "D5",
+      "function": "loadDeviceActiveMatches",
+      "scenario": "valid v2 map on disk, no legacy singleton; setItem fails during read-time migration",
+      "observed": {
+        "returnedEntries": 0,
+        "diskStillContainsSavedMatch": true
+      },
+      "meaning": "read result lost on quota failure, not deletion of stored data"
+    },
+    {
+      "id": "R1",
+      "classification": "existing read-with-repair, not automatically a defect",
+      "function": "loadSecureTournaments",
+      "observed": {
+        "collectionGET": 1,
+        "authorizedRepairPUT": 1
+      },
+      "fixture": "mock repair function signals a repair; actual loader dispatches the PUT"
+    }
+  ]
+}
