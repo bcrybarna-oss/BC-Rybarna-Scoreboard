@@ -38,7 +38,15 @@ Skutečný export z27.10.2026: 40 913 440 B, 26 profilů, čten pouze v izolovan
 
 Příkazy: `node scripts/check-release.cjs --base origin/main`; `node scripts/run-tests.cjs production`; `node scripts/run-tests.cjs experimental`; `node tests/players-read-comparison.cjs` (PLAYERS_10A_BACKUP); `node tests/players-read-repository-browser.cjs`; existující browser testy match-challenges, match-challenge-actions, production-recovery-auth, federal-module, mobile112. Playwright/Chrome a soukromé fixtures jsou lokální závislosti; bez nich se tento rozsah nesmí vydávat za zopakovaný v CI.
 
-## Omezení a návrat
+## Konečný lokální a GitHub stav
+
+Samostatný [PR57](https://github.com/bcrybarna-oss/BC-Rybarna-Scoreboard/pull/57), implementační commit **42f723e389cc589981004724b0cf7f374c42c692**. Po commitu znovu celá produkční sada371/0/0 a tracked strom čistý; Git blob SHA256 indexu/repository/MatchChallenges odpovídají přesně testovanému working diffu v manifestu. Následující dokumentační doplnění tyto zdroje nemění. Při konečném fetchi main nadále22a5bcc/112; PR55 nesloučený. Cizí untracked soubory zůstaly mimo PR.
+
+[GitHub42086589372](https://github.com/bcrybarna-oss/BC-Rybarna-Scoreboard/actions/runs/42086589372): release PASS, produkce **368 PASS /0 FAIL /3 SKIP**, experiment **28 PASS /2 FAIL /0 SKIP**. Tři SKIP jsou soukromé relink/undo fixtures, lokálně všechny prošly. Celý kombinovaný workflow je FAILURE kvůli dvěma experimentálním vadám; žádný job se nevypínal. [Mobilní browser CI11242086589221](https://github.com/bcrybarna-oss/BC-Rybarna-Scoreboard/actions/runs/42086589221) SUCCESS.
+
+A1/A2/B skutečné PNG/PDF včetně mobilního DPR3 a exportního lifecycle PASS, Pushout Singles/Doubles/Team XLSX desktop/mobil PASS, turnajové založení/oddělené fáze/plná kvóta/draft/reload/FC izolace PASS, stream/OBS izolace PASS.0 reálných Firebase požadavků či zápisů. V exportním harnessu první běh odhalil již chybějící obsloužení assetu OnlinePresence; doplněn pouze mock route pro skutečný modul, původní assertion na nulové JS chyby zachován a finální běh PASS. Úvodní spuštění XLSX bez lokálních env podkladů skončilo před testem; platný konečný běh obsahuje všechny vstupy/knihovny.
+
+## Omezení a návrat (platné i po lokálním PASS)
 
 Živý testovací Auth/RTDB projekt s autorizací a věrnou kopií Rules není dostupný. Mocky ověřují klientský kontrakt, **ne skutečná serverová oprávnění**. Produkční Firebase nebyla použita k testovacím účtům ani zápisům. D1–D5, opravné zápisy jiných loaderů, cache, S1/S2/V1/F1/F2, PDF a neznámé JSON tvary zůstávají samostatné úkoly.
 

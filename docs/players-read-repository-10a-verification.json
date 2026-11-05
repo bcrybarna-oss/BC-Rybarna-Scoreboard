@@ -213,5 +213,37 @@
     "fail": 2
   },
   "liveAuthRulesVerified": false,
-  "productionWrites": 0
+  "productionWrites": 0,
+  "committedVerification": {
+    "candidateCommit": "42f723e389cc589981004724b0cf7f374c42c692",
+    "trackedStatusAtFinalProductionRun": "",
+    "productionNode": {
+      "pass": 371,
+      "fail": 0,
+      "skip": 0
+    },
+    "sources": {
+      "index.html": "11e7bea95f8e8c31f65b03a12ccf938988aa3b80c66a8b77745c22998131c30f",
+      "assets/js/players-read-repository.js": "96ef669eaca40ef25d854df6cd957fd72bfdd6819a5976c981b4e9e8627c60e5",
+      "assets/js/match-challenges.js": "338637e8721d2f54cce26263737d46e2b1a2f2f5929f41df195fa89b0a70e56e"
+    }
+  },
+  "github": {
+    "implementationHead": "42f723e389cc589981004724b0cf7f374c42c692",
+    "regressionRun": 42086589372,
+    "release": "success",
+    "production": {
+      "pass": 368,
+      "fail": 0,
+      "skip": 3
+    },
+    "experimental": {
+      "pass": 28,
+      "fail": 2,
+      "skip": 0
+    },
+    "mobile112Run": 42086589221,
+    "mobile112": "success",
+    "combined": "failure"
+  }
 }
