@@ -1,5 +1,9 @@
 # Etapa 10 — mapa a návrh datové vrstvy
 
+## Aktuální stav 10a — implementováno a izolovaně ověřeno, kandidát113
+
+Dominik5.11.2026: [PlayersReadRepository — rozsah, výsledky a návrat](players-read-repository-stage-10a.md). Jediný produkční collection reader přesunut celý včetně GET adaptéru; původní factory/export odstraněny, aplikace vlastní jednu instanci a publikaci. Produkční Node371/0/0 lokálně, baseline/kandidát desktop/mobil a32 nových kontraktů PASS. Auth/Rules živě neověřeny; D1–D5 a samostatné úkoly zůstávají. Main22a5bcc/112, PR55 zatím otevřený; před sloučením znovu ověřit jeho cloud-readiness i verzi. Nic nesloučeno/nenasazeno,10b nezahájena. Následující návrhy a záznamy jsou historický kontext.
+
 Zadavatel: **Dominik**. Datum: **5. 11. 2026**. **Pouze návrh, žádná aplikační implementace ani oprava dat.**
 Výchozí `origin/main`: `22a5bcc00126fd998809ea935d298e7b986524b2`, čerstvý fetch5.11.; verze **v4.51.112 RC**. Zachován PR54/merge1f1d2d5 a všechny následné listopadové dokumentační opravy. Jaroslavova112 obsahuje mobilní ovládání a skutečnou změnu úvodní fáze14.1 včetně `openingBreakAvailable14` v UNDO; nejde jen o CSS. Nasazení112 je doloženo [předáním112](deployment-v4.51.112.md); toto plánování znovu neověřovalo veřejný web ani živá data. Etapa9 je dokončena v přijatém rozsahu; starý test-modular zůstává mimo produkci.
 
