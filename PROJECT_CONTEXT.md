@@ -1,4 +1,10 @@
-# Etapa10a — PlayersReadRepository, kandidát v4.51.113 RC
+# Nasazeno v4.51.113 RC — etapa10a PlayersReadRepository (Dominik, 5. 11. 2026)
+
+Aktuální verze: **v4.51.113 RC**. PR56 dokumentace merge0933e64, PR57 aplikace merge **86bf7afc9b7ac250ec2a4706fd7948e5514bcbae**. Pages42089799710 SUCCESS; skutečný veřejný index/overlay/repository/MatchChallenges přesně shodný s merge, UI113, desktop/mobil anonymní navigace bez JS chyb a zápisů. Jedna produkční implementace a jedna app-owned instance; Jaroslavova112 zachována. PR55 zůstává otevřený a nezměněný.
+
+Lokálně produkce371/0/0; GitHub release PASS, produkce368/0/3 (soukromé fixtures lokálně PASS), experiment28/2/0, celekFAILURE jen kvůli nezměněnému experimentu. MobilníCI PASS, finální izolované browser/regrese a PNG/PDF/XLSX PASS. Živé Auth/Rules a přihlášené soukromé produkční reporty neověřeny; veřejný smoke je anonymní/offline, nikoli mockovaný. [Nasazení, důkazy a návrat](docs/deployment-v4.51.113.md). D1–D5 a další samostatná omezení zachována.10a uzavřena;10b nezahájena. Následující kandidátní stavy jsou historie.
+
+# Historie přípravy10a — kandidát v4.51.113 RC
 
 Aktuální verze: **v4.51.113 RC**. Produkční základ112 z main22a5bcc, zachovány Jaroslavovy mobilní/14.1 změny. Dominik schválil pouze přesun sdíleného collection čtení hráčů do jediného PlayersReadRepository: stejná app-owned instance, scope/epoch/revision/barrier, URL až před GET, publikace a render v aplikaci. Bez GETbyID/zápisů/pollingu/cache/fallbacku nebo oprav D1–D5. Ověření: produkční Node371 PASS/0 FAIL/0 SKIP lokálně;32 nových baseline/candidate kontraktů a izolované desktop/mobil/browser regrese PASS. [Rozsah, důkazy, omezení a návrat](docs/players-read-repository-stage-10a.md). ŽivéAuth/Rules prostředí chybí, mocky jej nenahrazují. Samostatný [PR57](https://github.com/bcrybarna-oss/BC-Rybarna-Scoreboard/pull/57), implementace42f723e. GitHub release PASS/produkce368 PASS,0 FAIL,3 SKIP/experiment28 PASS,2 FAIL; mobilníCI PASS. Bez merge/deploy; PR55 zatím nesloučený kandidát113, verzi nutno znovu ověřit před vydáním.
 

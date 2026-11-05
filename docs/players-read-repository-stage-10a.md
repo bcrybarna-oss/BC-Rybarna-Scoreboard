@@ -1,5 +1,9 @@
 # Etapa 10a — PlayersReadRepository
 
+## Nasazeno10a — v4.51.113 RC (5. 11. 2026)
+
+Dominik: PR56 merge0933e64 a PR57 merge86bf7af, Pages42089799710 SUCCESS, veřejné soubory/verze/modul a desktop/mobil navigace ověřeny. [Deployment, CI, oddělení mocků a návrat](deployment-v4.51.113.md). Jediný PlayersReadRepository a app-owned instance, původní factory odstraněna. Produkce371/0/0 lokálně, GitHub368/0/3, release/mobilPASS; experiment28/2 nezměněný a viditelný. ŽivéAuth/Rules a D1–D5 zůstávají samostatné, PR55 otevřený.10a dokončena v přijatém rozsahu;10b nezahájena. Příprava níže je historie.
+
 Zadavatel: Dominik. 5. 11. 2026. Kandidát **v4.51.113 RC**, samostatný PR; nesloučeno a nenasazeno. Implementuje schválený [návrh PR56](https://github.com/bcrybarna-oss/BC-Rybarna-Scoreboard/pull/56), včetně jeho dokumentačního základu. Etapa10b nezahájena.
 
 ## Rozsah a vlastnictví

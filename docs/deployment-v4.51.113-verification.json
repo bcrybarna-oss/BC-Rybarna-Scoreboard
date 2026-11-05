@@ -1,0 +1,402 @@
+{
+  "commit": "86bf7afc9b7ac250ec2a4706fd7948e5514bcbae",
+  "actualPublic": true,
+  "liveAuthRules": false,
+  "http": [
+    {
+      "file": "index.html",
+      "status": 200,
+      "sha256": "11e7bea95f8e8c31f65b03a12ccf938988aa3b80c66a8b77745c22998131c30f"
+    },
+    {
+      "file": "overlay.html",
+      "status": 200,
+      "sha256": "54ad8de46f5b1051bb601b4f2340ce5bec71f5d8f03860c7b1e2d2977eadd73d"
+    },
+    {
+      "file": "assets/js/players-read-repository.js",
+      "status": 200,
+      "sha256": "96ef669eaca40ef25d854df6cd957fd72bfdd6819a5976c981b4e9e8627c60e5"
+    },
+    {
+      "file": "assets/js/match-challenges.js",
+      "status": 200,
+      "sha256": "338637e8721d2f54cce26263737d46e2b1a2f2f5929f41df195fa89b0a70e56e"
+    }
+  ],
+  "clients": [
+    {
+      "mobile": false,
+      "version": "v4.51.113 RC",
+      "visited": [
+        "results",
+        "federal-cup-2026",
+        "live"
+      ],
+      "jsErrors": [],
+      "blockedWrites": [],
+      "modules": [
+        {
+          "path": "/BC-Rybarna-Scoreboard/assets/js/match-challenges.js",
+          "status": 200
+        },
+        {
+          "path": "/BC-Rybarna-Scoreboard/assets/js/players-read-repository.js",
+          "status": 200
+        },
+        {
+          "path": "/BC-Rybarna-Scoreboard/assets/js/own-reports.js",
+          "status": 200
+        },
+        {
+          "path": "/BC-Rybarna-Scoreboard/assets/js/federal-viewer.js",
+          "status": 200
+        },
+        {
+          "path": "/BC-Rybarna-Scoreboard/assets/js/cloud-refresh.js",
+          "status": 200
+        },
+        {
+          "path": "/BC-Rybarna-Scoreboard/assets/js/match-challenge-actions.js",
+          "status": 200
+        },
+        {
+          "path": "/BC-Rybarna-Scoreboard/assets/js/federal-statistics.js",
+          "status": 200
+        },
+        {
+          "path": "/BC-Rybarna-Scoreboard/assets/js/notification-center.js",
+          "status": 200
+        },
+        {
+          "path": "/BC-Rybarna-Scoreboard/assets/js/federal-report-controller.js",
+          "status": 200
+        },
+        {
+          "path": "/BC-Rybarna-Scoreboard/assets/js/livescore-renderer.js",
+          "status": 200
+        },
+        {
+          "path": "/BC-Rybarna-Scoreboard/assets/js/online-presence.js",
+          "status": 200
+        },
+        {
+          "path": "/BC-Rybarna-Scoreboard/assets/js/livescore-reader.js",
+          "status": 200
+        },
+        {
+          "path": "/BC-Rybarna-Scoreboard/assets/js/federal-report-renderer.js",
+          "status": 200
+        },
+        {
+          "path": "/BC-Rybarna-Scoreboard/assets/js/admin-reports.js",
+          "status": 200
+        }
+      ],
+      "authenticated": false
+    },
+    {
+      "mobile": true,
+      "version": "v4.51.113 RC",
+      "visited": [
+        "results",
+        "federal-cup-2026",
+        "live"
+      ],
+      "jsErrors": [],
+      "blockedWrites": [],
+      "modules": [
+        {
+          "path": "/BC-Rybarna-Scoreboard/assets/js/federal-statistics.js",
+          "status": 200
+        },
+        {
+          "path": "/BC-Rybarna-Scoreboard/assets/js/federal-report-renderer.js",
+          "status": 200
+        },
+        {
+          "path": "/BC-Rybarna-Scoreboard/assets/js/federal-report-controller.js",
+          "status": 200
+        },
+        {
+          "path": "/BC-Rybarna-Scoreboard/assets/js/livescore-reader.js",
+          "status": 200
+        },
+        {
+          "path": "/BC-Rybarna-Scoreboard/assets/js/match-challenge-actions.js",
+          "status": 200
+        },
+        {
+          "path": "/BC-Rybarna-Scoreboard/assets/js/own-reports.js",
+          "status": 200
+        },
+        {
+          "path": "/BC-Rybarna-Scoreboard/assets/js/cloud-refresh.js",
+          "status": 200
+        },
+        {
+          "path": "/BC-Rybarna-Scoreboard/assets/js/livescore-renderer.js",
+          "status": 200
+        },
+        {
+          "path": "/BC-Rybarna-Scoreboard/assets/js/players-read-repository.js",
+          "status": 200
+        },
+        {
+          "path": "/BC-Rybarna-Scoreboard/assets/js/notification-center.js",
+          "status": 200
+        },
+        {
+          "path": "/BC-Rybarna-Scoreboard/assets/js/federal-viewer.js",
+          "status": 200
+        },
+        {
+          "path": "/BC-Rybarna-Scoreboard/assets/js/admin-reports.js",
+          "status": 200
+        },
+        {
+          "path": "/BC-Rybarna-Scoreboard/assets/js/match-challenges.js",
+          "status": 200
+        },
+        {
+          "path": "/BC-Rybarna-Scoreboard/assets/js/online-presence.js",
+          "status": 200
+        }
+      ],
+      "authenticated": false
+    }
+  ],
+  "reportButtons": 1,
+  "predeployment": {
+    "baselineMain": "0933e64164e8f82705c63c299b55320c94bfa8f6",
+    "testedHead": "ee38fd6ff52fa6fcd9f431f5187b55936f1d2c4a",
+    "trackedSourceStatus": "clean",
+    "approvedApplicationParity": "identical to dc5499125f7dd720bbf5922ade159e44b79fb7a1",
+    "productionLocal": {
+      "pass": 371,
+      "fail": 0,
+      "skip": 0
+    },
+    "privateDataComparison": {
+      "baseline": "22a5bcc00126fd998809ea935d298e7b986524b2",
+      "testedHead": "ee38fd6ff52fa6fcd9f431f5187b55936f1d2c4a",
+      "trackedStatusAtTest": [],
+      "files": {
+        "index.html": {
+          "rawSha256": "11e7bea95f8e8c31f65b03a12ccf938988aa3b80c66a8b77745c22998131c30f",
+          "normalizedSha256": "11e7bea95f8e8c31f65b03a12ccf938988aa3b80c66a8b77745c22998131c30f"
+        },
+        "assets/js/players-read-repository.js": {
+          "rawSha256": "96ef669eaca40ef25d854df6cd957fd72bfdd6819a5976c981b4e9e8627c60e5",
+          "normalizedSha256": "96ef669eaca40ef25d854df6cd957fd72bfdd6819a5976c981b4e9e8627c60e5"
+        },
+        "assets/js/match-challenges.js": {
+          "rawSha256": "338637e8721d2f54cce26263737d46e2b1a2f2f5929f41df195fa89b0a70e56e",
+          "normalizedSha256": "338637e8721d2f54cce26263737d46e2b1a2f2f5929f41df195fa89b0a70e56e"
+        }
+      },
+      "archiveBytes": 40913440,
+      "archiveHash": "49908fbcd66113315e524e6e61a4fc3a889654bb0e9420d309b843d4181a4d5d",
+      "clients": [
+        {
+          "label": "baseline",
+          "gets": 1,
+          "mutations": 0,
+          "profileCount": 26,
+          "inputDataHash": "312f814b68542ec227eb1b8ecb9d4a69a8f378b1f02a53200547744a2886718d",
+          "outputDataHash": "312f814b68542ec227eb1b8ecb9d4a69a8f378b1f02a53200547744a2886718d",
+          "elapsedMs": 0.46750000000000114,
+          "snapshot": {
+            "requests": 0,
+            "writes": 0,
+            "epoch": 2,
+            "revision": 1
+          }
+        },
+        {
+          "label": "candidate",
+          "gets": 1,
+          "mutations": 0,
+          "profileCount": 26,
+          "inputDataHash": "312f814b68542ec227eb1b8ecb9d4a69a8f378b1f02a53200547744a2886718d",
+          "outputDataHash": "312f814b68542ec227eb1b8ecb9d4a69a8f378b1f02a53200547744a2886718d",
+          "elapsedMs": 0.24090000000001055,
+          "snapshot": {
+            "requests": 0,
+            "writes": 0,
+            "epoch": 2,
+            "revision": 1
+          }
+        }
+      ],
+      "privateExportUnchanged": true,
+      "productionNetworkCalls": 0
+    },
+    "repositoryBrowser": {
+      "baseline": "22a5bcc00126fd998809ea935d298e7b986524b2",
+      "reports": [
+        [
+          {
+            "variant": "baseline",
+            "mode": "desktop",
+            "sourceHash": "36e2c61442a932829fedbc4835e5d1685fddd374bdc9ae314b661932dfc2d46a",
+            "completeHash": "e5a8e0ca725046af09ee0963781ce9b7dc0c2140f7ac0c41420d2646d142fc95",
+            "singleFlight": 1,
+            "navigationSharedGETs": 1,
+            "repositoryMutations": 0,
+            "otherAppMutations": [],
+            "authRefreshPOSTs": 1,
+            "gets": 14,
+            "fullStorage": true,
+            "deniedStorage": true,
+            "listenersStable": true,
+            "bfcacheRetainsRepository": true,
+            "pagehideDisposes": true,
+            "modules": [
+              "/assets/js/federal-statistics.js",
+              "/assets/js/federal-report-renderer.js",
+              "/assets/js/federal-report-controller.js",
+              "/assets/js/livescore-reader.js",
+              "/assets/js/livescore-renderer.js",
+              "/assets/js/online-presence.js",
+              "/assets/js/match-challenge-actions.js",
+              "/assets/js/notification-center.js",
+              "/assets/js/match-challenges.js",
+              "/assets/js/cloud-refresh.js",
+              "/assets/js/own-reports.js",
+              "/assets/js/federal-viewer.js",
+              "/assets/js/admin-reports.js"
+            ],
+            "jsErrors": []
+          },
+          {
+            "variant": "candidate",
+            "mode": "desktop",
+            "sourceHash": "11e7bea95f8e8c31f65b03a12ccf938988aa3b80c66a8b77745c22998131c30f",
+            "completeHash": "e5a8e0ca725046af09ee0963781ce9b7dc0c2140f7ac0c41420d2646d142fc95",
+            "singleFlight": 1,
+            "navigationSharedGETs": 1,
+            "repositoryMutations": 0,
+            "otherAppMutations": [],
+            "authRefreshPOSTs": 1,
+            "gets": 14,
+            "fullStorage": true,
+            "deniedStorage": true,
+            "listenersStable": true,
+            "bfcacheRetainsRepository": true,
+            "pagehideDisposes": true,
+            "modules": [
+              "/assets/js/federal-report-renderer.js",
+              "/assets/js/federal-report-controller.js",
+              "/assets/js/livescore-reader.js",
+              "/assets/js/livescore-renderer.js",
+              "/assets/js/online-presence.js",
+              "/assets/js/match-challenge-actions.js",
+              "/assets/js/federal-statistics.js",
+              "/assets/js/players-read-repository.js",
+              "/assets/js/match-challenges.js",
+              "/assets/js/notification-center.js",
+              "/assets/js/cloud-refresh.js",
+              "/assets/js/own-reports.js",
+              "/assets/js/federal-viewer.js",
+              "/assets/js/admin-reports.js"
+            ],
+            "jsErrors": []
+          }
+        ],
+        [
+          {
+            "variant": "baseline",
+            "mode": "mobile",
+            "sourceHash": "36e2c61442a932829fedbc4835e5d1685fddd374bdc9ae314b661932dfc2d46a",
+            "completeHash": "e5a8e0ca725046af09ee0963781ce9b7dc0c2140f7ac0c41420d2646d142fc95",
+            "singleFlight": 1,
+            "navigationSharedGETs": 1,
+            "repositoryMutations": 0,
+            "otherAppMutations": [],
+            "authRefreshPOSTs": 1,
+            "gets": 14,
+            "fullStorage": true,
+            "deniedStorage": true,
+            "listenersStable": true,
+            "bfcacheRetainsRepository": true,
+            "pagehideDisposes": true,
+            "modules": [
+              "/assets/js/federal-statistics.js",
+              "/assets/js/federal-report-renderer.js",
+              "/assets/js/livescore-reader.js",
+              "/assets/js/federal-report-controller.js",
+              "/assets/js/livescore-renderer.js",
+              "/assets/js/online-presence.js",
+              "/assets/js/match-challenge-actions.js",
+              "/assets/js/match-challenges.js",
+              "/assets/js/notification-center.js",
+              "/assets/js/cloud-refresh.js",
+              "/assets/js/own-reports.js",
+              "/assets/js/federal-viewer.js",
+              "/assets/js/admin-reports.js"
+            ],
+            "jsErrors": []
+          },
+          {
+            "variant": "candidate",
+            "mode": "mobile",
+            "sourceHash": "11e7bea95f8e8c31f65b03a12ccf938988aa3b80c66a8b77745c22998131c30f",
+            "completeHash": "e5a8e0ca725046af09ee0963781ce9b7dc0c2140f7ac0c41420d2646d142fc95",
+            "singleFlight": 1,
+            "navigationSharedGETs": 1,
+            "repositoryMutations": 0,
+            "otherAppMutations": [],
+            "authRefreshPOSTs": 1,
+            "gets": 14,
+            "fullStorage": true,
+            "deniedStorage": true,
+            "listenersStable": true,
+            "bfcacheRetainsRepository": true,
+            "pagehideDisposes": true,
+            "modules": [
+              "/assets/js/federal-statistics.js",
+              "/assets/js/federal-report-renderer.js",
+              "/assets/js/federal-report-controller.js",
+              "/assets/js/livescore-reader.js",
+              "/assets/js/livescore-renderer.js",
+              "/assets/js/online-presence.js",
+              "/assets/js/match-challenge-actions.js",
+              "/assets/js/players-read-repository.js",
+              "/assets/js/match-challenges.js",
+              "/assets/js/notification-center.js",
+              "/assets/js/cloud-refresh.js",
+              "/assets/js/own-reports.js",
+              "/assets/js/federal-viewer.js",
+              "/assets/js/admin-reports.js"
+            ],
+            "jsErrors": []
+          }
+        ]
+      ],
+      "liveAuth": false,
+      "liveRules": false
+    }
+  },
+  "github": {
+    "pr56Merge": "0933e64164e8f82705c63c299b55320c94bfa8f6",
+    "pr57Merge": "86bf7afc9b7ac250ec2a4706fd7948e5514bcbae",
+    "pr57CI": 42089360332,
+    "mobile112CI": 42089360662,
+    "mainCI": 42089800720,
+    "pages": 42089799710,
+    "release": "success",
+    "production": {
+      "pass": 368,
+      "fail": 0,
+      "skip": 3
+    },
+    "experimental": {
+      "pass": 28,
+      "fail": 2,
+      "skip": 0
+    },
+    "regressionWorkflow": "failure",
+    "pagesResult": "success"
+  }
+}

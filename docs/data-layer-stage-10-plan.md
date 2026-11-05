@@ -1,5 +1,9 @@
 # Etapa 10 — mapa a návrh datové vrstvy
 
+## Nasazeno10a — v4.51.113 RC (5. 11. 2026)
+
+Dominik: PR56 merge0933e64 a PR57 merge86bf7af, Pages42089799710 SUCCESS, veřejné soubory/verze/modul a desktop/mobil navigace ověřeny. [Deployment, CI, oddělení mocků a návrat](deployment-v4.51.113.md). Jediný PlayersReadRepository a app-owned instance, původní factory odstraněna. Produkce371/0/0 lokálně, GitHub368/0/3, release/mobilPASS; experiment28/2 nezměněný a viditelný. ŽivéAuth/Rules a D1–D5 zůstávají samostatné, PR55 otevřený.10a dokončena v přijatém rozsahu;10b nezahájena. Příprava níže je historie.
+
 ## Aktuální stav 10a — implementováno a izolovaně ověřeno, kandidát113
 
 Dominik5.11.2026: [PlayersReadRepository — rozsah, výsledky a návrat](players-read-repository-stage-10a.md). Jediný produkční collection reader přesunut celý včetně GET adaptéru; původní factory/export odstraněny, aplikace vlastní jednu instanci a publikaci. Produkční Node371/0/0 lokálně, baseline/kandidát desktop/mobil a32 nových kontraktů PASS. Auth/Rules živě neověřeny; D1–D5 a samostatné úkoly zůstávají. Main22a5bcc/112, PR55 zatím otevřený; před sloučením znovu ověřit jeho cloud-readiness i verzi. Nic nesloučeno/nenasazeno,10b nezahájena. Následující návrhy a záznamy jsou historický kontext.
