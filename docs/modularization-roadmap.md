@@ -1,5 +1,9 @@
 # Aktuální roadmapa modularizace Poolčítadla
 
+## Aktuální návrh etapy10 — pouze mapa a rozdělení (5.11.2026)
+
+Výchozí main22a5bcc je **v4.51.112 RC**, včetně Jaroslavova PR54 a oprav úvodní14.1/UNDO. Etapa9 zůstává dokončená v přijatém rozsahu. [Aktuální mapa datových toků, návrh10a–10g a testovací prostředí](data-layer-stage-10-plan.md) zpřesňuje pořadí podle skutečného kódu: nejprve již chráněný společný read hráčů, nikoli univerzální REST framework. Zatím žádná aplikační implementace ani opravy D1–D5, žádný merge/deploy nebo změna verze. Starší obecný plán10 níže označen jako historie. Otevřený Jaroslavův PR55 (kandidát113, cloud-readiness počtu zápasů) není vbaseline; před implementací načíst nový main a zachovat případné přibylé readiness flagy/testy. S1/S2/V1/F1/F2 a reportB beze změny, neimplicitní součást10.
+
 ## Aktuální stav — etapa9 dokončena v přijatém rozsahu (v4.51.111 RC)
 
 Dominik31.10.2026:9a NotificationCenter (109),9b1 MatchChallenges a zjednodušená9b2 MatchChallengeActions (společná110),9c OnlinePresence (111) jsou nasazené. PR53 merge6fb8c7d/Pages41231980016 success; [ověření a návrat](deployment-v4.51.111.md). Jedna produkční implementace každé oblasti, jasní vlastníci prostředků a sessionguardy, původní těla odstraněna. Veřejná anonymní kontrola oddělená od izolovaných publikovaných zápisových scénářů. Žádné produkční testovací zápisy, etapa10 **nezahájena** a vyžaduje nové zadání. Historické přípravy/zákazy níže nejsou aktuální stav.
@@ -106,13 +110,32 @@ Aktuální rozdělení31.10.2026 podle skutečných závislostí nahrazuje půvo
 - Ověření každé části: skutečný produkční modul, dvě relace a více tabů, logout/reconnect/visibility, init/stop, dedup požadavků, jedno provedení akce a zachycený vlastník/payload před odesláním. Odeslaný zápis nelze logoutem odvolat. Skutečné zápisy jen do izolovaných dat.
 - Dokončení: jeden vlastník každého prostředku a mutačního jobu, staré tělo odstraněné, výsledky bez souběhu původní implementace.9a negarantuje starý globální securePlayers transport, výzvy ani presence; jejich známé mezery jsou uvedené v mapě.
 
-## 10. Datová vrstva
+## 10. Datová vrstva — návrh, implementace nezahájena
+
+[Podrobný návrh5.11.](data-layer-stage-10-plan.md) je aktuální podklad ke schválení, nikoli již odsouhlasená implementace.
+
+| Pořadí | Hranice menších PR | Dokončení a hlavní závislost |
+|---|---|---|
+|10a | PlayersReadRepository: přesun celé createPlayersReader a jedinéhoGET players z dnešního core/MatchChallenges | Jeden app-owned reader, původní factory odstraněno,9b2 barrier+single-flight+epoch zachovány; bez opravného RTDB zápisu, pollingu, DOM/cache. |
+|10b1/b2 | Surové matches čtení; pak explicitní loader/normalizace/confirmation/historická oprava | Nejprve samostatně rozhodnout opravu D4, zachovat data/repairoprávnění/FC a uložené zápasy. |
+|10c1/c2 | Tournaments read; pak read→repair orchestrace | D3 samostatně před přesunem; hybrid čekání, fáze101 a autorizované opravy neskrýt ani nepřepsat. |
+|10d1/d2 | AppData read/ETag; pak merge/apply a stávající conditional upload | CloudRefresh zůstává vlastník prostředků, RAM/diskrevize97 a FC conditional save se nezmění. |
+|10e1/e2 | Local DB/revize/safety backup; potom recovery/serializace | D5 je samostatná chyba quota při read; zachovat klíče/UNDO112 a pravdivé nedurable chování, žádné jiné úložiště. |
+|10f1/f2/f3 | Stávající profile / match+confirmation / tournament writery | D1/D2 a identityguardy odděleně; zachovat pole a PUT/PATCH/DELETE rozsah, žádný nový S1 protokol nebo Rules. |
+|10g1… | Malé doménové adaptéry pro ligu/série/hlášení/stream/presence/účty | Zachovat životnost již nasazených modulů, označit bootstrap/mirror/cleanup zápisy; nepřesouvat celé Auth ani herní logiku. |
+
+Každá část má v podrobném návrhu rozsah, rizika, ověření a gate dokončení.10a lze dokončit samostatně při zachování dnešního explicitníhoAuth kontextu; plné A1/A2 je samostatná hranice. Opravy nalezených vad nejsou nenápadnou součástí přesunu. Návrat každého přesunu reverzí bez dat. SkutečnéRules/Auth testy vyžadují samostatné testovací prostředíV1; současné mocky je negarantují.
+
+<details>
+<summary>Historický obecný plán10 před mapou5.11.2026 — zachován jako podklad, ne aktuální pořadí</summary>
 
 - PR10a: společný REST transport/ETag/chybové typy a session context bez změny payloadů.10b: úložiště matches a sdílení aktuálníPromise.10c: players/profiles.10d: tournaments/series/leagues.10e: appData read/merge/write jako samostatné transakce, současný CloudRefresh využít, nekopírovat.
 - Závislosti: A1, stávající normalize/merge a identifikátory, lokální persistence, tombstones/recovery, dosavadní revize/cache guard97. Cache velikost/politika se nemění (F2).
 - Rizika: ztráta undo či příznaků přes serializaci, starší cloud přepíše novější disk, nesprávný ETag, opakované zpracování stejné revize při quota error, stejné UID v jiné relaci.
 - Ověření: skutečné soukromé exporty vRAM, Firebase serializace prázdných polí/nul, 401/403/412/offline/lost ack, single-flight a account epochs, žádné duplicitní GET/PUT, plná místní kvóta bez mazání archivu.
 - Dokončení: každá větev má jeden repository/transport a definovaného vlastníka stavu, core nemá druhý merge/loader, všechna ztrátová a konfliktní chování explicitní. Zachovat výkonnostní opravy97–104.
+
+</details>
 
 ## 11. Výsledky a obecné statistiky
 

@@ -1,5 +1,13 @@
 # Revize aplikace Poolčítadlo
 
+## Dominik – mapa a návrh rozdělení datové vrstvy, etapa10 (v4.51.112 RC)
+Zadavatel: Dominik
+Datum: 5. 11. 2026
+Změny: Pouze dokumentace z aktuálního origin/main22a5bcc po Jaroslavově nasazené112; mobilní ovládání a openingBreakAvailable14/UNDO zachovány. Mapa players/matches/tournaments/appData, REST a sdílených loaderů, identity, lokální cache/recovery, oprav při čtení a souběžných zápisů. Návrh menších10a–10g, první doporučená pure-read PlayersReadRepository při zachování dosavadního vlastníka prostředků a read/write bariéry. Původní obecný plán zachován jako historie.
+Testy:7release-policy testů PASS;6izolovaných baseline reprodukcí nad skutečnými funkcemi ve VM potvrzuje5stávajících vad D1–D5 a opravnýPUT při read R1. Nejde o implementaci ani testy oprav; žádný reálnýAuth/Firebase/datovýzápis. Statická kontrola zdrojů/dokumentačních odkazů; Release gate PASS; PR56 CI42081370602 releasePASS/produkce336PASS,0FAIL,3SKIP/experiment28PASS,2FAIL,0SKIP, celekFAILURE pouze kvůli experimentu. Novébrowserové ani zátěžové měření nebylo součástí návrhu.
+Nasazení: Dokumentační větev/PR, nesloučeno/nenasazeno. Aplikační verze112 se nezvyšuje; souběžné změny Dominika/Jaroslava zachovány. Otevřený PR55 s kandidátem113 je evidován jako nesloučený; před první implementací nutno znovu načíst main a zachovat případně přibylý cloud-readiness kontrakt. Produkčnídata aRules nedotčeny, implementace10a nezahájena.
+Omezení: Chybí verzovaná kopie skutečnýchRules a izolovaná Auth/RTDB konfigurace; serverové oprávnění se nedokazuje mockem. D1–D5 samostatné opravy před dotčenými přesuny; S1/S2/V1/F1/F2 a omezeníreportuB zůstávají mimo modularizaci. Návrh vyžaduje schválení první implementace, žádný framework/serverovýprotokol/migrace/cache přesun/PDF nebo herní změna.
+
 ## Jaroslav – kompaktní mobilní počítání všech disciplín (v4.51.112 RC)
 Zadavatel: Jaroslav
 Datum: 4. 11. 2026
