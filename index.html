@@ -1043,14 +1043,15 @@
   </div>
 
 <script src="assets/js/federal-statistics.js?v=4.51.98"></script>
-<script src="assets/js/federal-report-renderer.js?v=4.51.112"></script>
-<script src="assets/js/federal-report-controller.js?v=4.51.112"></script>
-<script src="assets/js/livescore-reader.js?v=4.51.112"></script>
-<script src="assets/js/livescore-renderer.js?v=4.51.112"></script>
-<script src="assets/js/online-presence.js?v=4.51.112"></script>
-<script src="assets/js/match-challenge-actions.js?v=4.51.112"></script>
-<script src="assets/js/match-challenges.js?v=4.51.112"></script>
-<script src="assets/js/notification-center.js?v=4.51.112"></script>
+<script src="assets/js/federal-report-renderer.js?v=4.51.113"></script>
+<script src="assets/js/federal-report-controller.js?v=4.51.113"></script>
+<script src="assets/js/livescore-reader.js?v=4.51.113"></script>
+<script src="assets/js/livescore-renderer.js?v=4.51.113"></script>
+<script src="assets/js/online-presence.js?v=4.51.113"></script>
+<script src="assets/js/match-challenge-actions.js?v=4.51.113"></script>
+<script src="assets/js/players-read-repository.js?v=4.51.113"></script>
+<script src="assets/js/match-challenges.js?v=4.51.113"></script>
+<script src="assets/js/notification-center.js?v=4.51.113"></script>
 <script src="assets/js/cloud-refresh.js?v=4.51.99"></script>
 <script src="assets/js/own-reports.js?v=4.51.102"></script>
 <script src="assets/js/federal-viewer.js?v=4.51.103"></script>
@@ -3157,7 +3158,7 @@ html[data-theme="light"] #leagueSchedule .history-item .muted{
           <span class="by">by</span>
           <span class="club">BC Rybárna</span>
         </div>
-        <small class="modern-brand-version">v4.51.112 RC</small>
+        <small class="modern-brand-version">v4.51.113 RC</small>
       </div>
     </div>
     <div class="nav">
@@ -3776,7 +3777,7 @@ html[data-theme="light"] #leagueSchedule .history-item .muted{
         </div>
         <div class="subpanel" style="min-width:210px;text-align:center;margin:0">
           <div class="muted" style="font-size:10px;font-weight:950;letter-spacing:1px">AKTUÁLNÍ VERZE</div>
-          <div style="font-size:22px;font-weight:950;color:var(--gold2);margin-top:5px">v4.51.112 RC</div>
+          <div style="font-size:22px;font-weight:950;color:var(--gold2);margin-top:5px">v4.51.113 RC</div>
         </div>
       </div>
     </div>
@@ -6546,7 +6547,7 @@ html[data-theme="light"] #leagueSchedule .history-item .muted{
       </div>
 
       <div id="groupPlayoffSeedStatus" class="muted" style="margin-top:12px;min-height:20px"></div>
-      <div class="muted" style="margin-top:4px;font-size:11px">RC v4.51.112</div>
+      <div class="muted" style="margin-top:4px;font-size:11px">RC v4.51.113</div>
       <div class="modal-actions">
         <button id="groupPlayoffSeedApplyBtn" class="btn primary big" type="button">NASADIT DO PLAY-OFF</button>
         <button id="groupPlayoffSeedCancelBtn" class="btn">ZRUŠIT</button>
@@ -6641,6 +6642,7 @@ html[data-theme="light"] #leagueSchedule .history-item .muted{
     const error=document.createElement('div');error.id='federalReportRendererLoadError';error.setAttribute('role','alert');error.textContent='Nepodařilo se načíst vykreslování reportů Federal Cupu. Obnovte stránku.';document.body.prepend(error);throw new Error('FEDERAL_REPORT_RENDERER_MODULE_UNAVAILABLE');
   }
   if(!window.MatchChallengeActions){const error=document.createElement('div');error.id='matchChallengeActionsLoadError';error.setAttribute('role','alert');error.textContent='Nepodařilo se načíst ovládání výzev. Obnovte stránku.';document.body.prepend(error);throw Error('MATCH_CHALLENGE_ACTIONS_MODULE_UNAVAILABLE');}
+  if(!window.PlayersReadRepository){const error=document.createElement('div');error.id='playersReadRepositoryLoadError';error.setAttribute('role','alert');error.textContent='Nepodařilo se načíst hráčské profily. Obnovte stránku.';document.body.prepend(error);throw Error('PLAYERS_READ_REPOSITORY_MODULE_UNAVAILABLE');}
   if(!window.MatchChallenges){const error=document.createElement('div');error.id='matchChallengesLoadError';error.setAttribute('role','alert');error.textContent='Nepodařilo se načíst výzvy k zápasu. Obnovte stránku.';document.body.prepend(error);throw Error('MATCH_CHALLENGES_MODULE_UNAVAILABLE');}
   if(!window.NotificationCenter){const error=document.createElement('div');error.id='notificationCenterLoadError';error.setAttribute('role','alert');error.textContent='Nepodařilo se načíst upozornění. Obnovte stránku.';document.body.prepend(error);throw Error('NOTIFICATION_CENTER_MODULE_UNAVAILABLE');}
   if(!window.LivescoreRenderer){const error=document.createElement('div');error.id='livescoreRendererLoadError';error.setAttribute('role','alert');error.textContent='Nepodařilo se načíst zobrazení Livescore. Obnovte stránku.';document.body.prepend(error);throw Error('LIVESCORE_RENDERER_MODULE_UNAVAILABLE');}
@@ -7689,7 +7691,7 @@ html[data-theme="light"] #leagueSchedule .history-item .muted{
     const btn=$('submitReportBtn');if(btn)btn.disabled=true;
     try{
       const id=uid(),p=currentUserPlayerId?data.players?.[currentUserPlayerId]:null;
-      const report={id,createdByUid:cloudUid,createdByPlayerId:currentUserPlayerId||'',createdByName:p?playerSelectionLabel(p):(cloudUserEmail||'Uživatel'),email:cloudUserEmail||'',type,area,description,appVersion:'v4.51.112 RC',createdAt:new Date().toISOString(),updatedAt:new Date().toISOString(),status:'new',adminNote:''};
+      const report={id,createdByUid:cloudUid,createdByPlayerId:currentUserPlayerId||'',createdByName:p?playerSelectionLabel(p):(cloudUserEmail||'Uživatel'),email:cloudUserEmail||'',type,area,description,appVersion:'v4.51.113 RC',createdAt:new Date().toISOString(),updatedAt:new Date().toISOString(),status:'new',adminNote:''};
       await reportRequest(id,'PUT',report);
       try{
         await writeReportUserMirror(report);
@@ -8469,10 +8471,10 @@ html[data-theme="light"] #leagueSchedule .history-item .muted{
     try{if(typeof window.renderModernHome==='function')window.renderModernHome();}catch(e){}
   }
 
-  const securePlayersReader=window.MatchChallenges.createPlayersReader({
+  const securePlayersReader=window.PlayersReadRepository.create({
     identity:()=>({authenticated:cloudAuthenticated,uid:cloudUid,scope:JSON.stringify([currentUserPlayerId,currentUserRole,cloudEmailVerified])}),
     ensureToken:context=>ensureCloudToken(context),
-    request:signal=>fetch(cloudUrl('players')+'&t='+Date.now(),{cache:'no-store',signal}),
+    fetch:(...args)=>fetch(...args),url:()=>cloudUrl('players'),now:Date.now,
     apply:players=>{data.players=players;try{window.renderModernHome?.();}catch(e){}}
   });
   function loadSecurePlayers(){return securePlayersReader.read();}

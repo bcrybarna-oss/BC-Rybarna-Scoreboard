@@ -1,5 +1,13 @@
 # Revize aplikace Poolčítadlo
 
+## Dominik – sdílené čtení hráčů, etapa10a (v4.51.113 RC)
+Zadavatel: Dominik
+Datum: 5. 11. 2026
+Změny: Jediný PlayersReadRepository vlastní přesunutý createPlayersReader a collectionGET adapter; původní factory/export odstraněn. Jedna app-owned instance securePlayersReader a loadSecurePlayers pro všechny volající, stejné identity/epoch/revision/bariéry a lifecycle, aplikace vlastní publish/render. Žádná nová JSONvalidace, cache, retry, zápisovýprotokol nebo opravy D1–D5. Jaroslavova112 zachována, PR55 nesloučený nepřibírán.
+Testy: Celá produkční Node371 PASS/0 FAIL/0 SKIP lokálně se soukromými fixtures;32 nových testů skutečného modulu proti přesné baseline factory a nezávislým očekáváním.26 skutečných profilů,20 souběžných volání→1GET, stejné úplné hashe,0 mutací. Baseline/kandidát × desktop/mobil: scope/auth/slowJSON/bariéry/storage/lifecycle/navigace PASS; výzvy, notifikace, bootstrap, identity/recovery a mobilní112 regrese PASS. Experiment baseline i kandidát28 PASS/2 FAIL/0 SKIP, jednotlivé příčiny v docs/players-read-repository-stage-10a.md; historický audit žurnálu0 PASS/2 FAIL samostatně. Žádná tolerance/CI výjimka, žádné produkční zápisy. Release PASS; GitHub42086589372 produkce368/0/3, experiment28/2/0 (celekFAILURE), mobilníCI42086589221 PASS. A1/A2/B skutečnéPNG/PDF, XLSX desktop/mobil, turnaje a stream/OBS PASS.
+Nasazení: Kandidát113 na základě aktuálního main112, pouze samostatnýPR; nic nesloučeno ani nenasazeno. Při souběžném vydání PR55 znovu určit základ/verzi a zachovat cloud-readiness kontrakt/testy.
+Omezení: ŽivéAuth/Rules testovací prostředí a kopieRules nedostupné. NeobvyklýJSON i čekající read před bariérou zachovávají původní sémantiku; nic nezpřísněno. D1–D5 a S1/S2/V1/F1/F2 neřešeny touto extrakcí. Návrat reverzí celého10a bez datové migrace, s novou verzí pokud mezitím vydáno;10b nezahájena.
+
 ## Dominik – mapa a návrh rozdělení datové vrstvy, etapa10 (v4.51.112 RC)
 Zadavatel: Dominik
 Datum: 5. 11. 2026

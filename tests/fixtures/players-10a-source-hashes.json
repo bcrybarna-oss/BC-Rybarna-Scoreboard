@@ -1,0 +1,14 @@
+{
+  "baseline": "22a5bcc00126fd998809ea935d298e7b986524b2",
+  "functions": {
+    "securePlayerRequest": "fed34cd2313386ce46187ef557ae56269fb16e8c97324c131a2ef29014d19cd4",
+    "saveSecurePlayer": "ab23fd794153decf94725a23634a5c2ddb9143ec018f3af0b3d3638165a7ac70",
+    "readSecureMatches": "c269655228a94c22589b6a29ee41f19aec2ab0f5c46f4afebadeb2d362b4bfa9",
+    "loadSecureTournaments": "325c7ef2c6b8d6efd46c237b2ab8b34b4e0320f9654888f9124450d00e4d8107",
+    "loadDeviceActiveMatches": "308ed16080fcb016cd93fd5b3fae55b0e536e378b0eda18d095c4832ea8dea99",
+    "openingBreakAvailableForAction14": "bc0165f13b92b45b80edd8dcb8dce25b2b55b926554d400d357b8f9ed5bf6fcd",
+    "saveDeviceActiveMatch": "3819cdaf6b555f50c7f4d8d47de51299bfef3aacae6fa29582cb7db5da6411b3",
+    "cloudUrl": "6bb5ce89d40572d952bf3cb3eda44813274146a9b45c40b55bebec35effb1107",
+    "ensureCloudToken": "1b8bdd3cbaf0208b59bab0616d6bba84d00223cc6e79b44ccc90a5f9d4707183"
+  }
+}

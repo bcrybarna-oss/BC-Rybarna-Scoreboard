@@ -1,6 +1,10 @@
 # Aktuální roadmapa modularizace Poolčítadla
 
-## Aktuální návrh etapy10 — pouze mapa a rozdělení (5.11.2026)
+## Aktuální stav 10a — implementováno a izolovaně ověřeno, kandidát113
+
+Dominik5.11.2026: [PlayersReadRepository — rozsah, výsledky a návrat](players-read-repository-stage-10a.md). Jediný produkční collection reader přesunut celý včetně GET adaptéru; původní factory/export odstraněny, aplikace vlastní jednu instanci a publikaci. Produkční Node371/0/0 lokálně, baseline/kandidát desktop/mobil a32 nových kontraktů PASS. Auth/Rules živě neověřeny; D1–D5 a samostatné úkoly zůstávají. Main22a5bcc/112, PR55 zatím otevřený; před sloučením znovu ověřit jeho cloud-readiness i verzi. Nic nesloučeno/nenasazeno,10b nezahájena. Následující návrhy a záznamy jsou historický kontext.
+
+## Historický návrh etapy10 — mapa a rozdělení (5.11.2026)
 
 Výchozí main22a5bcc je **v4.51.112 RC**, včetně Jaroslavova PR54 a oprav úvodní14.1/UNDO. Etapa9 zůstává dokončená v přijatém rozsahu. [Aktuální mapa datových toků, návrh10a–10g a testovací prostředí](data-layer-stage-10-plan.md) zpřesňuje pořadí podle skutečného kódu: nejprve již chráněný společný read hráčů, nikoli univerzální REST framework. Zatím žádná aplikační implementace ani opravy D1–D5, žádný merge/deploy nebo změna verze. Starší obecný plán10 níže označen jako historie. Otevřený Jaroslavův PR55 (kandidát113, cloud-readiness počtu zápasů) není vbaseline; před implementací načíst nový main a zachovat případné přibylé readiness flagy/testy. S1/S2/V1/F1/F2 a reportB beze změny, neimplicitní součást10.
 
