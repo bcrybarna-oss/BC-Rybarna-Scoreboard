@@ -1,5 +1,13 @@
 # Revize aplikace Poolčítadlo
 
+## Dominik – generační kontrola čtení zápasů, etapa 10b0 (v4.51.114 RC)
+Zadavatel: Dominik
+Datum: 6. 11. 2026
+Změny: Čtení zápasů sdílí Promise v rámci generace autentizované relace. Opožděná odpověď po A → B → A ani po novém přihlášení stejného UID nesmí přepsat stav a cache nebo spustit historický opravný PUT. Obnovení tokenu ve stejné relaci zachovává sdílení. Oprava zůstává uvnitř současného loaderu.
+Testy: D4 reprodukována na přesném main f68098c. Baseline 5 PASS a 7 reprodukovaných selhání, kandidát 12 PASS. Release gate a všech 383 produkčních Node testů prošly. Desktop a mobil ověřily historii, statistiky, uložení, potvrzení, recovery, mobilní ovládání v112, turnaje, výzvy, notifikace a exporty. Dvě experimentální vady a shodné selhání doplňkového scénáře Pushout cloud jsou vykázány zvlášť. Podrobné výsledky jsou v docs/match-read-session-stage-10b0.md.
+Nasazení: Kandidát v samostatném PR. Main zůstává v4.51.113 RC. Jaroslavův otevřený PR #55 stojí mimo tuto změnu.
+Omezení: Živé Auth a Firebase Rules nebyly ověřeny. Již odeslaný PUT může doběhnout. Návrat reverzí v novém vydání bez obnovování produkčních dat.
+
 ## Dominik – sdílené čtení hráčů, etapa10a (v4.51.113 RC)
 Zadavatel: Dominik
 Datum: 5. 11. 2026
