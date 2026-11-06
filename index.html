@@ -1043,15 +1043,15 @@
   </div>
 
 <script src="assets/js/federal-statistics.js?v=4.51.98"></script>
-<script src="assets/js/federal-report-renderer.js?v=4.51.113"></script>
-<script src="assets/js/federal-report-controller.js?v=4.51.113"></script>
-<script src="assets/js/livescore-reader.js?v=4.51.113"></script>
-<script src="assets/js/livescore-renderer.js?v=4.51.113"></script>
-<script src="assets/js/online-presence.js?v=4.51.113"></script>
-<script src="assets/js/match-challenge-actions.js?v=4.51.113"></script>
-<script src="assets/js/players-read-repository.js?v=4.51.113"></script>
-<script src="assets/js/match-challenges.js?v=4.51.113"></script>
-<script src="assets/js/notification-center.js?v=4.51.113"></script>
+<script src="assets/js/federal-report-renderer.js?v=4.51.114"></script>
+<script src="assets/js/federal-report-controller.js?v=4.51.114"></script>
+<script src="assets/js/livescore-reader.js?v=4.51.114"></script>
+<script src="assets/js/livescore-renderer.js?v=4.51.114"></script>
+<script src="assets/js/online-presence.js?v=4.51.114"></script>
+<script src="assets/js/match-challenge-actions.js?v=4.51.114"></script>
+<script src="assets/js/players-read-repository.js?v=4.51.114"></script>
+<script src="assets/js/match-challenges.js?v=4.51.114"></script>
+<script src="assets/js/notification-center.js?v=4.51.114"></script>
 <script src="assets/js/cloud-refresh.js?v=4.51.99"></script>
 <script src="assets/js/own-reports.js?v=4.51.102"></script>
 <script src="assets/js/federal-viewer.js?v=4.51.103"></script>
@@ -3158,7 +3158,7 @@ html[data-theme="light"] #leagueSchedule .history-item .muted{
           <span class="by">by</span>
           <span class="club">BC Rybárna</span>
         </div>
-        <small class="modern-brand-version">v4.51.113 RC</small>
+        <small class="modern-brand-version">v4.51.114 RC</small>
       </div>
     </div>
     <div class="nav">
@@ -3777,7 +3777,7 @@ html[data-theme="light"] #leagueSchedule .history-item .muted{
         </div>
         <div class="subpanel" style="min-width:210px;text-align:center;margin:0">
           <div class="muted" style="font-size:10px;font-weight:950;letter-spacing:1px">AKTUÁLNÍ VERZE</div>
-          <div style="font-size:22px;font-weight:950;color:var(--gold2);margin-top:5px">v4.51.113 RC</div>
+          <div style="font-size:22px;font-weight:950;color:var(--gold2);margin-top:5px">v4.51.114 RC</div>
         </div>
       </div>
     </div>
@@ -6547,7 +6547,7 @@ html[data-theme="light"] #leagueSchedule .history-item .muted{
       </div>
 
       <div id="groupPlayoffSeedStatus" class="muted" style="margin-top:12px;min-height:20px"></div>
-      <div class="muted" style="margin-top:4px;font-size:11px">RC v4.51.113</div>
+      <div class="muted" style="margin-top:4px;font-size:11px">RC v4.51.114</div>
       <div class="modal-actions">
         <button id="groupPlayoffSeedApplyBtn" class="btn primary big" type="button">NASADIT DO PLAY-OFF</button>
         <button id="groupPlayoffSeedCancelBtn" class="btn">ZRUŠIT</button>
@@ -6712,6 +6712,8 @@ html[data-theme="light"] #leagueSchedule .history-item .muted{
   let adminCreatePlayerTargetUid=null;
   let cloudUserEmail='';
   let cloudUid='';
+  // Explicit login, logout and UID changes end the lifetime of pending match reads.
+  let cloudSessionGeneration=0;
   let cloudAuthenticated=false;
   let cloudSyncTimer=null;
   let cloudSyncInProgress=false;
@@ -7691,7 +7693,7 @@ html[data-theme="light"] #leagueSchedule .history-item .muted{
     const btn=$('submitReportBtn');if(btn)btn.disabled=true;
     try{
       const id=uid(),p=currentUserPlayerId?data.players?.[currentUserPlayerId]:null;
-      const report={id,createdByUid:cloudUid,createdByPlayerId:currentUserPlayerId||'',createdByName:p?playerSelectionLabel(p):(cloudUserEmail||'Uživatel'),email:cloudUserEmail||'',type,area,description,appVersion:'v4.51.113 RC',createdAt:new Date().toISOString(),updatedAt:new Date().toISOString(),status:'new',adminNote:''};
+      const report={id,createdByUid:cloudUid,createdByPlayerId:currentUserPlayerId||'',createdByName:p?playerSelectionLabel(p):(cloudUserEmail||'Uživatel'),email:cloudUserEmail||'',type,area,description,appVersion:'v4.51.114 RC',createdAt:new Date().toISOString(),updatedAt:new Date().toISOString(),status:'new',adminNote:''};
       await reportRequest(id,'PUT',report);
       try{
         await writeReportUserMirror(report);
@@ -7890,7 +7892,9 @@ html[data-theme="light"] #leagueSchedule .history-item .muted{
 
     const user=(j.users&&j.users[0])||null;
     if(user){
-      cloudUid=user.localId||cloudUid||'';
+      const uid=user.localId||cloudUid||'';
+      if(uid!==cloudUid)cloudSessionGeneration++;
+      cloudUid=uid;
       cloudUserEmail=user.email||cloudUserEmail||'';
       cloudEmailVerified=!!user.emailVerified;
     }
@@ -8035,6 +8039,7 @@ html[data-theme="light"] #leagueSchedule .history-item .muted{
     const j=await r.json();
     if(!r.ok) throw new Error((j.error&&j.error.message)||'REGISTER_FAILED');
 
+    cloudSessionGeneration++;
     cloudUid=j.localId||'';
     cloudUserEmail=j.email||email||'';
     cloudIdToken=j.idToken;
@@ -8065,6 +8070,7 @@ html[data-theme="light"] #leagueSchedule .history-item .muted{
     const j=await r.json();
     if(!r.ok) throw new Error((j.error&&j.error.message)||'LOGIN_FAILED');
 
+    cloudSessionGeneration++;
     cloudIdToken=j.idToken;
     cloudRefreshToken=j.refreshToken;
     cloudTokenExpiresAt=Date.now()+(Number(j.expiresIn||3600)*1000)-60000;
@@ -8376,8 +8382,11 @@ html[data-theme="light"] #leagueSchedule .history-item .muted{
     }
   }
 
-  async function secureMatchRequest(matchId,method,body=null){
-    if(!await ensureCloudToken()) throw new Error('NO_AUTH');
+  async function secureMatchRequest(matchId,method,body=null,readContext=null){
+    // Only the historical repair triggered by a collection read passes this context.
+    if(readContext&&!readContext.current())throw new Error('MATCHES_IDENTITY_CHANGED');
+    if(!await ensureCloudToken(readContext)) throw new Error('NO_AUTH');
+    if(readContext&&!readContext.current())throw new Error('MATCHES_IDENTITY_CHANGED');
     const opts={method,headers:{'Content-Type':'application/json'},cache:'no-store'};
     if(body!==null) opts.body=JSON.stringify(body);
     const r=await fetch(cloudUrl('matches/'+matchId),opts);
@@ -8411,22 +8420,28 @@ html[data-theme="light"] #leagueSchedule .history-item .muted{
     return changed;
   }
 
-  let secureMatchesLoad=null,secureMatchesLoadUid=null;
+  let secureMatchesLoad=null;
   function loadSecureMatches(){
-    if(secureMatchesLoad&&secureMatchesLoadUid===cloudUid)return secureMatchesLoad;
-    const pending=readSecureMatches().finally(()=>{
-      if(secureMatchesLoad===pending){secureMatchesLoad=null;secureMatchesLoadUid=null;}
+    if(secureMatchesLoad?.current())return secureMatchesLoad.promise;
+
+    const generation=cloudSessionGeneration;
+    const uid=cloudUid;
+    const current=()=>cloudSessionGeneration===generation&&cloudUid===uid;
+    const job={current,promise:null};
+    job.promise=Promise.resolve().then(()=>readSecureMatches(current)).finally(()=>{
+      if(secureMatchesLoad===job)secureMatchesLoad=null;
     });
-    secureMatchesLoad=pending;secureMatchesLoadUid=cloudUid;
-    return pending;
+    secureMatchesLoad=job;
+    return job.promise;
   }
-  async function readSecureMatches(){
-    if(!await ensureCloudToken()) throw new Error('NO_AUTH');
-    const requestUid=cloudUid;
+  async function readSecureMatches(current){
+    if(!current())throw new Error('MATCHES_IDENTITY_CHANGED');
+    if(!await ensureCloudToken({current})) throw new Error('NO_AUTH');
+    if(!current()||!cloudAuthenticated)throw new Error('MATCHES_IDENTITY_CHANGED');
     const r=await fetch(cloudUrl('matches')+'&t='+Date.now(),{cache:'no-store'});
     if(!r.ok) throw new Error('MATCHES_READ_'+r.status);
     const raw=await r.json()||{};
-    if(cloudUid!==requestUid)throw new Error('MATCHES_IDENTITY_CHANGED');
+    if(!current()||!cloudAuthenticated)throw new Error('MATCHES_IDENTITY_CHANGED');
     data.matches=Object.values(raw).filter(Boolean);
     const compatibilityRepaired=applyKnownHistoricalMatchMetadataRepairs(data.matches);
     data.matches.forEach(m=>{
@@ -8436,10 +8451,12 @@ html[data-theme="light"] #leagueSchedule .history-item .muted{
     if(compatibilityRepaired && currentUserIsSystemAdmin()){
       data.matches
         .filter(m=>m?.metadataCompatibilityRepair==='MR_DOUBLES_2026_09_19')
-        .forEach(m=>secureMatchRequest(m.id,'PUT',m).catch(e=>console.warn('Historical metadata repair save:',e)));
+        .forEach(m=>secureMatchRequest(m.id,'PUT',m,{current}).catch(e=>console.warn('Historical metadata repair save:',e)));
     }
     try{localStorage.setItem(DB_KEY,JSON.stringify(data));}catch(e){}
-    setTimeout(maybeShowPendingResultConfirmation,80);
+    setTimeout(()=>{
+      if(current()&&cloudAuthenticated)maybeShowPendingResultConfirmation();
+    },80);
     try{if(typeof window.renderModernHome==='function')window.renderModernHome();}catch(e){}
     return data.matches;
   }
@@ -9083,6 +9100,7 @@ html[data-theme="light"] #leagueSchedule .history-item .muted{
   function clearRuntimeCloudIdentity(){
     invalidateFederalReport();
     cloudAutoSync?.stop();
+    cloudSessionGeneration++;
     window.invalidateLivescoreReader?.();
     ownReportsSync?.stop();
     adminReportsSync?.stop();

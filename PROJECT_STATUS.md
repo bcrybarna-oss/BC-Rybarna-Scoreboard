@@ -1,3 +1,7 @@
+# Kandidát v4.51.114 RC — etapa 10b0 (Dominik, 6. 11. 2026)
+
+Aktuální verze: **v4.51.114 RC**. Kandidát z main f68098c (nasazená v4.51.113 RC) opravuje D4 pomocí generace autentizované relace. Stará odpověď A po A → B → A se nemůže publikovat ani vyvolat opravný zápis. Jedna platná relace dál sdílí jeden GET. PR #55 zůstává samostatný. [Výsledky a postup návratu](docs/match-read-session-stage-10b0.md).
+
 # Nasazeno v4.51.113 RC — etapa10a PlayersReadRepository (Dominik, 5. 11. 2026)
 
 Aktuální verze: **v4.51.113 RC**. PR56 dokumentace merge0933e64, PR57 aplikace merge **86bf7afc9b7ac250ec2a4706fd7948e5514bcbae**. Pages42089799710 SUCCESS; skutečný veřejný index/overlay/repository/MatchChallenges přesně shodný s merge, UI113, desktop/mobil anonymní navigace bez JS chyb a zápisů. Jedna produkční implementace a jedna app-owned instance; Jaroslavova112 zachována. PR55 zůstává otevřený a nezměněný.
