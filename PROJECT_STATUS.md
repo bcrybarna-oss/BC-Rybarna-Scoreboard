@@ -1,6 +1,6 @@
-# Kandidát v4.51.114 RC — etapa 10b0 (Dominik, 6. 11. 2026)
+# Nasazeno v4.51.114 RC — etapa 10b0 (Dominik, 6. 11. 2026)
 
-Aktuální verze: **v4.51.114 RC**. Kandidát z main f68098c (nasazená v4.51.113 RC) opravuje D4 pomocí generace autentizované relace. Stará odpověď A po A → B → A se nemůže publikovat ani vyvolat opravný zápis. Jedna platná relace dál sdílí jeden GET. PR #55 zůstává samostatný. [Výsledky a postup návratu](docs/match-read-session-stage-10b0.md).
+Aktuální verze: **v4.51.114 RC**. PR #58 sloučen jako `56469c56f0a2cdba7f443f4fb61826801e46aaea`. Pages 42263281231 prošlo a veřejný desktop i mobil potvrdily verzi, shodu souborů a navigaci bez JavaScriptových výjimek. Lokálně 383 PASS, GitHub 380 PASS, 0 FAIL a 3 SKIP. Experiment má dvě známé vady shodné s baseline. PR #55 zůstává otevřený. Živé Auth, Rules a fyzická zařízení jsou neověřené. Etapa 10b0 dokončena. Etapy 10b1 a 10b2 jsou nezahájené. [Záznam nasazení](docs/deployment-v4.51.114.md)
 
 # Nasazeno v4.51.113 RC — etapa10a PlayersReadRepository (Dominik, 5. 11. 2026)
 

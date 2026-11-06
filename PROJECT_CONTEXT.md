@@ -1,3 +1,7 @@
+# Čtení zápasů po etapě 10b0
+
+Od v4.51.114 RC používá `loadSecureMatches` UID a generaci autentizované relace. Úspěšný sign-in, registrace, vyčištění relace a změna UID ukončují platnost starého čtení. Obnova tokenu ve stejné relaci platnost zachovává. Stejná ochrana platí pro opravný PUT před odesláním a odložené nabídnutí potvrzení. [Záznam nasazení](docs/deployment-v4.51.114.md)
+
 # Nasazeno v4.51.113 RC — etapa10a PlayersReadRepository (Dominik, 5. 11. 2026)
 
 Aktuální verze: **v4.51.113 RC**. PR56 dokumentace merge0933e64, PR57 aplikace merge **86bf7afc9b7ac250ec2a4706fd7948e5514bcbae**. Pages42089799710 SUCCESS; skutečný veřejný index/overlay/repository/MatchChallenges přesně shodný s merge, UI113, desktop/mobil anonymní navigace bez JS chyb a zápisů. Jedna produkční implementace a jedna app-owned instance; Jaroslavova112 zachována. PR55 zůstává otevřený a nezměněný.

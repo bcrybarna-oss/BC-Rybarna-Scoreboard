@@ -1,6 +1,6 @@
 # Etapa 10b0 — životnost čtení zápasů
 
-Dominik, 6. 11. 2026. Kandidát v4.51.114 RC z main `f68098c7212425907e33699b577c530685093b77` (v4.51.113 RC). Samostatná funkční oprava D4 čeká na kontrolu v PR. Jaroslavův PR #55 byl při přípravě stále otevřený a jeho cloud-readiness kontrakt není součástí tohoto základu.
+Dominik, 6. 11. 2026. Vydání v4.51.114 RC z main `f68098c7212425907e33699b577c530685093b77` (v4.51.113 RC). Oprava D4 byla sloučena v PR #58 a nasazena. [Záznam nasazení](deployment-v4.51.114.md) Jaroslavův PR #55 byl při přípravě stále otevřený a jeho cloud-readiness kontrakt není součástí tohoto základu.
 
 `loadSecureMatches` původně sdílel Promise podle UID při volání. `readSecureMatches` si po autorizaci znovu vzal tehdejší UID a porovnal ho až po dekódování JSON. Na přesném main izolovaný audit reprodukoval přijetí staré odpovědi po A → B → A. Prohlížeč navíc ukázal, že nová A převzala starou Promise. Starý výsledek pak prošel historickou normalizací, přepsal stav a cache a spustil opravný PUT v mocku.
 

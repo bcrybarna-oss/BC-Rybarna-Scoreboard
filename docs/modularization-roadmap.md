@@ -1,8 +1,8 @@
 # Aktuální roadmapa modularizace Poolčítadla
 
-## Kandidát 10b0 — generační ochrana čtení zápasů
+## Dokončeno 10b0 — nasazeno v4.51.114 RC
 
-Samostatná oprava D4 v kandidátu v4.51.114 RC ověřuje generaci relace před GET i před publikací. Čtení v jedné relaci dál sdílí Promise. Podrobnosti a důkazy popisuje [etapa 10b0](match-read-session-stage-10b0.md). Stav je kandidátní. Etapy 10b1 a 10b2 čekají na vlastní zadání.
+PR #58 opravuje D4 kontrolou generace relace před GET i před publikací. Čtení ve stejné relaci dál sdílí Promise. Merge `56469c5` je veřejně ověřený. Etapy 10b1 a 10b2 jsou nezahájené. [Nasazení a výsledky](deployment-v4.51.114.md)
 
 ## Nasazeno10a — v4.51.113 RC (5. 11. 2026)
 
