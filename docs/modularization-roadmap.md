@@ -2,7 +2,7 @@
 
 ## Pozastaveno kvůli opravě zakládání běžných turnajů
 
-Dominik 8. 11. 2026 upřednostnil samostatnou opravu formuláře a ověřování uložení. Etapy 10b1 a 10b2 jsou nezahájené. [Diagnostika turnaje](ordinary-tournament-draw-v4.51.115.md)
+Oprava formuláře a ověřování uložení z PR #59 je nasazená ve v4.51.115 RC. Modularizace zůstává pozastavená. Etapy 10b1 a 10b2 jsou nezahájené. [Záznam nasazení](deployment-v4.51.115.md)
 
 ## Dokončeno 10b0 — nasazeno v4.51.114 RC
 

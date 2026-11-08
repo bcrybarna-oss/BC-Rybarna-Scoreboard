@@ -5,7 +5,7 @@ Zadavatel: Dominik
 Datum: 8. 11. 2026
 Změny: Tlačítko rozlosování vysvětluje nedokončenou prezenci, chybějící hráče a další podmínky přímo ve formuláři. Varování o místním úložišti je pod tlačítkem. Opakovaný pokus navazuje na stejné ID turnaje. Neověřenou přípravu lze po potvrzení opustit i pod jiným účtem. Opuštění odemkne formulář a zneplatní čekající operaci.
 Testy: Reprodukce na main 49deb97 a zamčení na 2cf0fa6. Browserové scénáře na 320, 390 a 1440 px ověřily PUT/GET výpadky, A → B → A, zrušené i potvrzené opuštění, reload, nový turnaj B a odmítnutí pozdní odpovědi A. Prošly regrese v101 s archivem pouze pro čtení, recovery, D4 a mobilní ovládání. Release gate a 383 produkčních Node testů prošly. Experiment má dvě dříve evidované vady. Výsledky jsou v docs/ordinary-tournament-draw-v4.51.115.md.
-Nasazení: Kandidát v existujícím PR #59 čeká na kontrolu. Produkce zůstává v4.51.114 RC.
+Nasazení: PR #59 sloučen jako 9ca4f05d4ecac1b8aaf02a0bf54e4d80c3869863. GitHub Pages 42474797271 publikovalo v4.51.115 RC. Veřejný desktop a mobil potvrdily verzi, shodu souborů, navigaci a nové ovládání formuláře. [Záznam nasazení](docs/deployment-v4.51.115.md)
 Omezení: Živé Auth, Firebase Rules a fyzický telefon neověřeny. Paměťový návrh zaniká po obnovení či zavření stránky, pokud místní zápis selhal.
 
 ## Dominik – generační kontrola čtení zápasů, etapa 10b0 (v4.51.114 RC)

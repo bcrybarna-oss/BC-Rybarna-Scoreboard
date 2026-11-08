@@ -1,6 +1,8 @@
-# Kandidát v4.51.115 RC — zakládání běžných turnajů (Dominik, 8. 11. 2026)
+# Nasazeno v4.51.115 RC — zakládání běžných turnajů (Dominik, 8. 11. 2026)
 
-Aktuální verze: **v4.51.115 RC** v PR #59 z main `49deb97`. Produkce je v4.51.114 RC. Rozlosování ukazuje konkrétní důvod blokace. Výsledek se zveřejní po cloudovém ověření a další pokus používá stejné ID. Potvrzené opuštění místního pokusu odemkne formulář i po změně účtu. [Diagnostika a ověření](docs/ordinary-tournament-draw-v4.51.115.md)
+Aktuální verze: **v4.51.115 RC**. PR #59 sloučen jako `9ca4f05d4ecac1b8aaf02a0bf54e4d80c3869863`. Pages 42474797271 prošlo. Veřejný desktop i mobil potvrdily verzi, shodu HTML, overlaye a modulů a navigaci bez JavaScriptových výjimek. Rozlosování ukazuje konkrétní důvod blokace. Výsledek se zveřejní po cloudovém ověření a další pokus používá stejné ID. Potvrzené opuštění místního pokusu odemkne formulář i po změně účtu.
+
+Release a mobilní CI prošly. Produkční Node má lokálně 383 PASS a na GitHubu 380 PASS, 0 FAIL, 3 SKIP. Experiment má dvě nezměněné vady. Živé Auth, Firebase Rules a fyzická zařízení zůstávají neověřené. Při selhání místního uložení může reload ztratit přípravu nebo obnovit starší pokus. PR #55 zůstává otevřený. Etapy 10b1 a 10b2 jsou nezahájené. [Záznam nasazení](docs/deployment-v4.51.115.md)
 
 # Nasazeno v4.51.114 RC — etapa 10b0 (Dominik, 6. 11. 2026)
 

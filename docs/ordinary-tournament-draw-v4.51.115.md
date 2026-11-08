@@ -1,6 +1,6 @@
 # Zakládání a rozlosování běžného turnaje
 
-Dominik, 8. 11. 2026. Kandidát v4.51.115 RC vychází z přesného main `49deb97589316c09695669250fd6927776d4a907` (v4.51.114 RC). Samostatný PR ke kontrole. PR #55 zůstává otevřený a mimo tento diff.
+Dominik, 8. 11. 2026. Kandidát v4.51.115 RC vychází z přesného main `49deb97589316c09695669250fd6927776d4a907` (v4.51.114 RC). PR #59 byl sloučen a vydán. PR #55 zůstává otevřený a mimo toto vydání. [Záznam nasazení](deployment-v4.51.115.md)
 
 ## Reprodukce a příčina
 

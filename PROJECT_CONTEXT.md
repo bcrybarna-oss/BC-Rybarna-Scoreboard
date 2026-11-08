@@ -1,6 +1,6 @@
 # Zakládání běžného turnaje ve v4.51.115 RC
 
-Opravná větev drží přípravu i ID rozlosovaného turnaje do ověření cloudového zápisu. Další pokus nejprve čte stejné ID. Stejný obsah potvrdí uložení a chybějící záznam umožní PUT pod stejným ID. Volitelný rozpracovaný pokus se ukládá spolu s prezencí pod dosavadním klíčem návrhu. Když úložiště selže, formulář a pokus zůstanou v paměti otevřené stránky. [Diagnostika a ověření](docs/ordinary-tournament-draw-v4.51.115.md)
+Od v4.51.115 RC zůstává příprava i ID rozlosovaného turnaje zachované do ověření cloudového zápisu. Další pokus nejprve čte stejné ID. Stejný obsah potvrdí uložení a chybějící záznam umožní PUT pod stejným ID. Volitelný rozpracovaný pokus se ukládá spolu s prezencí pod dosavadním klíčem návrhu. Když úložiště selže, formulář a pokus zůstanou v paměti otevřené stránky. [Diagnostika a ověření](docs/ordinary-tournament-draw-v4.51.115.md)
 
 Neověřený pokus může uživatel výslovně opustit. Potvrzení uvádí název a ID, aby mohl nejprve dohledat případný zápis v cloudu. Po potvrzení se uvolní místní příprava a její čekající odpovědi už nemohou měnit stav nového pokusu.
 
