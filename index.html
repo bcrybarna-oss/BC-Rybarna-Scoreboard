@@ -17006,7 +17006,6 @@ $('winnerText').textContent = match.solo14
 
     const advance=Math.max(1,Number(t.advancePerGroup||2));
     const tieRule=t.groupAdvanceTieRule||'points';
-    const lounska=isLounskaRoundRobin(t);
     t.groupPenaltyWinners=t.groupPenaltyWinners||{};
 
     for(const g of (t.groups||[])){
@@ -17039,7 +17038,7 @@ $('winnerText').textContent = match.solo14
 
         let tiedIds=cohort.map(r=>r.id);
 
-        if(tieRule==='head_to_head' && !lounska){
+        if(tieRule==='head_to_head'){
           const mini=groupHeadToHeadMini(g,tiedIds);
 
           // Rozdělíme hráče podle počtu výher ve vzájemných zápasech.
@@ -17100,11 +17099,10 @@ $('winnerText').textContent = match.solo14
           continue;
         }
 
-        // V Lounské sérii penalty přicházejí až po minitabulce i skóre.
-        const miniWins=lounska ? groupMiniWins(g,tiedIds) : null;
+        // Varianta "body / skóre": pokud skóre stále nerozhodne, mohou následovat penalty.
         const byScore=new Map();
         cohort.forEach(r=>{
-          const key=`${miniWins?.get(r.id)||0}|${r.diff}|${r.rf}`;
+          const key=`${r.diff}|${r.rf}`;
           if(!byScore.has(key))byScore.set(key,[]);
           byScore.get(key).push(r.id);
         });
@@ -17112,10 +17110,10 @@ $('winnerText').textContent = match.solo14
         let scoreOffset=0;
         const scoreGroups=[...byScore.entries()]
           .map(([key,ids])=>{
-            const [wins,diff,rf]=key.split('|').map(Number);
-            return {wins,diff,rf,ids};
+            const [diff,rf]=key.split('|').map(Number);
+            return {diff,rf,ids};
           })
-          .sort((a,b)=>b.wins-a.wins||b.diff-a.diff||b.rf-a.rf);
+          .sort((a,b)=>b.diff-a.diff||b.rf-a.rf);
 
         for(const sg of scoreGroups){
           const subgroup=sg.ids;
@@ -18145,9 +18143,9 @@ $('winnerText').textContent = match.solo14
     return out;
   }
 
-  function groupStandings(group,t){
+  function groupStandings(group,t,series=null){
     const rows=rawGroupRows(group);
-    const lounska=isLounskaRoundRobin(t);
+    const lounska=isLounskaRoundRobin(t,series);
     const penaltyOrder=(t?.groupPenaltyWinners?.[group.id]||[]);
     const penaltyIndex=id=>{
       const i=penaltyOrder.indexOf(id);
@@ -19212,13 +19210,13 @@ $('winnerText').textContent = match.solo14
     return Number.MAX_SAFE_INTEGER;
   }
 
-  function roundRobinOverallStandings(t){
+  function roundRobinOverallStandings(t,series=null){
     if(!t || !Array.isArray(t.groups))return [];
 
     // U čistého "každý s každým" je každá skupina samostatná tabulka.
     // Pokud je jen jedna skupina, pořadí je jednoznačné 1., 2., 3. ...
     if(t.groups.length===1){
-      const st=groupStandings(t.groups[0],t);
+      const st=groupStandings(t.groups[0],t,series);
       return st.map((r,i)=>({
         playerId:r.id,
         place:i+1,
@@ -19285,7 +19283,7 @@ $('winnerText').textContent = match.solo14
 
   function renderGroupTournament(t){
     const finalSummary=renderRoundRobinFinalSummary(t);
-    return `${finalSummary}${isLounskaRoundRobin(t)?lounskaRoundRobinNote():''}<div class="tournament-columns">${t.groups.map(g=>{
+    return `${finalSummary}<div class="tournament-columns">${t.groups.map(g=>{
       ensureGroupRoundOrder(g);
       const st=groupStandings(g,t);
 
@@ -20624,9 +20622,9 @@ function renderTournamentDetail(){
       .includes('loun');
   }
 
-  function isLounskaRoundRobin(t){
-    return t?.format==='groups' && !!t.id && (data.tournamentSeries||[]).some(s=>
-      isLounskaSeries(s) && (s.tournamentIds?.includes(t.id) || isLinkedHistoricalSeriesTournament(s,t)));
+  function isLounskaRoundRobin(t,series){
+    return t?.format==='groups' && !!t.id && !!series && isLounskaSeries(series) &&
+      (series.tournamentIds?.includes(t.id) || isLinkedHistoricalSeriesTournament(series,t));
   }
 
   function lounskaRoundRobinNote(inSeries=false){
@@ -20761,7 +20759,7 @@ function renderTournamentDetail(){
   }
 
   function seriesRefineTournamentPlacements(s,t,records){
-    if(seriesPlacementTieBreakMode(s)!=='score_h2h_group' || isLounskaRoundRobin(t))return records;
+    if(seriesPlacementTieBreakMode(s)!=='score_h2h_group' || isLounskaRoundRobin(t,s))return records;
 
     const out=(records||[]).map(r=>({...r}));
     const cohorts=new Map();
@@ -20910,7 +20908,7 @@ function renderTournamentDetail(){
 
   function seriesTournamentPlacementRecords(s,t){
     if(t?.historicalStructure?.manualPlaces && t.status==='complete')return t.historicalStructure.manualPlaces.map(r=>({playerId:r.playerId,value:r.place,label:r.place+'. místo',sharedPlace:t.historicalStructure.manualPlaces.filter(x=>x.place===r.place).length>1}));
-    const rows=seriesRefineTournamentPlacements(s,t,baseTournamentPlacementRecords(t));
+    const rows=seriesRefineTournamentPlacements(s,t,baseTournamentPlacementRecords(t,s));
 
     // Poslední pojistka pro historicky opravované turnaje:
     // hráči se stejným finálním rankKey musí mít vždy stejné value.
@@ -21200,7 +21198,6 @@ function renderTournamentDetail(){
     const seedEditable=editable&&(!slots.some(s=>!s.key.startsWith('g_')&&s.m.status==='done')||model.seedReview);
     const finalRows=complete?tournamentPlacementRecords(t):[];
     $('historicalStructureBody').innerHTML=`<h3>${esc(t.name)} • ${esc(t.historicalDate)}</h3><p>${complete?'DOKONČENO – započítává se do série':'ROZPRACOVÁNO – zatím bez bodů v sérii'}</p><button class="btn" data-historical-action onclick="historicalRefreshStructure()">OBNOVIT ULOŽENÝ STAV</button>${dormant?`<p class="muted">Uchované výsledky navazujících kol: ${dormant}. Použijí se pouze při shodných účastnících; mimo aktuální strukturu se nezapočítávají.</p>`:''}
-      ${isLounskaRoundRobin(t)?lounskaRoundRobinNote():''}
       ${(t.groups||[]).map(g=>`<h3>Skupina ${esc(g.id)}</h3><table class="stats-table"><thead><tr><th>Hráč</th><th>Výhry</th><th>Skóre</th></tr></thead><tbody>${groupStandings(g,t).map(r=>`<tr><td>${esc(tournamentPlayerName(r.id,t))}</td><td>${r.v}</td><td>${r.rf}:${r.ra}</td></tr>`).join('')}</tbody></table>`).join('')}
       ${tie?`<div class="subpanel">Nerozhodnuté penalty ve skupině ${esc(tie.groupId)} – vyber dalšího hráče v pořadí:<select id="hsPenalty">${historicalOptions(tie.candidates,t)}</select>${editable?'<button class="btn primary" data-historical-action onclick="historicalResolvePenalty()">POTVRDIT PENALTY</button>':''}</div>`:''}
       ${canSeed?`<details ${!t.playoffStarted||model.seedReview?'open':''}><summary>NASAZENÍ PLAY-OFF ${model.seedReview?'– POTVRĎ ZMĚNĚNÉ POSTUPUJÍCÍ':''}</summary><p>Návrh podle stávajících pravidel můžeš před výsledky ručně změnit. Musí obsahovat všechny postupující právě jednou.</p><div class="grid two">${seeds.map((id,i)=>`<label>Pozice ${i+1}<select class="hsPlayoffSeed" ${seedEditable?'':'disabled'}>${historicalOptions(qualifiers,t,id)}</select></label>`).join('')}</div><label>Napojení semifinále pro 8 postupujících<select id="hsRouting" ${seedEditable?'':'disabled'}>${[['cross13','QF1 × QF3'],['cross14','QF1 × QF4'],['adjacent','QF1 × QF2']].map(([v,label])=>`<option value="${v}" ${(model.initial.manualGroupPlayoffSemiRouting||'cross13')===v?'selected':''}>${label}</option>`).join('')}</select></label>${seedEditable?'<button class="btn primary" data-historical-action onclick="historicalApplySeeds()">POTVRDIT RUČNÍ NASAZENÍ</button>':''}</details>`:''}
@@ -21506,6 +21503,26 @@ function renderTournamentDetail(){
     toast('Spolupořadatel série byl odebrán.');
   };
 
+  function renderSeriesRoundRobin(t,s){
+    if(t.format!=='groups')return '';
+    const complete=t.status==='complete';
+    const rows=complete ? seriesTournamentPlacementRecords(s,t).slice().sort((a,b)=>a.value-b.value) : [];
+    const label=complete ? 'Konečné pořadí v sérii' : 'Průběžné pořadí v sérii';
+    return `<details class="series-round-robin" style="margin-top:8px">
+      <summary>${label} • ${esc(s.name||'Série')}</summary>
+      ${isLounskaRoundRobin(t,s) && !t.historicalStructure?.manualPlaces ? lounskaRoundRobinNote() : ''}
+      ${complete
+        ? (rows.length ? `<div style="overflow:auto"><table class="stats-table">
+          <thead><tr><th>Místo</th><th>Hráč</th><th>Body</th></tr></thead>
+          <tbody>${rows.map(r=>`<tr><td>${esc(r.label)}</td><td>${esc(tournamentPlayerName(r.playerId,t))}</td><td>${seriesPointsForPlacement(s,r,t)}</td></tr>`).join('')}</tbody>
+        </table></div>` : '<p class="muted">Společné konečné pořadí není k dispozici.</p>')
+        : (t.groups||[]).map(g=>`<div style="overflow:auto"><strong>Skupina ${esc(g.id)}</strong><table class="stats-table">
+          <thead><tr><th>Hráč</th><th>Výhry</th><th>Racky</th></tr></thead>
+          <tbody>${groupStandings(g,t,s).map(r=>`<tr><td>${esc(tournamentPlayerName(r.id,t))}</td><td>${r.v}</td><td>${r.rf}:${r.ra}</td></tr>`).join('')}</tbody>
+        </table></div>`).join('')}
+    </details>`;
+  }
+
   function renderSeriesModal(){
     const s=(data.tournamentSeries||[]).find(x=>x.id===selectedSeriesId);
     const body=$('seriesModalBody');
@@ -21589,10 +21606,11 @@ function renderTournamentDetail(){
         <div style="display:flex;justify-content:space-between;gap:8px;align-items:center;flex-wrap:wrap">
           <div><strong>${esc(t.name)}</strong><div class="muted">${esc(tournamentFormatLabel(t))} • ${esc(tournamentDisciplineSummary(t))}</div></div>
           <div style="display:flex;gap:6px">
-            <button class="btn" onclick="${t.historicalStructure?`openHistoricalStructure('${t.id}')`:`openTournamentDetail('${t.id}');$('seriesModal').classList.remove('show')`}">${t.historicalStructure?'HISTORICKÉ VÝSLEDKY • '+(t.status==='complete'?'DOKONČENO':'ROZPRACOVÁNO'):'VÝSLEDKY'}</button>
+            <button class="btn" onclick="${t.historicalStructure?`openHistoricalStructure('${t.id}')`:`openTournamentDetail('${t.id}');document.getElementById('seriesModal').classList.remove('show')`}">${t.historicalStructure?'HISTORICKÉ VÝSLEDKY • '+(t.status==='complete'?'DOKONČENO':'ROZPRACOVÁNO'):'VÝSLEDKY'}</button>
             ${canManageSeries(s)&&!t.historicalStructure?`<button class="btn danger" onclick="removeTournamentFromSeries('${s.id}','${t.id}')">ODEBRAT</button>`:''}
           </div>
         </div>
+        ${renderSeriesRoundRobin(t,s)}
       </div>`).join(''):'<div class="muted">Zatím žádný běžný turnaj.</div>'}
 
       ${historical.length?`<h3 style="margin-top:18px">HISTORICKY ZADANÉ TURNAJE</h3>
@@ -28368,7 +28386,7 @@ function renderHistory(){
   }
 
   
-  function baseTournamentPlacementRecords(t){
+  function baseTournamentPlacementRecords(t,series=null){
     if(!t || t.status!=='complete') return [];
     if(t.historicalStructure?.manualPlaces)return t.historicalStructure.manualPlaces.map(r=>({playerId:r.playerId,value:r.place,label:r.place+'. místo'}));
     const records=[];
@@ -28452,7 +28470,7 @@ function renderHistory(){
     }
 
     if(t.format==='groups'){
-      const rr=roundRobinOverallStandings(t);
+      const rr=roundRobinOverallStandings(t,series);
       rr.forEach(r=>{
         records.push({
           playerId:r.playerId,
@@ -28490,6 +28508,7 @@ function renderHistory(){
 
   function tournamentPlacementRecords(t){
     const records=baseTournamentPlacementRecords(t);
+    if(t?.format==='groups')return records;
     const series=tournamentPlacementSeriesRule(t);
     return series ? seriesRefineTournamentPlacements(series,t,records) : records;
   }

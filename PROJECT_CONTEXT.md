@@ -1,6 +1,6 @@
 # Pořadí Každý s každým v Lounské sérii ve v4.51.116 RC
 
-Kandidát používá stávající identifikaci Lounské série podle normalizovaného názvu a existující vazbu turnaje včetně oprávněné historické struktury. `groupStandings` řadí hráče podle výher, výher v minitabulce shodné skupiny a následně podle celkového rozdílu a počtu vyhraných racků. Při úplné shodě se použije výsledek výslovně nastavených penalt, jinak nasazení. Konečné pořadí se propisuje do série bez následného přerovnání podle fází play-off. [Rozsah a ověření](docs/lounska-round-robin-v4.51.116.md)
+Kandidát používá stávající identifikaci Lounské série podle normalizovaného názvu a existující vazbu turnaje včetně oprávněné historické struktury. Výpočet umístění předává konkrétní sérii do `groupStandings`. V Lounské sérii se po výhrách použijí výhry v minitabulce, rozdíl a počet vyhraných racků, relevantní zaznamenané penalty a nasazení. Konečné pořadí pro Lounskou sérii se nepřerovnává podle fází play-off. Obecný detail, statistiky, historie hráčů a dokončování turnaje používají nastavení samotného turnaje. [Rozsah a ověření](docs/lounska-round-robin-v4.51.116.md)
 
 # Zakládání běžného turnaje ve v4.51.115 RC
 

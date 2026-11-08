@@ -1,6 +1,6 @@
 # Kandidát v4.51.116 RC — vzájemný zápas v Lounské sérii (Dominik, 8. 11. 2026)
 
-Aktuální verze: **v4.51.116 RC**, kandidát ze základu `6c45986`. Produkce zůstává v4.51.115 RC. Při shodě počtu výher v propojeném turnaji Každý s každým rozhoduje minitabulka. Z turnajového pořadí se odvozují body série se stávající bodovací tabulkou. [Rozsah a ověření](docs/lounska-round-robin-v4.51.116.md)
+Aktuální verze: **v4.51.116 RC**, kandidát ze základu `6c45986`. Produkce zůstává v4.51.115 RC. PR #60 odděluje výpočet pro Lounskou sérii od společného detailu a ostatních sérií. První kandidát byl zastaven kvůli změně bodů standardní série u sdíleného turnaje. Opravený kandidát zachovává každé sérii její vlastní pořadí. [Rozsah a ověření](docs/lounska-round-robin-v4.51.116.md)
 
 # Nasazeno v4.51.115 RC — zakládání běžných turnajů (Dominik, 8. 11. 2026)
 

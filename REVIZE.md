@@ -3,8 +3,8 @@
 ## Dominik – vzájemný zápas v Lounské sérii (v4.51.116 RC)
 Zadavatel: Dominik
 Datum: 8. 11. 2026
-Změny: V propojeném turnaji Lounské série Každý s každým po výhrách rozhoduje minitabulka, rozdíl racků a počet vyhraných racků. Konečné pořadí a body série používají stejný výpočet. Tabulka a popis série vysvětlují pravidlo.
-Testy: Izolované srovnání s main 6c45986 pokrývá dvojici, trojici, cyklus, nedokončený turnaj, historické výsledky, ruční umístění a bodování na desktopu i mobilu. [Rozsah a ověření](docs/lounska-round-robin-v4.51.116.md)
+Změny: V kontextu Lounské série po výhrách rozhoduje minitabulka, rozdíl racků a počet vyhraných racků. U sdíleného turnaje používá každá série vlastní pravidla. Společný detail a obecné statistiky používají nastavení turnaje. Detail série vysvětluje příslušné pořadí.
+Testy: Srovnání s main 6c45986 a prvním kandidátem 36e006c. Izolované testy ověřují dvě vazby v obou pořadích, odebrání, obecné statistiky, dvojici, trojici, cyklus, nedokončené zápasy, historické i ruční výsledky a body na desktopu i mobilu. [Rozsah a ověření](docs/lounska-round-robin-v4.51.116.md)
 Nasazení: Kandidát k revizi. Produkce zůstává v4.51.115 RC.
 Omezení: Starší turnaje s více samostatnými skupinami nemají společné automatické pořadí. Historická ruční umístění mají přednost. Živé Auth a fyzická zařízení nebyly ověřeny.
 
