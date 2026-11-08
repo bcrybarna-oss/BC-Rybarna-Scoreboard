@@ -4,7 +4,7 @@
 
 Oprava formuláře a ověřování uložení z PR #59 je nasazená ve v4.51.115 RC. Modularizace zůstává pozastavená. Etapy 10b1 a 10b2 jsou nezahájené. [Záznam nasazení](deployment-v4.51.115.md)
 
-Samostatný kandidát v4.51.116 RC v PR #60 odděluje pravidla Lounské série od společného pořadí turnaje a pravidel dalších sérií. Čeká na revizi. [Rozsah a ověření](lounska-round-robin-v4.51.116.md)
+PR #60 je nasazený ve v4.51.116 RC. Pravidla Lounské série jsou oddělená od společného pořadí turnaje a pravidel dalších sérií. Etapy 10b1 a 10b2 zůstávají nezahájené. [Záznam nasazení](deployment-v4.51.116.md)
 
 ## Dokončeno 10b0 — nasazeno v4.51.114 RC
 

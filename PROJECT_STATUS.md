@@ -1,6 +1,8 @@
-# Kandidát v4.51.116 RC — vzájemný zápas v Lounské sérii (Dominik, 8. 11. 2026)
+# Nasazeno v4.51.116 RC — vzájemný zápas v Lounské sérii (Dominik, 8. 11. 2026)
 
-Aktuální verze: **v4.51.116 RC**, kandidát ze základu `6c45986`. Produkce zůstává v4.51.115 RC. PR #60 odděluje výpočet pro Lounskou sérii od společného detailu a ostatních sérií. První kandidát byl zastaven kvůli změně bodů standardní série u sdíleného turnaje. Opravený kandidát zachovává každé sérii její vlastní pořadí. [Rozsah a ověření](docs/lounska-round-robin-v4.51.116.md)
+Aktuální verze: **v4.51.116 RC**. PR #60 sloučen jako `90d550783172b1a6229d24c575d763c22b991a27`. GitHub Pages 42486020246 prošel. Veřejný desktop a mobil potvrdily verzi, shodu HTML, overlaye a modulů i navigaci bez JavaScriptových výjimek. Izolovaný test nad publikovaným HTML potvrdil vlastní pořadí a body obou sérií a stabilní společný detail.
+
+Release a mobilní CI prošly. Lokální produkční Node má 383 PASS. GitHub má 380 PASS, 0 FAIL a 3 SKIP. Experiment vykazuje dvě nezměněné vady identity. Živé Auth, Firebase Rules a fyzická zařízení zůstávají neověřené. PR #55 zůstává otevřený. Další modularizace je pozastavená. [Záznam nasazení](docs/deployment-v4.51.116.md)
 
 # Nasazeno v4.51.115 RC — zakládání běžných turnajů (Dominik, 8. 11. 2026)
 

@@ -5,7 +5,7 @@ Zadavatel: Dominik
 Datum: 8. 11. 2026
 Změny: V kontextu Lounské série po výhrách rozhoduje minitabulka, rozdíl racků a počet vyhraných racků. U sdíleného turnaje používá každá série vlastní pravidla. Společný detail a obecné statistiky používají nastavení turnaje. Detail série vysvětluje příslušné pořadí.
 Testy: Srovnání s main 6c45986 a prvním kandidátem 36e006c. Izolované testy ověřují dvě vazby v obou pořadích, odebrání, obecné statistiky, dvojici, trojici, cyklus, nedokončené zápasy, historické i ruční výsledky a body na desktopu i mobilu. [Rozsah a ověření](docs/lounska-round-robin-v4.51.116.md)
-Nasazení: Kandidát k revizi. Produkce zůstává v4.51.115 RC.
+Nasazení: PR #60 sloučen jako 90d550783172b1a6229d24c575d763c22b991a27. GitHub Pages 42486020246 publikoval v4.51.116 RC. Veřejný desktop i mobil potvrdily verzi, shodu souborů a navigaci. Nad staženým HTML prošel izolovaný test obou sérií. [Záznam nasazení](docs/deployment-v4.51.116.md)
 Omezení: Starší turnaje s více samostatnými skupinami nemají společné automatické pořadí. Historická ruční umístění mají přednost. Živé Auth a fyzická zařízení nebyly ověřeny.
 
 ## Dominik – zakládání a losování běžného turnaje (v4.51.115 RC)

@@ -1,6 +1,6 @@
 # Vzájemný zápas v turnajích Lounské série
 
-Dominik, 8. 11. 2026. Výchozí main `6c459862a0201879920bdc0b93b3f49be5d0e7da` obsahuje v4.51.115 RC. Tato změna je kandidát v4.51.116 RC.
+Dominik, 8. 11. 2026. Výchozí main `6c459862a0201879920bdc0b93b3f49be5d0e7da` obsahuje v4.51.115 RC. PR #60 byl vydán jako v4.51.116 RC. [Záznam nasazení](deployment-v4.51.116.md)
 
 ## Rozsah pravidla
 
