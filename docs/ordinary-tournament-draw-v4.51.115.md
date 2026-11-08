@@ -26,6 +26,14 @@ Návrh používá dosavadní klíč prezence a přidává volitelný neověřen�
 
 Ve v100 přibyla obnova hesla. Samostatný soubor `docs/tournament-setup-v4.51.100.md` na main ani v historii nebyl nalezen. Podkladem je revize v100 a [diagnostika v101](tournament-setup-v4.51.101.md). Regrese v101 ověřuje paměťový režim, oddělené disciplíny a race-to skupin a play-off, ruční nasazení i historický ETag PUT a ověřovací GET. Datový formát turnajů a chování generátorů se zachovaly.
 
+## Opuštění neověřeného pokusu
+
+Na kontrolovaném commitu `2cf0fa6154867a532d10052b5f7ad8c694d4736a` po selhání PUT zůstal formulář zamčený. Pod účtem B ověřování čekalo na původní účet A. Po návratu na A neshodný GET zachoval zámek a reload pod B jej obnovil. V žádném z těchto stavů formulář nenabízel možnost místní pokus ukončit.
+
+Tlačítko **Opustit místní pokus** je dostupné mimo zamčená pole i pod jiným účtem a během čekání na odpověď. Potvrzení uvádí název a ID. Před novým založením doporučuje zkontrolovat cloudový seznam, protože předchozí zápis mohl uspět. Odmítnutí potvrzení zachová přípravu. Přijetí uvolní formulář pro novou prezenci a nové ID. Případný cloudový turnaj zůstává dostupný pod původním ID.
+
+Odeslání dalších požadavků a zpracování odpovědi ověřují konkrétní pokus i relaci. Opuštěný pokus nemůže přepsat formulář, stav ukládání ani výsledek pozdějšího pokusu. Existující ověření a opakování používají původní ID. Při neúspěšném místním zápisu zůstane odemčení v RAM a upozornění vysvětlí, že se po reloadu může vrátit dříve uložený pokus.
+
 ## Snímky a testy
 
 - [Main, mobil 390 × 844](screenshots/ordinary-115-main-mobile.png)
@@ -34,6 +42,8 @@ Ve v100 přibyla obnova hesla. Samostatný soubor `docs/tournament-setup-v4.51.1
 - [Kandidát, desktop 1440 × 1000](screenshots/ordinary-115-desktop.png)
 
 `tests/ordinary-tournament-create-browser.cjs` spouští skutečné HTML s izolovaným mockem sítě. `ORDINARY_BASELINE=1` načte přesný Git blob main. Kandidát pokrývá SKO, DKO, skupiny, skupiny se SKO a DKO, švýcarský formát, náhodné a ruční nasazení, ELO a oba režimy elektronického losu. Ověřuje platbu, uzavření a znovuotevření prezence, nedokončený los, nepřekrytá upozornění, opakovaná klepnutí, PUT/GET výpadek a obnovení stejného ID.
+
+Režim `ORDINARY_LOCK_BASELINE=1` reprodukuje zamčení na `2cf0fa6`. Rozšířený test na kandidátu pokrývá A → B → A, neshodný GET bez přepisu, odmítnutí potvrzení klávesou Enter, opuštění a nový turnaj B. Běží na 1440, 390 a 320 px s dostupným, plným i zakázaným úložištěm. Ověřuje reload s uloženým pokusem i obnovu dříve uložené verze, pokud zápis opuštění selhal. Samostatný scénář dokončí GET účtu A během zápisu nového turnaje B a kontroluje nezměněnou přípravu B i ochranu proti dalšímu odeslání.
 
 Release gate a lokální produkční Node sada prošly, 383 PASS. Prošly browserové regrese v101, mobilní ovládání, recovery, D4 a skutečný případ Federal Cupu #9 s výsledky a reportem. Test v101 použil soukromý archiv z 27. 10. 2026 pouze pro čtení v mocku. Má 40 913 440 bajtů a po testu odpovídá původnímu obsahu. Archiv je mimo PR.
 

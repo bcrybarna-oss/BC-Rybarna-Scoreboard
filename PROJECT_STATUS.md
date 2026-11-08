@@ -1,6 +1,6 @@
 # Kandidát v4.51.115 RC — zakládání běžných turnajů (Dominik, 8. 11. 2026)
 
-Aktuální verze: **v4.51.115 RC** v opravné větvi z main `49deb97`. Produkce je v4.51.114 RC. Rozlosování ukazuje konkrétní důvod blokace. Výsledek se zveřejní po cloudovém ověření a další pokus používá stejné ID. [Diagnostika a ověření](docs/ordinary-tournament-draw-v4.51.115.md)
+Aktuální verze: **v4.51.115 RC** v PR #59 z main `49deb97`. Produkce je v4.51.114 RC. Rozlosování ukazuje konkrétní důvod blokace. Výsledek se zveřejní po cloudovém ověření a další pokus používá stejné ID. Potvrzené opuštění místního pokusu odemkne formulář i po změně účtu. [Diagnostika a ověření](docs/ordinary-tournament-draw-v4.51.115.md)
 
 # Nasazeno v4.51.114 RC — etapa 10b0 (Dominik, 6. 11. 2026)
 

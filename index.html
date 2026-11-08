@@ -4833,6 +4833,7 @@ html[data-theme="light"] #leagueSchedule .history-item .muted{
         </div>
         <div class="tournament-create-actions">
           <button id="createTournamentBtn" class="btn primary big" type="button" aria-describedby="tournamentCreateFeedback tournamentDraftStorageWarning">ROZLOSOVAT TURNAJ</button>
+          <button id="abandonTournamentCreationBtn" class="btn hidden" type="button">OPUSTIT MÍSTNÍ POKUS</button>
           <div id="tournamentCreateFeedback" role="status"></div>
           <div id="tournamentDraftStorageWarning" class="muted" role="status"></div>
         </div>
@@ -16375,6 +16376,7 @@ $('winnerText').textContent = match.solo14
           : ((mode==='draw'||mode==='draw_individual') ? 'VYTVOŘIT TURNAJ DLE LOSU' : 'ROZLOSOVAT TURNAJ'));
     btn.disabled=tournamentCreationBusy;
     $('tournamentCreateFields').inert=!!tournamentCreationPending;
+    $('abandonTournamentCreationBtn').classList.toggle('hidden',!tournamentCreationPending);
   }
 
   function manualGroupSeedLayout(ids,groupCount){
@@ -23935,6 +23937,43 @@ function renderTournamentDetail(){
     return t;
   }
 
+  function resetTournamentCreationCheckin(){
+    tournamentGuestDrafts=[];
+    tournamentSelectedPlayerIds=[];
+    manualTournamentSeedOrder=[];
+    tournamentDrawNumbers={};
+    tournamentCheckin={};
+    tournamentCheckinClosed=false;
+    if($('tournamentHandicapEnabled'))$('tournamentHandicapEnabled').checked=false;
+    tournamentPrizeMoney={mode:'percent',returnPercent:100,fixedAmount:0,bonus:0,payouts:[{label:'1. místo',count:1,percent:50},{label:'2. místo',count:1,percent:30},{label:'3. místo',count:1,percent:20}]};
+    if($('tournamentEntryFee'))$('tournamentEntryFee').value='0';
+    syncTournamentPrizeMoneyForm();
+  }
+
+  $('abandonTournamentCreationBtn').onclick=()=>{
+    const pending=tournamentCreationPending;
+    if(!pending)return;
+    const {name,id}=pending.tournament;
+    if(!confirm(
+      'Opustit místní pokus „'+name+'“ (ID '+id+')?\n\n'
+      +'Předchozí zápis mohl uspět a turnaj už může být v cloudu. Opuštěním ukončíš místní přípravu. '
+      +'Případný cloudový turnaj zůstane uložený. Než založíš další, zkontroluj seznam cloudových turnajů podle názvu nebo ID.'
+    ))return;
+
+    tournamentCreationPending=null;
+    tournamentCreationBusy=false;
+    resetTournamentCreationCheckin();
+    $('tournamentName').value='';
+    updateTournamentCreateButtonLabel();
+    renderTournamentPlayerPicker();
+    const warning=$('tournamentDraftStorageWarning');
+    if(warning.textContent){
+      warning.textContent+=' Po obnovení se může vrátit dříve uložený pokus.';
+    }
+    showTournamentCreateFeedback('Místní pokus byl opuštěn. Před dalším založením zkontroluj v cloudu turnaj „'+name+'“ (ID '+id+').');
+    $('createTournamentBtn').focus({preventScroll:true});
+  };
+
   $('createTournamentBtn').onclick=async()=>{
     if(tournamentCreationBusy)return;
     const retry=!!tournamentCreationPending;
@@ -23959,13 +23998,15 @@ function renderTournamentDetail(){
       };
     }
 
-    const {tournament:t,seriesId}=tournamentCreationPending;
+    const pending=tournamentCreationPending;
+    const {tournament:t,seriesId}=pending;
     if(!cloudAuthenticated || cloudUid!==t.createdByUid){
       showTournamentCreateFeedback('Přihlas se účtem, který turnaj připravil, a zkus uložení znovu.');
       return;
     }
     const generation=cloudSessionGeneration;
-    const current=()=>cloudAuthenticated && cloudUid===t.createdByUid && cloudSessionGeneration===generation;
+    const current=()=>tournamentCreationPending===pending && cloudAuthenticated
+      && cloudUid===t.createdByUid && cloudSessionGeneration===generation;
     const context={current};
     tournamentCreationBusy=true;
     updateTournamentCreateButtonLabel();
@@ -23976,9 +24017,11 @@ function renderTournamentDetail(){
     try{
       // A previous PUT may have succeeded even if its response or verification failed.
       let remote=retry ? await secureTournamentRequest(t.id,'GET',null,context) : null;
+      if(!current())throw Error('TOURNAMENT_CREATION_SESSION_CHANGED');
       if(remote===null){
         reading=false;
         await secureTournamentRequest(t.id,'PUT',t,context);
+        if(!current())throw Error('TOURNAMENT_CREATION_SESSION_CHANGED');
         reading=true;
         remote=await secureTournamentRequest(t.id,'GET',null,context);
       }
@@ -23988,30 +24031,24 @@ function renderTournamentDetail(){
         return;
       }
     }catch(error){
+      if(tournamentCreationPending!==pending)return;
       console.warn('Tournament creation:',error);
       const message=reading ? 'Uložení turnaje se nepodařilo ověřit.' : 'Zápis turnaje do cloudu se nepodařil.';
       showTournamentCreateFeedback(message+' Příprava zůstala zachovaná. Pokračuj stejným tlačítkem.');
       return;
     }finally{
-      tournamentCreationBusy=false;
-      updateTournamentCreateButtonLabel();
+      if(tournamentCreationPending===pending){
+        tournamentCreationBusy=false;
+        updateTournamentCreateButtonLabel();
+      }
     }
 
     const index=(data.tournaments||[]).findIndex(item=>item.id===t.id);
     if(index>=0)data.tournaments[index]=t;
     else data.tournaments.push(t);
     tournamentCreationPending=null;
-    tournamentGuestDrafts=[];
-    tournamentSelectedPlayerIds=[];
-    manualTournamentSeedOrder=[];
-    tournamentDrawNumbers={};
-    tournamentCheckin={};
-    tournamentCheckinClosed=false;
-    if($('tournamentHandicapEnabled'))$('tournamentHandicapEnabled').checked=false;
-    tournamentPrizeMoney={mode:'percent',returnPercent:100,fixedAmount:0,bonus:0,payouts:[{label:'1. místo',count:1,percent:50},{label:'2. místo',count:1,percent:30},{label:'3. místo',count:1,percent:20}]};
     clearTournamentCheckinDraft();
-    if($('tournamentEntryFee'))$('tournamentEntryFee').value='0';
-    syncTournamentPrizeMoneyForm();
+    resetTournamentCreationCheckin();
 
     const series=(data.tournamentSeries||[]).find(item=>item.id===seriesId);
     if(series && !series.tournamentIds.includes(t.id)){

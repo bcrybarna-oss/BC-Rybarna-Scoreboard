@@ -7,9 +7,11 @@ const { chromium } = require('playwright');
 
 const root = path.resolve(__dirname, '..');
 const baseline = process.env.ORDINARY_BASELINE === '1';
+const lockBaseline = process.env.ORDINARY_LOCK_BASELINE === '1';
 const main = '49deb97589316c09695669250fd6927776d4a907';
-const source = baseline
-  ? execFileSync('git', ['show', main + ':index.html'], { cwd: root, encoding: 'utf8', maxBuffer: 10e6 })
+const reviewed = '2cf0fa6154867a532d10052b5f7ad8c694d4736a';
+const source = baseline || lockBaseline
+  ? execFileSync('git', ['show', (baseline ? main : reviewed) + ':index.html'], { cwd: root, encoding: 'utf8', maxBuffer: 10e6 })
   : fs.readFileSync(path.join(root, 'index.html'), 'utf8');
 const out = path.resolve(process.env.ORDINARY_OUT || 'output/ordinary-tournament-115');
 fs.mkdirSync(out, { recursive: true });
@@ -21,19 +23,24 @@ const players = Object.fromEntries(Array.from({ length: 6 }, (_, i) => {
 }));
 const hook = `
 window.ordinaryProbe = {
-  start(players){
-    clearRuntimeCloudIdentity();
+  start(players,uid){
     data = defaultData();
     data.players = players;
-    cloudUid = 'isolated-owner';
+    this.account(uid);
+    document.querySelector('#cloudLoginModal').classList.remove('show');
+    showScreen('tournament');
+  },
+  account(uid){
+    clearRuntimeCloudIdentity();
+    if(!uid)return;
+    cloudUid = uid;
     cloudAuthenticated = true;
     cloudEmailVerified = true;
     cloudIdToken = 'mock';
     cloudTokenExpiresAt = Date.now()+3600000;
     currentUserRole = 'system_admin';
-    document.querySelector('#cloudLoginModal').classList.remove('show');
-    showScreen('tournament');
   },
+  submit(){return $('createTournamentBtn').onclick();},
   state(){return {ids:tournamentSelectedPlayerIds,paid:tournamentPaidPlayerIds(),closed:tournamentCheckinClosed,tournaments:data.tournaments};},
   reload(){return loadSecureTournaments();}
 };`;
@@ -71,7 +78,8 @@ async function client(browser, width, mode){
   await context.addInitScript(storageProbe, mode);
   const db = new Map();
   const requests = [], errors = [];
-  const network = { failPut:false, failGet:false, holdPut:null };
+  const network = { failPut:false, failGet:false, holdPut:null, holdGet:null };
+  const dialogs = { accept:true, messages:[] };
   await context.route('**/*', async route => {
     const request = route.request(), url = new URL(request.url());
     if(url.origin === host){
@@ -93,6 +101,7 @@ async function client(browser, width, mode){
         return route.fulfill({json:db.get(id)});
       }
       if(method === 'GET'){
+        if(network.holdGet)await network.holdGet;
         if(network.failGet)return route.fulfill({status:503,body:'isolated read failure'});
         return route.fulfill({json:db.get(id) ?? null});
       }
@@ -103,18 +112,21 @@ async function client(browser, width, mode){
   const page = await context.newPage();
   page.setDefaultTimeout(10000);
   page.on('pageerror', error => errors.push(error.message));
-  page.on('dialog', dialog => dialog.accept());
-  async function open(){
+  page.on('dialog', dialog => {
+    dialogs.messages.push(dialog.message());
+    return dialogs.accept ? dialog.accept() : dialog.dismiss();
+  });
+  async function open(uid='isolated-owner'){
     await page.locator('#cloudLoginModal.show').waitFor();
-    await page.evaluate(({players, mode}) => {
+    await page.evaluate(({players, mode, uid}) => {
       window.storageMode = mode;
-      ordinaryProbe.start(players);
-    }, {players, mode});
+      ordinaryProbe.start(players,uid);
+    }, {players, mode, uid});
     await page.locator('#tournamentHubCreateBtn').click();
   }
   await page.goto(host);
   await open();
-  return {page,context,db,requests,errors,network,open};
+  return {page,context,db,requests,errors,network,open,dialogs};
 }
 
 async function add(page, count = 4){
@@ -127,6 +139,55 @@ async function add(page, count = 4){
 async function closeCheckin(page){
   await page.locator('#tournamentMarkAllPaidBtn').click();
   await page.locator('#tournamentCloseCheckinBtn').click();
+}
+
+async function prepare(page, name){
+  await page.locator('#tournamentName').fill(name);
+  await add(page);
+  await closeCheckin(page);
+}
+
+async function changeAccount(page, uid){
+  await page.evaluate(uid => {
+    ordinaryProbe.account('');
+    ordinaryProbe.account(uid);
+  }, uid);
+}
+
+async function lockBaselineChecks(browser){
+  const h = await client(browser, 390, 'normal');
+  try{
+    const {page,network,requests,db} = h;
+    const button = page.locator('#createTournamentBtn');
+    const fields = page.locator('#tournamentCreateFields');
+    const feedback = page.locator('#tournamentCreateFeedback');
+    await prepare(page,'Pokus účtu A');
+    network.failPut=true;
+    await button.click();
+    await page.waitForFunction(() => !document.getElementById('createTournamentBtn').disabled);
+    assert.match(await feedback.innerText(), /Zápis turnaje.*nepodařil/);
+    assert.equal(await fields.evaluate(el=>el.inert), true);
+    const id=requests[0].id;
+    await changeAccount(page,'account-b');
+    await button.click();
+    assert.match(await feedback.innerText(), /účtem, který turnaj připravil/);
+    assert.equal(requests.length,1);
+    assert.equal(await fields.evaluate(el=>el.inert), true);
+    await changeAccount(page,'isolated-owner');
+    db.set(id,{id,name:'Jiný turnaj na serveru'});
+    await button.click();
+    await page.waitForFunction(() => !document.getElementById('createTournamentBtn').disabled);
+    assert.match(await feedback.innerText(), /jinou nebo neúplnou verzi/);
+    assert.deepEqual(requests.map(r=>r.method),['PUT','GET']);
+    await page.reload();
+    await h.open('account-b');
+    assert.equal(await fields.evaluate(el=>el.inert), true);
+    assert.equal(await page.locator('#abandonTournamentCreationBtn').count(),0);
+    assert.deepEqual(h.errors,[]);
+    console.log('REPRODUCED PR lock after failed PUT, A→B→A, mismatched GET and reload under B; no exit control');
+  }finally{
+    await h.context.close();
+  }
 }
 
 async function baselineChecks(browser){
@@ -310,10 +371,165 @@ async function candidateChecks(browser){
   }
 }
 
+async function abandonChecks(browser){
+  for(const [width,mode] of [[1440,'normal'],[390,'full'],[320,'denied']]){
+    const h=await client(browser,width,mode);
+    try{
+      const {page,network,requests,db,dialogs}=h;
+      const create=page.locator('#createTournamentBtn');
+      const abandon=page.locator('#abandonTournamentCreationBtn');
+      const fields=page.locator('#tournamentCreateFields');
+      const feedback=page.locator('#tournamentCreateFeedback');
+      const warning=page.locator('#tournamentDraftStorageWarning');
+      await prepare(page,'Pokus účtu A');
+      network.failPut=true;
+      await create.click();
+      await page.waitForFunction(() => !document.getElementById('createTournamentBtn').disabled);
+      assert.match(await feedback.innerText(),/Zápis turnaje.*nepodařil/);
+      const oldId=requests[0].id;
+      await changeAccount(page,'account-b');
+      await create.click();
+      assert.match(await feedback.innerText(),/účtem, který turnaj připravil/);
+      assert.equal(requests.length,1);
+      assert.deepEqual(await page.evaluate(()=>ordinaryProbe.state().ids),['p1','p2','p3','p4']);
+      await changeAccount(page,'isolated-owner');
+      const remote={id:oldId,name:'Obsah původního ID v cloudu'};
+      db.set(oldId,remote);
+      await create.click();
+      await page.waitForFunction(() => !document.getElementById('createTournamentBtn').disabled);
+      assert.match(await feedback.innerText(),/jinou nebo neúplnou verzi/);
+      assert.deepEqual(requests,[{method:'PUT',id:oldId},{method:'GET',id:oldId}]);
+      assert.deepEqual(db.get(oldId),remote);
+      if(mode==='normal'){
+        await page.reload();
+        await h.open('account-b');
+        assert.match(await feedback.innerText(),/čeká na ověření/);
+      }else{
+        await changeAccount(page,'account-b');
+        assert.match(await warning.innerText(),/pouze v paměti/);
+      }
+      assert.equal(await fields.evaluate(el=>el.inert),true);
+      assert.ok(await abandon.isVisible());
+      assert.ok(await abandon.isEnabled());
+      assert.equal(await abandon.evaluate(el=>el.closest('[inert]')),null);
+      assert.ok(await abandon.evaluate(el=>el.getBoundingClientRect().height>=44));
+      assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));
+      dialogs.accept=false;
+      await abandon.press('Enter');
+      const message=dialogs.messages.at(-1);
+      assert.match(message,/Pokus účtu A/);
+      assert.ok(message.includes(oldId));
+      assert.match(message,/zápis mohl uspět/);
+      assert.match(message,/seznam cloudových turnajů/);
+      assert.equal(await fields.evaluate(el=>el.inert),true);
+      assert.deepEqual(await page.evaluate(()=>ordinaryProbe.state().ids),['p1','p2','p3','p4']);
+      assert.equal(requests.length,2);
+      dialogs.accept=true;
+      if(mode==='normal'){
+        await page.evaluate(()=>{window.storageMode='full';});
+        await abandon.click();
+        assert.equal(await fields.evaluate(el=>el.inert),false);
+        assert.match(await warning.innerText(),/může vrátit dříve uložený pokus/);
+        assert.equal(requests.length,2);
+        await page.reload();
+        await h.open('account-b');
+        assert.equal(await fields.evaluate(el=>el.inert),true);
+      }
+      await abandon.click();
+      assert.match(await feedback.innerText(),/Místní pokus byl opuštěn/);
+      assert.equal(await fields.evaluate(el=>el.inert),false);
+      assert.equal(await abandon.isVisible(),false);
+      assert.equal(await page.locator('#tournamentName').inputValue(),'');
+      assert.deepEqual(await page.evaluate(()=>ordinaryProbe.state().ids),[]);
+      assert.deepEqual(db.get(oldId),remote);
+      assert.equal(requests.length,2);
+      if(mode==='normal'){
+        const draft=await page.evaluate(key=>JSON.parse(localStorage.getItem(key)),draftKey);
+        assert.equal(draft.creation,undefined);
+        assert.deepEqual(draft.playerIds,[]);
+        await page.reload();
+        await h.open('account-b');
+        assert.equal(await fields.evaluate(el=>el.inert),false);
+      }else{
+        assert.match(await warning.innerText(),/pouze v paměti/);
+      }
+      network.failPut=false;
+      await prepare(page,'Turnaj účtu B');
+      await create.click();
+      await page.locator('#screen-tournament-detail.active').waitFor();
+      const newId=requests[2].id;
+      assert.notEqual(newId,oldId);
+      assert.deepEqual(requests.slice(2),[{method:'PUT',id:newId},{method:'GET',id:newId}]);
+      assert.equal(db.get(newId).createdByUid,'account-b');
+      assert.deepEqual(db.get(oldId),remote);
+      assert.equal(db.size,2);
+      assert.deepEqual(h.errors,[]);
+      console.log('PASS A→B→A, mismatch, cancel, abandon, new B',width,mode);
+    }finally{
+      await h.context.close();
+    }
+  }
+}
+
+async function lateResponseCheck(browser){
+  const h=await client(browser,390,'normal');
+  try{
+    const {page,network,requests,db}=h;
+    const create=page.locator('#createTournamentBtn');
+    const feedback=page.locator('#tournamentCreateFeedback');
+    await prepare(page,'Opožděný turnaj A');
+    let releaseOld;
+    network.holdGet=new Promise(resolve=>{releaseOld=resolve;});
+    const oldGet=page.waitForRequest(r=>r.method()==='GET' && /\/tournaments\/[^/]+\.json/.test(new URL(r.url()).pathname));
+    await page.evaluate(()=>{window.oldAttempt=ordinaryProbe.submit();});
+    await oldGet;
+    assert.equal(await create.isDisabled(),true);
+    assert.equal(db.size,1);
+    const oldId=[...db.keys()][0];
+    await changeAccount(page,'account-b');
+    await page.locator('#abandonTournamentCreationBtn').click();
+    await prepare(page,'Nová příprava B');
+    let releaseNew;
+    network.holdPut=new Promise(resolve=>{releaseNew=resolve;});
+    const newPut=page.waitForRequest(r=>r.method()==='PUT' && /\/tournaments\/[^/]+\.json/.test(new URL(r.url()).pathname));
+    await page.evaluate(()=>{window.newAttempt=ordinaryProbe.submit();});
+    await newPut;
+    const draftBefore=await page.evaluate(key=>localStorage.getItem(key),draftKey);
+    assert.equal(JSON.parse(draftBefore).creation.tournament.name,'Nová příprava B');
+    const newId=JSON.parse(draftBefore).creation.tournament.id;
+    assert.notEqual(newId,oldId);
+    network.holdGet=null;
+    releaseOld();
+    await page.evaluate(()=>window.oldAttempt);
+    assert.equal(await create.isDisabled(),true);
+    assert.match(await feedback.innerText(),/Ukládám a ověřuji/);
+    assert.equal(await page.locator('#tournamentName').inputValue(),'Nová příprava B');
+    assert.equal(await page.evaluate(key=>localStorage.getItem(key),draftKey),draftBefore);
+    assert.deepEqual(await page.evaluate(()=>ordinaryProbe.state().tournaments),[]);
+    releaseNew();
+    await page.evaluate(()=>window.newAttempt);
+    await page.locator('#screen-tournament-detail.active').waitFor();
+    assert.deepEqual(requests,[{method:'PUT',id:oldId},{method:'GET',id:oldId},{method:'PUT',id:newId},{method:'GET',id:newId}]);
+    assert.equal(db.get(oldId).createdByUid,'isolated-owner');
+    assert.equal(db.get(newId).createdByUid,'account-b');
+    assert.deepEqual(await page.evaluate(()=>ordinaryProbe.state().tournaments.map(t=>t.id)),[newId]);
+    assert.deepEqual(h.errors,[]);
+    console.log('PASS old A response leaves B draft, feedback, busy state and result intact');
+  }finally{
+    await h.context.close();
+  }
+}
+
 (async () => {
   const browser = await chromium.launch({channel:'chrome',headless:true});
   try{
-    await (baseline ? baselineChecks(browser) : candidateChecks(browser));
+    if(lockBaseline)await lockBaselineChecks(browser);
+    else if(baseline)await baselineChecks(browser);
+    else{
+      await candidateChecks(browser);
+      await abandonChecks(browser);
+      await lateResponseCheck(browser);
+    }
   }finally{
     await browser.close();
   }
