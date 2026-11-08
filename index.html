@@ -1043,15 +1043,15 @@
   </div>
 
 <script src="assets/js/federal-statistics.js?v=4.51.98"></script>
-<script src="assets/js/federal-report-renderer.js?v=4.51.115"></script>
-<script src="assets/js/federal-report-controller.js?v=4.51.115"></script>
-<script src="assets/js/livescore-reader.js?v=4.51.115"></script>
-<script src="assets/js/livescore-renderer.js?v=4.51.115"></script>
-<script src="assets/js/online-presence.js?v=4.51.115"></script>
-<script src="assets/js/match-challenge-actions.js?v=4.51.115"></script>
-<script src="assets/js/players-read-repository.js?v=4.51.115"></script>
-<script src="assets/js/match-challenges.js?v=4.51.115"></script>
-<script src="assets/js/notification-center.js?v=4.51.115"></script>
+<script src="assets/js/federal-report-renderer.js?v=4.51.116"></script>
+<script src="assets/js/federal-report-controller.js?v=4.51.116"></script>
+<script src="assets/js/livescore-reader.js?v=4.51.116"></script>
+<script src="assets/js/livescore-renderer.js?v=4.51.116"></script>
+<script src="assets/js/online-presence.js?v=4.51.116"></script>
+<script src="assets/js/match-challenge-actions.js?v=4.51.116"></script>
+<script src="assets/js/players-read-repository.js?v=4.51.116"></script>
+<script src="assets/js/match-challenges.js?v=4.51.116"></script>
+<script src="assets/js/notification-center.js?v=4.51.116"></script>
 <script src="assets/js/cloud-refresh.js?v=4.51.99"></script>
 <script src="assets/js/own-reports.js?v=4.51.102"></script>
 <script src="assets/js/federal-viewer.js?v=4.51.103"></script>
@@ -3167,7 +3167,7 @@ html[data-theme="light"] #leagueSchedule .history-item .muted{
           <span class="by">by</span>
           <span class="club">BC Rybárna</span>
         </div>
-        <small class="modern-brand-version">v4.51.115 RC</small>
+        <small class="modern-brand-version">v4.51.116 RC</small>
       </div>
     </div>
     <div class="nav">
@@ -3786,7 +3786,7 @@ html[data-theme="light"] #leagueSchedule .history-item .muted{
         </div>
         <div class="subpanel" style="min-width:210px;text-align:center;margin:0">
           <div class="muted" style="font-size:10px;font-weight:950;letter-spacing:1px">AKTUÁLNÍ VERZE</div>
-          <div style="font-size:22px;font-weight:950;color:var(--gold2);margin-top:5px">v4.51.115 RC</div>
+          <div style="font-size:22px;font-weight:950;color:var(--gold2);margin-top:5px">v4.51.116 RC</div>
         </div>
       </div>
     </div>
@@ -6560,7 +6560,7 @@ html[data-theme="light"] #leagueSchedule .history-item .muted{
       </div>
 
       <div id="groupPlayoffSeedStatus" class="muted" style="margin-top:12px;min-height:20px"></div>
-      <div class="muted" style="margin-top:4px;font-size:11px">RC v4.51.115</div>
+      <div class="muted" style="margin-top:4px;font-size:11px">RC v4.51.116</div>
       <div class="modal-actions">
         <button id="groupPlayoffSeedApplyBtn" class="btn primary big" type="button">NASADIT DO PLAY-OFF</button>
         <button id="groupPlayoffSeedCancelBtn" class="btn">ZRUŠIT</button>
@@ -7708,7 +7708,7 @@ html[data-theme="light"] #leagueSchedule .history-item .muted{
     const btn=$('submitReportBtn');if(btn)btn.disabled=true;
     try{
       const id=uid(),p=currentUserPlayerId?data.players?.[currentUserPlayerId]:null;
-      const report={id,createdByUid:cloudUid,createdByPlayerId:currentUserPlayerId||'',createdByName:p?playerSelectionLabel(p):(cloudUserEmail||'Uživatel'),email:cloudUserEmail||'',type,area,description,appVersion:'v4.51.115 RC',createdAt:new Date().toISOString(),updatedAt:new Date().toISOString(),status:'new',adminNote:''};
+      const report={id,createdByUid:cloudUid,createdByPlayerId:currentUserPlayerId||'',createdByName:p?playerSelectionLabel(p):(cloudUserEmail||'Uživatel'),email:cloudUserEmail||'',type,area,description,appVersion:'v4.51.116 RC',createdAt:new Date().toISOString(),updatedAt:new Date().toISOString(),status:'new',adminNote:''};
       await reportRequest(id,'PUT',report);
       try{
         await writeReportUserMirror(report);
@@ -16997,6 +16997,10 @@ $('winnerText').textContent = match.solo14
     return rows;
   }
 
+  function groupMiniWins(group,ids){
+    return new Map(groupHeadToHeadMini(group,ids).map(row=>[row.id,row.v]));
+  }
+
   function unresolvedGroupPenaltyTie(t){
     if(!t?.groupPenaltyTieBreak || !groupPhaseComplete(t))return null;
 
@@ -18139,8 +18143,9 @@ $('winnerText').textContent = match.solo14
     return out;
   }
 
-  function groupStandings(group,t){
+  function groupStandings(group,t,series=null){
     const rows=rawGroupRows(group);
+    const lounska=isLounskaRoundRobin(t,series);
     const penaltyOrder=(t?.groupPenaltyWinners?.[group.id]||[]);
     const penaltyIndex=id=>{
       const i=penaltyOrder.indexOf(id);
@@ -18164,7 +18169,12 @@ $('winnerText').textContent = match.solo14
     [...byWins.keys()].sort((a,b)=>b-a).forEach(wins=>{
       const cohort=byWins.get(wins);
 
-      if(tieRule==='head_to_head' && cohort.length>1){
+      if(lounska && cohort.length>1){
+        const wins=groupMiniWins(group,cohort.map(r=>r.id));
+        cohort.sort((a,b)=>wins.get(b.id)-wins.get(a.id)||b.diff-a.diff||b.rf-a.rf||
+          (t.groupPenaltyTieBreak ? penaltyIndex(a.id)-penaltyIndex(b.id) : 0)||
+          seedIndex(a.id)-seedIndex(b.id));
+      }else if(tieRule==='head_to_head' && cohort.length>1){
         const miniMap=Object.fromEntries(groupHeadToHeadMini(group,cohort.map(r=>r.id)).map(r=>[r.id,r]));
         cohort.sort((a,b)=>{
           const av=miniMap[a.id]?.v||0, bv=miniMap[b.id]?.v||0;
@@ -19200,13 +19210,13 @@ $('winnerText').textContent = match.solo14
     return Number.MAX_SAFE_INTEGER;
   }
 
-  function roundRobinOverallStandings(t){
+  function roundRobinOverallStandings(t,series=null){
     if(!t || !Array.isArray(t.groups))return [];
 
     // U čistého "každý s každým" je každá skupina samostatná tabulka.
     // Pokud je jen jedna skupina, pořadí je jednoznačné 1., 2., 3. ...
     if(t.groups.length===1){
-      const st=groupStandings(t.groups[0],t);
+      const st=groupStandings(t.groups[0],t,series);
       return st.map((r,i)=>({
         playerId:r.id,
         place:i+1,
@@ -20601,11 +20611,24 @@ function renderTournamentDetail(){
 
   function seriesPlacementTieBreakMode(s){
     if(s?.placementTieBreak)return s.placementTieBreak;
-    const normalized=String(s?.name||'')
+    return isLounskaSeries(s) ? 'score_h2h_group' : 'legacy';
+  }
+
+  function isLounskaSeries(s){
+    return String(s?.name||'')
       .normalize('NFD')
       .replace(/[\u0300-\u036f]/g,'')
-      .toLowerCase();
-    return normalized.includes('loun') ? 'score_h2h_group' : 'legacy';
+      .toLowerCase()
+      .includes('loun');
+  }
+
+  function isLounskaRoundRobin(t,series){
+    return t?.format==='groups' && !!t.id && !!series && isLounskaSeries(series) &&
+      (series.tournamentIds?.includes(t.id) || isLinkedHistoricalSeriesTournament(series,t));
+  }
+
+  function lounskaRoundRobinNote(inSeries=false){
+    return `<p class="muted">${inSeries?'V turnaji Každý s každým: ':''}Při rovnosti počtu výher rozhoduje vzájemný zápas. Pro tři a více shodných hráčů se použije minitabulka.</p>`;
   }
 
   function seriesPlacementStageInfo(t,record){
@@ -20736,7 +20759,7 @@ function renderTournamentDetail(){
   }
 
   function seriesRefineTournamentPlacements(s,t,records){
-    if(seriesPlacementTieBreakMode(s)!=='score_h2h_group')return records;
+    if(seriesPlacementTieBreakMode(s)!=='score_h2h_group' || isLounskaRoundRobin(t,s))return records;
 
     const out=(records||[]).map(r=>({...r}));
     const cohorts=new Map();
@@ -20885,7 +20908,7 @@ function renderTournamentDetail(){
 
   function seriesTournamentPlacementRecords(s,t){
     if(t?.historicalStructure?.manualPlaces && t.status==='complete')return t.historicalStructure.manualPlaces.map(r=>({playerId:r.playerId,value:r.place,label:r.place+'. místo',sharedPlace:t.historicalStructure.manualPlaces.filter(x=>x.place===r.place).length>1}));
-    const rows=seriesRefineTournamentPlacements(s,t,baseTournamentPlacementRecords(t));
+    const rows=seriesRefineTournamentPlacements(s,t,baseTournamentPlacementRecords(t,s));
 
     // Poslední pojistka pro historicky opravované turnaje:
     // hráči se stejným finálním rankKey musí mít vždy stejné value.
@@ -21018,7 +21041,11 @@ function renderTournamentDetail(){
     // A tournament's self-declared seriesId alone must never authorize points
     // in somebody else's series. Explicit legacy links remain authoritative;
     // automatic draft links require a creator authorized by the series record.
-    return [...new Set([...(s.tournamentIds||[]),...(data.tournaments||[]).filter(t=>t.historicalStructure?.seriesId===s.id && t.createdByUid && (t.createdByUid===s.createdByUid||s.managerUids?.[t.createdByUid]===true)).map(t=>t.id)])];
+    return [...new Set([...(s.tournamentIds||[]),...(data.tournaments||[]).filter(t=>isLinkedHistoricalSeriesTournament(s,t)).map(t=>t.id)])];
+  }
+  function isLinkedHistoricalSeriesTournament(s,t){
+    return t.historicalStructure?.seriesId===s.id && t.createdByUid &&
+      (t.createdByUid===s.createdByUid||s.managerUids?.[t.createdByUid]===true);
   }
   function historicalCanManage(t){
     const s=(data.tournamentSeries||[]).find(s=>s.id===t.historicalStructure?.seriesId);
@@ -21476,6 +21503,26 @@ function renderTournamentDetail(){
     toast('Spolupořadatel série byl odebrán.');
   };
 
+  function renderSeriesRoundRobin(t,s){
+    if(t.format!=='groups')return '';
+    const complete=t.status==='complete';
+    const rows=complete ? seriesTournamentPlacementRecords(s,t).slice().sort((a,b)=>a.value-b.value) : [];
+    const label=complete ? 'Konečné pořadí v sérii' : 'Průběžné pořadí v sérii';
+    return `<details class="series-round-robin" style="margin-top:8px">
+      <summary>${label} • ${esc(s.name||'Série')}</summary>
+      ${isLounskaRoundRobin(t,s) && !t.historicalStructure?.manualPlaces ? lounskaRoundRobinNote() : ''}
+      ${complete
+        ? (rows.length ? `<div style="overflow:auto"><table class="stats-table">
+          <thead><tr><th>Místo</th><th>Hráč</th><th>Body</th></tr></thead>
+          <tbody>${rows.map(r=>`<tr><td>${esc(r.label)}</td><td>${esc(tournamentPlayerName(r.playerId,t))}</td><td>${seriesPointsForPlacement(s,r,t)}</td></tr>`).join('')}</tbody>
+        </table></div>` : '<p class="muted">Společné konečné pořadí není k dispozici.</p>')
+        : (t.groups||[]).map(g=>`<div style="overflow:auto"><strong>Skupina ${esc(g.id)}</strong><table class="stats-table">
+          <thead><tr><th>Hráč</th><th>Výhry</th><th>Racky</th></tr></thead>
+          <tbody>${groupStandings(g,t,s).map(r=>`<tr><td>${esc(tournamentPlayerName(r.id,t))}</td><td>${r.v}</td><td>${r.rf}:${r.ra}</td></tr>`).join('')}</tbody>
+        </table></div>`).join('')}
+    </details>`;
+  }
+
   function renderSeriesModal(){
     const s=(data.tournamentSeries||[]).find(x=>x.id===selectedSeriesId);
     const body=$('seriesModalBody');
@@ -21493,6 +21540,7 @@ function renderTournamentDetail(){
           ? 'vlastní • '+esc(seriesCustomPointsText(s)||'bez pravidel')
           : `1. ${s.pointsTop?.[0]??100} • 2. ${s.pointsTop?.[1]??80} • 3. ${s.pointsTop?.[2]??65} • 4. ${s.pointsTop?.[3]??55} • 5.–8. ${s.pointsBands?.[0]??45} • 9.–16. ${s.pointsBands?.[1]??25} • 17.–32. ${s.pointsBands?.[2]??10} • 33.–64. ${s.pointsBands?.[3]??5}`}
           ${s.bestCount?` • počítá se nejlepších ${s.bestCount}`:' • počítají se všechny'}</div>
+        ${isLounskaSeries(s)?lounskaRoundRobinNote(true):''}
       </div>
 
       ${canManageSeries(s)?`
@@ -21558,10 +21606,11 @@ function renderTournamentDetail(){
         <div style="display:flex;justify-content:space-between;gap:8px;align-items:center;flex-wrap:wrap">
           <div><strong>${esc(t.name)}</strong><div class="muted">${esc(tournamentFormatLabel(t))} • ${esc(tournamentDisciplineSummary(t))}</div></div>
           <div style="display:flex;gap:6px">
-            <button class="btn" onclick="${t.historicalStructure?`openHistoricalStructure('${t.id}')`:`openTournamentDetail('${t.id}');$('seriesModal').classList.remove('show')`}">${t.historicalStructure?'HISTORICKÉ VÝSLEDKY • '+(t.status==='complete'?'DOKONČENO':'ROZPRACOVÁNO'):'VÝSLEDKY'}</button>
+            <button class="btn" onclick="${t.historicalStructure?`openHistoricalStructure('${t.id}')`:`openTournamentDetail('${t.id}');document.getElementById('seriesModal').classList.remove('show')`}">${t.historicalStructure?'HISTORICKÉ VÝSLEDKY • '+(t.status==='complete'?'DOKONČENO':'ROZPRACOVÁNO'):'VÝSLEDKY'}</button>
             ${canManageSeries(s)&&!t.historicalStructure?`<button class="btn danger" onclick="removeTournamentFromSeries('${s.id}','${t.id}')">ODEBRAT</button>`:''}
           </div>
         </div>
+        ${renderSeriesRoundRobin(t,s)}
       </div>`).join(''):'<div class="muted">Zatím žádný běžný turnaj.</div>'}
 
       ${historical.length?`<h3 style="margin-top:18px">HISTORICKY ZADANÉ TURNAJE</h3>
@@ -28337,7 +28386,7 @@ function renderHistory(){
   }
 
   
-  function baseTournamentPlacementRecords(t){
+  function baseTournamentPlacementRecords(t,series=null){
     if(!t || t.status!=='complete') return [];
     if(t.historicalStructure?.manualPlaces)return t.historicalStructure.manualPlaces.map(r=>({playerId:r.playerId,value:r.place,label:r.place+'. místo'}));
     const records=[];
@@ -28421,7 +28470,7 @@ function renderHistory(){
     }
 
     if(t.format==='groups'){
-      const rr=roundRobinOverallStandings(t);
+      const rr=roundRobinOverallStandings(t,series);
       rr.forEach(r=>{
         records.push({
           playerId:r.playerId,
@@ -28459,6 +28508,7 @@ function renderHistory(){
 
   function tournamentPlacementRecords(t){
     const records=baseTournamentPlacementRecords(t);
+    if(t?.format==='groups')return records;
     const series=tournamentPlacementSeriesRule(t);
     return series ? seriesRefineTournamentPlacements(series,t,records) : records;
   }
