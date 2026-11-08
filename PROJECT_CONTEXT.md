@@ -1,3 +1,7 @@
+# Zakládání běžného turnaje ve v4.51.115 RC
+
+Opravná větev drží přípravu i ID rozlosovaného turnaje do ověření cloudového zápisu. Další pokus nejprve čte stejné ID. Stejný obsah potvrdí uložení a chybějící záznam umožní PUT pod stejným ID. Volitelný rozpracovaný pokus se ukládá spolu s prezencí pod dosavadním klíčem návrhu. Když úložiště selže, formulář a pokus zůstanou v paměti otevřené stránky. [Diagnostika a ověření](docs/ordinary-tournament-draw-v4.51.115.md)
+
 # Čtení zápasů po etapě 10b0
 
 Od v4.51.114 RC používá `loadSecureMatches` UID a generaci autentizované relace. Úspěšný sign-in, registrace, vyčištění relace a změna UID ukončují platnost starého čtení. Obnova tokenu ve stejné relaci platnost zachovává. Stejná ochrana platí pro opravný PUT před odesláním a odložené nabídnutí potvrzení. [Záznam nasazení](docs/deployment-v4.51.114.md)

@@ -1,3 +1,7 @@
+# Kandidát v4.51.115 RC — zakládání běžných turnajů (Dominik, 8. 11. 2026)
+
+Aktuální verze: **v4.51.115 RC** v opravné větvi z main `49deb97`. Produkce je v4.51.114 RC. Rozlosování ukazuje konkrétní důvod blokace. Výsledek se zveřejní po cloudovém ověření a další pokus používá stejné ID. [Diagnostika a ověření](docs/ordinary-tournament-draw-v4.51.115.md)
+
 # Nasazeno v4.51.114 RC — etapa 10b0 (Dominik, 6. 11. 2026)
 
 Aktuální verze: **v4.51.114 RC**. PR #58 sloučen jako `56469c56f0a2cdba7f443f4fb61826801e46aaea`. Pages 42263281231 prošlo a veřejný desktop i mobil potvrdily verzi, shodu souborů a navigaci bez JavaScriptových výjimek. Lokálně 383 PASS, GitHub 380 PASS, 0 FAIL a 3 SKIP. Experiment má dvě známé vady shodné s baseline. PR #55 zůstává otevřený. Živé Auth, Rules a fyzická zařízení jsou neověřené. Etapa 10b0 dokončena. Etapy 10b1 a 10b2 jsou nezahájené. [Záznam nasazení](docs/deployment-v4.51.114.md)
