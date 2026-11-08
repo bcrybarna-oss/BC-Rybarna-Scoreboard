@@ -1,5 +1,9 @@
 # Aktuální roadmapa modularizace Poolčítadla
 
+## Pozastaveno kvůli opravě zakládání běžných turnajů
+
+Dominik 8. 11. 2026 upřednostnil samostatnou opravu formuláře a ověřování uložení. Etapy 10b1 a 10b2 jsou nezahájené. [Diagnostika turnaje](ordinary-tournament-draw-v4.51.115.md)
+
 ## Dokončeno 10b0 — nasazeno v4.51.114 RC
 
 PR #58 opravuje D4 kontrolou generace relace před GET i před publikací. Čtení ve stejné relaci dál sdílí Promise. Merge `56469c5` je veřejně ověřený. Etapy 10b1 a 10b2 jsou nezahájené. [Nasazení a výsledky](deployment-v4.51.114.md)
