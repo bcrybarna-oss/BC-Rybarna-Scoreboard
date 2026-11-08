@@ -1043,15 +1043,15 @@
   </div>
 
 <script src="assets/js/federal-statistics.js?v=4.51.98"></script>
-<script src="assets/js/federal-report-renderer.js?v=4.51.115"></script>
-<script src="assets/js/federal-report-controller.js?v=4.51.115"></script>
-<script src="assets/js/livescore-reader.js?v=4.51.115"></script>
-<script src="assets/js/livescore-renderer.js?v=4.51.115"></script>
-<script src="assets/js/online-presence.js?v=4.51.115"></script>
-<script src="assets/js/match-challenge-actions.js?v=4.51.115"></script>
-<script src="assets/js/players-read-repository.js?v=4.51.115"></script>
-<script src="assets/js/match-challenges.js?v=4.51.115"></script>
-<script src="assets/js/notification-center.js?v=4.51.115"></script>
+<script src="assets/js/federal-report-renderer.js?v=4.51.116"></script>
+<script src="assets/js/federal-report-controller.js?v=4.51.116"></script>
+<script src="assets/js/livescore-reader.js?v=4.51.116"></script>
+<script src="assets/js/livescore-renderer.js?v=4.51.116"></script>
+<script src="assets/js/online-presence.js?v=4.51.116"></script>
+<script src="assets/js/match-challenge-actions.js?v=4.51.116"></script>
+<script src="assets/js/players-read-repository.js?v=4.51.116"></script>
+<script src="assets/js/match-challenges.js?v=4.51.116"></script>
+<script src="assets/js/notification-center.js?v=4.51.116"></script>
 <script src="assets/js/cloud-refresh.js?v=4.51.99"></script>
 <script src="assets/js/own-reports.js?v=4.51.102"></script>
 <script src="assets/js/federal-viewer.js?v=4.51.103"></script>
@@ -3167,7 +3167,7 @@ html[data-theme="light"] #leagueSchedule .history-item .muted{
           <span class="by">by</span>
           <span class="club">BC Rybárna</span>
         </div>
-        <small class="modern-brand-version">v4.51.115 RC</small>
+        <small class="modern-brand-version">v4.51.116 RC</small>
       </div>
     </div>
     <div class="nav">
@@ -3786,7 +3786,7 @@ html[data-theme="light"] #leagueSchedule .history-item .muted{
         </div>
         <div class="subpanel" style="min-width:210px;text-align:center;margin:0">
           <div class="muted" style="font-size:10px;font-weight:950;letter-spacing:1px">AKTUÁLNÍ VERZE</div>
-          <div style="font-size:22px;font-weight:950;color:var(--gold2);margin-top:5px">v4.51.115 RC</div>
+          <div style="font-size:22px;font-weight:950;color:var(--gold2);margin-top:5px">v4.51.116 RC</div>
         </div>
       </div>
     </div>
@@ -6560,7 +6560,7 @@ html[data-theme="light"] #leagueSchedule .history-item .muted{
       </div>
 
       <div id="groupPlayoffSeedStatus" class="muted" style="margin-top:12px;min-height:20px"></div>
-      <div class="muted" style="margin-top:4px;font-size:11px">RC v4.51.115</div>
+      <div class="muted" style="margin-top:4px;font-size:11px">RC v4.51.116</div>
       <div class="modal-actions">
         <button id="groupPlayoffSeedApplyBtn" class="btn primary big" type="button">NASADIT DO PLAY-OFF</button>
         <button id="groupPlayoffSeedCancelBtn" class="btn">ZRUŠIT</button>
@@ -7708,7 +7708,7 @@ html[data-theme="light"] #leagueSchedule .history-item .muted{
     const btn=$('submitReportBtn');if(btn)btn.disabled=true;
     try{
       const id=uid(),p=currentUserPlayerId?data.players?.[currentUserPlayerId]:null;
-      const report={id,createdByUid:cloudUid,createdByPlayerId:currentUserPlayerId||'',createdByName:p?playerSelectionLabel(p):(cloudUserEmail||'Uživatel'),email:cloudUserEmail||'',type,area,description,appVersion:'v4.51.115 RC',createdAt:new Date().toISOString(),updatedAt:new Date().toISOString(),status:'new',adminNote:''};
+      const report={id,createdByUid:cloudUid,createdByPlayerId:currentUserPlayerId||'',createdByName:p?playerSelectionLabel(p):(cloudUserEmail||'Uživatel'),email:cloudUserEmail||'',type,area,description,appVersion:'v4.51.116 RC',createdAt:new Date().toISOString(),updatedAt:new Date().toISOString(),status:'new',adminNote:''};
       await reportRequest(id,'PUT',report);
       try{
         await writeReportUserMirror(report);
@@ -16997,11 +16997,16 @@ $('winnerText').textContent = match.solo14
     return rows;
   }
 
+  function groupMiniWins(group,ids){
+    return new Map(groupHeadToHeadMini(group,ids).map(row=>[row.id,row.v]));
+  }
+
   function unresolvedGroupPenaltyTie(t){
     if(!t?.groupPenaltyTieBreak || !groupPhaseComplete(t))return null;
 
     const advance=Math.max(1,Number(t.advancePerGroup||2));
     const tieRule=t.groupAdvanceTieRule||'points';
+    const lounska=isLounskaRoundRobin(t);
     t.groupPenaltyWinners=t.groupPenaltyWinners||{};
 
     for(const g of (t.groups||[])){
@@ -17034,7 +17039,7 @@ $('winnerText').textContent = match.solo14
 
         let tiedIds=cohort.map(r=>r.id);
 
-        if(tieRule==='head_to_head'){
+        if(tieRule==='head_to_head' && !lounska){
           const mini=groupHeadToHeadMini(g,tiedIds);
 
           // Rozdělíme hráče podle počtu výher ve vzájemných zápasech.
@@ -17095,10 +17100,11 @@ $('winnerText').textContent = match.solo14
           continue;
         }
 
-        // Varianta "body / skóre": pokud skóre stále nerozhodne, mohou následovat penalty.
+        // V Lounské sérii penalty přicházejí až po minitabulce i skóre.
+        const miniWins=lounska ? groupMiniWins(g,tiedIds) : null;
         const byScore=new Map();
         cohort.forEach(r=>{
-          const key=`${r.diff}|${r.rf}`;
+          const key=`${miniWins?.get(r.id)||0}|${r.diff}|${r.rf}`;
           if(!byScore.has(key))byScore.set(key,[]);
           byScore.get(key).push(r.id);
         });
@@ -17106,10 +17112,10 @@ $('winnerText').textContent = match.solo14
         let scoreOffset=0;
         const scoreGroups=[...byScore.entries()]
           .map(([key,ids])=>{
-            const [diff,rf]=key.split('|').map(Number);
-            return {diff,rf,ids};
+            const [wins,diff,rf]=key.split('|').map(Number);
+            return {wins,diff,rf,ids};
           })
-          .sort((a,b)=>b.diff-a.diff||b.rf-a.rf);
+          .sort((a,b)=>b.wins-a.wins||b.diff-a.diff||b.rf-a.rf);
 
         for(const sg of scoreGroups){
           const subgroup=sg.ids;
@@ -18141,6 +18147,7 @@ $('winnerText').textContent = match.solo14
 
   function groupStandings(group,t){
     const rows=rawGroupRows(group);
+    const lounska=isLounskaRoundRobin(t);
     const penaltyOrder=(t?.groupPenaltyWinners?.[group.id]||[]);
     const penaltyIndex=id=>{
       const i=penaltyOrder.indexOf(id);
@@ -18164,7 +18171,12 @@ $('winnerText').textContent = match.solo14
     [...byWins.keys()].sort((a,b)=>b-a).forEach(wins=>{
       const cohort=byWins.get(wins);
 
-      if(tieRule==='head_to_head' && cohort.length>1){
+      if(lounska && cohort.length>1){
+        const wins=groupMiniWins(group,cohort.map(r=>r.id));
+        cohort.sort((a,b)=>wins.get(b.id)-wins.get(a.id)||b.diff-a.diff||b.rf-a.rf||
+          (t.groupPenaltyTieBreak ? penaltyIndex(a.id)-penaltyIndex(b.id) : 0)||
+          seedIndex(a.id)-seedIndex(b.id));
+      }else if(tieRule==='head_to_head' && cohort.length>1){
         const miniMap=Object.fromEntries(groupHeadToHeadMini(group,cohort.map(r=>r.id)).map(r=>[r.id,r]));
         cohort.sort((a,b)=>{
           const av=miniMap[a.id]?.v||0, bv=miniMap[b.id]?.v||0;
@@ -19273,7 +19285,7 @@ $('winnerText').textContent = match.solo14
 
   function renderGroupTournament(t){
     const finalSummary=renderRoundRobinFinalSummary(t);
-    return `${finalSummary}<div class="tournament-columns">${t.groups.map(g=>{
+    return `${finalSummary}${isLounskaRoundRobin(t)?lounskaRoundRobinNote():''}<div class="tournament-columns">${t.groups.map(g=>{
       ensureGroupRoundOrder(g);
       const st=groupStandings(g,t);
 
@@ -20601,11 +20613,24 @@ function renderTournamentDetail(){
 
   function seriesPlacementTieBreakMode(s){
     if(s?.placementTieBreak)return s.placementTieBreak;
-    const normalized=String(s?.name||'')
+    return isLounskaSeries(s) ? 'score_h2h_group' : 'legacy';
+  }
+
+  function isLounskaSeries(s){
+    return String(s?.name||'')
       .normalize('NFD')
       .replace(/[\u0300-\u036f]/g,'')
-      .toLowerCase();
-    return normalized.includes('loun') ? 'score_h2h_group' : 'legacy';
+      .toLowerCase()
+      .includes('loun');
+  }
+
+  function isLounskaRoundRobin(t){
+    return t?.format==='groups' && !!t.id && (data.tournamentSeries||[]).some(s=>
+      isLounskaSeries(s) && (s.tournamentIds?.includes(t.id) || isLinkedHistoricalSeriesTournament(s,t)));
+  }
+
+  function lounskaRoundRobinNote(inSeries=false){
+    return `<p class="muted">${inSeries?'V turnaji Každý s každým: ':''}Při rovnosti počtu výher rozhoduje vzájemný zápas. Pro tři a více shodných hráčů se použije minitabulka.</p>`;
   }
 
   function seriesPlacementStageInfo(t,record){
@@ -20736,7 +20761,7 @@ function renderTournamentDetail(){
   }
 
   function seriesRefineTournamentPlacements(s,t,records){
-    if(seriesPlacementTieBreakMode(s)!=='score_h2h_group')return records;
+    if(seriesPlacementTieBreakMode(s)!=='score_h2h_group' || isLounskaRoundRobin(t))return records;
 
     const out=(records||[]).map(r=>({...r}));
     const cohorts=new Map();
@@ -21018,7 +21043,11 @@ function renderTournamentDetail(){
     // A tournament's self-declared seriesId alone must never authorize points
     // in somebody else's series. Explicit legacy links remain authoritative;
     // automatic draft links require a creator authorized by the series record.
-    return [...new Set([...(s.tournamentIds||[]),...(data.tournaments||[]).filter(t=>t.historicalStructure?.seriesId===s.id && t.createdByUid && (t.createdByUid===s.createdByUid||s.managerUids?.[t.createdByUid]===true)).map(t=>t.id)])];
+    return [...new Set([...(s.tournamentIds||[]),...(data.tournaments||[]).filter(t=>isLinkedHistoricalSeriesTournament(s,t)).map(t=>t.id)])];
+  }
+  function isLinkedHistoricalSeriesTournament(s,t){
+    return t.historicalStructure?.seriesId===s.id && t.createdByUid &&
+      (t.createdByUid===s.createdByUid||s.managerUids?.[t.createdByUid]===true);
   }
   function historicalCanManage(t){
     const s=(data.tournamentSeries||[]).find(s=>s.id===t.historicalStructure?.seriesId);
@@ -21171,6 +21200,7 @@ function renderTournamentDetail(){
     const seedEditable=editable&&(!slots.some(s=>!s.key.startsWith('g_')&&s.m.status==='done')||model.seedReview);
     const finalRows=complete?tournamentPlacementRecords(t):[];
     $('historicalStructureBody').innerHTML=`<h3>${esc(t.name)} • ${esc(t.historicalDate)}</h3><p>${complete?'DOKONČENO – započítává se do série':'ROZPRACOVÁNO – zatím bez bodů v sérii'}</p><button class="btn" data-historical-action onclick="historicalRefreshStructure()">OBNOVIT ULOŽENÝ STAV</button>${dormant?`<p class="muted">Uchované výsledky navazujících kol: ${dormant}. Použijí se pouze při shodných účastnících; mimo aktuální strukturu se nezapočítávají.</p>`:''}
+      ${isLounskaRoundRobin(t)?lounskaRoundRobinNote():''}
       ${(t.groups||[]).map(g=>`<h3>Skupina ${esc(g.id)}</h3><table class="stats-table"><thead><tr><th>Hráč</th><th>Výhry</th><th>Skóre</th></tr></thead><tbody>${groupStandings(g,t).map(r=>`<tr><td>${esc(tournamentPlayerName(r.id,t))}</td><td>${r.v}</td><td>${r.rf}:${r.ra}</td></tr>`).join('')}</tbody></table>`).join('')}
       ${tie?`<div class="subpanel">Nerozhodnuté penalty ve skupině ${esc(tie.groupId)} – vyber dalšího hráče v pořadí:<select id="hsPenalty">${historicalOptions(tie.candidates,t)}</select>${editable?'<button class="btn primary" data-historical-action onclick="historicalResolvePenalty()">POTVRDIT PENALTY</button>':''}</div>`:''}
       ${canSeed?`<details ${!t.playoffStarted||model.seedReview?'open':''}><summary>NASAZENÍ PLAY-OFF ${model.seedReview?'– POTVRĎ ZMĚNĚNÉ POSTUPUJÍCÍ':''}</summary><p>Návrh podle stávajících pravidel můžeš před výsledky ručně změnit. Musí obsahovat všechny postupující právě jednou.</p><div class="grid two">${seeds.map((id,i)=>`<label>Pozice ${i+1}<select class="hsPlayoffSeed" ${seedEditable?'':'disabled'}>${historicalOptions(qualifiers,t,id)}</select></label>`).join('')}</div><label>Napojení semifinále pro 8 postupujících<select id="hsRouting" ${seedEditable?'':'disabled'}>${[['cross13','QF1 × QF3'],['cross14','QF1 × QF4'],['adjacent','QF1 × QF2']].map(([v,label])=>`<option value="${v}" ${(model.initial.manualGroupPlayoffSemiRouting||'cross13')===v?'selected':''}>${label}</option>`).join('')}</select></label>${seedEditable?'<button class="btn primary" data-historical-action onclick="historicalApplySeeds()">POTVRDIT RUČNÍ NASAZENÍ</button>':''}</details>`:''}
@@ -21493,6 +21523,7 @@ function renderTournamentDetail(){
           ? 'vlastní • '+esc(seriesCustomPointsText(s)||'bez pravidel')
           : `1. ${s.pointsTop?.[0]??100} • 2. ${s.pointsTop?.[1]??80} • 3. ${s.pointsTop?.[2]??65} • 4. ${s.pointsTop?.[3]??55} • 5.–8. ${s.pointsBands?.[0]??45} • 9.–16. ${s.pointsBands?.[1]??25} • 17.–32. ${s.pointsBands?.[2]??10} • 33.–64. ${s.pointsBands?.[3]??5}`}
           ${s.bestCount?` • počítá se nejlepších ${s.bestCount}`:' • počítají se všechny'}</div>
+        ${isLounskaSeries(s)?lounskaRoundRobinNote(true):''}
       </div>
 
       ${canManageSeries(s)?`
