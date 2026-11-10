@@ -1,6 +1,6 @@
 # Připraveno k ověření v4.51.117 RC — diagnostika stream overlaye (Jaroslav, 10. 11. 2026)
 
-Kandidát **v4.51.117 RC** je pouze ve větvi `fix/stream-overlay-diagnostics-20261110`, **nenasazeno**. Poslední potvrzená produkce zůstává **v4.51.116 RC**. Příčina živé závady Streamlabs není zatím potvrzena: současné chování používá jedinou cestu `stream/users/{uid}` a overlay odmítá neaktivní/nečerstvá data a jiný `matchId`. Nový panel ukazuje HTTP stav odeslání a tlačítkem provede bezpečné read-only ověření veřejného čtení přes URL odpovídající overlayi. Cílený browser test rozlišuje úspěch, jiný zápas a HTTP 403. Nezasahuje do ostrých uživatelských dat. CI, skutečná produkční Firebase, pravidla a Streamlabs zůstávají neověřeny.
+Aktuální verze: **v4.51.117 RC** (kandidát, zatím NENASAZENO). Kandidát **v4.51.117 RC** je pouze ve větvi `fix/stream-overlay-diagnostics-20261110`, **nenasazeno**. Poslední potvrzená produkce zůstává **v4.51.116 RC**. Příčina živé závady Streamlabs není zatím potvrzena: současné chování používá jedinou cestu `stream/users/{uid}` a overlay odmítá neaktivní/nečerstvá data a jiný `matchId`. Nový panel ukazuje HTTP stav odeslání a tlačítkem provede bezpečné read-only ověření veřejného čtení přes URL odpovídající overlayi. Cílený browser test rozlišuje úspěch, jiný zápas a HTTP 403. Nezasahuje do ostrých uživatelských dat. CI, skutečná produkční Firebase, pravidla a Streamlabs zůstávají neověřeny.
 
 # Nasazeno v4.51.116 RC — vzájemný zápas v Lounské sérii (Dominik, 8. 11. 2026)
 
