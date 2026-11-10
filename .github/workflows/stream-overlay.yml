@@ -1,0 +1,27 @@
+name: Stream overlay (isolated browser)
+on:
+  pull_request:
+    paths:
+      - 'index.html'
+      - 'overlay.html'
+      - 'tests/stream-*.cjs'
+      - '.github/workflows/stream-overlay.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  stream-overlay:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install isolated Playwright runtime
+        run: npm install --no-save --ignore-scripts playwright@1.62.1
+      - name: Verify match-overlay read, write, identity and isolation
+        run: |
+          npm run test:stream
+          npm run test:stream-isolation
