@@ -1043,15 +1043,15 @@
   </div>
 
 <script src="assets/js/federal-statistics.js?v=4.51.98"></script>
-<script src="assets/js/federal-report-renderer.js?v=4.51.116"></script>
-<script src="assets/js/federal-report-controller.js?v=4.51.116"></script>
-<script src="assets/js/livescore-reader.js?v=4.51.116"></script>
-<script src="assets/js/livescore-renderer.js?v=4.51.116"></script>
-<script src="assets/js/online-presence.js?v=4.51.116"></script>
-<script src="assets/js/match-challenge-actions.js?v=4.51.116"></script>
-<script src="assets/js/players-read-repository.js?v=4.51.116"></script>
-<script src="assets/js/match-challenges.js?v=4.51.116"></script>
-<script src="assets/js/notification-center.js?v=4.51.116"></script>
+<script src="assets/js/federal-report-renderer.js?v=4.51.117"></script>
+<script src="assets/js/federal-report-controller.js?v=4.51.117"></script>
+<script src="assets/js/livescore-reader.js?v=4.51.117"></script>
+<script src="assets/js/livescore-renderer.js?v=4.51.117"></script>
+<script src="assets/js/online-presence.js?v=4.51.117"></script>
+<script src="assets/js/match-challenge-actions.js?v=4.51.117"></script>
+<script src="assets/js/players-read-repository.js?v=4.51.117"></script>
+<script src="assets/js/match-challenges.js?v=4.51.117"></script>
+<script src="assets/js/notification-center.js?v=4.51.117"></script>
 <script src="assets/js/cloud-refresh.js?v=4.51.99"></script>
 <script src="assets/js/own-reports.js?v=4.51.102"></script>
 <script src="assets/js/federal-viewer.js?v=4.51.103"></script>
@@ -3167,7 +3167,7 @@ html[data-theme="light"] #leagueSchedule .history-item .muted{
           <span class="by">by</span>
           <span class="club">BC Rybárna</span>
         </div>
-        <small class="modern-brand-version">v4.51.116 RC</small>
+        <small class="modern-brand-version">v4.51.117 RC</small>
       </div>
     </div>
     <div class="nav">
@@ -3786,7 +3786,7 @@ html[data-theme="light"] #leagueSchedule .history-item .muted{
         </div>
         <div class="subpanel" style="min-width:210px;text-align:center;margin:0">
           <div class="muted" style="font-size:10px;font-weight:950;letter-spacing:1px">AKTUÁLNÍ VERZE</div>
-          <div style="font-size:22px;font-weight:950;color:var(--gold2);margin-top:5px">v4.51.116 RC</div>
+          <div style="font-size:22px;font-weight:950;color:var(--gold2);margin-top:5px">v4.51.117 RC</div>
         </div>
       </div>
     </div>
@@ -5235,6 +5235,8 @@ html[data-theme="light"] #leagueSchedule .history-item .muted{
           <label for="matchStreamOverlayUrl">Adresa overlaye tohoto zápasu</label>
           <input id="matchStreamOverlayUrl" type="text" readonly style="width:100%;min-width:0" aria-label="Pevná OBS adresa tohoto zápasu">
           <button id="copyMatchStreamOverlayUrl" type="button" class="btn" style="margin-top:6px">KOPÍROVAT ADRESU ZÁPASU</button>
+          <button id="verifyStreamOverlayBtn" type="button" class="btn" style="margin-top:6px">OVĚŘIT SPOJENÍ OVERLAYE</button>
+          <div id="streamSyncStatus" role="status" aria-live="polite" class="muted" style="margin-top:8px">Stream • čekám na první odeslání dat.</div>
         </div>
       </div>
 
@@ -6560,7 +6562,7 @@ html[data-theme="light"] #leagueSchedule .history-item .muted{
       </div>
 
       <div id="groupPlayoffSeedStatus" class="muted" style="margin-top:12px;min-height:20px"></div>
-      <div class="muted" style="margin-top:4px;font-size:11px">RC v4.51.116</div>
+      <div class="muted" style="margin-top:4px;font-size:11px">RC v4.51.117</div>
       <div class="modal-actions">
         <button id="groupPlayoffSeedApplyBtn" class="btn primary big" type="button">NASADIT DO PLAY-OFF</button>
         <button id="groupPlayoffSeedCancelBtn" class="btn">ZRUŠIT</button>
@@ -7708,7 +7710,7 @@ html[data-theme="light"] #leagueSchedule .history-item .muted{
     const btn=$('submitReportBtn');if(btn)btn.disabled=true;
     try{
       const id=uid(),p=currentUserPlayerId?data.players?.[currentUserPlayerId]:null;
-      const report={id,createdByUid:cloudUid,createdByPlayerId:currentUserPlayerId||'',createdByName:p?playerSelectionLabel(p):(cloudUserEmail||'Uživatel'),email:cloudUserEmail||'',type,area,description,appVersion:'v4.51.116 RC',createdAt:new Date().toISOString(),updatedAt:new Date().toISOString(),status:'new',adminNote:''};
+      const report={id,createdByUid:cloudUid,createdByPlayerId:currentUserPlayerId||'',createdByName:p?playerSelectionLabel(p):(cloudUserEmail||'Uživatel'),email:cloudUserEmail||'',type,area,description,appVersion:'v4.51.117 RC',createdAt:new Date().toISOString(),updatedAt:new Date().toISOString(),status:'new',adminNote:''};
       await reportRequest(id,'PUT',report);
       try{
         await writeReportUserMirror(report);
@@ -11231,6 +11233,14 @@ $('useClock').addEventListener('change',e=>$('clockSettings').classList.toggle('
   const STREAM_OVERLAY_BASE_URL = 'https://bcrybarna-oss.github.io/BC-Rybarna-Scoreboard/overlay.html?v=14';
   let streamSendTimer=null;
   let lastStreamPayload='';
+  let streamStatusMatchId='';
+  let streamVerificationGeneration=0;
+  function showStreamSyncStatus(message,level='info'){
+    const element=$('streamSyncStatus');
+    if(!element)return;
+    element.textContent=message;
+    element.style.color=level==='error'?'#ff9a9a':level==='ok'?'#b7e7bd':'';
+  }
 
   function currentStreamDbPath(ownerUid=cloudUid){
     return ownerUid ? 'stream/users/'+ownerUid : null;
@@ -11339,6 +11349,7 @@ $('useClock').addEventListener('change',e=>$('clockSettings').classList.toggle('
     if(!await ensureCloudToken()){
       setCloudStatus('PŘIHLÁSIT',false);
       lastStreamPayload='';
+      if(match===sendingMatch)showStreamSyncStatus('STREAM • chybí platné přihlášení. Přihlas se znovu.','error');
       return false;
     }
     if(match!==sendingMatch||cloudUid!==ownerUid||!sendingMatch.streamEnabled)return false;
@@ -11357,14 +11368,19 @@ $('useClock').addEventListener('change',e=>$('clockSettings').classList.toggle('
         lastStreamPayload='';
         console.warn('Stream sync HTTP:',res.status);
         setCloudStatus('CHYBA',false);
+        if(match===sendingMatch)showStreamSyncStatus('STREAM • zápis do Firebase selhal (HTTP '+res.status+').','error');
         return false;
       }
-      if(match===sendingMatch&&cloudUid===ownerUid)lastStreamPayload=key;
+      if(match===sendingMatch&&cloudUid===ownerUid){
+        lastStreamPayload=key;
+        showStreamSyncStatus('STREAM • data zápasu odeslána do Firebase. Ověř čtení overlaye.');
+      }
       return true;
     }catch(err){
       lastStreamPayload='';
       console.warn('Stream sync:',err);
       setCloudStatus('CHYBA',false);
+      if(match===sendingMatch)showStreamSyncStatus('STREAM • odeslání selhalo (síť nebo spojení).','error');
       return false;
     }
   }
@@ -11388,6 +11404,10 @@ $('useClock').addEventListener('change',e=>$('clockSettings').classList.toggle('
     const visible=!!(match && match.streamEnabled);
     panel.classList.toggle('hidden',!visible);
     if(!visible)return;
+    if(streamStatusMatchId!==match.id){
+      streamStatusMatchId=match.id;
+      showStreamSyncStatus('Stream • čekám na první odeslání dat.');
+    }
     refreshStreamOverlayUrl();
     const mode=match.streamMode||'live';
     const map={live:'LIVE',pause:'PAUZA',soon:'BRZY ZAČÍNÁME',end:'KONEC'};
@@ -11405,6 +11425,48 @@ $('useClock').addEventListener('change',e=>$('clockSettings').classList.toggle('
     await sendStreamState(true);
     autosaveCurrent();
   }
+
+  async function verifyCurrentStreamOverlay(){
+    if(!match||!match.streamEnabled)return;
+    const currentMatch=match,ownerUid=cloudUid,generation=++streamVerificationGeneration;
+    const current=()=>generation===streamVerificationGeneration&&match===currentMatch&&cloudUid===ownerUid&&currentMatch.streamEnabled;
+    const button=$('verifyStreamOverlayBtn');
+    if(button)button.disabled=true;
+    showStreamSyncStatus('STREAM • ověřuji zápis i veřejné čtení overlaye…');
+    try{
+      if(!ownerUid){showStreamSyncStatus('STREAM • není přihlášený účet.','error');return;}
+      const sent=await sendStreamState(true);
+      if(!current())return;
+      if(!sent)return;
+      const controller=new AbortController(),timeout=setTimeout(()=>controller.abort(),6000);
+      let res,serverState;
+      try{
+        const url=FIREBASE_DB+'/stream/users/'+encodeURIComponent(ownerUid)+'.json?verify='+Date.now();
+        res=await fetch(url,{cache:'no-store',signal:controller.signal});
+        if(res.ok)serverState=await res.json();
+      }finally{clearTimeout(timeout);}
+      if(!current())return;
+      if(!res.ok){
+        showStreamSyncStatus('OVERLAY • data nelze veřejně číst (HTTP '+res.status+'). Zkontroluj Firebase Rules.','error');
+      }else if(!serverState||serverState.active!==true){
+        showStreamSyncStatus('OVERLAY • Firebase vrací neaktivní nebo prázdný stream.','error');
+      }else if(serverState.matchId!==currentMatch.id){
+        showStreamSyncStatus('OVERLAY • jiný zápas přepisuje tento stream. Zavři staré počítadlo na ostatních zařízeních.','error');
+      }else{
+        const age=Date.now()-Number(serverState.updatedAt);
+        if(!Number.isFinite(age)||age< -5000||age>=20000){
+          showStreamSyncStatus('OVERLAY • data mají neplatný čas. Zkontroluj automatický čas na obou zařízeních.','error');
+        }else{
+          showStreamSyncStatus('OVERLAY • spojení ověřeno: zápas je v databázi a overlay ho může načíst.','ok');
+        }
+      }
+    }catch(e){
+      if(current())showStreamSyncStatus('OVERLAY • ověření veřejného čtení selhalo (síť nebo spojení).','error');
+    }finally{
+      if(button)button.disabled=false;
+    }
+  }
+  if($('verifyStreamOverlayBtn'))$('verifyStreamOverlayBtn').onclick=verifyCurrentStreamOverlay;
 
   if($('streamModeLiveBtn'))$('streamModeLiveBtn').onclick=()=>setStreamMode('live');
   if($('streamModePauseBtn'))$('streamModePauseBtn').onclick=()=>setStreamMode('pause');
