@@ -1,3 +1,7 @@
+# Diagnostika Streamlabs overlaye — kandidát v4.51.117 RC
+
+Ovládání streamu dostává volitelné ověření přes stejné veřejné RTDB čtení jako overlay. Po autorizovaném PUT `stream/users/{uid}` kontroluje GET tohoto konkrétního UID bez auth, `active`, `matchId` a `updatedAt` (platné do 20 s, tolerance 5 s do budoucna). Při HTTP 403 hlásí možné nastavení Firebase Rules, při cizím matchId jinou stránku téhož uživatele. Produkční Firebase Rules nejsou verzované v tomto repozitáři a nesmějí se z diagnostiky odvozovat. Stávající streamová datová cesta, publikace, render a oddělení jednotlivých zápasů se nemění. Kandidát dosud nenasažen, produkce 116.
+
 # Pořadí Každý s každým v Lounské sérii ve v4.51.116 RC
 
 Od v4.51.116 RC se používá stávající identifikace Lounské série podle normalizovaného názvu a existující vazba turnaje včetně oprávněné historické struktury. Výpočet umístění předává konkrétní sérii do `groupStandings`. V Lounské sérii se po výhrách použijí výhry v minitabulce, rozdíl a počet vyhraných racků, relevantní zaznamenané penalty a nasazení. Konečné pořadí pro Lounskou sérii se nepřerovnává podle fází play-off. Obecný detail, statistiky, historie hráčů a dokončování turnaje používají nastavení samotného turnaje. [Rozsah a ověření](docs/lounska-round-robin-v4.51.116.md)
