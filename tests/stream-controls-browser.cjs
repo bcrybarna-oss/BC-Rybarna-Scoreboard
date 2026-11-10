@@ -19,11 +19,16 @@ assert.ok(html.includes('window.streamTest='));
  const browser=await chromium.launch({channel:'chrome',headless:true});
  const context=await browser.newContext({serviceWorkers:'block'});
  const store=new Map(),writes=[],errors=[];
+ let verifyOverride=null,verifyStatus=0;
  await context.route('**/*',async route=>{if(require('./helpers/federal-statistics.cjs').serve(route))return;
   const req=route.request(),u=new URL(req.url());
   if(u.origin==='http://stream-isolated.local')return route.fulfill({contentType:'text/html',body:u.pathname==='/overlay.html'?fs.readFileSync(path.join(root,'overlay.html'),'utf8'):html});
   if(u.hostname==='identitytoolkit.googleapis.com')return route.fulfill({contentType:'application/json',body:JSON.stringify(u.pathname.includes('accounts:lookup')?{users:[{localId:'isolated-stream',email:'bcrybarna@gmail.com',emailVerified:true}]}:{localId:'isolated-stream',email:'bcrybarna@gmail.com',idToken:'mock-token',refreshToken:'mock-refresh',expiresIn:'3600'})});
   if(u.hostname==='securetoken.googleapis.com')return route.fulfill({contentType:'application/json',body:JSON.stringify({user_id:'isolated-stream',id_token:'mock-token',refresh_token:'mock-refresh',expires_in:'3600'})});
+  if(u.pathname==='/stream/users/isolated-stream.json'&&req.method()==='GET'&&u.searchParams.has('verify')){
+   if(verifyStatus)return route.fulfill({status:verifyStatus,contentType:'application/json',body:'{"error":"Permission denied"}'});
+   if(verifyOverride)return route.fulfill({contentType:'application/json',body:JSON.stringify(verifyOverride)});
+  }
   if(u.pathname.endsWith('.json')){
    if(['PUT','PATCH'].includes(req.method())){const value=req.postDataJSON();store.set(u.pathname,req.method()==='PATCH'?{...store.get(u.pathname),...value}:value);writes.push({path:u.pathname,value});}
    if(req.method()==='DELETE')store.delete(u.pathname);
@@ -90,6 +95,20 @@ assert.ok(html.includes('window.streamTest='));
    await page.evaluate(async id=>{delete streamTest.match.streamEnabled;streamTest.save();await streamTest.resume(id);},unstreamed);assert.equal(await page.evaluate(()=>!!streamTest.match.streamEnabled),false);
 
    await setup(mode,true);
+   await page.locator('#verifyStreamOverlayBtn').click();
+   await page.waitForFunction(()=>document.getElementById('streamSyncStatus').textContent.includes('spojení ověřeno'));
+   if(mode==='simple'){
+     verifyOverride={active:true,matchId:'another-match',updatedAt:Date.now()};
+     await page.locator('#verifyStreamOverlayBtn').click();
+     await page.waitForFunction(()=>document.getElementById('streamSyncStatus').textContent.includes('jiný zápas přepisuje'));
+     verifyOverride=null;
+     verifyStatus=403;
+     await page.locator('#verifyStreamOverlayBtn').click();
+     await page.waitForFunction(()=>document.getElementById('streamSyncStatus').textContent.includes('HTTP 403'));
+     verifyStatus=0;
+     await page.locator('#verifyStreamOverlayBtn').click();
+     await page.waitForFunction(()=>document.getElementById('streamSyncStatus').textContent.includes('spojení ověřeno'));
+   }
    await page.locator(mode==='simple'?'#simpleAddP1':'#eightBallWin0').click();
    assert.deepEqual(await page.evaluate(()=>streamTest.match.scores),[1,0]);
    for(const viewport of [{width:1280,height:900},{width:390,height:844},{width:844,height:390},{width:320,height:568}]){
