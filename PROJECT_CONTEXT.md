@@ -1,6 +1,6 @@
-# Diagnostika Streamlabs overlaye — kandidát v4.51.117 RC
+# Diagnostika Streamlabs overlaye — v4.51.117 RC
 
-Ovládání streamu dostává volitelné ověření přes stejné veřejné RTDB čtení jako overlay. Po autorizovaném PUT `stream/users/{uid}` kontroluje GET tohoto konkrétního UID bez auth, `active`, `matchId` a `updatedAt` (platné do 20 s, tolerance 5 s do budoucna). Při HTTP 403 hlásí možné nastavení Firebase Rules, při cizím matchId jinou stránku téhož uživatele. Produkční Firebase Rules nejsou verzované v tomto repozitáři a nesmějí se z diagnostiky odvozovat. Stávající streamová datová cesta, publikace, render a oddělení jednotlivých zápasů se nemění. Kandidát dosud nenasažen, produkce 116.
+Ovládání streamu dostává volitelné ověření přes stejné veřejné RTDB čtení jako overlay. Po autorizovaném PUT `stream/users/{uid}` kontroluje GET tohoto konkrétního UID bez auth, `active`, `matchId` a `updatedAt` (platné do 20 s, tolerance 5 s do budoucna). Při HTTP 403 hlásí možné nastavení Firebase Rules, při cizím matchId jinou stránku téhož uživatele. Produkční Firebase Rules nejsou verzované v tomto repozitáři a nesmějí se z diagnostiky odvozovat. Stávající streamová datová cesta, publikace, render a oddělení jednotlivých zápasů se nemění. PR #61 sloučen do main jako 86fe8d03ddb9a2846985c9ff12a5848a579fbb1f, GitHub Pages 42888816133 build/deploy SUCCESS; živá Firebase a Streamlabs dosud bez ověření.
 
 # Pořadí Každý s každým v Lounské sérii ve v4.51.116 RC
 
