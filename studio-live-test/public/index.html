@@ -1,0 +1,104 @@
+<!doctype html>
+<html lang="cs">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="robots" content="noindex,nofollow,noarchive">
+<meta name="referrer" content="no-referrer">
+<meta name="theme-color" content="#10151c">
+<title>Poolčítadlo LIVE – Facebook test</title>
+<style>
+:root{font-family:system-ui,-apple-system,"Segoe UI",sans-serif;color:#f6f7f9;background:#10151c;--accent:#e7bd65}
+*{box-sizing:border-box}
+body{margin:0}
+header{max-width:1100px;margin:0 auto;padding:23px 16px 10px}
+small{color:#b1becd}
+h1{margin:4px 0;font-size:clamp(23px,4vw,33px)}
+h2{font-size:17px;margin:0 0 14px}
+.eyebrow{letter-spacing:.15em;font-size:11px;font-weight:900;color:var(--accent)}
+main{max-width:1100px;margin:0 auto;padding:10px 16px 36px;display:grid;grid-template-columns:minmax(0,1.5fr) minmax(290px,1fr);gap:16px}
+.panel{background:#1c2531;border:1px solid #354353;border-radius:17px;padding:16px}
+.preview{display:block;width:100%;aspect-ratio:16/9;background:#142a20;border:1px solid #425f48;border-radius:12px}
+#camera{width:1px;height:1px;opacity:.001;position:absolute;pointer-events:none}
+.field{margin:0 0 13px}
+label{display:block;font-size:12px;font-weight:700;margin:0 0 5px;color:#dbe4ed}
+input,select{background:#0f1721;color:#fff;border:1px solid #617081;border-radius:9px;width:100%;padding:11px;font:inherit;min-height:42px}
+input[type=color]{padding:2px;height:42px}
+button{font:inherit;cursor:pointer;border:1px solid #627284;background:#304052;color:#fff;border-radius:10px;padding:10px 13px;min-height:43px;font-weight:750}
+button:disabled{opacity:.45;cursor:not-allowed}
+button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+button.primary{background:var(--accent);border-color:var(--accent);color:#1f1d15}
+button.danger{background:#6b2e3b;border-color:#a9475b}
+.buttons{display:flex;gap:8px;flex-wrap:wrap}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.scenes{display:grid;grid-template-columns:repeat(2,1fr);gap:7px;margin:13px 0}
+.scenes button[aria-pressed=true]{background:#64502d;border-color:var(--accent)}
+.status{padding:12px;border-radius:10px;background:#283748;margin-top:12px;font-size:13px;line-height:1.5}
+.status.error{background:#502c34;color:#ffd2ce}
+.status.good{background:#244134;color:#c6f8d9}
+.note{border:1px solid #a17c47;background:#2d2c26;color:#f3d8a5;border-radius:10px;padding:12px;font-size:12px;line-height:1.6;margin:12px 0}
+.separator{height:1px;background:#465568;margin:17px 0}
+.mono{font-family:ui-monospace,monospace;font-size:12px}
+@media(max-width:800px){main{grid-template-columns:1fr}.panel{padding:13px}header{padding-top:14px}}
+</style>
+</head>
+<body>
+<header><div class="eyebrow">POOLČÍTADLO BY BC RYBÁRNA · EXPERIMENT</div><h1>LIVE – první test Facebooku</h1>
+<small>Samostatná testovací verze. Obraz se odešle až po stisknutí „Začít odesílat na Facebook“.</small></header>
+<main>
+<div>
+<section class="panel">
+<h2>Náhled vysílaného obrazu</h2>
+<video id="camera" autoplay muted playsinline aria-hidden="true"></video>
+<canvas class="preview" id="output" width="960" height="540" aria-label="Náhled složeného obrazu ze stolu a výsledkové lišty"></canvas>
+<div class="buttons" style="margin-top:12px">
+<button type="button" class="primary" id="startCamera">Zapnout kameru</button>
+<button type="button" id="stopCamera" disabled>Vypnout kameru</button>
+</div>
+<div class="field" style="margin-top:12px"><label for="cameraFacing">Kamera na telefonu</label>
+<select id="cameraFacing"><option value="environment">Zadní</option><option value="user">Přední</option></select></div>
+<div class="scenes" role="group" aria-label="Přepínání scén">
+<button type="button" data-scene="camera" aria-pressed="true">Kamera</button>
+<button type="button" data-scene="soon" aria-pressed="false">Začínáme</button>
+<button type="button" data-scene="pause" aria-pressed="false">Pauza</button>
+<button type="button" data-scene="end" aria-pressed="false">Konec</button>
+</div>
+<div class="status" id="cameraStatus" role="status" aria-live="polite">Kamera zatím není zapnutá. Náhled je pouze na tvém zařízení.</div>
+</section>
+<section class="panel" style="margin-top:14px">
+<h2>Výsledková lišta ve videu</h2>
+<div class="two"><div class="field"><label for="nameA">Hráč A</label><input id="nameA" value="Jarda Tichý" maxlength="35"></div>
+<div class="field"><label for="nameB">Hráč B</label><input id="nameB" value="René Kulas" maxlength="35"></div></div>
+<div class="two"><div class="field"><label for="clubA">Klub A</label><input id="clubA" value="BC Rybárna" maxlength="35"></div>
+<div class="field"><label for="clubB">Klub B</label><input id="clubB" value="Hosté" maxlength="35"></div></div>
+<div class="two"><div class="field"><label for="colorA">Barva A</label><input id="colorA" type="color" value="#e5b64f"></div>
+<div class="field"><label for="colorB">Barva B</label><input id="colorB" type="color" value="#398ad2"></div></div>
+<div class="buttons">
+<button type="button" id="minusA">A −</button><button type="button" id="plusA">A +</button>
+<button type="button" id="minusB">B −</button><button type="button" id="plusB">B +</button>
+<strong id="scoreLabel" style="align-self:center;margin-left:auto">0 : 0</strong>
+</div>
+<small>Skóre je zatím pouze zkušební, bez propojení s ostrou databází.</small>
+</section>
+</div>
+<aside>
+<section class="panel">
+<h2>Připojení Facebook Live</h2>
+<div class="note"><strong>Pozor:</strong> Toto už odešle skutečný živý obraz na Facebook, pokud bude testovací server spuštěný. Nejdřív si ve Facebook Live Produceru nastav vhodnou viditelnost testu. Vysílací klíč nikam neposílej – zadávej ho pouze do tohoto zabezpečeného webu.</div>
+<div class="field"><label for="adminPassword">Heslo testovacího serveru</label><input id="adminPassword" type="password" autocomplete="off" placeholder="Tajné heslo služby"></div>
+<div class="field"><label for="fbServer">Serverová RTMPS adresa z Facebook Live Produceru</label><input id="fbServer" type="url" autocomplete="off" spellcheck="false" placeholder="rtmps://…facebook.com/rtmp/"></div>
+<div class="field"><label for="fbKey">Vysílací klíč Facebooku</label><input id="fbKey" type="password" autocomplete="off" spellcheck="false" placeholder="Klíč z Live Produceru"></div>
+<div class="buttons">
+<button id="startLive" class="primary" type="button" disabled>Začít odesílat na Facebook</button>
+<button id="stopLive" type="button" class="danger" disabled>Ukončit přenos</button>
+</div>
+<div class="status" id="liveStatus" role="status" aria-live="polite">Nejprve zapni kameru, pak zadej údaje a spusť test.</div>
+<div class="separator"></div>
+<small><strong>Jak poznáš úspěch?</strong> Ve Facebook Live Produceru se po chvíli objeví náhled příchozího obrazu. Samotné odesílání ještě nemusí znamenat veřejně zveřejněné živé vysílání; na Facebooku jej můžeš muset potvrdit ručně.</small>
+</section>
+<div class="note"><strong>Omezení první verze:</strong> Jeden odchozí přenos na server, zkušební skóre, 960 × 540 px při 20 sn./s. Audio je zatím tiché, server přidává tichou zvukovou stopu. Komentování, více kamer a automatická integrace Facebooku budou až další etapy. Telefon nech během testu odemčený a stránku v popředí.</div>
+</aside>
+</main>
+<script src="/app.js" defer></script>
+</body>
+</html>

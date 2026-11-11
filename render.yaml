@@ -1,0 +1,18 @@
+# Experimental service only. This file is in a development branch.
+# Deliberately pinned to the test branch, never to main.
+services:
+  - type: web
+    runtime: docker
+    name: poolcitadlo-live-facebook-test
+    branch: feature/poolcitadlo-live-lab-20261030
+    dockerfilePath: ./studio-live-test/Dockerfile
+    dockerContext: .
+    plan: free
+    region: frankfurt
+    autoDeployTrigger: 'off'
+    healthCheckPath: /health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: STUDIO_ADMIN_TOKEN
+        sync: false

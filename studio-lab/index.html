@@ -1,0 +1,365 @@
+<!doctype html>
+<html lang="cs">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="robots" content="noindex,nofollow,noarchive">
+<meta name="referrer" content="no-referrer">
+<meta name="color-scheme" content="dark">
+<meta name="theme-color" content="#11151b">
+<title>Poolčítadlo LIVE · Izolovaná laboratoř</title>
+<style>
+:root{font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;color:#f2f3f6;background:#101319;--gold:#e6bd62;--left:#d9ab44;--right:#357bd3}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+body{margin:0;min-height:100vh}
+button,input,select{font:inherit}
+button{cursor:pointer}
+button:disabled{opacity:.45;cursor:not-allowed}
+button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid #e6bd62;outline-offset:3px}
+.shell{max-width:1250px;margin:auto;padding:24px clamp(12px,3vw,36px) 52px}
+header{display:flex;justify-content:space-between;align-items:center;gap:14px;flex-wrap:wrap;margin-bottom:20px}
+.eyebrow{color:var(--gold);font-weight:800;letter-spacing:.13em;font-size:11px}
+h1{font-size:clamp(23px,3vw,34px);margin:4px 0 6px}
+.subtitle{font-size:13px;color:#a9b3c2;line-height:1.5;max-width:730px}
+.pill{padding:9px 12px;border:1px solid #846b40;background:#272416;border-radius:999px;color:#f7d58e;font-size:12px;font-weight:800}
+.layout{display:grid;grid-template-columns:minmax(0,1.7fr) minmax(280px,1fr);gap:20px}
+.panel{background:#191f28;border:1px solid #303a47;border-radius:18px;padding:17px}
+.panel h2{font-size:16px;margin:0 0 14px}
+.label-line{display:flex;justify-content:space-between;gap:10px;align-items:center;margin-bottom:12px}
+.small{font-size:12px;color:#b4bfcb;line-height:1.5}
+.stage{position:relative;isolation:isolate;aspect-ratio:16/9;min-height:190px;overflow:hidden;border-radius:13px;background:radial-gradient(ellipse at 50% 30%,#315647,#132924 70%,#0b1315);border:1px solid #3e4e4c}
+.stage video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;background:#172721}
+.stage[data-scene="camera"] video{display:block}
+.stage:not([data-scene="camera"]) video{display:block}
+.empty{position:absolute;inset:0;display:grid;place-content:center;text-align:center;color:#c5d3cb;padding:20px;gap:5px}
+.empty strong{font-size:19px}
+.empty span{font-size:12px}
+.stage.has-camera[data-scene="camera"] .empty{display:none}
+.card-scene{display:none;position:absolute;inset:0;align-items:center;justify-content:center;text-align:center;padding:24px;background:radial-gradient(ellipse at 50% 20%,#443928,#0f131b 75%)}
+.stage:not([data-scene="camera"]) .card-scene{display:flex}
+.card-inner{border:1px solid #957642;border-radius:20px;background:#11161ac9;padding:clamp(16px,5vw,50px);width:min(92%,620px)}
+.card-kicker{color:var(--gold);font-size:clamp(11px,1.6vw,16px);font-weight:800;letter-spacing:.14em}
+.card-title{font-size:clamp(24px,5vw,58px);font-weight:900;margin:10px 0}
+.card-sub{color:#c3cbd4;font-size:clamp(11px,1.7vw,18px)}
+.watermark{position:absolute;top:12px;right:14px;z-index:4;background:#101820b8;border:1px solid #ffffff2b;padding:7px 10px;border-radius:7px;text-align:right;pointer-events:none}
+.watermark strong{font-size:clamp(9px,1.25vw,14px);letter-spacing:.07em}
+.watermark small{display:block;color:#dfbd70;font-size:clamp(8px,.95vw,11px)}
+.scorebar{position:absolute;z-index:3;bottom:10px;left:10px;right:10px;display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);gap:6px;align-items:stretch;background:#101820e8;border:1px solid #e6bd6247;border-radius:10px;padding:5px;pointer-events:none}
+.stage:not([data-scene="camera"]) .scorebar{display:none}
+.player{min-width:0;padding:8px 10px;background:color-mix(in srgb,var(--left) 24%,#101820);border-bottom:4px solid var(--left);border-radius:6px}
+.player.right{text-align:right;background:color-mix(in srgb,var(--right) 24%,#101820);border-color:var(--right)}
+.player small{display:block;color:#ccd4e0;font-size:clamp(8px,.9vw,12px);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.player strong{display:block;font-size:clamp(11px,1.6vw,22px);overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+.score{color:#f8d983;align-self:center;font-weight:900;font-variant-numeric:tabular-nums;font-size:clamp(19px,3vw,40px);padding:0 6px;white-space:nowrap}
+.preview-note{font-size:12px;margin-top:11px;color:#a7b5c5}
+.status{margin-top:12px;padding:10px 12px;border-radius:9px;background:#222c34;font-size:12px;line-height:1.5;min-height:39px}
+.status[data-kind="error"]{color:#ffb6ad;background:#40272b}
+.status[data-kind="ok"]{color:#aff0c7;background:#20382d}
+.buttons{display:flex;gap:8px;flex-wrap:wrap}
+.btn{border-radius:10px;border:1px solid #4d5c69;padding:10px 12px;background:#2a3541;color:#fff;font-weight:700;font-size:13px;min-height:42px}
+.btn.primary{color:#1b1a15;background:var(--gold);border-color:var(--gold)}
+.btn.danger{background:#44272b;border-color:#8c414d}
+.btn.active{border-color:#f2cd7c;background:#4b3b22}
+.scenes{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.scenes .btn{width:100%;text-align:left;min-height:48px}
+label{font-size:12px;font-weight:700;color:#d7dfea;display:block;margin-bottom:7px}
+input[type="text"],select{background:#101820;color:#f4f6fb;width:100%;border:1px solid #52606d;border-radius:9px;min-height:40px;padding:9px}
+.field{margin-bottom:12px}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.color-row{display:flex;align-items:center;gap:10px}
+input[type="color"]{width:48px;height:38px;padding:0;border:1px solid #697785;border-radius:7px;background:transparent}
+.score-control{display:flex;align-items:center;justify-content:space-between;gap:8px;background:#11171f;border:1px solid #303a47;border-radius:9px;padding:8px;margin-bottom:8px}
+.score-control span{font-weight:800;font-variant-numeric:tabular-nums}
+.score-control .btn{min-width:38px;padding:8px}
+.note{border:1px solid #6e603b;border-radius:12px;background:#26251f;padding:12px 14px;color:#d8c89c;font-size:12px;line-height:1.6;margin-top:18px}
+.section-space{margin-top:15px}
+footer{font-size:11px;color:#9aabbc;line-height:1.6;margin-top:18px}
+@media(max-width:850px){.layout{grid-template-columns:1fr}.panel{padding:14px}}
+@media(max-width:500px){.shell{padding:15px 10px 35px}.stage{min-height:180px}.player{padding:6px}.watermark{top:7px;right:7px;padding:5px 7px}.scorebar{bottom:6px;left:6px;right:6px}.player strong{font-size:11px}.player small{font-size:8px}}
+</style>
+</head>
+<body>
+<div class="shell">
+  <header>
+    <div>
+      <div class="eyebrow">POOLČÍTADLO BY BC RYBÁRNA</div>
+      <h1>LIVE – testovací studio</h1>
+      <div class="subtitle">První izolovaný prototyp: kamera, zkušební scoreboard a přepínání grafických scén. Bez přihlášení, Firebase a přenosu na internet.</div>
+    </div>
+    <span class="pill">LAB · NEVYSÍLÁ SE</span>
+  </header>
+  <div class="layout">
+    <main>
+      <section class="panel">
+        <div class="label-line"><h2>Náhled režie</h2><span class="small" id="sceneName">Hlavní kamera</span></div>
+        <div class="stage" id="stage" data-scene="camera">
+          <video id="cameraVideo" playsinline autoplay muted aria-label="Náhled kamery"></video>
+          <div class="empty"><strong>📷 Kamera není zapnutá</strong><span>Povol kameru tlačítkem pod náhledem.</span></div>
+          <div class="card-scene"><div class="card-inner">
+            <div class="card-kicker" id="cardKicker">POOLČÍTADLO LIVE</div>
+            <div class="card-title" id="cardTitle">BRZY ZAČÍNÁME</div>
+            <div class="card-sub" id="cardSub">Přenos začne za chvíli</div>
+          </div></div>
+          <div class="watermark"><strong>POOLČÍTADLO</strong><small>by BC Rybárna</small></div>
+          <div class="scorebar">
+            <div class="player"><small id="clubLeftPreview">KLUB A</small><strong id="nameLeftPreview">Hráč A</strong></div>
+            <div class="score"><span id="scoreLeftPreview">0</span> : <span id="scoreRightPreview">0</span></div>
+            <div class="player right"><small id="clubRightPreview">KLUB B</small><strong id="nameRightPreview">Hráč B</strong></div>
+          </div>
+        </div>
+        <p class="preview-note">Jde o místní náhled na tomto zařízení – žádné video ani skóre se nikam neodesílá.</p>
+        <div class="field">
+          <label for="cameraSelect">Kamera</label>
+          <select id="cameraSelect">
+            <option value="environment">Zadní kamera (preferovaná)</option>
+            <option value="user">Přední kamera</option>
+          </select>
+        </div>
+        <div class="buttons">
+          <button class="btn primary" id="startCamera" type="button">Zapnout kameru</button>
+          <button class="btn danger" id="stopCamera" type="button" disabled>Vypnout kameru</button>
+          <button class="btn" id="resumeVideo" type="button" hidden>Zobrazit obraz ručně</button>
+        </div>
+        <div id="status" class="status" role="status" aria-live="polite">Připraveno. Kamera se zapne až po tvém souhlasu.</div>
+      </section>
+      <section class="panel section-space">
+        <h2>Scény</h2>
+        <div class="scenes" role="group" aria-label="Přepínání scén">
+          <button class="btn active" data-scene-button="camera" aria-pressed="true">📷 Hlavní kamera</button>
+          <button class="btn" data-scene-button="soon" aria-pressed="false">▶ Začínáme</button>
+          <button class="btn" data-scene-button="pause" aria-pressed="false">⏸ Pauza</button>
+          <button class="btn" data-scene-button="end" aria-pressed="false">■ Konec</button>
+        </div>
+      </section>
+    </main>
+    <aside>
+      <section class="panel">
+        <h2>Zkušební zápas a vzhled</h2>
+        <div class="two">
+          <div class="field"><label for="playerLeft">Hráč vlevo</label><input id="playerLeft" type="text" maxlength="45" value="Jarda Tichý"></div>
+          <div class="field"><label for="playerRight">Hráč vpravo</label><input id="playerRight" type="text" maxlength="45" value="René Kulas"></div>
+        </div>
+        <div class="two">
+          <div class="field"><label for="clubLeft">Klub vlevo</label><input id="clubLeft" type="text" maxlength="36" value="BC Rybárna"></div>
+          <div class="field"><label for="clubRight">Klub vpravo</label><input id="clubRight" type="text" maxlength="36" value="Hosté"></div>
+        </div>
+        <div class="two">
+          <div class="field"><label for="colorLeft">Barva levého klubu</label><div class="color-row"><input id="colorLeft" type="color" value="#d9ab44"><span class="small">Levý panel</span></div></div>
+          <div class="field"><label for="colorRight">Barva pravého klubu</label><div class="color-row"><input id="colorRight" type="color" value="#357bd3"><span class="small">Pravý panel</span></div></div>
+        </div>
+        <label>Zkušební skóre</label>
+        <div class="score-control"><span id="scoreLeftLabel">Jarda Tichý</span><div class="buttons"><button class="btn" id="leftMinus" aria-label="Odebrat bod hráči vlevo">−</button><span id="leftNumber">0</span><button class="btn" id="leftPlus" aria-label="Přidat bod hráči vlevo">+</button></div></div>
+        <div class="score-control"><span id="scoreRightLabel">René Kulas</span><div class="buttons"><button class="btn" id="rightMinus" aria-label="Odebrat bod hráči vpravo">−</button><span id="rightNumber">0</span><button class="btn" id="rightPlus" aria-label="Přidat bod hráči vpravo">+</button></div></div>
+        <p class="small">Změny názvů, skóre a klubových barev se ihned projeví v náhledu. Neovlivňují ostré zápasy.</p>
+      </section>
+      <div class="note"><strong>Co tento prototyp ještě neumí:</strong> odesílání na Facebook, přenos obrazu z dalších zařízení, více kamer současně, komentátory a správu rolí. Tyto části potřebují samostatný testovací backend a streamovací službu.</div>
+    </aside>
+  </div>
+  <footer>Izolovaný prototyp bez síťových požadavků a bez ukládání dat. Pro kameru otevři stránku přes HTTPS nebo localhost; prohlížeč musí povolit přístup ke kameře. Nezamykat telefon během testování.</footer>
+</div>
+<script>
+(function(){
+  "use strict";
+  const byId = id => document.getElementById(id);
+  const stage = byId("stage");
+  const video = byId("cameraVideo");
+  const status = byId("status");
+  const cameraSelect = byId("cameraSelect");
+  const resumeVideo = byId("resumeVideo");
+  const scenes = {
+    camera:{label:"Hlavní kamera"},
+    soon:{label:"Začínáme",title:"BRZY ZAČÍNÁME",sub:"Přenos začne za chvíli"},
+    pause:{label:"Pauza",title:"PAUZA",sub:"Za chvíli pokračujeme"},
+    end:{label:"Konec",title:"KONEC PŘENOSU",sub:"Děkujeme za sledování"}
+  };
+  let stream = null;
+  let starting = false;
+  let cameraGeneration = 0;
+  let scene = "camera";
+  let scores = [0,0];
+
+  function info(message,kind){
+    status.textContent = message;
+    status.dataset.kind = kind || "";
+  }
+  function repaint(){
+    byId("nameLeftPreview").textContent = byId("playerLeft").value.trim() || "Hráč A";
+    byId("nameRightPreview").textContent = byId("playerRight").value.trim() || "Hráč B";
+    byId("clubLeftPreview").textContent = byId("clubLeft").value.trim() || "Bez klubu";
+    byId("clubRightPreview").textContent = byId("clubRight").value.trim() || "Bez klubu";
+    byId("scoreLeftLabel").textContent = byId("nameLeftPreview").textContent;
+    byId("scoreRightLabel").textContent = byId("nameRightPreview").textContent;
+    byId("scoreLeftPreview").textContent = byId("leftNumber").textContent = String(scores[0]);
+    byId("scoreRightPreview").textContent = byId("rightNumber").textContent = String(scores[1]);
+    stage.style.setProperty("--left",byId("colorLeft").value);
+    stage.style.setProperty("--right",byId("colorRight").value);
+    stage.dataset.scene = scene;
+    byId("sceneName").textContent = scenes[scene].label;
+    if(scene !== "camera"){
+      byId("cardTitle").textContent = scenes[scene].title;
+      byId("cardSub").textContent = scenes[scene].sub;
+    }
+    document.querySelectorAll("[data-scene-button]").forEach(btn=>{
+      const active = btn.dataset.sceneButton === scene;
+      btn.classList.toggle("active",active);
+      btn.setAttribute("aria-pressed",active?"true":"false");
+    });
+  }
+  function controls(){
+    byId("startCamera").disabled = starting || !!stream;
+    byId("stopCamera").disabled = starting || !stream;
+    cameraSelect.disabled = starting;
+    stage.classList.toggle("has-camera",!!stream);
+  }
+  function stopCamera(){
+    resumeVideo.hidden=true;
+    // Invalidates an outstanding getUserMedia request after pagehide or replacement.
+    cameraGeneration++;
+    if(stream){
+      stream.getTracks().forEach(track=>track.stop());
+      stream=null;
+    }
+    video.pause();
+    video.srcObject=null;
+    controls();
+  }
+  async function refreshDevices(){
+    if(!navigator.mediaDevices || !navigator.mediaDevices.enumerateDevices)return;
+    try{
+      const devices = (await navigator.mediaDevices.enumerateDevices()).filter(d=>d.kind==="videoinput");
+      const previous = cameraSelect.value;
+      cameraSelect.querySelectorAll("option[data-device]").forEach(el=>el.remove());
+      devices.forEach((device,index)=>{
+        const opt=document.createElement("option");
+        opt.value="device:"+device.deviceId;
+        opt.textContent=device.label || "Kamera "+(index+1);
+        opt.dataset.device="1";
+        cameraSelect.appendChild(opt);
+      });
+      if([...cameraSelect.options].some(o=>o.value===previous))cameraSelect.value=previous;
+    }catch(_){ /* Device enumeration is optional. */ }
+  }
+  function playPreview(expectedStream){
+    if(!expectedStream || stream!==expectedStream)return;
+    video.muted=true;
+    video.playsInline=true;
+    let playResult;
+    try{playResult=video.play();}
+    catch(error){
+      resumeVideo.hidden=false;
+      info("Kamera je povolená, ale obraz se nespustil. Klepni na Zobrazit obraz ručně. "+(error&&error.name||""),"error");
+      return;
+    }
+    if(playResult && typeof playResult.then==="function"){
+      playResult.then(()=>{
+        if(stream!==expectedStream)return;
+        resumeVideo.hidden=true;
+        info("Kamera je připojená. Obraz se zobrazuje pouze na tomto zařízení.","ok");
+      }).catch(error=>{
+        if(stream!==expectedStream)return;
+        resumeVideo.hidden=false;
+        info("Kamera je povolená, ale Safari nepovolilo automatické přehrání ("+(error&&error.name||"neznámá chyba")+"). Klepni na Zobrazit obraz ručně.","error");
+      });
+    }else{
+      resumeVideo.hidden=true;
+      info("Kamera je připojená. Obraz se zobrazuje pouze na tomto zařízení.","ok");
+    }
+  }
+  async function startCamera(){
+    if(starting)return;
+    if(window.isSecureContext===false){
+      info("Kamera vyžaduje zabezpečenou adresu HTTPS. Otevři testovací stránku přímo v Safari.","error");
+      return;
+    }
+    if(!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia){
+      info("Tento prohlížeč nebo adresa nepodporuje kameru. Použij HTTPS a povol přístup ke kameře.","error");
+      return;
+    }
+    starting=true;
+    stopCamera();
+    const requestGeneration = cameraGeneration;
+    controls();
+    info("Žádám o přístup ke kameře…","");
+    try{
+      const selected=cameraSelect.value;
+      const videoConstraints={width:{ideal:1280},height:{ideal:720},frameRate:{ideal:30}};
+      if(selected.startsWith("device:")){
+        videoConstraints.deviceId={exact:selected.slice(7)};
+      }else{
+        videoConstraints.facingMode={ideal:selected==="user"?"user":"environment"};
+      }
+      let acquired;
+      try{acquired=await navigator.mediaDevices.getUserMedia({video:videoConstraints,audio:false});}
+      catch(error){
+        if(requestGeneration!==cameraGeneration)return;
+        if(error && (error.name==="OverconstrainedError" || error.name==="NotFoundError")){
+          info("Požadovaná kamera není dostupná. Zkouším výchozí kameru…","");
+          acquired=await navigator.mediaDevices.getUserMedia({video:true,audio:false});
+        }else throw error;
+      }
+      if(requestGeneration!==cameraGeneration){
+        acquired.getTracks().forEach(track=>track.stop());
+        return;
+      }
+      stream=acquired;
+      video.srcObject=acquired;
+      acquired.getVideoTracks().forEach(track=>{
+        track.addEventListener("ended",()=>{
+          if(stream===acquired){stopCamera();info("Kamera byla odpojena nebo ji převzala jiná aplikace.","error");}
+        });
+      });
+      info("Kamera povolena. Zkouším zobrazit živý obraz…","");
+      playPreview(acquired);
+      // A stalled media element must not prevent buttons from becoming usable.
+      setTimeout(()=>{
+        if(stream===acquired && video.readyState<2){
+          resumeVideo.hidden=false;
+          info("Safari zatím nezobrazilo snímek. Klepni na Zobrazit obraz ručně, případně zkontroluj nastavení kamery pro tento web.","error");
+        }
+      },4500);
+      await refreshDevices();
+    }catch(error){
+      if(requestGeneration!==cameraGeneration)return;
+      stopCamera();
+      const kind=error&&error.name;
+      const guidance=kind==="NotAllowedError"?"Přístup ke kameře nebyl povolen. Zkontroluj oprávnění prohlížeče.":kind==="NotFoundError"?"Na zařízení není dostupná požadovaná kamera.":kind==="OverconstrainedError"?"Požadovaná kamera není dostupná; vyber jinou.":kind==="NotReadableError"?"Kamera je obsazená jinou aplikací.":"Kameru se nepodařilo zapnout. Zkus jinou kameru nebo HTTPS.";
+      info(guidance+(kind?" ("+kind+")":""),"error");
+    }finally{
+      starting=false;
+      controls();
+    }
+  }
+  for(const id of ["playerLeft","playerRight","clubLeft","clubRight","colorLeft","colorRight"]){
+    byId(id).addEventListener("input",repaint);
+  }
+  [["leftMinus",0,-1],["leftPlus",0,1],["rightMinus",1,-1],["rightPlus",1,1]].forEach(([id,player,delta])=>{
+    byId(id).addEventListener("click",()=>{
+      scores[player]=Math.min(999,Math.max(0,scores[player]+delta));
+      repaint();
+    });
+  });
+  document.querySelectorAll("[data-scene-button]").forEach(btn=>{
+    btn.addEventListener("click",()=>{
+      scene=btn.dataset.sceneButton;
+      repaint();
+      if(scene==="camera" && stream && video.paused)playPreview(stream);
+    });
+  });
+  byId("startCamera").addEventListener("click",startCamera);
+  resumeVideo.addEventListener("click",()=>{
+    if(stream){scene="camera";repaint();playPreview(stream);}
+    else info("Nejdřív zapni kameru.","error");
+  });
+  byId("stopCamera").addEventListener("click",()=>{stopCamera();info("Kamera byla vypnutá. Nic se neodesílá.","");});
+  cameraSelect.addEventListener("change",()=>{if(stream)startCamera();});
+  if(navigator.mediaDevices && navigator.mediaDevices.addEventListener){
+    navigator.mediaDevices.addEventListener("devicechange",refreshDevices);
+  }
+  window.addEventListener("pagehide",stopCamera);
+  repaint();
+  controls();
+})();
+</script>
+</body>
+</html>

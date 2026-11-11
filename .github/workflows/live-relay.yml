@@ -1,0 +1,56 @@
+name: Poolcitalo LIVE – Facebook relay experiments
+
+on:
+  pull_request:
+    paths:
+      - "studio-live-test/**"
+      - ".github/workflows/live-relay.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  relay-tests:
+    name: Isolated relay contract and streaming tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Install test relay dependencies
+        working-directory: studio-live-test
+        run: npm install --no-audit --no-fund
+      - name: Verify server and browser script syntax
+        run: |
+          node --check studio-live-test/server.js
+          node --check studio-live-test/public/app.js
+      - name: Exercise auth, WebSocket and FFmpeg contracts
+        working-directory: studio-live-test
+        run: npm test
+      - name: Install Chromium and FFmpeg for synthetic end-to-end video test
+        run: |
+          npm install --no-audit --no-fund
+          npx playwright install --with-deps chromium
+          sudo apt-get update -qq
+          sudo apt-get install -y ffmpeg
+          ffmpeg -version | head -n 1
+      - name: Browser to local FFmpeg smoke test (NO Facebook connection)
+        run: node studio-live-test/tests/browser.cjs
+  docker-image:
+    name: Build independent Render test image
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build isolated Docker web service
+        run: docker build --file studio-live-test/Dockerfile --tag poolcitadlo-live-fb:test .
+      - name: Verify test service starts and health endpoint is available
+        run: |
+          docker run -d --name pool-live-test -e STUDIO_ADMIN_TOKEN=example-very-long-test-password-12345 -p 10000:10000 poolcitadlo-live-fb:test
+          for i in $(seq 1 20); do
+            if curl --silent --fail http://localhost:10000/health; then exit 0; fi
+            sleep 1
+          done
+          docker logs pool-live-test
+          exit 1
