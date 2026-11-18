@@ -25,3 +25,4 @@ jobs:
         run: |
           npm run test:stream
           npm run test:stream-isolation
+          npm run test:stream-lag
