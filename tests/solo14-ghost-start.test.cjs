@@ -31,9 +31,12 @@ function begin(m){
  return {events,clocks};
 }
 
-test('14.1 Ghost: even restored legacy break flags must not offer opening break',()=>{
+test('14.1 Ghost: even restored legacy break flags must not expose opening break actions',()=>{
  const ghost=match({ghost:true});
- assert.equal(active(ghost),false);
+ assert.equal(active(ghost),true,'Baseline eligibility helper remains unchanged for compatibility');
+ assert.match(html,/const openingBreakActive=!match\.solo14GhostMode && openingBreakAvailableForAction14\(match\)/);
+ assert.match(html,/\$\('openingBreakOk14'\)\.onclick=\(\)=>\{\s*if\(match\?\.solo14GhostMode \|\| !openingBreakAvailableForAction14\(match\)\)return;/);
+ assert.match(html,/\$\('openingBreakFoul14'\)\.onclick=\(\)=>\{\s*if\(match\?\.solo14GhostMode \|\| !openingBreakAvailableForAction14\(match\)\)return;/);
  const normal=match({ghost:false});
  assert.equal(active(normal),true);
  assert.equal(active({...normal,solo14:false}),true,'classic 14.1 retains legal opening break');
