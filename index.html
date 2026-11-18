@@ -12197,7 +12197,7 @@ const isFourteen=match.discipline==='14.1' && !simpleCounter;
       }
       if(!match.consecutiveFouls14) match.consecutiveFouls14=[0,0];
       $('foulInfo14').textContent='Po sobě jdoucí fauly – '+match.playerNames[0]+': '+match.consecutiveFouls14[0]+' | '+match.playerNames[1]+': '+match.consecutiveFouls14[1];
-      const openingBreakActive=openingBreakAvailableForAction14(match);
+      const openingBreakActive=!match.solo14GhostMode && openingBreakAvailableForAction14(match);
       $('openingBreakOk14').classList.toggle('hidden', !openingBreakActive);
       $('openingBreakFoul14').classList.toggle('hidden', !openingBreakActive);
     }
@@ -14569,7 +14569,7 @@ const isFourteen=match.discipline==='14.1' && !simpleCounter;
   // Rozstřel je jednorázová fáze. U starších obnovených zápasů chraň
   // i stav, kde historický příznak zůstal true po prvním náběhu / +14.
   function openingBreakAvailableForAction14(m){
-    return !!m && m.discipline==='14.1' && !m.solo14GhostMode && !m.endedAt &&
+    return !!m && m.discipline==='14.1' && !m.endedAt &&
       m.openingBreakAvailable14===true &&
       !(m.inningsHistory14||[]).length &&
       Number(m.reracksInInning14||0)===0 &&
@@ -14577,7 +14577,7 @@ const isFourteen=match.discipline==='14.1' && !simpleCounter;
   }
 
   $('openingBreakOk14').onclick=()=>{
-    if(!openingBreakAvailableForAction14(match))return;
+    if(match?.solo14GhostMode || !openingBreakAvailableForAction14(match))return;
     addActionEvent('14.1 • úvodní rozstřel bez faulu • pokračování hry');
     match.openingBreakAvailable14=false;
     match.isBreakShot=false;
@@ -14587,7 +14587,7 @@ const isFourteen=match.discipline==='14.1' && !simpleCounter;
   };
 
   $('openingBreakFoul14').onclick=()=>{
-    if(!openingBreakAvailableForAction14(match))return;
+    if(match?.solo14GhostMode || !openingBreakAvailableForAction14(match))return;
     const i=match.turn;
     addActionEvent('14.1 • faul na úvodním rozstřelu • '+match.playerNames[i]+' −2 body');
     match.isBreakShot=false;
