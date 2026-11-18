@@ -1043,15 +1043,15 @@
   </div>
 
 <script src="assets/js/federal-statistics.js?v=4.51.98"></script>
-<script src="assets/js/federal-report-renderer.js?v=4.51.117"></script>
-<script src="assets/js/federal-report-controller.js?v=4.51.117"></script>
-<script src="assets/js/livescore-reader.js?v=4.51.117"></script>
-<script src="assets/js/livescore-renderer.js?v=4.51.117"></script>
-<script src="assets/js/online-presence.js?v=4.51.117"></script>
-<script src="assets/js/match-challenge-actions.js?v=4.51.117"></script>
-<script src="assets/js/players-read-repository.js?v=4.51.117"></script>
-<script src="assets/js/match-challenges.js?v=4.51.117"></script>
-<script src="assets/js/notification-center.js?v=4.51.117"></script>
+<script src="assets/js/federal-report-renderer.js?v=4.51.118"></script>
+<script src="assets/js/federal-report-controller.js?v=4.51.118"></script>
+<script src="assets/js/livescore-reader.js?v=4.51.118"></script>
+<script src="assets/js/livescore-renderer.js?v=4.51.118"></script>
+<script src="assets/js/online-presence.js?v=4.51.118"></script>
+<script src="assets/js/match-challenge-actions.js?v=4.51.118"></script>
+<script src="assets/js/players-read-repository.js?v=4.51.118"></script>
+<script src="assets/js/match-challenges.js?v=4.51.118"></script>
+<script src="assets/js/notification-center.js?v=4.51.118"></script>
 <script src="assets/js/cloud-refresh.js?v=4.51.99"></script>
 <script src="assets/js/own-reports.js?v=4.51.102"></script>
 <script src="assets/js/federal-viewer.js?v=4.51.103"></script>
@@ -3167,7 +3167,7 @@ html[data-theme="light"] #leagueSchedule .history-item .muted{
           <span class="by">by</span>
           <span class="club">BC Rybárna</span>
         </div>
-        <small class="modern-brand-version">v4.51.117 RC</small>
+        <small class="modern-brand-version">v4.51.118 RC</small>
       </div>
     </div>
     <div class="nav">
@@ -3786,7 +3786,7 @@ html[data-theme="light"] #leagueSchedule .history-item .muted{
         </div>
         <div class="subpanel" style="min-width:210px;text-align:center;margin:0">
           <div class="muted" style="font-size:10px;font-weight:950;letter-spacing:1px">AKTUÁLNÍ VERZE</div>
-          <div style="font-size:22px;font-weight:950;color:var(--gold2);margin-top:5px">v4.51.117 RC</div>
+          <div style="font-size:22px;font-weight:950;color:var(--gold2);margin-top:5px">v4.51.118 RC</div>
         </div>
       </div>
     </div>
@@ -6562,7 +6562,7 @@ html[data-theme="light"] #leagueSchedule .history-item .muted{
       </div>
 
       <div id="groupPlayoffSeedStatus" class="muted" style="margin-top:12px;min-height:20px"></div>
-      <div class="muted" style="margin-top:4px;font-size:11px">RC v4.51.117</div>
+      <div class="muted" style="margin-top:4px;font-size:11px">RC v4.51.118</div>
       <div class="modal-actions">
         <button id="groupPlayoffSeedApplyBtn" class="btn primary big" type="button">NASADIT DO PLAY-OFF</button>
         <button id="groupPlayoffSeedCancelBtn" class="btn">ZRUŠIT</button>
@@ -7710,7 +7710,7 @@ html[data-theme="light"] #leagueSchedule .history-item .muted{
     const btn=$('submitReportBtn');if(btn)btn.disabled=true;
     try{
       const id=uid(),p=currentUserPlayerId?data.players?.[currentUserPlayerId]:null;
-      const report={id,createdByUid:cloudUid,createdByPlayerId:currentUserPlayerId||'',createdByName:p?playerSelectionLabel(p):(cloudUserEmail||'Uživatel'),email:cloudUserEmail||'',type,area,description,appVersion:'v4.51.117 RC',createdAt:new Date().toISOString(),updatedAt:new Date().toISOString(),status:'new',adminNote:''};
+      const report={id,createdByUid:cloudUid,createdByPlayerId:currentUserPlayerId||'',createdByName:p?playerSelectionLabel(p):(cloudUserEmail||'Uživatel'),email:cloudUserEmail||'',type,area,description,appVersion:'v4.51.118 RC',createdAt:new Date().toISOString(),updatedAt:new Date().toISOString(),status:'new',adminNote:''};
       await reportRequest(id,'PUT',report);
       try{
         await writeReportUserMirror(report);
@@ -17543,6 +17543,161 @@ $('winnerText').textContent = match.solo14
     return orderedIds[orderedIds.length-1];
   }
 
+  // Rozlosuj celé kolo společně. Lokální greedy může v posledních dvojicích
+  // vytvořit odvetu, přestože existuje perfektní párování bez odvety.
+  // Přednost: nejméně odvet -> nejmenší rozdíly bodů -> nejbližší pořadí.
+  function swissPlanPairs(orderedIds, points, played){
+    const ids=[...orderedIds],n=ids.length;
+    if(n<2)return [];
+    if(n%2!==0)throw Error('Swiss pairing requires an even-sized pool');
+
+    const cost=(a,b)=>[
+      played.has(swissPlayedPairKey(ids[a],ids[b]))?1:0,
+      Math.abs(Number(points[ids[a]]||0)-Number(points[ids[b]]||0)),
+      Math.abs(a-b)
+    ];
+    const better=(a,b)=>!b || a[0]<b[0] ||
+      (a[0]===b[0] && (a[1]<b[1] || (a[1]===b[1] && a[2]<b[2])));
+
+    // Malé/střední turnaje: přesná optimalizace všech dvojic.
+    if(n<=18){
+      const memo=new Map();
+      function solve(mask){
+        if(mask===0)return [0,0,0,-1];
+        if(memo.has(mask))return memo.get(mask);
+        let a=0;while(!(mask&(1<<a)))a++;
+        const withoutA=mask^(1<<a);
+        let best=null;
+        for(let b=a+1;b<n;b++){
+          if(!(withoutA&(1<<b)))continue;
+          const rest=solve(withoutA^(1<<b)),edge=cost(a,b);
+          const candidate=[rest[0]+edge[0],rest[1]+edge[1],rest[2]+edge[2],b];
+          if(better(candidate,best))best=candidate;
+        }
+        memo.set(mask,best);
+        return best;
+      }
+      let mask=(1<<n)-1;solve(mask);
+      const pairs=[];
+      while(mask){
+        let a=0;while(!(mask&(1<<a)))a++;
+        const b=memo.get(mask)[3];
+        pairs.push([ids[a],ids[b]]);
+        mask^=(1<<a)|(1<<b);
+      }
+      return pairs;
+    }
+
+    // Větší turnaje: Edmondsovo maximální párování bez odvet.
+    // Maximum neopakovaných dvojic určuje i matematické minimum odvet.
+    const neighbors=ids.map((_,a)=>ids.map((_,b)=>b)
+      .filter(b=>a!==b&&cost(a,b)[0]===0)
+      .sort((b,c)=>{
+        const x=cost(a,b),y=cost(a,c);
+        return x[1]-y[1]||x[2]-y[2]||b-c;
+      }));
+    const matching=Array(n).fill(-1),parent=Array(n).fill(-1),
+      base=Array.from({length:n},(_,i)=>i),used=Array(n).fill(false),
+      blossom=Array(n).fill(false);
+
+    function lca(a,b){
+      const seen=Array(n).fill(false);
+      while(true){
+        a=base[a];seen[a]=true;
+        if(matching[a]===-1)break;
+        a=parent[matching[a]];
+      }
+      while(true){
+        b=base[b];
+        if(seen[b])return b;
+        if(matching[b]===-1)break;
+        b=parent[matching[b]];
+      }
+      return -1;
+    }
+    function markPath(v,root,child){
+      while(base[v]!==root){
+        blossom[base[v]]=blossom[base[matching[v]]]=true;
+        parent[v]=child;
+        child=matching[v];
+        v=parent[matching[v]];
+      }
+    }
+    function augment(root){
+      used.fill(false);parent.fill(-1);
+      for(let i=0;i<n;i++)base[i]=i;
+      const queue=[root];used[root]=true;
+      for(let head=0;head<queue.length;head++){
+        const v=queue[head];
+        for(const to of neighbors[v]){
+          if(base[v]===base[to]||matching[v]===to)continue;
+          if(to===root||(matching[to]!==-1&&parent[matching[to]]!==-1)){
+            const rootBase=lca(v,to);
+            blossom.fill(false);
+            markPath(v,rootBase,to);
+            markPath(to,rootBase,v);
+            for(let i=0;i<n;i++)if(blossom[base[i]]){
+              base[i]=rootBase;
+              if(!used[i]){used[i]=true;queue.push(i);}
+            }
+          }else if(parent[to]===-1){
+            parent[to]=v;
+            if(matching[to]===-1){
+              let current=to;
+              while(current!==-1){
+                const previous=parent[current],
+                  next=previous===-1?-1:matching[previous];
+                matching[current]=previous;
+                if(previous!==-1)matching[previous]=current;
+                current=next;
+              }
+              return true;
+            }
+            const next=matching[to];used[next]=true;queue.push(next);
+          }
+        }
+      }
+      return false;
+    }
+
+    for(let i=0;i<n;i++)if(matching[i]===-1)augment(i);
+    const pairs=[],remaining=[];
+    for(let i=0;i<n;i++){
+      if(matching[i]>i)pairs.push([i,matching[i]]);
+      else if(matching[i]===-1)remaining.push(i);
+    }
+    while(remaining.length){
+      const a=remaining.shift();
+      let pick=0;
+      for(let i=1;i<remaining.length;i++)
+        if(better(cost(a,remaining[i]),cost(a,remaining[pick])))pick=i;
+      pairs.push([a,remaining.splice(pick,1)[0]]);
+    }
+
+    // V rámci nejmenšího možného počtu odvet zlepšuj i bodové rozdíly.
+    function sumCost(a,b){
+      const x=cost(...a),y=cost(...b);
+      return [x[0]+y[0],x[1]+y[1],x[2]+y[2]];
+    }
+    let improved=true;
+    while(improved){
+      improved=false;
+      for(let i=0;i<pairs.length&&!improved;i++)
+        for(let j=i+1;j<pairs.length&&!improved;j++){
+          const [a,b]=pairs[i],[c,d]=pairs[j],
+            existing=sumCost(pairs[i],pairs[j]);
+          for(const changed of [[[a,c],[b,d]],[[a,d],[b,c]]]){
+            if(better(sumCost(...changed),existing)){
+              [pairs[i],pairs[j]]=changed;
+              improved=true;
+              break;
+            }
+          }
+        }
+    }
+    return pairs.map(([a,b])=>[ids[a],ids[b]]);
+  }
+
   function swissPairRound(t){
     const standings=swissStandings(t);
     let pool=standings.map(r=>r.id);
@@ -17551,32 +17706,11 @@ $('winnerText').textContent = match.solo14
     if(byePlayerId)pool=pool.filter(id=>id!==byePlayerId);
 
     const points=Object.fromEntries(standings.map(r=>[r.id,r.points]));
-    const matches=[];
-
-    while(pool.length>=2){
-      const a=pool.shift();
-
-      let bestIndex=-1;
-      let bestScore=Infinity;
-      for(let i=0;i<pool.length;i++){
-        const b=pool[i];
-        const rematch=played.has(swissPlayedPairKey(a,b)) ? 10000 : 0;
-        const pointGap=Math.abs(Number(points[a]||0)-Number(points[b]||0))*100;
-        const rankGap=i;
-        const score=rematch+pointGap+rankGap;
-        if(score<bestScore){bestScore=score;bestIndex=i;}
-      }
-
-      if(bestIndex<0)bestIndex=0;
-      const b=pool.splice(bestIndex,1)[0];
-      matches.push(tournamentMatchObject(
-        a,b,
-        `Švýcarský systém • ${Number(t.swiss.currentRound||0)+1}. kolo`,
-        'SWISS'
-      ));
-    }
-
     const number=Number(t.swiss.currentRound||0)+1;
+    const matches=swissPlanPairs(pool,points,played).map(([a,b])=>
+      tournamentMatchObject(a,b,`Švýcarský systém • ${number}. kolo`,'SWISS')
+    );
+
     t.swiss.rounds.push({
       id:uid(),number,label:number+'. kolo',matches,byePlayerId,
       createdAt:new Date().toISOString()
@@ -17792,7 +17926,7 @@ $('winnerText').textContent = match.solo14
       <strong>ŠVÝCARSKÝ SYSTÉM • ${s.currentRound||0}/${s.roundsTotal||0} KOL</strong>
       <div class="muted" style="margin-top:5px">
         Výhra = 1 bod • volno = 1 bod. Pořadí: body → Buchholz → rozdíl racků → vyhrané racky.
-        V dalších kolech se párují hráči s podobným počtem bodů a aplikace se snaží zabránit opakovanému soupeři.
+        Další kolo se losuje jako celek: nejprve co nejméně odvet, potom co nejmenší rozdíly bodů.
       </div>
       ${playoffInfo}
     </div>${table}${rounds}${playoff}${swissFinalRecapHtml(t)}`;
