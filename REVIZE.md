@@ -1,5 +1,14 @@
 # Revize aplikace Poolčítadlo
 
+## Jaroslav – Ghost 14.1: okamžitý náběh a přehled skóre (v4.51.119 RC)
+Zadavatel: Jaroslav
+Datum: 18. 11. 2026
+Změny: Ghost 14.1 začíná z ideální rozehrávky se 14 koulemi v trojúhelníku a jednou brejkovou koulí mimo trojúhelník (výpočtový počet 15); úvodní legální break ani faul −2 nejsou pro tento režim nabízeny, včetně starších obnovených zápasů. Ghost nezvyšuje statistiku úvodních breaků; začíná ihned náběhem. Klasická 14.1 a sólo bez Ghosta mají původní chování. Skórovací přehled má pořadí Hráč → Koule na stole → Ghost, na mobilu stále na jedné řadě. UNDO zůstává funkční a při skrytých break tlačítkách vyplňuje šířku ovládání.
+Testy: Nové izolované produkční testy tests/solo14-ghost-start.test.cjs pro začátek Ghosta, skrytí úvodního breaku, pokračování klasické 14.1 a pořadí ukazatelů; rozšířené testy tests/solo14-mobile-layout-browser.cjs pro mobilní rozmístění a nepřítomnost break tlačítek. CI a fyzický telefon zatím neověřeny.
+Nasazení: Zatím pouze větev fix/ghost141-opening-layout-20261118, produkce beze změny v4.51.118 RC.
+Omezení: Již zaznamenaná historie zápasů ani statistiky dokončených her se nepřepisují. Browser testy jsou izolované od Firebase, produkční data netestována.
+
+
 ## Jaroslav – švýcarské párování bez zbytečných odvet (v4.51.118 RC)
 Zadavatel: Jaroslav
 Datum: 18. 11. 2026
