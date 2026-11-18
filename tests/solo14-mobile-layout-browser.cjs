@@ -27,6 +27,8 @@ async function fixture(page,{ghost=false,solo=true}={}){
     document.querySelector('#solo14ScoreRow').classList.toggle('ghost-enabled',ghost);
     document.querySelector('#solo14StatsPanel').classList.toggle('hidden',!solo);
     document.querySelector('#solo14GhostScoreTile').classList.toggle('hidden',!ghost);
+    document.querySelector('#openingBreakOk14').classList.toggle('hidden',ghost);
+    document.querySelector('#openingBreakFoul14').classList.toggle('hidden',ghost);
     document.querySelector('#normalActions').classList.add('hidden');
     document.querySelector('#ghostActions').classList.add('hidden');
     document.querySelector('#simpleCounterActions').classList.add('hidden');
@@ -40,7 +42,7 @@ const rects=page=>page.evaluate(()=>{
     return {top:r.top,bottom:r.bottom,left:r.left,right:r.right,height:r.height,width:r.width};
   };
   return {
-    score:rect('#solo14TotalScore'),balls:rect('#solo14BallsTop'),
+    score:rect('#solo14TotalScore'),balls:rect('#solo14BallsTop'),ghost:rect('#solo14GhostScore'),
     addRack:rect('#addRack14'),miss:rect('#endMiss14'),
     safe:rect('#endSafe14'),foul:rect('#endFoul14'),
     undo:rect('#undo14Btn'),breakOk:rect('#openingBreakOk14'),breakFoul:rect('#openingBreakFoul14'),
@@ -79,6 +81,11 @@ test('Solo against Ghost keeps all 3 score tiles on one mobile row',async()=>{
     await fixture(page,{ghost:true});
     const r=await rects(page);
     assert.equal(r.ghostColumns,3);
+    assert.ok(r.score.right<=r.balls.left+1,'Player points must precede balls on table');
+    assert.ok(r.balls.right<=r.ghost.left+1,'Balls on table must precede Ghost points');
+    assert.equal(r.breakOk.height,0,'Ghost must never show legal opening-break button');
+    assert.equal(r.breakFoul.height,0,'Ghost must never show opening-break foul button');
+    assert.ok(r.undo.height>=44,'Undo remains available and touch-sized');
     assert.ok(r.foul.bottom<=r.viewport-6);
     assert.ok(r.scrollWidth<=r.innerWidth);
   }finally{await browser.close();}
