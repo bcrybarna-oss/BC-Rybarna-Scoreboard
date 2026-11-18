@@ -1,5 +1,14 @@
 # Revize aplikace Poolčítadlo
 
+## Jaroslav – švýcarské párování bez zbytečných odvet (v4.51.118 RC)
+Zadavatel: Jaroslav
+Datum: 18. 11. 2026
+Změny: Oprava švýcarského systému v produkčním index.html. Místo greedy párování po jednom hráči se nyní hodnotí celé kolo: primárně minimální počet opakovaných soupeřů, poté minimální rozdíly bodů a pořadí. Do 18 hráčů přesná optimalizace dvojic (DP); při více hráčích maximální párování bez odvet v obecném grafu (Edmonds/Blossom), poté lokální doladění bodů bez navýšení odvet. Volno pro lichý počet hráčů se vybírá dosavadním pravidlem. Existující výsledky a vylosovaná minulá kola se nepřepisují.
+Testy: Nové tests/swiss-pairing.test.cjs extrahují skutečné produkční funkce, reprodukci 8 hráčů / 5 kol, 200 deterministických průběhů, preferenci shodných bodů, nevyhnutelné odvety, volno a 24 hráčů. [CI 44374008135](https://github.com/bcrybarna-oss/BC-Rybarna-Scoreboard/actions/runs/44374008135): Release PASS, produkční Node **387 PASS, 0 FAIL, 3 SKIP**; pouze dlouhodobě známé dva experimentální FAIL ve vedlejším jobu. [Mobilní CI 44374008113](https://github.com/bcrybarna-oss/BC-Rybarna-Scoreboard/actions/runs/44374008113) PASS. Samostatná browser kontrola streamu se dokončuje. Skutečná produkční Auth/Rules a fyzická zařízení bez ověření.
+Nasazení: Kandidát v oddělené větvi fix/swiss-global-pairing-20261118, nenasaženo; výchozí main c45f4291758055c2c552e2f9118511966e37ca88, produkce před změnou v4.51.117 RC.
+Omezení: V již vygenerovaných kolech nic nepřelosováváme, změna se týká nově vytvářených kol. Matematicky nevyhnutelné odvety mohou nastat při delších turnajích; algoritmus minimalizuje jejich počet, nikoliv předem plánuje výsledek všech budoucích kol. Skutečné Firebase a účet pořadatele zatím neověřeny.
+
+
 ## Jaroslav – ověření propojení streamu s overlayem (v4.51.117 RC)
 Zadavatel: Jaroslav
 Datum: 10. 11. 2026
