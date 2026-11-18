@@ -63,45 +63,109 @@ assert.ok(html.includes('window.streamTest='));
   assert.equal((await state()).id,savedId);
  }
  try{
-  for(const mode of ['simple','full']){
-   await setup(mode);let m=await state();const id=m.id,url=await page.locator('#matchStreamOverlayUrl').inputValue();
-   assert.equal(m.lagWinner,null);assert.equal(m.breaker,null);assert.equal(m.turn,null);assert.deepEqual(m.stats.map(s=>s.breaks),[0,0]);assert.equal(m.events.filter(e=>e.text.startsWith('Rack ')).length,0);assert.equal(m.detailedPlay?.records.length||0,0);assert.equal(m.detailedPlay?.inning,undefined);
-   await side(-1);assert.equal(await page.locator('#simpleCounterActions').isVisible(),false);assert.equal(await page.locator('#normalActions').isVisible(),false);
-   await page.evaluate(()=>{actionDryBreak();winRack(0);simpleAddPoint(0)});assert.deepEqual((await state()).stats,m.stats);assert.deepEqual((await state()).scores,[0,0]);
-   await page.locator('#streamModeSoonBtn').click();await page.evaluate(()=>streamTest.send(true));await overlay.waitForFunction(()=>document.querySelector('.intermission-main')?.textContent==='BRZY ZAČÍNÁME');
-   await page.locator('#streamModeLiveBtn').click();await side(-1);
-   await reload();assert.equal((await state()).breaker,null);await side(-1);
-   await page.locator('#streamLagP2').click();await side(1,mode==='simple'?'BREAK':'U STOLU');m=await state();assert.equal(m.lagWinner,1);assert.deepEqual(m.stats.map(s=>s.breaks),[0,1]);assert.deepEqual(m.stats.map(s=>s.lagWins),[0,1]);
-   await page.locator('#streamLagUndo').click();await side(-1);m=await state();assert.equal(m.lagWinner,null);assert.deepEqual(m.stats.map(s=>s.breaks),[0,0]);assert.deepEqual(m.stats.map(s=>s.lagWins),[0,0]);await page.locator('#streamLagP2').click();
-   await page.locator('#streamLagP1').click();m=await state();assert.deepEqual(m.stats.map(s=>s.breaks),[1,0]);assert.deepEqual(m.stats.map(s=>s.lagWins),[1,0]);
-   await page.locator('#streamLagUndo').click();m=await state();assert.equal(m.lagWinner,1);assert.deepEqual(m.stats.map(s=>s.breaks),[0,1]);assert.deepEqual(m.stats.map(s=>s.lagWins),[0,1]);await side(1,mode==='simple'?'BREAK':'U STOLU');
-   await page.evaluate(()=>streamTest.breaker());await side(0,mode==='simple'?'BREAK':'U STOLU');await page.evaluate(()=>streamTest.undo());await side(1,mode==='simple'?'BREAK':'U STOLU');
-   await reload();await overlay.reload();m=await state();assert.equal(m.lagWinner,1);assert.deepEqual(m.stats.map(s=>s.lagWins),[0,1]);assert.equal(await page.locator('#lagModal').isVisible(),false);assert.equal(await page.locator('#matchStreamOverlayUrl').inputValue(),url);await side(1,mode==='simple'?'BREAK':'U STOLU');
-   if(mode==='simple'){
-    await page.evaluate(()=>{streamTest.match.turn=0;streamTest.render()});await side(1);
-    await page.locator('#streamLagLock').click();assert.equal(await page.locator('#streamLagP1').isEnabled(),false);
-    await page.evaluate(()=>streamTest.choose(0));assert.equal((await state()).lagWinner,1);
-    await reload();assert.equal(await page.locator('#streamLagP1').isEnabled(),false);
-    await page.locator('#simpleAddP1').click();await side(0);assert.equal(await page.locator('#streamLagP1').isEnabled(),false);
-   }else{
-    await page.locator('#actionDryBreakBtn').click();await side(0,'U STOLU');assert.equal((await state()).breaker,1);assert.equal(await page.locator('#streamLagP1').isEnabled(),false);
+  // Jednorázové tempo musí fungovat pro oba typy počítadla a všechny tři disciplíny.
+  for(const discipline of ['8-ball','9-ball','10-ball']){
+   for(const mode of ['simple','full']){
+    await setup(mode,'alternate',true,discipline);
+    let m=await state();
+    const id=m.id,url=await page.locator('#matchStreamOverlayUrl').inputValue();
+    assert.equal(m.lagWinner,null);
+    assert.equal(m.breaker,null);
+    assert.equal(m.turn,null);
+    assert.deepEqual(m.stats.map(s=>s.breaks),[0,0]);
+    assert.equal(await page.locator('#streamLagControls').isVisible(),true);
+    assert.equal(await page.locator('#simpleCounterActions').isVisible(),false);
+    assert.equal(await page.locator('#normalActions').isVisible(),false);
+    await side(-1);
+    await page.evaluate(()=>{actionDryBreak();winRack(0);simpleAddPoint(0)});
+    assert.deepEqual((await state()).scores,[0,0],'No score changes before tempo');
+
+    // Výběr P2 okamžitě potvrdí vítěze, odblokuje hru a skryje celý panel.
+    await page.locator('#streamLagP2').click();
+    m=await state();
+    assert.equal(m.lagWinner,1);
+    assert.equal(m.breaker,1);
+    assert.equal(m.streamLagLocked,true);
+    assert.deepEqual(m.stats.map(s=>s.lagWins),[0,1]);
+    assert.deepEqual(m.stats.map(s=>s.breaks),[0,1]);
+    assert.equal(await page.locator('#streamLagControls').isVisible(),false);
+    assert.equal(await page.locator('#streamLagP1').isVisible(),false);
+    assert.equal(await page.locator('#streamLagLock').isVisible(),false);
+    await side(1,mode==='simple'?'BREAK':'U STOLU');
+
+    // V jednoduchém režimu žádné další "ZAHÁJIT HRU" – ihned přičti bod.
+    if(mode==='simple'){
+     assert.equal(await page.locator('#simpleCounterActions').isVisible(),true);
+     await page.locator('#simpleAddP1').click();
+     assert.deepEqual((await state()).scores,[1,0]);
+     assert.equal(await page.locator('#streamLagControls').isVisible(),false);
+     await page.evaluate(()=>streamTest.undo());
+     assert.deepEqual((await state()).scores,[0,0]);
+     assert.equal(await page.locator('#streamLagControls').isVisible(),false);
+    }else{
+     assert.equal(await page.locator('#normalActions').isVisible(),true);
+     await page.locator('#actionDryBreakBtn').click();
+     assert.equal(await page.locator('#streamLagControls').isVisible(),false);
+     await page.evaluate(()=>streamTest.undo());
+     assert.equal(await page.locator('#streamLagControls').isVisible(),false);
+    }
+    await page.evaluate(()=>streamTest.choose(0));
+    assert.equal((await state()).lagWinner,1,'A second lag choice cannot overwrite the first');
+
+    // Reload/obnovení nesmí tlačítka znovu ukázat.
+    await reload();
+    await overlay.reload();
+    m=await state();
+    assert.equal(m.id,id);
+    assert.equal(m.lagWinner,1);
+    assert.equal(m.breaker,1);
+    assert.equal(await page.locator('#streamLagControls').isVisible(),false);
+    assert.equal(await page.locator('#matchStreamOverlayUrl').inputValue(),url);
+    await side(1,mode==='simple'?'BREAK':'U STOLU');
+
+    // Undo původní volby zase otevře možnost zvolit vítěze.
+    await page.evaluate(()=>streamTest.undo());
+    m=await state();
+    assert.equal(m.lagWinner,null);
+    assert.equal(m.breaker,null);
+    assert.deepEqual(m.stats.map(s=>s.breaks),[0,0]);
+    assert.equal(await page.locator('#streamLagControls').isVisible(),true);
+    assert.equal(await page.locator('#streamLagP1').isEnabled(),true);
+    await side(-1);
+    await page.locator('#streamLagP1').click();
+    assert.equal((await state()).lagWinner,0);
+    assert.equal(await page.locator('#streamLagControls').isVisible(),false);
+    await side(0,mode==='simple'?'BREAK':'U STOLU');
+    console.log('PASS '+discipline+'/'+mode+': lag one tap hides full panel; immediate scoring, UNDO and reload');
    }
-   m=await state();await page.evaluate(()=>streamTest.choose(0));assert.equal((await state()).lagWinner,1);assert.deepEqual((await state()).stats,m.stats);assert.equal((await state()).id,id);
-   await page.evaluate(()=>streamTest.undo());if(mode==='simple')await page.evaluate(()=>streamTest.undo());assert.equal(await page.locator('#streamLagP1').isEnabled(),true);await page.locator('#streamLagP1').click();await side(0,mode==='simple'?'BREAK':'U STOLU');
-   await page.setViewportSize({width:390,height:844});for(const button of ['streamLagP1','streamLagP2']){const r=await page.locator('#'+button).boundingBox();assert.ok(r.width>40&&r.x>=0&&r.x+r.width<=391);}await page.setViewportSize({width:1280,height:900});
-   console.log('PASS '+mode+': pre-lag stream SOON/LIVE, no implicit player/shot/stats, choice/correction/undo/lock, reload and fixed URL, mobile');
   }
+
+  // Starší jednoduché zápasy s již zadaným tempem a bez lock příznaku
+  // se po obnovení také nesmějí zaseknout za dvojím potvrzováním.
+  await setup('simple','alternate',true,'9-ball');
+  await page.locator('#streamLagP2').click();
+  await page.evaluate(()=>{streamTest.match.streamLagLocked=false;streamTest.save();streamTest.render();});
+  assert.equal(await page.locator('#streamLagControls').isVisible(),false);
+  assert.equal(await page.locator('#simpleCounterActions').isVisible(),true);
+  await page.locator('#simpleAddP1').click();
+  assert.deepEqual((await state()).scores,[1,0]);
+
+  // Alternating/winner break policies remain unchanged after auto-confirm.
   for(const mode of ['alternate','alternate2','winner']){
-   await setup('simple',mode);await page.locator('#streamLagP2').click();await side(1);await page.locator('#streamLagLock').click();
+   await setup('simple',mode);await page.locator('#streamLagP2').click();await side(1);
+   assert.equal(await page.locator('#streamLagControls').isVisible(),false);
    await page.locator('#simpleAddP1').click();await side(mode==='alternate2'?1:0);
    await page.locator('#simpleAddP2').click();await side(mode==='alternate'?1:mode==='alternate2'?0:1);
-   console.log('PASS simple BREAK: '+mode+' uses actual next rack breaker');
+   console.log('PASS simple BREAK: '+mode+' preserves next breaker without extra lock');
   }
-  await setup('simple','alternate',true,'8-ball');await page.locator('#streamLagP2').click();await page.locator('#simpleStreamBreaker').click();await side(0);assert.deepEqual((await state()).stats.map(s=>s.breaks),[1,0]);
-  await setup('simple','alternate',true,'9-ball',true);await side(0);await page.locator('#simpleAddP1').click();await side(1);await page.locator('#simpleAddP2').click();await side(0);assert.equal((await state()).breakMode,'winner-table');
+  await setup('simple','alternate',true,'8-ball');
+  await page.locator('#streamLagP2').click();
+  await page.evaluate(()=>streamTest.breaker());
+  assert.equal((await state()).breaker,1,'First breaker is locked after lag selection');
+  assert.equal(await page.locator('#streamLagControls').isVisible(),false);
   await setup('full','alternate',true,'14.1');await page.locator('#streamLagP2').click();assert.equal((await state()).breaker,null);await reload();await side(-1);await page.locator('#streamLagP2').click();await page.locator('#lagPassBreak14').click();await side(0,'U STOLU');assert.deepEqual((await state()).stats.map(s=>s.breaks),[1,0]);assert.deepEqual((await state()).stats.map(s=>s.lagWins),[0,1]);
   await setup('full','alternate',false);assert.equal(await page.locator('#lagModal').isVisible(),true);await page.locator('#lagP2').click();assert.equal((await state()).lagWinner,1);assert.deepEqual((await state()).stats.map(s=>s.breaks),[0,1]);assert.equal(await page.locator('#streamDirectorPanel').isVisible(),false);
   assert.deepEqual(errors,[]);assert.ok(writes.some(w=>w.path==='/stream/users/isolated-stream.json'));
-  console.log('PASS no-overlay legacy lag, 8-ball, 14.1 opening choice, 0 JS errors; every request isolated');
+  console.log('PASS no-overlay legacy lag, 8/9/10-ball one-tap, 14.1 opening choice, 0 JS errors; every request isolated');
  }finally{await browser.close();}
 })().catch(e=>{console.error(e);process.exitCode=1;});

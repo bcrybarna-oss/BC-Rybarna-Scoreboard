@@ -1,5 +1,14 @@
 # Revize aplikace Poolčítadlo
 
+## Jaroslav – streamované tempo jedním potvrzením (v4.51.120 RC)
+Zadavatel: Jaroslav
+Datum: 18. 11. 2026
+Změny: Streamovaný zápas 8-ball, 9-ball a 10-ball v jednoduchém i rozšířeném počítadle po jediném zadání vítěze tempa okamžitě skryje celý panel `streamLagControls` včetně obou tlačítek, UNDO i dodatečného „ZAHÁJIT HRU • UZAMKNOUT TEMPO“. Vítěz tempa se automaticky uzamkne a lze rovnou skórovat. Po UNDO původní volby se panel znovu zobrazí. Stejně se zpracují starší obnovené zápasy s již zadaným vítězem, ale bez hodnoty `streamLagLocked`. Průběh tempa 14.1, nestrýmované tempo, rozstřel, skóre a publikace overlaye se nemění.
+Testy: `tests/stream-lag-one-tap.test.cjs` ověřuje skutečný produkční helper a render/guard kontrakty; `tests/stream-lag-browser.cjs` používá skutečný produkční HTML a izolovaný in-memory Firebase REST mock a zkouší 8/9/10 × simple/full, jeden klik, scoring, reload, UNDO, legacy lock=false a rozstřelovací pravidla; workflow stream-overlay nově spouští `npm run test:stream-lag`. [CI stream 44381493871](https://github.com/bcrybarna-oss/BC-Rybarna-Scoreboard/actions/runs/44381493871): PASS test:stream, test:stream-isolation i test:stream-lag (8/9/10 × simple/full, Undo, reload, legacy bez locku, alternate/winner break, 14.1 beze změny, bez JS výjimek a bez reálných Firebase zápisů). [Mobilní CI 44381493620](https://github.com/bcrybarna-oss/BC-Rybarna-Scoreboard/actions/runs/44381493620) PASS. [Regresní CI 44381493548](https://github.com/bcrybarna-oss/BC-Rybarna-Scoreboard/actions/runs/44381493548): Release PASS; produkční Node 397 PASS / 0 FAIL / 3 SKIP. Dvě historické vady experimentální sady zůstávají, proto celé regresní workflow FAILURE.
+Nasazení: Pouze větev `fix/stream-lag-one-tap-20261118`, produkce v4.51.119 RC beze změny. Výchozí main `a7b227cbdb652708f8466cf80ef3c3f3ec64c825`.
+Omezení: Neprovádí se testovací zápisy do produkční Firebase a nevstupuje se do aktivních zápasů uživatelů. Reálný Streamlabs na fyzickém zařízení zatím neověřen; dvě starší chyby experimentálních kontraktů nedotčené.
+
+
 ## Jaroslav – Ghost 14.1: okamžitý náběh a přehled skóre (v4.51.119 RC)
 Zadavatel: Jaroslav
 Datum: 18. 11. 2026
