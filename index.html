@@ -324,6 +324,9 @@
       min-height:56px;
       font-weight:900;
     }
+    .fourteen-utility-grid:not(:has(#openingBreakOk14:not(.hidden))){
+      grid-template-columns:1fr;
+    }
     .fourteen-info{
       margin-top:12px;
       padding:11px 12px;
@@ -1043,15 +1046,15 @@
   </div>
 
 <script src="assets/js/federal-statistics.js?v=4.51.98"></script>
-<script src="assets/js/federal-report-renderer.js?v=4.51.118"></script>
-<script src="assets/js/federal-report-controller.js?v=4.51.118"></script>
-<script src="assets/js/livescore-reader.js?v=4.51.118"></script>
-<script src="assets/js/livescore-renderer.js?v=4.51.118"></script>
-<script src="assets/js/online-presence.js?v=4.51.118"></script>
-<script src="assets/js/match-challenge-actions.js?v=4.51.118"></script>
-<script src="assets/js/players-read-repository.js?v=4.51.118"></script>
-<script src="assets/js/match-challenges.js?v=4.51.118"></script>
-<script src="assets/js/notification-center.js?v=4.51.118"></script>
+<script src="assets/js/federal-report-renderer.js?v=4.51.119"></script>
+<script src="assets/js/federal-report-controller.js?v=4.51.119"></script>
+<script src="assets/js/livescore-reader.js?v=4.51.119"></script>
+<script src="assets/js/livescore-renderer.js?v=4.51.119"></script>
+<script src="assets/js/online-presence.js?v=4.51.119"></script>
+<script src="assets/js/match-challenge-actions.js?v=4.51.119"></script>
+<script src="assets/js/players-read-repository.js?v=4.51.119"></script>
+<script src="assets/js/match-challenges.js?v=4.51.119"></script>
+<script src="assets/js/notification-center.js?v=4.51.119"></script>
 <script src="assets/js/cloud-refresh.js?v=4.51.99"></script>
 <script src="assets/js/own-reports.js?v=4.51.102"></script>
 <script src="assets/js/federal-viewer.js?v=4.51.103"></script>
@@ -3167,7 +3170,7 @@ html[data-theme="light"] #leagueSchedule .history-item .muted{
           <span class="by">by</span>
           <span class="club">BC Rybárna</span>
         </div>
-        <small class="modern-brand-version">v4.51.118 RC</small>
+        <small class="modern-brand-version">v4.51.119 RC</small>
       </div>
     </div>
     <div class="nav">
@@ -3786,7 +3789,7 @@ html[data-theme="light"] #leagueSchedule .history-item .muted{
         </div>
         <div class="subpanel" style="min-width:210px;text-align:center;margin:0">
           <div class="muted" style="font-size:10px;font-weight:950;letter-spacing:1px">AKTUÁLNÍ VERZE</div>
-          <div style="font-size:22px;font-weight:950;color:var(--gold2);margin-top:5px">v4.51.118 RC</div>
+          <div style="font-size:22px;font-weight:950;color:var(--gold2);margin-top:5px">v4.51.119 RC</div>
         </div>
       </div>
     </div>
@@ -4867,14 +4870,14 @@ html[data-theme="light"] #leagueSchedule .history-item .muted{
               <div class="solo14-score-label">Hráč</div>
               <div id="solo14TotalScore" class="solo14-score-value">0</div>
             </div>
+            <div class="solo14-score-tile gold">
+              <div class="solo14-score-label">Koulí na stole</div>
+              <div id="solo14BallsTop" class="solo14-score-value gold">15</div>
+            </div>
             <div id="solo14GhostScoreTile" class="solo14-score-tile hidden">
               <div class="solo14-score-label">Ghost</div>
               <div id="solo14GhostScore" class="solo14-score-value">0</div>
               <div id="solo14GhostLevel" class="muted hidden" style="font-size:11px;font-weight:900;margin-top:5px"></div>
-            </div>
-            <div class="solo14-score-tile gold">
-              <div class="solo14-score-label">Koulí na stole</div>
-              <div id="solo14BallsTop" class="solo14-score-value gold">15</div>
             </div>
           </div>
           <div id="p1ScoreAdjust" class="score-adjust">
@@ -6562,7 +6565,7 @@ html[data-theme="light"] #leagueSchedule .history-item .muted{
       </div>
 
       <div id="groupPlayoffSeedStatus" class="muted" style="margin-top:12px;min-height:20px"></div>
-      <div class="muted" style="margin-top:4px;font-size:11px">RC v4.51.118</div>
+      <div class="muted" style="margin-top:4px;font-size:11px">RC v4.51.119</div>
       <div class="modal-actions">
         <button id="groupPlayoffSeedApplyBtn" class="btn primary big" type="button">NASADIT DO PLAY-OFF</button>
         <button id="groupPlayoffSeedCancelBtn" class="btn">ZRUŠIT</button>
@@ -7710,7 +7713,7 @@ html[data-theme="light"] #leagueSchedule .history-item .muted{
     const btn=$('submitReportBtn');if(btn)btn.disabled=true;
     try{
       const id=uid(),p=currentUserPlayerId?data.players?.[currentUserPlayerId]:null;
-      const report={id,createdByUid:cloudUid,createdByPlayerId:currentUserPlayerId||'',createdByName:p?playerSelectionLabel(p):(cloudUserEmail||'Uživatel'),email:cloudUserEmail||'',type,area,description,appVersion:'v4.51.118 RC',createdAt:new Date().toISOString(),updatedAt:new Date().toISOString(),status:'new',adminNote:''};
+      const report={id,createdByUid:cloudUid,createdByPlayerId:currentUserPlayerId||'',createdByName:p?playerSelectionLabel(p):(cloudUserEmail||'Uživatel'),email:cloudUserEmail||'',type,area,description,appVersion:'v4.51.119 RC',createdAt:new Date().toISOString(),updatedAt:new Date().toISOString(),status:'new',adminNote:''};
       await reportRequest(id,'PUT',report);
       try{
         await writeReportUserMirror(report);
@@ -10943,7 +10946,7 @@ $('useClock').addEventListener('change',e=>$('clockSettings').classList.toggle('
       leagueLink:pendingLeagueLink ? JSON.parse(JSON.stringify(pendingLeagueLink)) : null,
       federalCupLink:federalCupLink,
       federalTeam:federalCupLink?.type==='team' ? {pending:true,players:[null,null],racks:[],baseline:null} : null,
-      isBreakShot:true,
+      isBreakShot:!solo14GhostMode,
       discipline,
       counterMode,
       target:federalCupLink ? 5 : (winnerTableMode ? null : (()=>{
@@ -10990,7 +10993,7 @@ $('useClock').addEventListener('change',e=>$('clockSettings').classList.toggle('
       reracksInInning14: 0,
       inningsHistory14: [],
       pendingEndReason14: null,
-      openingBreakAvailable14: discipline==='14.1',
+      openingBreakAvailable14: discipline==='14.1' && !solo14GhostMode,
       consecutiveFouls14:[0,0],
       turn:0,
       breaker:0,
@@ -11062,7 +11065,9 @@ $('useClock').addEventListener('change',e=>$('clockSettings').classList.toggle('
       match.breaker=0; match.turn=0;
       logEvent(match.winnerTableMode
         ? 'VÍTĚZ NA STOLE • první rozstřel '+match.playerNames[0]+' • čeká '+match.winnerTable.players[match.winnerTable.waiting].displayName
-        : 'První rozstřel ručně nastaven na '+match.playerNames[0]);
+        : (match.solo14GhostMode
+          ? '14.1 Ghost • hráč začíná přímo náběhem'
+          : 'První rozstřel ručně nastaven na '+match.playerNames[0]));
       beginRack();
       renderMatch();
     }
@@ -11204,7 +11209,8 @@ $('useClock').addEventListener('change',e=>$('clockSettings').classList.toggle('
     if(match.federalTeam)match.federalTeam.baseline=JSON.parse(JSON.stringify(match.stats));
     if(match.federalCupLink&&!match.federalTeam){const e=match.federalEvidence||(match.federalEvidence={version:1,fromStart:false,racks:[]});e.rackBaseline=JSON.parse(JSON.stringify(match.stats));}
     if(match.winnerTableMode) syncWinnerTableSlots();
-    match.isBreakShot=true;
+    const idealGhost14=match.discipline==='14.1' && match.solo14GhostMode;
+    match.isBreakShot=!idealGhost14;
     match.softBreakOriginalBreaker=null;
     match.softBreakReturnEligibleFor=null;
     match.breakAndRunEligible=true;
@@ -11223,10 +11229,12 @@ $('useClock').addEventListener('change',e=>$('clockSettings').classList.toggle('
     match.warnedTwoFouls=[false,false];
     match.extensionsUsed=[0,0];
     match.turn=match.breaker;
-    match.stats[match.breaker].breaks++;
+    if(!idealGhost14)match.stats[match.breaker].breaks++;
     ensureDetailedPlay(true);
-    logEvent('Rack '+match.rackNumber+' • rozstřel '+match.playerNames[match.breaker]);
-    if(match.useClock) resetClock(true,true);
+    logEvent(idealGhost14
+      ? '14.1 Ghost • začátek náběhu • 14 koulí v trojúhelníku + brejková koule'
+      : 'Rack '+match.rackNumber+' • rozstřel '+match.playerNames[match.breaker]);
+    if(match.useClock) resetClock(!idealGhost14,true);
   }
 
 
@@ -14561,7 +14569,7 @@ const isFourteen=match.discipline==='14.1' && !simpleCounter;
   // Rozstřel je jednorázová fáze. U starších obnovených zápasů chraň
   // i stav, kde historický příznak zůstal true po prvním náběhu / +14.
   function openingBreakAvailableForAction14(m){
-    return !!m && m.discipline==='14.1' && !m.endedAt &&
+    return !!m && m.discipline==='14.1' && !m.solo14GhostMode && !m.endedAt &&
       m.openingBreakAvailable14===true &&
       !(m.inningsHistory14||[]).length &&
       Number(m.reracksInInning14||0)===0 &&
