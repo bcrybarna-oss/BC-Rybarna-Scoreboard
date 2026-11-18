@@ -1046,15 +1046,15 @@
   </div>
 
 <script src="assets/js/federal-statistics.js?v=4.51.98"></script>
-<script src="assets/js/federal-report-renderer.js?v=4.51.119"></script>
-<script src="assets/js/federal-report-controller.js?v=4.51.119"></script>
-<script src="assets/js/livescore-reader.js?v=4.51.119"></script>
-<script src="assets/js/livescore-renderer.js?v=4.51.119"></script>
-<script src="assets/js/online-presence.js?v=4.51.119"></script>
-<script src="assets/js/match-challenge-actions.js?v=4.51.119"></script>
-<script src="assets/js/players-read-repository.js?v=4.51.119"></script>
-<script src="assets/js/match-challenges.js?v=4.51.119"></script>
-<script src="assets/js/notification-center.js?v=4.51.119"></script>
+<script src="assets/js/federal-report-renderer.js?v=4.51.120"></script>
+<script src="assets/js/federal-report-controller.js?v=4.51.120"></script>
+<script src="assets/js/livescore-reader.js?v=4.51.120"></script>
+<script src="assets/js/livescore-renderer.js?v=4.51.120"></script>
+<script src="assets/js/online-presence.js?v=4.51.120"></script>
+<script src="assets/js/match-challenge-actions.js?v=4.51.120"></script>
+<script src="assets/js/players-read-repository.js?v=4.51.120"></script>
+<script src="assets/js/match-challenges.js?v=4.51.120"></script>
+<script src="assets/js/notification-center.js?v=4.51.120"></script>
 <script src="assets/js/cloud-refresh.js?v=4.51.99"></script>
 <script src="assets/js/own-reports.js?v=4.51.102"></script>
 <script src="assets/js/federal-viewer.js?v=4.51.103"></script>
@@ -3170,7 +3170,7 @@ html[data-theme="light"] #leagueSchedule .history-item .muted{
           <span class="by">by</span>
           <span class="club">BC Rybárna</span>
         </div>
-        <small class="modern-brand-version">v4.51.119 RC</small>
+        <small class="modern-brand-version">v4.51.120 RC</small>
       </div>
     </div>
     <div class="nav">
@@ -3789,7 +3789,7 @@ html[data-theme="light"] #leagueSchedule .history-item .muted{
         </div>
         <div class="subpanel" style="min-width:210px;text-align:center;margin:0">
           <div class="muted" style="font-size:10px;font-weight:950;letter-spacing:1px">AKTUÁLNÍ VERZE</div>
-          <div style="font-size:22px;font-weight:950;color:var(--gold2);margin-top:5px">v4.51.119 RC</div>
+          <div style="font-size:22px;font-weight:950;color:var(--gold2);margin-top:5px">v4.51.120 RC</div>
         </div>
       </div>
     </div>
@@ -6565,7 +6565,7 @@ html[data-theme="light"] #leagueSchedule .history-item .muted{
       </div>
 
       <div id="groupPlayoffSeedStatus" class="muted" style="margin-top:12px;min-height:20px"></div>
-      <div class="muted" style="margin-top:4px;font-size:11px">RC v4.51.119</div>
+      <div class="muted" style="margin-top:4px;font-size:11px">RC v4.51.120</div>
       <div class="modal-actions">
         <button id="groupPlayoffSeedApplyBtn" class="btn primary big" type="button">NASADIT DO PLAY-OFF</button>
         <button id="groupPlayoffSeedCancelBtn" class="btn">ZRUŠIT</button>
@@ -7713,7 +7713,7 @@ html[data-theme="light"] #leagueSchedule .history-item .muted{
     const btn=$('submitReportBtn');if(btn)btn.disabled=true;
     try{
       const id=uid(),p=currentUserPlayerId?data.players?.[currentUserPlayerId]:null;
-      const report={id,createdByUid:cloudUid,createdByPlayerId:currentUserPlayerId||'',createdByName:p?playerSelectionLabel(p):(cloudUserEmail||'Uživatel'),email:cloudUserEmail||'',type,area,description,appVersion:'v4.51.119 RC',createdAt:new Date().toISOString(),updatedAt:new Date().toISOString(),status:'new',adminNote:''};
+      const report={id,createdByUid:cloudUid,createdByPlayerId:currentUserPlayerId||'',createdByName:p?playerSelectionLabel(p):(cloudUserEmail||'Uživatel'),email:cloudUserEmail||'',type,area,description,appVersion:'v4.51.120 RC',createdAt:new Date().toISOString(),updatedAt:new Date().toISOString(),status:'new',adminNote:''};
       await reportRequest(id,'PUT',report);
       try{
         await writeReportUserMirror(report);
@@ -11100,8 +11100,15 @@ $('useClock').addEventListener('change',e=>$('clockSettings').classList.toggle('
   function streamLagPending(){
     return !!match?.deferredLag && (match.lagWinner==null || match.breaker==null);
   }
+  // U 8/9/10-ball je volba vítěze tempa jednorázová. Platí i pro
+  // rozehrané starší zápasy, které dosud čekaly na samostatné uzamčení.
+  function streamLagResolved(){
+    return !!match?.deferredLag &&
+      ['8-ball','9-ball','10-ball'].includes(match.discipline) &&
+      [0,1].includes(match.lagWinner) && [0,1].includes(match.breaker);
+  }
   function canEditStreamLag(){
-    return !!match?.deferredLag && !match.streamLagLocked && !match.endedAt && match.rackNumber===1 && match.isBreakShot &&
+    return !!match?.deferredLag && !streamLagResolved() && !match.streamLagLocked && !match.endedAt && match.rackNumber===1 && match.isBreakShot &&
       (match.discipline!=='14.1' || match.openingBreakAvailable14) &&
       !(match.detailedPlay?.records||[]).length;
   }
@@ -11132,6 +11139,7 @@ $('useClock').addEventListener('change',e=>$('clockSettings').classList.toggle('
     match.breaker=i;
     match.turn=i;
     beginRack();
+    if(streamLagResolved())match.streamLagLocked=true;
     openMatchScreen();
   }
 
@@ -12226,12 +12234,13 @@ const isFourteen=match.discipline==='14.1' && !simpleCounter;
         ? 'UKONČIT A ULOŽIT GHOST SESSION'
         : (match.winnerTableMode ? 'UKONČIT A ULOŽIT SESSION' : 'Ukončit a uložit jako nedohraný'));
     renderFederalTeamRack();
-    $('streamLagControls').classList.toggle('hidden',!match.deferredLag);
+    // Po jednom potvrzení tempa 8/9/10-ball ihned uvolni herní plochu.
+    $('streamLagControls').classList.toggle('hidden',!match.deferredLag || streamLagResolved());
     $('streamLagStatus').textContent=streamLagPending()?'Čeká se na výsledek tempa':'Tempo vyhrál '+match.playerNames[match.lagWinner];
-    const waitingForLagLock=simpleCounter && match.deferredLag && match.rackNumber===1 && !match.streamLagLocked;
+    const waitingForLagLock=simpleCounter && match.deferredLag && match.rackNumber===1 && !match.streamLagLocked && !streamLagResolved();
     $('streamLagLock').classList.toggle('hidden',!waitingForLagLock || streamLagPending());
     [0,1].forEach(i=>{const button=$('streamLagP'+(i+1));button.textContent='TEMPO • '+match.playerNames[i];button.disabled=!canEditStreamLag();});
-    $('simpleStreamBreaker').classList.toggle('hidden',!simpleCounter || !match.streamEnabled || waitingForLag || !!match.endedAt || (match.rackNumber===1 && !!match.streamLagLocked));
+    $('simpleStreamBreaker').classList.toggle('hidden',!simpleCounter || !match.streamEnabled || waitingForLag || !!match.endedAt || (match.rackNumber===1 && (!!match.streamLagLocked || streamLagResolved())));
     if(waitingForLagLock)$('simpleCounterActions').classList.add('hidden');
     if(streamLagPending()){
       for(const id of ['simpleCounterActions','normalActions','fourteenActions','eightBallResultPanel','fc26RackPlayers','clockWrap'])$(id)?.classList.add('hidden');
@@ -13997,7 +14006,7 @@ const isFourteen=match.discipline==='14.1' && !simpleCounter;
 
   function simpleFinishRack(player,{statType=null,label='+1'}={}){
     if(streamLagPending())return;
-    if(match?.deferredLag && match.rackNumber===1 && !match.streamLagLocked)return toast('Před prvním rozstřelem potvrď tempo tlačítkem ZAHÁJIT HRU.');
+    if(match?.deferredLag && match.rackNumber===1 && !match.streamLagLocked && !streamLagResolved())return toast('Před prvním rozstřelem potvrď tempo tlačítkem ZAHÁJIT HRU.');
     if(!match || match.counterMode!=='simple' || !editableMatchOwnedByCurrentUser(match))return;
     if(match.endedAt || match.status==='complete'){
       toast('Zápas už je ukončený.');
@@ -14640,7 +14649,7 @@ const isFourteen=match.discipline==='14.1' && !simpleCounter;
   function changeRackBreaker(){
     if(!match) return;
     if(streamLagPending())return toast('Nejdřív zadej výsledek tempa.');
-    if(match.deferredLag && match.rackNumber===1 && match.streamLagLocked)return toast('Tempo je uzamčené. Nejdřív vrať zahájení hry přes UNDO.');
+    if(match.deferredLag && match.rackNumber===1 && (match.streamLagLocked || streamLagResolved()))return toast('Tempo je uzamčené. Nejdřív vrať zahájení hry přes UNDO.');
     // Rozstřel lze ve Federal Cupu opravit před jeho odehráním. Po něm
     // by změna vlastníka oddělila statistiky breaku a B&R od skutečného hráče.
     if(match.federalCupLink && !match.isBreakShot && !match.federalTeam?.pending){
