@@ -2,7 +2,7 @@
 
 Zadavatel: Dominik, navazuje na PR #68. Datum: 24. 11. 2026.
 
-Kandidát **v4.51.122 RC** z `a4960aa24dfb041157202a9a38c765ec6391c813` (v121). Nic nesloučeno ani nenasazeno. PR #55 a ostatní otevřená práce se nemění.
+**v4.51.122 RC nasazeno**, merge `f3a503f6fb5122d76e36a044cc6bc2872ae6d4ce` z původního main `a4960aa24dfb041157202a9a38c765ec6391c813` (v121). [Skutečný výsledek nasazení](deployment-v4.51.122.md). PR #55 a ostatní otevřená práce se nemění.
 
 ## Příčina a hranice
 

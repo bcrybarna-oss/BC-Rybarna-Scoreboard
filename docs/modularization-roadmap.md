@@ -1,8 +1,8 @@
 # Aktuální roadmapa modularizace Poolčítadla
 
-## Samostatná UI oprava SKO — kandidát v4.51.122 RC
+## Samostatná UI oprava SKO — nasazeno v4.51.122 RC
 
-Vizuální pořadí volných losů a spojnice se řeší mimo modularizaci. Datové a sportovní vrstvy se nemění; 10b1/10b2 zůstávají nezahájené. [Rozsah](sko-visual-slots-v4.51.122.md).
+Vizuální pořadí volných losů a spojnice nasazeno přes PR #70, merge `f3a503f6fb5122d76e36a044cc6bc2872ae6d4ce`, Pages 45387811562 SUCCESS. [Deployment report](deployment-v4.51.122.md). Jde o práci mimo modularizaci. Datové a sportovní vrstvy se nemění; 10b1/10b2 zůstávají nezahájené. [Rozsah](sko-visual-slots-v4.51.122.md).
 
 ## Samostatná oprava hybridního nasazení — nasazeno v4.51.121 RC
 
