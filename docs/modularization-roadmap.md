@@ -1,5 +1,10 @@
 # Aktuální roadmapa modularizace Poolčítadla
 
+## Samostatná oprava hybridního nasazení — kandidát v4.51.121 RC
+
+Oprava pevného nasazení Skupiny → SKO, ručních editorů a náhledu BYE probíhá mimo modularizaci. Etapy 10b1 a 10b2 zůstávají nezahájené. [Rozsah a ověření](hybrid-sko-byes-v4.51.121.md)
+
+
 ## Pozastaveno kvůli opravě zakládání běžných turnajů
 
 Oprava formuláře a ověřování uložení z PR #59 je nasazená ve v4.51.115 RC. Modularizace zůstává pozastavená. Etapy 10b1 a 10b2 jsou nezahájené. [Záznam nasazení](deployment-v4.51.115.md)

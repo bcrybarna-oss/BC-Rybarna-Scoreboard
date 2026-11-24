@@ -1046,15 +1046,15 @@
   </div>
 
 <script src="assets/js/federal-statistics.js?v=4.51.98"></script>
-<script src="assets/js/federal-report-renderer.js?v=4.51.120"></script>
-<script src="assets/js/federal-report-controller.js?v=4.51.120"></script>
-<script src="assets/js/livescore-reader.js?v=4.51.120"></script>
-<script src="assets/js/livescore-renderer.js?v=4.51.120"></script>
-<script src="assets/js/online-presence.js?v=4.51.120"></script>
-<script src="assets/js/match-challenge-actions.js?v=4.51.120"></script>
-<script src="assets/js/players-read-repository.js?v=4.51.120"></script>
-<script src="assets/js/match-challenges.js?v=4.51.120"></script>
-<script src="assets/js/notification-center.js?v=4.51.120"></script>
+<script src="assets/js/federal-report-renderer.js?v=4.51.121"></script>
+<script src="assets/js/federal-report-controller.js?v=4.51.121"></script>
+<script src="assets/js/livescore-reader.js?v=4.51.121"></script>
+<script src="assets/js/livescore-renderer.js?v=4.51.121"></script>
+<script src="assets/js/online-presence.js?v=4.51.121"></script>
+<script src="assets/js/match-challenge-actions.js?v=4.51.121"></script>
+<script src="assets/js/players-read-repository.js?v=4.51.121"></script>
+<script src="assets/js/match-challenges.js?v=4.51.121"></script>
+<script src="assets/js/notification-center.js?v=4.51.121"></script>
 <script src="assets/js/cloud-refresh.js?v=4.51.99"></script>
 <script src="assets/js/own-reports.js?v=4.51.102"></script>
 <script src="assets/js/federal-viewer.js?v=4.51.103"></script>
@@ -3170,7 +3170,7 @@ html[data-theme="light"] #leagueSchedule .history-item .muted{
           <span class="by">by</span>
           <span class="club">BC Rybárna</span>
         </div>
-        <small class="modern-brand-version">v4.51.120 RC</small>
+        <small class="modern-brand-version">v4.51.121 RC</small>
       </div>
     </div>
     <div class="nav">
@@ -3789,7 +3789,7 @@ html[data-theme="light"] #leagueSchedule .history-item .muted{
         </div>
         <div class="subpanel" style="min-width:210px;text-align:center;margin:0">
           <div class="muted" style="font-size:10px;font-weight:950;letter-spacing:1px">AKTUÁLNÍ VERZE</div>
-          <div style="font-size:22px;font-weight:950;color:var(--gold2);margin-top:5px">v4.51.120 RC</div>
+          <div style="font-size:22px;font-weight:950;color:var(--gold2);margin-top:5px">v4.51.121 RC</div>
         </div>
       </div>
     </div>
@@ -6565,7 +6565,7 @@ html[data-theme="light"] #leagueSchedule .history-item .muted{
       </div>
 
       <div id="groupPlayoffSeedStatus" class="muted" style="margin-top:12px;min-height:20px"></div>
-      <div class="muted" style="margin-top:4px;font-size:11px">RC v4.51.120</div>
+      <div class="muted" style="margin-top:4px;font-size:11px">RC v4.51.121</div>
       <div class="modal-actions">
         <button id="groupPlayoffSeedApplyBtn" class="btn primary big" type="button">NASADIT DO PLAY-OFF</button>
         <button id="groupPlayoffSeedCancelBtn" class="btn">ZRUŠIT</button>
@@ -7713,7 +7713,7 @@ html[data-theme="light"] #leagueSchedule .history-item .muted{
     const btn=$('submitReportBtn');if(btn)btn.disabled=true;
     try{
       const id=uid(),p=currentUserPlayerId?data.players?.[currentUserPlayerId]:null;
-      const report={id,createdByUid:cloudUid,createdByPlayerId:currentUserPlayerId||'',createdByName:p?playerSelectionLabel(p):(cloudUserEmail||'Uživatel'),email:cloudUserEmail||'',type,area,description,appVersion:'v4.51.120 RC',createdAt:new Date().toISOString(),updatedAt:new Date().toISOString(),status:'new',adminNote:''};
+      const report={id,createdByUid:cloudUid,createdByPlayerId:currentUserPlayerId||'',createdByName:p?playerSelectionLabel(p):(cloudUserEmail||'Uživatel'),email:cloudUserEmail||'',type,area,description,appVersion:'v4.51.121 RC',createdAt:new Date().toISOString(),updatedAt:new Date().toISOString(),status:'new',adminNote:''};
       await reportRequest(id,'PUT',report);
       try{
         await writeReportUserMirror(report);
@@ -16657,7 +16657,7 @@ $('winnerText').textContent = match.solo14
         const b=manualTournamentSeedOrder[i+1];
         pairs.push(`<div style="padding:6px 0;border-bottom:1px solid #29292d">
           <strong>Zápas ${Math.floor(i/2)+1}:</strong>
-          ${esc(tournamentPlayerName(a))} <span class="muted">vs</span> ${b?esc(tournamentPlayerName(b)):'BYE'}
+          ${esc(tournamentPlayerName(a))} <span class="muted">vs</span> ${b?esc(tournamentPlayerName(b)):'VOLNÝ LOS'}
         </div>`);
       }
       wrap.innerHTML+=`<div class="subpanel" style="margin-top:10px">
@@ -16952,6 +16952,72 @@ $('winnerText').textContent = match.solo14
     return null;
   }
 
+  function knockoutSeedRanks(count){
+    let size=2;
+    while(size<count)size*=2;
+    let ranks=size===2?[1,2]:[1,4,3,2];
+    while(ranks.length<size){
+      const next=ranks.length*2;
+      ranks=ranks.flatMap(rank=>[rank,next+1-rank]);
+    }
+    return ranks;
+  }
+
+  function groupPlayoffSlots(t,order){
+    if(t.format!=='groups_sko')return order.length%2?[...order,null]:[...order];
+    let index=0;
+    return knockoutSeedRanks(order.length).map(rank=>rank<=order.length?order[index++]||null:null);
+  }
+
+  function knockoutRoundLabel(size){
+    return {2:'Finále',4:'Semifinále',8:'Čtvrtfinále',16:'Osmifinále'}[size]||('Last '+size);
+  }
+
+  function fixedKnockoutPlan(t){
+    const k=t.ko,rounds=[];
+    // RTDB omits trailing empty slots, so derive capacity from the field size.
+    const size=knockoutSeedRanks(k.participantIds.length).length;
+    let inputs=Array.from({length:size},(_,slot)=>k.seedSlots[slot]?{id:k.seedSlots[slot]}:{bye:true});
+    for(let index=0;inputs.length>1;index++){
+      if(index===1 && size===8){
+        if(k.semifinalRouting==='cross13')inputs=[inputs[0],inputs[2],inputs[1],inputs[3]];
+        if(k.semifinalRouting==='cross14')inputs=[inputs[0],inputs[3],inputs[1],inputs[2]];
+      }
+      const label=knockoutRoundLabel(inputs.length),entries=[],winners=[];
+      for(let i=0;i<inputs.length;i+=2){
+        const slot=i/2,a=inputs[i],b=inputs[i+1];
+        const match=k.rounds[index]?.matches.find(m=>m.slot===slot);
+        const bye=a.bye||b.bye;
+        const winnerId=match?.winnerId||(bye?(a.id||b.id):null);
+        entries.push({slot,a,b,bye,match});
+        winners.push(winnerId?{id:winnerId}:{label:'Vítěz '+label.toLocaleLowerCase('cs-CZ')+' '+(slot+1)});
+      }
+      rounds.push({label,entries});
+      inputs=winners;
+    }
+    return rounds;
+  }
+
+  function knockoutCreateFixedWave(t){
+    const k=t.ko,index=k.rounds.length,plan=fixedKnockoutPlan(t)[index];
+    if(!plan)return;
+    const matches=[],byes=[];
+    for(const entry of plan.entries){
+      if(entry.bye){
+        byes.push({playerId:entry.a.id||entry.b.id,bracket:'KO',slot:entry.slot});
+      }else{
+        const bracket=plan.label==='Finále'?'F':(plan.label==='Semifinále'?'SF':'KO');
+        matches.push({...tournamentMatchObject(entry.a.id,entry.b.id,plan.label+' '+(entry.slot+1),bracket),slot:entry.slot});
+      }
+    }
+    if(plan.label==='Finále' && k.thirdPlacePlayoff && !knockoutThirdMatch(t)){
+      const bronze=knockoutThirdCandidates(t);
+      if(bronze.length===2)matches.push(tournamentMatchObject(bronze[0],bronze[1],'Zápas o 3. místo','3P'));
+    }
+    k.wave=index+1;
+    k.rounds.push({id:uid(),label:plan.label,type:'KO',matches,byes});
+  }
+
   function knockoutCreateWave(t){
     const k=ensureSKOState(t);
     if(!k || t.status==='complete')return;
@@ -16966,6 +17032,11 @@ $('winnerText').textContent = match.solo14
       if(k.championId && (!k.thirdPlacePlayoff || (knockoutThirdMatch(t)?.status==='done'))){
         t.status='complete';
       }
+      return;
+    }
+
+    if(k.seedSlots){
+      knockoutCreateFixedWave(t);
       return;
     }
 
@@ -17311,6 +17382,40 @@ $('winnerText').textContent = match.solo14
     toast('Penalty rozhodnuty • postupující byli zařazeni do pavouka.');
   };
 
+  function groupPlayoffFixedSeeds(qualifiers){
+    const slots=knockoutSeedRanks(qualifiers.length).map(rank=>qualifiers[rank-1]?{id:qualifiers[rank-1].id,group:qualifiers[rank-1].group,rank}:null);
+    if(new Set(qualifiers.map(p=>p.group)).size<2)return slots.filter(Boolean).map(p=>p.id);
+    const original=slots.map(p=>p?.rank||0);
+    // Only real first-round opponents can move. BYE recipients/branches stay fixed.
+    const movable=slots.map((p,i)=>p&&slots[i^1]?i:-1).filter(i=>i>=0);
+    const sameGroup=i=>Number(!!slots[i] && slots[i]?.group===slots[i^1]?.group);
+    const swap=(a,b)=>{[slots[a],slots[b]]=[slots[b],slots[a]];};
+    const less=(a,b)=>{for(let i=0;i<a.length;i++){if(a[i]!==b[i])return a[i]<b[i];}return false;};
+    for(;;){
+      let best=null;
+      for(let x=0;x<movable.length;x++)for(let y=x+1;y<movable.length;y++){
+        const a=movable[x],b=movable[y];
+        if((a>>1)===(b>>1))continue;
+        const before=sameGroup(a)+sameGroup(b);
+        if(!before)continue;
+        swap(a,b);
+        const change=sameGroup(a)+sameGroup(b)-before;
+        if(change<0){
+          const moves=Array(qualifiers.length).fill(0);
+          slots.forEach((p,i)=>{if(p)moves[p.rank-1]=Math.abs(p.rank-original[i]);});
+          const score=[change,moves.filter(Boolean).length,moves.reduce((a,b)=>a+b,0),...moves,a,b];
+          if(!best || less(score,best.score))best={a,b,score};
+        }
+        swap(a,b);
+      }
+      if(!best)break;
+      // Strictly fewer rematches each time; no cycling. If XX cannot swap with
+      // any pair free of X, every other pair contains X: the remaining XX is unavoidable.
+      swap(best.a,best.b);
+    }
+    return slots.filter(Boolean).map(p=>p.id);
+  }
+
   function groupPlayoffSeeds(t){
     const advance=Math.max(1,Number(t.advancePerGroup||2));
     const qualifiers=[];
@@ -17319,6 +17424,10 @@ $('winnerText').textContent = match.solo14
       st.slice(0,advance).forEach((r,pos)=>qualifiers.push({id:r.id,group:g.id,pos:pos+1,gi}));
     });
     qualifiers.sort((a,b)=>a.pos-b.pos||a.gi-b.gi);
+
+    if(t.format==='groups_sko'){
+      return groupPlayoffFixedSeeds(qualifiers);
+    }
 
     // High vs low seed, with a simple swap to avoid same-group rematch in first playoff round.
     const out=[];
@@ -17349,7 +17458,7 @@ $('winnerText').textContent = match.solo14
     return base;
   }
 
-  function startHybridPlayoff(t,manualOrder=null){
+  function startHybridPlayoff(t,manualOrder=null,useFixedSlots=true){
     const manual=Array.isArray(manualOrder) && manualOrder.length>0;
     if(!tournamentHasGroups(t) || t.playoffStarted)return false;
     if(!groupPhaseComplete(t))return false;
@@ -17401,7 +17510,10 @@ $('winnerText').textContent = match.solo14
       t.ko={
         participantIds:[...seeds],rounds:[],wave:0,eliminatedIds:[],eliminations:[],championId:null,runnerUpId:null,
         thirdPlacePlayoff:!!t.thirdPlacePlayoff,thirdPlaceWinnerId:null,thirdPlaceLoserId:null,
-        semifinalRouting:t.manualGroupPlayoffSemiRouting||'cross13'
+        ...(useFixedSlots?{seedSlots:groupPlayoffSlots(t,seeds)}:{}),
+        semifinalRouting:useFixedSlots
+          ? (manual && seeds.length===8 ? (t.manualGroupPlayoffSemiRouting||'adjacent') : 'adjacent')
+          : (t.manualGroupPlayoffSemiRouting||'cross13')
       };
       knockoutCreateWave(t);
     }else if(t.format==='groups_dko'){
@@ -18990,93 +19102,60 @@ $('winnerText').textContent = match.solo14
     return `${info.groupName}${info.place?' • '+info.place+'. místo':''}`;
   }
 
+  function manualPlayoffPositions(t,className){
+    const advance=Math.max(1,Number(t.advancePerGroup||2));
+    const count=Math.max(2,(t.groups||[]).length*advance);
+    const candidates=(t.groups||[]).flatMap(g=>groupStandings(g,t).map((r,i)=>({
+      id:r.id,label:tournamentPlayerName(r.id,t)+' • '+(g.name||('Skupina '+g.id))+' • '+(i+1)+'. místo'
+    })));
+    const allowed=new Set(candidates.map(p=>p.id));
+    const existing=(t.manualGroupPlayoffOrder||[]).filter(id=>allowed.has(id));
+    const suggested=t.format==='groups_sko' ? groupPlayoffSeeds(t)
+      : (t.groups||[]).flatMap(g=>groupStandings(g,t).slice(0,advance).map(r=>r.id));
+    const order=existing.length===count?existing:suggested;
+    const slots=groupPlayoffSlots(t,order);
+    const target=t.format==='groups_sko'
+      ? knockoutRoundLabel(slots.length/2).toLocaleLowerCase('cs-CZ') : 'dalšího kola';
+    const pairs=[];
+    for(let i=0;i<slots.length;i+=2){
+      const title=t.format==='groups_sko' ? knockoutRoundLabel(slots.length) : 'Zápas';
+      pairs.push(`<div class="subpanel" style="margin-bottom:10px;border-color:rgba(212,175,55,.35)">
+        <strong>${esc(title)} ${i/2+1}</strong><div class="grid two" style="margin-top:8px">
+        ${[i,i+1].map(slot=>slots[slot]
+          ? `<div><label>Hráč ${slot%2+1}</label><select class="${className}" data-tournament-id="${esc(t.id)}" data-slot="${slot}">
+              <option value="">— vyber hráče —</option>
+              ${candidates.map(p=>`<option value="${esc(p.id)}" ${slots[slot]===p.id?'selected':''}>${esc(p.label)}</option>`).join('')}
+            </select></div>`
+          : `<div class="manual-playoff-bye" data-bye-player-slot="${slot===i?i+1:i}" data-bye-target="${esc(target)}">
+              <strong>VOLNÝ LOS</strong><p class="muted">${esc(tournamentPlayerName(slots[slot===i?i+1:i],t))} — postupuje přímo do ${esc(target)}.</p>
+            </div>`).join('')}
+        </div></div>`);
+    }
+    return pairs.join('');
+  }
+
+  function updateManualPlayoffByes(container,t){
+    container.querySelectorAll('[data-bye-player-slot]').forEach(el=>{
+      const select=container.querySelector('select[data-slot="'+el.dataset.byePlayerSlot+'"]');
+      const name=select?.value?tournamentPlayerName(select.value,t):'Vybraný hráč';
+      el.querySelector('p').textContent=name+' — postupuje přímo do '+el.dataset.byeTarget+'.';
+    });
+  }
+
+  document.addEventListener('change',event=>{
+    if(!event.target.matches('.manual-playoff-slot,.inline-manual-playoff-slot'))return;
+    const t=(data.tournaments||[]).find(t=>t.id===event.target.dataset.tournamentId);
+    if(t)updateManualPlayoffByes(event.target.closest('.manual-playoff-positions'),t);
+  });
+
   function buildManualGroupSeedEditor(t){
     const wrap=$('groupPlayoffManualList');
     if(!wrap)return;
-
-    const advance=Math.max(1,Number(t.advancePerGroup||2));
-    const playoffSlots=Math.max(2,(t.groups||[]).length*advance);
-
-    // Ruční režim nabízí všechny hráče ze skupin.
-    // Aktuální pořadí skupiny se zobrazuje pouze jako informace, ale neomezuje výběr.
-    const candidates=[];
-    for(const g of (t.groups||[])){
-      const rows=groupStandings(g,t);
-      rows.forEach((r,i)=>candidates.push({
-        id:r.id,
-        groupId:g.id,
-        groupName:g.name||('Skupina '+g.id),
-        place:i+1
-      }));
-    }
-
-    const candidateIds=candidates.map(q=>q.id);
-    const existing=(t.manualGroupPlayoffOrder||[]).filter(id=>candidateIds.includes(id));
-
-    // Výchozí návrh je jen pomůcka. Při shodě ve skupině nic nerozhodujeme za organizátora;
-    // ruční výběr může být libovolný.
-    const suggested=[];
-    for(const g of (t.groups||[])){
-      groupStandings(g,t).slice(0,advance).forEach(r=>suggested.push(r.id));
-    }
-    const order=existing.length===playoffSlots ? existing : suggested.slice(0,playoffSlots);
-
-    const options=candidates.map(q=>`
-      <option value="${q.id}">
-        ${escapeHtml(tournamentPlayerName(q.id,t))} • ${escapeHtml(q.groupName)} • ${q.place}. místo
-      </option>`).join('');
-
-    const pairCount=Math.floor(playoffSlots/2);
-    let html=`
-      <div class="subpanel" style="margin-bottom:12px;border-color:rgba(212,175,55,.25)">
-        <strong>POSTUPUJÍCÍ DO PLAY-OFF: ${playoffSlots}</strong>
-        <div class="muted" style="margin-top:5px">
-          Výběr není omezen automatickým pořadím ve skupině. Můžeš zvolit přesně stejné postupující jako v papírovém turnaji.
-        </div>
-      </div>`;
-
-    for(let pair=0;pair<pairCount;pair++){
-      const aIndex=pair*2;
-      const bIndex=aIndex+1;
-      const label=playoffSlots===8
-        ? 'QF '+(pair+1)
-        : (playoffSlots===4 ? 'SF '+(pair+1) : 'ZÁPAS '+(pair+1));
-
-      html+=`
-        <div class="subpanel" style="margin-bottom:10px;border-color:rgba(212,175,55,.38)">
-          <strong>${label}</strong>
-          <div class="grid two" style="margin-top:8px">
-            <div>
-              <label>Hráč 1</label>
-              <select class="manual-playoff-slot" data-slot="${aIndex}">
-                <option value="">— vyber hráče —</option>
-                ${options}
-              </select>
-            </div>
-            <div>
-              <label>Hráč 2</label>
-              <select class="manual-playoff-slot" data-slot="${bIndex}">
-                <option value="">— vyber hráče —</option>
-                ${options}
-              </select>
-            </div>
-          </div>
-        </div>`;
-    }
-
-    wrap.innerHTML=html;
-
-    order.forEach((id,i)=>{
-      const sel=wrap.querySelector(`select[data-slot="${i}"]`);
-      if(sel)sel.value=id;
-    });
-
-    const semiBox=$('groupPlayoffSemiRoutingBox');
-    const showSemi=t.format==='groups_sko' && playoffSlots===8;
-    if(semiBox)semiBox.classList.toggle('hidden',!showSemi);
-    if(showSemi && $('groupPlayoffSemiRouting')){
-      $('groupPlayoffSemiRouting').value=t.manualGroupPlayoffSemiRouting||'cross13';
-    }
+    wrap.classList.add('manual-playoff-positions');
+    wrap.innerHTML=manualPlayoffPositions(t,'manual-playoff-slot');
+    const showSemi=t.format==='groups_sko' && groupPlayoffSeeds(t).length===8;
+    $('groupPlayoffSemiRoutingBox')?.classList.toggle('hidden',!showSemi);
+    if(showSemi)$('groupPlayoffSemiRouting').value=t.manualGroupPlayoffSemiRouting||'adjacent';
   }
 
   window.openGroupPlayoffSeedModal=function(tid,initialMode='rules'){
@@ -19225,7 +19304,7 @@ $('winnerText').textContent = match.solo14
       t.groupEliminations=[];
 
       t.manualGroupPlayoffOrder=[...manualOrder];
-      t.manualGroupPlayoffSemiRouting=$('groupPlayoffSemiRouting')?.value||'cross13';
+      t.manualGroupPlayoffSemiRouting=$('groupPlayoffSemiRouting')?.value||'adjacent';
       t.groupAdvanceTieRule='manual';
       t.groupPenaltyTieBreak=false;
       t.groupPenaltyWinners={};
@@ -19573,12 +19652,32 @@ $('winnerText').textContent = match.solo14
     return rows;
   }
 
+  function knockoutByeDestination(t,b){
+    if(!t.ko?.seedSlots)return 'POSTUP BEZ ZÁPASU';
+    return 'Postupuje přímo do '+knockoutRoundLabel(knockoutSeedRanks(t.ko.participantIds.length).length/2).toLocaleLowerCase('cs-CZ')+
+      ' '+(Math.floor(b.slot/2)+1)+'.';
+  }
+
+  function fixedKnockoutPreviewRounds(t,bracket=false){
+    if(!t.ko?.seedSlots)return '';
+    return fixedKnockoutPlan(t).slice(t.ko.rounds.length).map(round=>
+      `<div class="${bracket?'bracket-round':'tournament-round'} knockout-preview">
+        <h4>${esc(round.label)}</h4>
+        ${round.entries.map(entry=>`<div class="${bracket?'bracket-match':'tournament-match'}">
+          <div class="muted" style="margin-bottom:8px">NÁHLED • ${esc(round.label)} ${entry.slot+1}</div>
+          ${[entry.a,entry.b].map(player=>`<div class="${bracket?'bracket-player':''}" style="padding:8px">
+            ${esc(player.id?tournamentPlayerName(player.id,t):player.label)}
+          </div>`).join('')}
+        </div>`).join('')}
+      </div>`).join('');
+  }
+
   function renderTournamentBye(t,b,label='VOLNÝ LOS'){
     if(!b?.playerId)return '';
     return `<div class="tournament-match done" style="border-color:rgba(212,175,55,.48);background:rgba(212,175,55,.06)">
-      <div style="display:flex;justify-content:space-between;gap:8px;align-items:center;margin-bottom:7px">
+      <div style="display:flex;justify-content:space-between;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:7px">
         <span class="tournament-badge gold">${esc(label)}</span>
-        <span class="muted">POSTUP BEZ ZÁPASU</span>
+        <span class="muted">${esc(knockoutByeDestination(t,b))}</span>
       </div>
       <div style="text-align:center;font-size:18px;font-weight:950;color:var(--gold2);padding:8px 4px">
         ${esc(tournamentPlayerName(b.playerId,t))}
@@ -19610,100 +19709,35 @@ function renderSKOTournament(t){
 
       <div class="tournament-columns">${(k.rounds||[]).map(r=>`<div class="tournament-round">
         <h4>${esc(r.label)}</h4>
-        ${(r.byes||[]).map(b=>renderTournamentBye(t,b,'VOLNÝ LOS • BYE')).join('')}
+        ${(r.byes||[]).map(b=>renderTournamentBye(t,b,'VOLNÝ LOS')).join('')}
         ${(r.matches||[]).map(m=>renderTournamentMatch(t,m)).join('')}
-      </div>`).join('')}</div>`;
+      </div>`).join('')}${fixedKnockoutPreviewRounds(t)}</div>`;
   }
 
 
   function inlineManualPlayoffEditorHtml(t){
     if(!t || !['groups_sko','groups_dko'].includes(t.format) || !groupPhaseComplete(t) || t.playoffStarted)return '';
-
-    const advance=Math.max(1,Number(t.advancePerGroup||2));
-    const playoffSlots=Math.max(2,(t.groups||[]).length*advance);
-
-    const candidates=[];
-    for(const g of (t.groups||[])){
-      const rows=groupStandings(g,t);
-      rows.forEach((r,i)=>candidates.push({
-        id:r.id,
-        groupName:g.name||('Skupina '+g.id),
-        place:i+1
-      }));
-    }
-
-    const candidateIds=candidates.map(x=>x.id);
-    const existing=(t.manualGroupPlayoffOrder||[]).filter(id=>candidateIds.includes(id));
-
-    const suggested=[];
-    for(const g of (t.groups||[])){
-      groupStandings(g,t).slice(0,advance).forEach(r=>suggested.push(r.id));
-    }
-    const order=existing.length===playoffSlots ? existing : suggested.slice(0,playoffSlots);
-
-    function optionsForSlot(slotIndex){
-      return candidates.map(q=>`
-        <option value="${esc(q.id)}" ${order[slotIndex]===q.id?'selected':''}>
-          ${esc(tournamentPlayerName(q.id,t))} • ${esc(q.groupName)} • ${q.place}. místo
-        </option>`).join('');
-    }
-
-    const pairCount=Math.floor(playoffSlots/2);
-    let pairsHtml='';
-
-    for(let pair=0;pair<pairCount;pair++){
-      const a=pair*2,b=a+1;
-      const label=playoffSlots===8?'QF '+(pair+1):(playoffSlots===4?'SF '+(pair+1):'ZÁPAS '+(pair+1));
-      pairsHtml+=`
-        <div class="subpanel" style="margin-bottom:10px;border-color:rgba(212,175,55,.35)">
-          <strong>${label}</strong>
-          <div class="grid two" style="margin-top:8px">
-            <div>
-              <label>Hráč 1</label>
-              <select class="inline-manual-playoff-slot" data-tournament-id="${esc(t.id)}" data-slot="${a}">
-                <option value="">— vyber hráče —</option>
-                ${optionsForSlot(a)}
-              </select>
-            </div>
-            <div>
-              <label>Hráč 2</label>
-              <select class="inline-manual-playoff-slot" data-tournament-id="${esc(t.id)}" data-slot="${b}">
-                <option value="">— vyber hráče —</option>
-                ${optionsForSlot(b)}
-              </select>
-            </div>
-          </div>
-        </div>`;
-    }
-
-    const routing=t.manualGroupPlayoffSemiRouting||'cross13';
-
-    return `
-      <details class="subpanel" open style="margin-top:14px;border-color:var(--gold)">
-        <summary style="cursor:pointer;font-weight:950;font-size:18px">RUČNÍ NASAZENÍ PLAY-OFF</summary>
-        <div class="muted" style="margin-top:8px">
-          Vyber postupující přímo ze seznamu všech hráčů ve skupinách. Shody ve skupinách ruční nasazení neblokují.
-        </div>
-
-        <div id="inlineManualPlayoffEditor_${esc(t.id)}" style="margin-top:12px">
-          ${pairsHtml}
-        </div>
-
-        ${t.format==='groups_sko' && playoffSlots===8 ? `
-          <div class="subpanel" style="margin-top:12px">
-            <label>Napojení čtvrtfinále do semifinále</label>
-            <select id="inlineSemiRouting_${esc(t.id)}">
-              <option value="cross13" ${routing==='cross13'?'selected':''}>Vítěz QF1 × vítěz QF3 • vítěz QF2 × vítěz QF4</option>
-              <option value="cross14" ${routing==='cross14'?'selected':''}>Vítěz QF1 × vítěz QF4 • vítěz QF2 × vítěz QF3</option>
-              <option value="adjacent" ${routing==='adjacent'?'selected':''}>Vítěz QF1 × vítěz QF2 • vítěz QF3 × vítěz QF4</option>
-            </select>
-          </div>` : ''}
-
-        <div id="inlineManualPlayoffStatus_${esc(t.id)}" class="muted" style="margin-top:10px;min-height:20px"></div>
-        <button class="btn primary big inline-manual-playoff-apply" data-tournament-id="${esc(t.id)}" type="button" style="width:100%;margin-top:10px">
-          VYTVOŘIT PLAY-OFF PODLE TOHOTO NASAZENÍ
-        </button>
-      </details>`;
+    const count=(t.groups||[]).length*Math.max(1,Number(t.advancePerGroup||2));
+    const routing=t.manualGroupPlayoffSemiRouting||'adjacent';
+    return `<details class="subpanel" open style="margin-top:14px;border-color:rgba(212,175,55,.35)">
+      <summary style="cursor:pointer;font-weight:950;font-size:18px">RUČNÍ NASAZENÍ PLAY-OFF</summary>
+      <p class="muted">Vyber postupující přímo ze seznamu všech hráčů ve skupinách. Shody ve skupinách ruční nasazení neblokují. U pozice s volným losem postupuje vybraný hráč bez zápasu.</p>
+      <div id="inlineManualPlayoffEditor_${esc(t.id)}" class="manual-playoff-positions" style="margin-top:12px">
+        ${manualPlayoffPositions(t,'inline-manual-playoff-slot')}
+      </div>
+      ${t.format==='groups_sko' && count===8 ? `<div class="subpanel" style="margin-top:12px">
+        <label>Napojení čtvrtfinále do semifinále</label>
+        <select id="inlineSemiRouting_${esc(t.id)}">
+          ${[['adjacent','Vítěz QF1 × vítěz QF2 • vítěz QF3 × vítěz QF4'],
+            ['cross13','Vítěz QF1 × vítěz QF3 • vítěz QF2 × vítěz QF4'],
+            ['cross14','Vítěz QF1 × vítěz QF4 • vítěz QF2 × vítěz QF3']]
+            .map(([value,label])=>`<option value="${value}" ${routing===value?'selected':''}>${label}</option>`).join('')}
+        </select></div>` : ''}
+      <div id="inlineManualPlayoffStatus_${esc(t.id)}" class="muted" style="margin-top:10px;min-height:20px"></div>
+      <button class="btn primary big inline-manual-playoff-apply" data-tournament-id="${esc(t.id)}" type="button" style="width:100%;margin-top:10px">
+        VYTVOŘIT PLAY-OFF PODLE TOHOTO NASAZENÍ
+      </button>
+    </details>`;
   }
 
   async function applyInlineManualPlayoff(tid){
@@ -19763,7 +19797,7 @@ function renderSKOTournament(t){
     t.awaitingPlayoffSeeding=true;
 
     t.manualGroupPlayoffOrder=[...order];
-    t.manualGroupPlayoffSemiRouting=$('inlineSemiRouting_'+tid)?.value||'cross13';
+    t.manualGroupPlayoffSemiRouting=$('inlineSemiRouting_'+tid)?.value||'adjacent';
     t.groupAdvanceTieRule='manual';
     t.groupPenaltyTieBreak=false;
     t.groupPenaltyWinners={};
@@ -19972,7 +20006,7 @@ function renderSKOTournament(t){
 
   function bracketRoundHtml(t,r,title){
     const matches=(r.matches||[]).map(m=>bracketMatchHtml(t,m)).join('');
-    const byes=(r.byes||[]).map(b=>`<div class="bracket-bye"><strong>${esc(tournamentPlayerName(b.playerId,t))}</strong> • VOLNÝ LOS / BYE</div>`).join('');
+    const byes=(r.byes||[]).map(b=>`<div class="bracket-bye"><strong>${esc(tournamentPlayerName(b.playerId,t))}</strong> • VOLNÝ LOS<br>${esc(knockoutByeDestination(t,b))}</div>`).join('');
     return `<div class="bracket-round"><h4>${esc(title||r.label||'KOLO')}</h4>${matches}${byes}</div>`;
   }
 
@@ -20014,7 +20048,7 @@ function renderSKOTournament(t){
     return `<div class="bracket-wrap">
       <div class="bracket-section">
         <div class="bracket-section-title"><strong>SKO PAVOUK</strong><span class="muted">jedna prohra = konec</span></div>
-        <div class="bracket-columns">${(t.ko?.rounds||[]).map(r=>bracketRoundHtml(t,r,r.label)).join('')}</div>
+        <div class="bracket-columns">${(t.ko?.rounds||[]).map(r=>bracketRoundHtml(t,r,r.label)).join('')}${fixedKnockoutPreviewRounds(t,true)}</div>
       </div>
     </div>`;
   }
@@ -21215,7 +21249,7 @@ function renderTournamentDetail(){
       if(model.playoffOrder.length!==qualifiers.length || model.playoffOrder.some(id=>!id))model.playoffOrder=qualifiers;
       if(previous.some((id,i)=>id!==model.playoffOrder[i]))model.seedReview=true;
       historicalValidateOrder(model.playoffOrder,qualifiers);
-      startHybridPlayoff(t,model.playoffOrder);
+      startHybridPlayoff(t,model.playoffOrder,!source.ko || !!source.ko.seedSlots);
     }
     for(let pass=0;pass<=Object.keys(model.results||{}).length;pass++){
       const ready=historicalStructureSlots(t).filter(s=>!s.key.startsWith('g_') && !used.has(s.key));
@@ -25052,6 +25086,7 @@ function renderTournamentDetail(){
 
     if(t.ko){
       t.ko.participantIds=(t.ko.participantIds||[]).map(id=>id===oldId?newId:id);
+      if(t.ko.seedSlots)t.ko.seedSlots=Array.from(t.ko.seedSlots,id=>id===oldId?newId:id||null);
       t.ko.eliminatedIds=(t.ko.eliminatedIds||[]).map(id=>id===oldId?newId:id);
       if(t.ko.championId===oldId)t.ko.championId=newId;
       if(t.ko.runnerUpId===oldId)t.ko.runnerUpId=newId;
