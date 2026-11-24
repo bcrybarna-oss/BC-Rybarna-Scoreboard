@@ -1,5 +1,14 @@
 # Revize aplikace Poolčítadlo
 
+## Dominik – pevné nasazení Skupiny → SKO a volné losy (v4.51.121 RC)
+Zadavatel: Dominik
+Datum: 24. 11. 2026
+Změny: Nové play-off Skupiny → SKO používá pevné pozice do mocniny dvou. Nejvýše nasazení získají BYE a návaznosti kol drží potvrzené větve. Oba ruční editory zobrazují všechny účastníky i volné pozice. Náhled ukazuje přímý postup a čekajícího soupeře. Staré pavouky zůstávají na původní cestě.
+Testy: Regresní testy nad produkčním zdrojem a izolované browserové kontroly ověřují 6/7/8 hráčů, ruční nasazení, reload a starší záznamy. [Rozsah a ověření](docs/hybrid-sko-byes-v4.51.121.md)
+Nasazení: Kandidát k revizi, produkce zůstává v4.51.120 RC.
+Omezení: Živé Auth, Firebase Rules a fyzická zařízení nebyly ověřeny. Původní rozehrané pavouky se automaticky nepřelosovávají.
+
+
 ## Jaroslav – streamované tempo jedním potvrzením (v4.51.120 RC)
 Zadavatel: Jaroslav
 Datum: 18. 11. 2026

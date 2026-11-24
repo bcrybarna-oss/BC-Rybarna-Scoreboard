@@ -1,0 +1,3363 @@
+{
+  "baseline": "f3f513b8c6c14aaf5ccfa40c823bd25f3c4511a8",
+  "cases": {
+    "seeded": {
+      "id": "f4de464f-d9cb-48f4-a603-0312ffdab2cb",
+      "createdByUid": "isolated-owner",
+      "managerUids": {
+        "isolated-owner": true
+      },
+      "name": "Legacy historical seven",
+      "format": "groups_sko",
+      "discipline": "9-ball",
+      "raceTo": 5,
+      "breakMode": "alternate",
+      "seedingMode": "manual",
+      "tableCount": 1,
+      "createdAt": "2026-10-01T12:00:00.000Z",
+      "status": "active",
+      "playerIds": [
+        "A",
+        "B",
+        "C",
+        "D",
+        "E",
+        "F",
+        "G"
+      ],
+      "guests": {},
+      "groups": [
+        {
+          "id": "A",
+          "players": [
+            "A",
+            "B",
+            "C",
+            "D",
+            "E",
+            "F",
+            "G"
+          ],
+          "matches": [
+            {
+              "id": "3a90c005-3837-4507-9d4a-8fe31e12e302",
+              "player1Id": "B",
+              "player2Id": "G",
+              "status": "done",
+              "tableNumber": null,
+              "score1": 5,
+              "score2": 1,
+              "winnerId": "B",
+              "loserId": "G",
+              "roundNumber": 1,
+              "roundOrder": 1,
+              "roundLabel": "Kolo 1",
+              "resumable": false,
+              "finishedAt": "2026-11-24T08:18:59.710Z",
+              "scoreboardMatchId": null,
+              "manualResult": true,
+              "manualResultByUid": "isolated-owner",
+              "manualResultAt": "2026-11-24T08:18:59.710Z"
+            },
+            {
+              "id": "622404f0-c594-4c6b-9cc6-ece834ead4a4",
+              "player1Id": "C",
+              "player2Id": "F",
+              "status": "done",
+              "tableNumber": null,
+              "score1": 5,
+              "score2": 1,
+              "winnerId": "C",
+              "loserId": "F",
+              "roundNumber": 1,
+              "roundOrder": 2,
+              "roundLabel": "Kolo 1",
+              "resumable": false,
+              "finishedAt": "2026-11-24T08:18:59.711Z",
+              "scoreboardMatchId": null,
+              "manualResult": true,
+              "manualResultByUid": "isolated-owner",
+              "manualResultAt": "2026-11-24T08:18:59.711Z"
+            },
+            {
+              "id": "07d56f73-fdcf-40ef-b6e7-0b83ff6d9139",
+              "player1Id": "D",
+              "player2Id": "E",
+              "status": "done",
+              "tableNumber": null,
+              "score1": 5,
+              "score2": 1,
+              "winnerId": "D",
+              "loserId": "E",
+              "roundNumber": 1,
+              "roundOrder": 3,
+              "roundLabel": "Kolo 1",
+              "resumable": false,
+              "finishedAt": "2026-11-24T08:18:59.711Z",
+              "scoreboardMatchId": null,
+              "manualResult": true,
+              "manualResultByUid": "isolated-owner",
+              "manualResultAt": "2026-11-24T08:18:59.711Z"
+            },
+            {
+              "id": "a224a26e-6905-48ba-8e0f-0dc36bcb1ade",
+              "player1Id": "G",
+              "player2Id": "A",
+              "status": "done",
+              "tableNumber": null,
+              "score1": 1,
+              "score2": 5,
+              "winnerId": "A",
+              "loserId": "G",
+              "roundNumber": 2,
+              "roundOrder": 1,
+              "roundLabel": "Kolo 2",
+              "resumable": false,
+              "finishedAt": "2026-11-24T08:18:59.712Z",
+              "scoreboardMatchId": null,
+              "manualResult": true,
+              "manualResultByUid": "isolated-owner",
+              "manualResultAt": "2026-11-24T08:18:59.712Z"
+            },
+            {
+              "id": "1eb0aa22-ab06-49e0-8308-774541624b13",
+              "player1Id": "E",
+              "player2Id": "B",
+              "status": "done",
+              "tableNumber": null,
+              "score1": 1,
+              "score2": 5,
+              "winnerId": "B",
+              "loserId": "E",
+              "roundNumber": 2,
+              "roundOrder": 2,
+              "roundLabel": "Kolo 2",
+              "resumable": false,
+              "finishedAt": "2026-11-24T08:18:59.712Z",
+              "scoreboardMatchId": null,
+              "manualResult": true,
+              "manualResultByUid": "isolated-owner",
+              "manualResultAt": "2026-11-24T08:18:59.712Z"
+            },
+            {
+              "id": "9f83bf1d-74b8-4da3-998c-4ac4493c453e",
+              "player1Id": "D",
+              "player2Id": "C",
+              "status": "done",
+              "tableNumber": null,
+              "score1": 1,
+              "score2": 5,
+              "winnerId": "C",
+              "loserId": "D",
+              "roundNumber": 2,
+              "roundOrder": 3,
+              "roundLabel": "Kolo 2",
+              "resumable": false,
+              "finishedAt": "2026-11-24T08:18:59.713Z",
+              "scoreboardMatchId": null,
+              "manualResult": true,
+              "manualResultByUid": "isolated-owner",
+              "manualResultAt": "2026-11-24T08:18:59.713Z"
+            },
+            {
+              "id": "f82142e3-f8f4-475d-81db-ba15af01812c",
+              "player1Id": "A",
+              "player2Id": "F",
+              "status": "done",
+              "tableNumber": null,
+              "score1": 5,
+              "score2": 1,
+              "winnerId": "A",
+              "loserId": "F",
+              "roundNumber": 3,
+              "roundOrder": 1,
+              "roundLabel": "Kolo 3",
+              "resumable": false,
+              "finishedAt": "2026-11-24T08:18:59.713Z",
+              "scoreboardMatchId": null,
+              "manualResult": true,
+              "manualResultByUid": "isolated-owner",
+              "manualResultAt": "2026-11-24T08:18:59.713Z"
+            },
+            {
+              "id": "dc3ab6e1-2e36-4b42-aec7-61991a26063c",
+              "player1Id": "G",
+              "player2Id": "E",
+              "status": "done",
+              "tableNumber": null,
+              "score1": 1,
+              "score2": 5,
+              "winnerId": "E",
+              "loserId": "G",
+              "roundNumber": 3,
+              "roundOrder": 2,
+              "roundLabel": "Kolo 3",
+              "resumable": false,
+              "finishedAt": "2026-11-24T08:18:59.713Z",
+              "scoreboardMatchId": null,
+              "manualResult": true,
+              "manualResultByUid": "isolated-owner",
+              "manualResultAt": "2026-11-24T08:18:59.713Z"
+            },
+            {
+              "id": "85c0dba2-6a2a-4b73-92ef-b4f3e8ce043e",
+              "player1Id": "B",
+              "player2Id": "C",
+              "status": "done",
+              "tableNumber": null,
+              "score1": 5,
+              "score2": 1,
+              "winnerId": "B",
+              "loserId": "C",
+              "roundNumber": 3,
+              "roundOrder": 3,
+              "roundLabel": "Kolo 3",
+              "resumable": false,
+              "finishedAt": "2026-11-24T08:18:59.714Z",
+              "scoreboardMatchId": null,
+              "manualResult": true,
+              "manualResultByUid": "isolated-owner",
+              "manualResultAt": "2026-11-24T08:18:59.714Z"
+            },
+            {
+              "id": "233347d6-5334-4454-b90b-8a5b00b8c30b",
+              "player1Id": "E",
+              "player2Id": "A",
+              "status": "done",
+              "tableNumber": null,
+              "score1": 1,
+              "score2": 5,
+              "winnerId": "A",
+              "loserId": "E",
+              "roundNumber": 4,
+              "roundOrder": 1,
+              "roundLabel": "Kolo 4",
+              "resumable": false,
+              "finishedAt": "2026-11-24T08:18:59.715Z",
+              "scoreboardMatchId": null,
+              "manualResult": true,
+              "manualResultByUid": "isolated-owner",
+              "manualResultAt": "2026-11-24T08:18:59.715Z"
+            },
+            {
+              "id": "4b94e5cf-f1fc-4391-a9c1-7f0375c06018",
+              "player1Id": "D",
+              "player2Id": "F",
+              "status": "done",
+              "tableNumber": null,
+              "score1": 5,
+              "score2": 1,
+              "winnerId": "D",
+              "loserId": "F",
+              "roundNumber": 4,
+              "roundOrder": 2,
+              "roundLabel": "Kolo 4",
+              "resumable": false,
+              "finishedAt": "2026-11-24T08:18:59.715Z",
+              "scoreboardMatchId": null,
+              "manualResult": true,
+              "manualResultByUid": "isolated-owner",
+              "manualResultAt": "2026-11-24T08:18:59.715Z"
+            },
+            {
+              "id": "acab9a7d-3392-4d85-b0d5-9444616d42ec",
+              "player1Id": "C",
+              "player2Id": "G",
+              "status": "done",
+              "tableNumber": null,
+              "score1": 5,
+              "score2": 1,
+              "winnerId": "C",
+              "loserId": "G",
+              "roundNumber": 4,
+              "roundOrder": 3,
+              "roundLabel": "Kolo 4",
+              "resumable": false,
+              "finishedAt": "2026-11-24T08:18:59.716Z",
+              "scoreboardMatchId": null,
+              "manualResult": true,
+              "manualResultByUid": "isolated-owner",
+              "manualResultAt": "2026-11-24T08:18:59.716Z"
+            },
+            {
+              "id": "c2492b21-94db-4f6b-96f9-eebfe04b0e3b",
+              "player1Id": "A",
+              "player2Id": "D",
+              "status": "done",
+              "tableNumber": null,
+              "score1": 5,
+              "score2": 1,
+              "winnerId": "A",
+              "loserId": "D",
+              "roundNumber": 5,
+              "roundOrder": 1,
+              "roundLabel": "Kolo 5",
+              "resumable": false,
+              "finishedAt": "2026-11-24T08:18:59.716Z",
+              "scoreboardMatchId": null,
+              "manualResult": true,
+              "manualResultByUid": "isolated-owner",
+              "manualResultAt": "2026-11-24T08:18:59.716Z"
+            },
+            {
+              "id": "b64c07aa-5985-4a28-8f34-83abce23e42e",
+              "player1Id": "E",
+              "player2Id": "C",
+              "status": "done",
+              "tableNumber": null,
+              "score1": 1,
+              "score2": 5,
+              "winnerId": "C",
+              "loserId": "E",
+              "roundNumber": 5,
+              "roundOrder": 2,
+              "roundLabel": "Kolo 5",
+              "resumable": false,
+              "finishedAt": "2026-11-24T08:18:59.716Z",
+              "scoreboardMatchId": null,
+              "manualResult": true,
+              "manualResultByUid": "isolated-owner",
+              "manualResultAt": "2026-11-24T08:18:59.716Z"
+            },
+            {
+              "id": "5ab6a9b3-195d-4e18-b4a7-87f473ece758",
+              "player1Id": "F",
+              "player2Id": "B",
+              "status": "done",
+              "tableNumber": null,
+              "score1": 1,
+              "score2": 5,
+              "winnerId": "B",
+              "loserId": "F",
+              "roundNumber": 5,
+              "roundOrder": 3,
+              "roundLabel": "Kolo 5",
+              "resumable": false,
+              "finishedAt": "2026-11-24T08:18:59.717Z",
+              "scoreboardMatchId": null,
+              "manualResult": true,
+              "manualResultByUid": "isolated-owner",
+              "manualResultAt": "2026-11-24T08:18:59.717Z"
+            },
+            {
+              "id": "7904119d-2109-4de5-89ae-32eb6141dec8",
+              "player1Id": "C",
+              "player2Id": "A",
+              "status": "done",
+              "tableNumber": null,
+              "score1": 1,
+              "score2": 5,
+              "winnerId": "A",
+              "loserId": "C",
+              "roundNumber": 6,
+              "roundOrder": 1,
+              "roundLabel": "Kolo 6",
+              "resumable": false,
+              "finishedAt": "2026-11-24T08:18:59.717Z",
+              "scoreboardMatchId": null,
+              "manualResult": true,
+              "manualResultByUid": "isolated-owner",
+              "manualResultAt": "2026-11-24T08:18:59.717Z"
+            },
+            {
+              "id": "dd54112b-3d93-4c8d-914e-2cf5523da58a",
+              "player1Id": "B",
+              "player2Id": "D",
+              "status": "done",
+              "tableNumber": null,
+              "score1": 5,
+              "score2": 1,
+              "winnerId": "B",
+              "loserId": "D",
+              "roundNumber": 6,
+              "roundOrder": 2,
+              "roundLabel": "Kolo 6",
+              "resumable": false,
+              "finishedAt": "2026-11-24T08:18:59.718Z",
+              "scoreboardMatchId": null,
+              "manualResult": true,
+              "manualResultByUid": "isolated-owner",
+              "manualResultAt": "2026-11-24T08:18:59.718Z"
+            },
+            {
+              "id": "cdf2eed2-18f0-4205-8aac-30e4f26aa57d",
+              "player1Id": "G",
+              "player2Id": "F",
+              "status": "done",
+              "tableNumber": null,
+              "score1": 1,
+              "score2": 5,
+              "winnerId": "F",
+              "loserId": "G",
+              "roundNumber": 6,
+              "roundOrder": 3,
+              "roundLabel": "Kolo 6",
+              "resumable": false,
+              "finishedAt": "2026-11-24T08:18:59.719Z",
+              "scoreboardMatchId": null,
+              "manualResult": true,
+              "manualResultByUid": "isolated-owner",
+              "manualResultAt": "2026-11-24T08:18:59.719Z"
+            },
+            {
+              "id": "1b0642bc-124e-4380-bc08-f5621dd2f624",
+              "player1Id": "A",
+              "player2Id": "B",
+              "status": "done",
+              "tableNumber": null,
+              "score1": 5,
+              "score2": 1,
+              "winnerId": "A",
+              "loserId": "B",
+              "roundNumber": 7,
+              "roundOrder": 1,
+              "roundLabel": "Kolo 7",
+              "resumable": false,
+              "finishedAt": "2026-11-24T08:18:59.719Z",
+              "scoreboardMatchId": null,
+              "manualResult": true,
+              "manualResultByUid": "isolated-owner",
+              "manualResultAt": "2026-11-24T08:18:59.719Z"
+            },
+            {
+              "id": "dcd2df6a-bdd7-45af-a07c-8b389789f477",
+              "player1Id": "D",
+              "player2Id": "G",
+              "status": "done",
+              "tableNumber": null,
+              "score1": 5,
+              "score2": 1,
+              "winnerId": "D",
+              "loserId": "G",
+              "roundNumber": 7,
+              "roundOrder": 2,
+              "roundLabel": "Kolo 7",
+              "resumable": false,
+              "finishedAt": "2026-11-24T08:18:59.720Z",
+              "scoreboardMatchId": null,
+              "manualResult": true,
+              "manualResultByUid": "isolated-owner",
+              "manualResultAt": "2026-11-24T08:18:59.720Z"
+            },
+            {
+              "id": "b4ad32cf-7674-46c1-946d-2d36709f9c36",
+              "player1Id": "E",
+              "player2Id": "F",
+              "status": "done",
+              "tableNumber": null,
+              "score1": 5,
+              "score2": 1,
+              "winnerId": "E",
+              "loserId": "F",
+              "roundNumber": 7,
+              "roundOrder": 3,
+              "roundLabel": "Kolo 7",
+              "resumable": false,
+              "finishedAt": "2026-11-24T08:18:59.720Z",
+              "scoreboardMatchId": null,
+              "manualResult": true,
+              "manualResultByUid": "isolated-owner",
+              "manualResultAt": "2026-11-24T08:18:59.720Z"
+            }
+          ],
+          "seedOrder": [
+            "A",
+            "B",
+            "C",
+            "D",
+            "E",
+            "F",
+            "G"
+          ]
+        }
+      ],
+      "advancePerGroup": 7,
+      "playoffType": "sko",
+      "playoffStarted": true,
+      "groupEliminations": [],
+      "thirdPlacePlayoff": false,
+      "groupDiscipline": "9-ball",
+      "playoffDiscipline": "9-ball",
+      "playoffRaceTo": 5,
+      "historicalEditMode": true,
+      "historicalDate": "2026-10-01",
+      "seriesPlacementTieBreak": "legacy",
+      "groupAdvanceTieRule": "points",
+      "groupPenaltyTieBreak": false,
+      "historicalStructure": {
+        "version": 1,
+        "creationKey": "f4de464f-d9cb-48f4-a603-0312ffdab2cb",
+        "seriesId": "legacy-series",
+        "initial": {
+          "id": "f4de464f-d9cb-48f4-a603-0312ffdab2cb",
+          "createdByUid": "isolated-owner",
+          "managerUids": {
+            "isolated-owner": true
+          },
+          "name": "Legacy historical seven",
+          "format": "groups_sko",
+          "discipline": "9-ball",
+          "raceTo": 5,
+          "breakMode": "alternate",
+          "seedingMode": "manual",
+          "tableCount": 1,
+          "createdAt": "2026-10-01T12:00:00.000Z",
+          "status": "active",
+          "playerIds": [
+            "A",
+            "B",
+            "C",
+            "D",
+            "E",
+            "F",
+            "G"
+          ],
+          "guests": {},
+          "groups": [
+            {
+              "id": "A",
+              "players": [
+                "A",
+                "B",
+                "C",
+                "D",
+                "E",
+                "F",
+                "G"
+              ],
+              "matches": [
+                {
+                  "id": "3a90c005-3837-4507-9d4a-8fe31e12e302",
+                  "player1Id": "B",
+                  "player2Id": "G",
+                  "status": "assigned",
+                  "tableNumber": 1,
+                  "score1": 0,
+                  "score2": 0,
+                  "winnerId": null,
+                  "loserId": null,
+                  "roundNumber": 1,
+                  "roundOrder": 1,
+                  "roundLabel": "Kolo 1"
+                },
+                {
+                  "id": "622404f0-c594-4c6b-9cc6-ece834ead4a4",
+                  "player1Id": "C",
+                  "player2Id": "F",
+                  "status": "pending",
+                  "tableNumber": null,
+                  "score1": 0,
+                  "score2": 0,
+                  "winnerId": null,
+                  "loserId": null,
+                  "roundNumber": 1,
+                  "roundOrder": 2,
+                  "roundLabel": "Kolo 1"
+                },
+                {
+                  "id": "07d56f73-fdcf-40ef-b6e7-0b83ff6d9139",
+                  "player1Id": "D",
+                  "player2Id": "E",
+                  "status": "pending",
+                  "tableNumber": null,
+                  "score1": 0,
+                  "score2": 0,
+                  "winnerId": null,
+                  "loserId": null,
+                  "roundNumber": 1,
+                  "roundOrder": 3,
+                  "roundLabel": "Kolo 1"
+                },
+                {
+                  "id": "a224a26e-6905-48ba-8e0f-0dc36bcb1ade",
+                  "player1Id": "G",
+                  "player2Id": "A",
+                  "status": "pending",
+                  "tableNumber": null,
+                  "score1": 0,
+                  "score2": 0,
+                  "winnerId": null,
+                  "loserId": null,
+                  "roundNumber": 2,
+                  "roundOrder": 1,
+                  "roundLabel": "Kolo 2"
+                },
+                {
+                  "id": "1eb0aa22-ab06-49e0-8308-774541624b13",
+                  "player1Id": "E",
+                  "player2Id": "B",
+                  "status": "pending",
+                  "tableNumber": null,
+                  "score1": 0,
+                  "score2": 0,
+                  "winnerId": null,
+                  "loserId": null,
+                  "roundNumber": 2,
+                  "roundOrder": 2,
+                  "roundLabel": "Kolo 2"
+                },
+                {
+                  "id": "9f83bf1d-74b8-4da3-998c-4ac4493c453e",
+                  "player1Id": "D",
+                  "player2Id": "C",
+                  "status": "pending",
+                  "tableNumber": null,
+                  "score1": 0,
+                  "score2": 0,
+                  "winnerId": null,
+                  "loserId": null,
+                  "roundNumber": 2,
+                  "roundOrder": 3,
+                  "roundLabel": "Kolo 2"
+                },
+                {
+                  "id": "f82142e3-f8f4-475d-81db-ba15af01812c",
+                  "player1Id": "A",
+                  "player2Id": "F",
+                  "status": "pending",
+                  "tableNumber": null,
+                  "score1": 0,
+                  "score2": 0,
+                  "winnerId": null,
+                  "loserId": null,
+                  "roundNumber": 3,
+                  "roundOrder": 1,
+                  "roundLabel": "Kolo 3"
+                },
+                {
+                  "id": "dc3ab6e1-2e36-4b42-aec7-61991a26063c",
+                  "player1Id": "G",
+                  "player2Id": "E",
+                  "status": "pending",
+                  "tableNumber": null,
+                  "score1": 0,
+                  "score2": 0,
+                  "winnerId": null,
+                  "loserId": null,
+                  "roundNumber": 3,
+                  "roundOrder": 2,
+                  "roundLabel": "Kolo 3"
+                },
+                {
+                  "id": "85c0dba2-6a2a-4b73-92ef-b4f3e8ce043e",
+                  "player1Id": "B",
+                  "player2Id": "C",
+                  "status": "pending",
+                  "tableNumber": null,
+                  "score1": 0,
+                  "score2": 0,
+                  "winnerId": null,
+                  "loserId": null,
+                  "roundNumber": 3,
+                  "roundOrder": 3,
+                  "roundLabel": "Kolo 3"
+                },
+                {
+                  "id": "233347d6-5334-4454-b90b-8a5b00b8c30b",
+                  "player1Id": "E",
+                  "player2Id": "A",
+                  "status": "pending",
+                  "tableNumber": null,
+                  "score1": 0,
+                  "score2": 0,
+                  "winnerId": null,
+                  "loserId": null,
+                  "roundNumber": 4,
+                  "roundOrder": 1,
+                  "roundLabel": "Kolo 4"
+                },
+                {
+                  "id": "4b94e5cf-f1fc-4391-a9c1-7f0375c06018",
+                  "player1Id": "D",
+                  "player2Id": "F",
+                  "status": "pending",
+                  "tableNumber": null,
+                  "score1": 0,
+                  "score2": 0,
+                  "winnerId": null,
+                  "loserId": null,
+                  "roundNumber": 4,
+                  "roundOrder": 2,
+                  "roundLabel": "Kolo 4"
+                },
+                {
+                  "id": "acab9a7d-3392-4d85-b0d5-9444616d42ec",
+                  "player1Id": "C",
+                  "player2Id": "G",
+                  "status": "pending",
+                  "tableNumber": null,
+                  "score1": 0,
+                  "score2": 0,
+                  "winnerId": null,
+                  "loserId": null,
+                  "roundNumber": 4,
+                  "roundOrder": 3,
+                  "roundLabel": "Kolo 4"
+                },
+                {
+                  "id": "c2492b21-94db-4f6b-96f9-eebfe04b0e3b",
+                  "player1Id": "A",
+                  "player2Id": "D",
+                  "status": "pending",
+                  "tableNumber": null,
+                  "score1": 0,
+                  "score2": 0,
+                  "winnerId": null,
+                  "loserId": null,
+                  "roundNumber": 5,
+                  "roundOrder": 1,
+                  "roundLabel": "Kolo 5"
+                },
+                {
+                  "id": "b64c07aa-5985-4a28-8f34-83abce23e42e",
+                  "player1Id": "E",
+                  "player2Id": "C",
+                  "status": "pending",
+                  "tableNumber": null,
+                  "score1": 0,
+                  "score2": 0,
+                  "winnerId": null,
+                  "loserId": null,
+                  "roundNumber": 5,
+                  "roundOrder": 2,
+                  "roundLabel": "Kolo 5"
+                },
+                {
+                  "id": "5ab6a9b3-195d-4e18-b4a7-87f473ece758",
+                  "player1Id": "F",
+                  "player2Id": "B",
+                  "status": "pending",
+                  "tableNumber": null,
+                  "score1": 0,
+                  "score2": 0,
+                  "winnerId": null,
+                  "loserId": null,
+                  "roundNumber": 5,
+                  "roundOrder": 3,
+                  "roundLabel": "Kolo 5"
+                },
+                {
+                  "id": "7904119d-2109-4de5-89ae-32eb6141dec8",
+                  "player1Id": "C",
+                  "player2Id": "A",
+                  "status": "pending",
+                  "tableNumber": null,
+                  "score1": 0,
+                  "score2": 0,
+                  "winnerId": null,
+                  "loserId": null,
+                  "roundNumber": 6,
+                  "roundOrder": 1,
+                  "roundLabel": "Kolo 6"
+                },
+                {
+                  "id": "dd54112b-3d93-4c8d-914e-2cf5523da58a",
+                  "player1Id": "B",
+                  "player2Id": "D",
+                  "status": "pending",
+                  "tableNumber": null,
+                  "score1": 0,
+                  "score2": 0,
+                  "winnerId": null,
+                  "loserId": null,
+                  "roundNumber": 6,
+                  "roundOrder": 2,
+                  "roundLabel": "Kolo 6"
+                },
+                {
+                  "id": "cdf2eed2-18f0-4205-8aac-30e4f26aa57d",
+                  "player1Id": "G",
+                  "player2Id": "F",
+                  "status": "pending",
+                  "tableNumber": null,
+                  "score1": 0,
+                  "score2": 0,
+                  "winnerId": null,
+                  "loserId": null,
+                  "roundNumber": 6,
+                  "roundOrder": 3,
+                  "roundLabel": "Kolo 6"
+                },
+                {
+                  "id": "1b0642bc-124e-4380-bc08-f5621dd2f624",
+                  "player1Id": "A",
+                  "player2Id": "B",
+                  "status": "pending",
+                  "tableNumber": null,
+                  "score1": 0,
+                  "score2": 0,
+                  "winnerId": null,
+                  "loserId": null,
+                  "roundNumber": 7,
+                  "roundOrder": 1,
+                  "roundLabel": "Kolo 7"
+                },
+                {
+                  "id": "dcd2df6a-bdd7-45af-a07c-8b389789f477",
+                  "player1Id": "D",
+                  "player2Id": "G",
+                  "status": "pending",
+                  "tableNumber": null,
+                  "score1": 0,
+                  "score2": 0,
+                  "winnerId": null,
+                  "loserId": null,
+                  "roundNumber": 7,
+                  "roundOrder": 2,
+                  "roundLabel": "Kolo 7"
+                },
+                {
+                  "id": "b4ad32cf-7674-46c1-946d-2d36709f9c36",
+                  "player1Id": "E",
+                  "player2Id": "F",
+                  "status": "pending",
+                  "tableNumber": null,
+                  "score1": 0,
+                  "score2": 0,
+                  "winnerId": null,
+                  "loserId": null,
+                  "roundNumber": 7,
+                  "roundOrder": 3,
+                  "roundLabel": "Kolo 7"
+                }
+              ],
+              "seedOrder": [
+                "A",
+                "B",
+                "C",
+                "D",
+                "E",
+                "F",
+                "G"
+              ]
+            }
+          ],
+          "advancePerGroup": 7,
+          "playoffType": "sko",
+          "playoffStarted": false,
+          "groupEliminations": [],
+          "thirdPlacePlayoff": false,
+          "groupDiscipline": "9-ball",
+          "playoffDiscipline": "9-ball",
+          "playoffRaceTo": 5,
+          "historicalEditMode": true,
+          "historicalDate": "2026-10-01",
+          "seriesPlacementTieBreak": "legacy",
+          "groupAdvanceTieRule": "points",
+          "groupPenaltyTieBreak": false
+        },
+        "results": {
+          "g_0_0": {
+            "p1": "B",
+            "p2": "G",
+            "names": [
+              "B",
+              "G"
+            ],
+            "s1": 5,
+            "s2": 1,
+            "by": "isolated-owner",
+            "at": "2026-11-24T08:18:59.710Z",
+            "label": "Skupina A • Kolo 1"
+          },
+          "g_0_1": {
+            "p1": "C",
+            "p2": "F",
+            "names": [
+              "C",
+              "F"
+            ],
+            "s1": 5,
+            "s2": 1,
+            "by": "isolated-owner",
+            "at": "2026-11-24T08:18:59.711Z",
+            "label": "Skupina A • Kolo 1"
+          },
+          "g_0_2": {
+            "p1": "D",
+            "p2": "E",
+            "names": [
+              "D",
+              "E"
+            ],
+            "s1": 5,
+            "s2": 1,
+            "by": "isolated-owner",
+            "at": "2026-11-24T08:18:59.711Z",
+            "label": "Skupina A • Kolo 1"
+          },
+          "g_0_3": {
+            "p1": "G",
+            "p2": "A",
+            "names": [
+              "G",
+              "A"
+            ],
+            "s1": 1,
+            "s2": 5,
+            "by": "isolated-owner",
+            "at": "2026-11-24T08:18:59.712Z",
+            "label": "Skupina A • Kolo 2"
+          },
+          "g_0_4": {
+            "p1": "E",
+            "p2": "B",
+            "names": [
+              "E",
+              "B"
+            ],
+            "s1": 1,
+            "s2": 5,
+            "by": "isolated-owner",
+            "at": "2026-11-24T08:18:59.712Z",
+            "label": "Skupina A • Kolo 2"
+          },
+          "g_0_5": {
+            "p1": "D",
+            "p2": "C",
+            "names": [
+              "D",
+              "C"
+            ],
+            "s1": 1,
+            "s2": 5,
+            "by": "isolated-owner",
+            "at": "2026-11-24T08:18:59.713Z",
+            "label": "Skupina A • Kolo 2"
+          },
+          "g_0_6": {
+            "p1": "A",
+            "p2": "F",
+            "names": [
+              "A",
+              "F"
+            ],
+            "s1": 5,
+            "s2": 1,
+            "by": "isolated-owner",
+            "at": "2026-11-24T08:18:59.713Z",
+            "label": "Skupina A • Kolo 3"
+          },
+          "g_0_7": {
+            "p1": "G",
+            "p2": "E",
+            "names": [
+              "G",
+              "E"
+            ],
+            "s1": 1,
+            "s2": 5,
+            "by": "isolated-owner",
+            "at": "2026-11-24T08:18:59.713Z",
+            "label": "Skupina A • Kolo 3"
+          },
+          "g_0_8": {
+            "p1": "B",
+            "p2": "C",
+            "names": [
+              "B",
+              "C"
+            ],
+            "s1": 5,
+            "s2": 1,
+            "by": "isolated-owner",
+            "at": "2026-11-24T08:18:59.714Z",
+            "label": "Skupina A • Kolo 3"
+          },
+          "g_0_9": {
+            "p1": "E",
+            "p2": "A",
+            "names": [
+              "E",
+              "A"
+            ],
+            "s1": 1,
+            "s2": 5,
+            "by": "isolated-owner",
+            "at": "2026-11-24T08:18:59.715Z",
+            "label": "Skupina A • Kolo 4"
+          },
+          "g_0_10": {
+            "p1": "D",
+            "p2": "F",
+            "names": [
+              "D",
+              "F"
+            ],
+            "s1": 5,
+            "s2": 1,
+            "by": "isolated-owner",
+            "at": "2026-11-24T08:18:59.715Z",
+            "label": "Skupina A • Kolo 4"
+          },
+          "g_0_11": {
+            "p1": "C",
+            "p2": "G",
+            "names": [
+              "C",
+              "G"
+            ],
+            "s1": 5,
+            "s2": 1,
+            "by": "isolated-owner",
+            "at": "2026-11-24T08:18:59.716Z",
+            "label": "Skupina A • Kolo 4"
+          },
+          "g_0_12": {
+            "p1": "A",
+            "p2": "D",
+            "names": [
+              "A",
+              "D"
+            ],
+            "s1": 5,
+            "s2": 1,
+            "by": "isolated-owner",
+            "at": "2026-11-24T08:18:59.716Z",
+            "label": "Skupina A • Kolo 5"
+          },
+          "g_0_13": {
+            "p1": "E",
+            "p2": "C",
+            "names": [
+              "E",
+              "C"
+            ],
+            "s1": 1,
+            "s2": 5,
+            "by": "isolated-owner",
+            "at": "2026-11-24T08:18:59.716Z",
+            "label": "Skupina A • Kolo 5"
+          },
+          "g_0_14": {
+            "p1": "F",
+            "p2": "B",
+            "names": [
+              "F",
+              "B"
+            ],
+            "s1": 1,
+            "s2": 5,
+            "by": "isolated-owner",
+            "at": "2026-11-24T08:18:59.717Z",
+            "label": "Skupina A • Kolo 5"
+          },
+          "g_0_15": {
+            "p1": "C",
+            "p2": "A",
+            "names": [
+              "C",
+              "A"
+            ],
+            "s1": 1,
+            "s2": 5,
+            "by": "isolated-owner",
+            "at": "2026-11-24T08:18:59.717Z",
+            "label": "Skupina A • Kolo 6"
+          },
+          "g_0_16": {
+            "p1": "B",
+            "p2": "D",
+            "names": [
+              "B",
+              "D"
+            ],
+            "s1": 5,
+            "s2": 1,
+            "by": "isolated-owner",
+            "at": "2026-11-24T08:18:59.718Z",
+            "label": "Skupina A • Kolo 6"
+          },
+          "g_0_17": {
+            "p1": "G",
+            "p2": "F",
+            "names": [
+              "G",
+              "F"
+            ],
+            "s1": 1,
+            "s2": 5,
+            "by": "isolated-owner",
+            "at": "2026-11-24T08:18:59.719Z",
+            "label": "Skupina A • Kolo 6"
+          },
+          "g_0_18": {
+            "p1": "A",
+            "p2": "B",
+            "names": [
+              "A",
+              "B"
+            ],
+            "s1": 5,
+            "s2": 1,
+            "by": "isolated-owner",
+            "at": "2026-11-24T08:18:59.719Z",
+            "label": "Skupina A • Kolo 7"
+          },
+          "g_0_19": {
+            "p1": "D",
+            "p2": "G",
+            "names": [
+              "D",
+              "G"
+            ],
+            "s1": 5,
+            "s2": 1,
+            "by": "isolated-owner",
+            "at": "2026-11-24T08:18:59.720Z",
+            "label": "Skupina A • Kolo 7"
+          },
+          "g_0_20": {
+            "p1": "E",
+            "p2": "F",
+            "names": [
+              "E",
+              "F"
+            ],
+            "s1": 5,
+            "s2": 1,
+            "by": "isolated-owner",
+            "at": "2026-11-24T08:18:59.720Z",
+            "label": "Skupina A • Kolo 7"
+          }
+        },
+        "playoffOrder": [
+          "A",
+          "G",
+          "B",
+          "F",
+          "C",
+          "E",
+          "D"
+        ],
+        "audit": [
+          {
+            "at": "2026-11-24T08:18:59.710Z",
+            "byUid": "isolated-owner",
+            "action": "score",
+            "key": "g_0_0",
+            "previous": null,
+            "next": {
+              "p1": "B",
+              "p2": "G",
+              "names": [
+                "B",
+                "G"
+              ],
+              "s1": 5,
+              "s2": 1,
+              "by": "isolated-owner",
+              "at": "2026-11-24T08:18:59.710Z",
+              "label": "Skupina A • Kolo 1"
+            },
+            "invalidated": []
+          },
+          {
+            "at": "2026-11-24T08:18:59.711Z",
+            "byUid": "isolated-owner",
+            "action": "score",
+            "key": "g_0_1",
+            "previous": null,
+            "next": {
+              "p1": "C",
+              "p2": "F",
+              "names": [
+                "C",
+                "F"
+              ],
+              "s1": 5,
+              "s2": 1,
+              "by": "isolated-owner",
+              "at": "2026-11-24T08:18:59.711Z",
+              "label": "Skupina A • Kolo 1"
+            },
+            "invalidated": []
+          },
+          {
+            "at": "2026-11-24T08:18:59.711Z",
+            "byUid": "isolated-owner",
+            "action": "score",
+            "key": "g_0_2",
+            "previous": null,
+            "next": {
+              "p1": "D",
+              "p2": "E",
+              "names": [
+                "D",
+                "E"
+              ],
+              "s1": 5,
+              "s2": 1,
+              "by": "isolated-owner",
+              "at": "2026-11-24T08:18:59.711Z",
+              "label": "Skupina A • Kolo 1"
+            },
+            "invalidated": []
+          },
+          {
+            "at": "2026-11-24T08:18:59.712Z",
+            "byUid": "isolated-owner",
+            "action": "score",
+            "key": "g_0_3",
+            "previous": null,
+            "next": {
+              "p1": "G",
+              "p2": "A",
+              "names": [
+                "G",
+                "A"
+              ],
+              "s1": 1,
+              "s2": 5,
+              "by": "isolated-owner",
+              "at": "2026-11-24T08:18:59.712Z",
+              "label": "Skupina A • Kolo 2"
+            },
+            "invalidated": []
+          },
+          {
+            "at": "2026-11-24T08:18:59.712Z",
+            "byUid": "isolated-owner",
+            "action": "score",
+            "key": "g_0_4",
+            "previous": null,
+            "next": {
+              "p1": "E",
+              "p2": "B",
+              "names": [
+                "E",
+                "B"
+              ],
+              "s1": 1,
+              "s2": 5,
+              "by": "isolated-owner",
+              "at": "2026-11-24T08:18:59.712Z",
+              "label": "Skupina A • Kolo 2"
+            },
+            "invalidated": []
+          },
+          {
+            "at": "2026-11-24T08:18:59.713Z",
+            "byUid": "isolated-owner",
+            "action": "score",
+            "key": "g_0_5",
+            "previous": null,
+            "next": {
+              "p1": "D",
+              "p2": "C",
+              "names": [
+                "D",
+                "C"
+              ],
+              "s1": 1,
+              "s2": 5,
+              "by": "isolated-owner",
+              "at": "2026-11-24T08:18:59.713Z",
+              "label": "Skupina A • Kolo 2"
+            },
+            "invalidated": []
+          },
+          {
+            "at": "2026-11-24T08:18:59.713Z",
+            "byUid": "isolated-owner",
+            "action": "score",
+            "key": "g_0_6",
+            "previous": null,
+            "next": {
+              "p1": "A",
+              "p2": "F",
+              "names": [
+                "A",
+                "F"
+              ],
+              "s1": 5,
+              "s2": 1,
+              "by": "isolated-owner",
+              "at": "2026-11-24T08:18:59.713Z",
+              "label": "Skupina A • Kolo 3"
+            },
+            "invalidated": []
+          },
+          {
+            "at": "2026-11-24T08:18:59.713Z",
+            "byUid": "isolated-owner",
+            "action": "score",
+            "key": "g_0_7",
+            "previous": null,
+            "next": {
+              "p1": "G",
+              "p2": "E",
+              "names": [
+                "G",
+                "E"
+              ],
+              "s1": 1,
+              "s2": 5,
+              "by": "isolated-owner",
+              "at": "2026-11-24T08:18:59.713Z",
+              "label": "Skupina A • Kolo 3"
+            },
+            "invalidated": []
+          },
+          {
+            "at": "2026-11-24T08:18:59.714Z",
+            "byUid": "isolated-owner",
+            "action": "score",
+            "key": "g_0_8",
+            "previous": null,
+            "next": {
+              "p1": "B",
+              "p2": "C",
+              "names": [
+                "B",
+                "C"
+              ],
+              "s1": 5,
+              "s2": 1,
+              "by": "isolated-owner",
+              "at": "2026-11-24T08:18:59.714Z",
+              "label": "Skupina A • Kolo 3"
+            },
+            "invalidated": []
+          },
+          {
+            "at": "2026-11-24T08:18:59.715Z",
+            "byUid": "isolated-owner",
+            "action": "score",
+            "key": "g_0_9",
+            "previous": null,
+            "next": {
+              "p1": "E",
+              "p2": "A",
+              "names": [
+                "E",
+                "A"
+              ],
+              "s1": 1,
+              "s2": 5,
+              "by": "isolated-owner",
+              "at": "2026-11-24T08:18:59.715Z",
+              "label": "Skupina A • Kolo 4"
+            },
+            "invalidated": []
+          },
+          {
+            "at": "2026-11-24T08:18:59.715Z",
+            "byUid": "isolated-owner",
+            "action": "score",
+            "key": "g_0_10",
+            "previous": null,
+            "next": {
+              "p1": "D",
+              "p2": "F",
+              "names": [
+                "D",
+                "F"
+              ],
+              "s1": 5,
+              "s2": 1,
+              "by": "isolated-owner",
+              "at": "2026-11-24T08:18:59.715Z",
+              "label": "Skupina A • Kolo 4"
+            },
+            "invalidated": []
+          },
+          {
+            "at": "2026-11-24T08:18:59.716Z",
+            "byUid": "isolated-owner",
+            "action": "score",
+            "key": "g_0_11",
+            "previous": null,
+            "next": {
+              "p1": "C",
+              "p2": "G",
+              "names": [
+                "C",
+                "G"
+              ],
+              "s1": 5,
+              "s2": 1,
+              "by": "isolated-owner",
+              "at": "2026-11-24T08:18:59.716Z",
+              "label": "Skupina A • Kolo 4"
+            },
+            "invalidated": []
+          },
+          {
+            "at": "2026-11-24T08:18:59.716Z",
+            "byUid": "isolated-owner",
+            "action": "score",
+            "key": "g_0_12",
+            "previous": null,
+            "next": {
+              "p1": "A",
+              "p2": "D",
+              "names": [
+                "A",
+                "D"
+              ],
+              "s1": 5,
+              "s2": 1,
+              "by": "isolated-owner",
+              "at": "2026-11-24T08:18:59.716Z",
+              "label": "Skupina A • Kolo 5"
+            },
+            "invalidated": []
+          },
+          {
+            "at": "2026-11-24T08:18:59.716Z",
+            "byUid": "isolated-owner",
+            "action": "score",
+            "key": "g_0_13",
+            "previous": null,
+            "next": {
+              "p1": "E",
+              "p2": "C",
+              "names": [
+                "E",
+                "C"
+              ],
+              "s1": 1,
+              "s2": 5,
+              "by": "isolated-owner",
+              "at": "2026-11-24T08:18:59.716Z",
+              "label": "Skupina A • Kolo 5"
+            },
+            "invalidated": []
+          },
+          {
+            "at": "2026-11-24T08:18:59.717Z",
+            "byUid": "isolated-owner",
+            "action": "score",
+            "key": "g_0_14",
+            "previous": null,
+            "next": {
+              "p1": "F",
+              "p2": "B",
+              "names": [
+                "F",
+                "B"
+              ],
+              "s1": 1,
+              "s2": 5,
+              "by": "isolated-owner",
+              "at": "2026-11-24T08:18:59.717Z",
+              "label": "Skupina A • Kolo 5"
+            },
+            "invalidated": []
+          },
+          {
+            "at": "2026-11-24T08:18:59.717Z",
+            "byUid": "isolated-owner",
+            "action": "score",
+            "key": "g_0_15",
+            "previous": null,
+            "next": {
+              "p1": "C",
+              "p2": "A",
+              "names": [
+                "C",
+                "A"
+              ],
+              "s1": 1,
+              "s2": 5,
+              "by": "isolated-owner",
+              "at": "2026-11-24T08:18:59.717Z",
+              "label": "Skupina A • Kolo 6"
+            },
+            "invalidated": []
+          },
+          {
+            "at": "2026-11-24T08:18:59.718Z",
+            "byUid": "isolated-owner",
+            "action": "score",
+            "key": "g_0_16",
+            "previous": null,
+            "next": {
+              "p1": "B",
+              "p2": "D",
+              "names": [
+                "B",
+                "D"
+              ],
+              "s1": 5,
+              "s2": 1,
+              "by": "isolated-owner",
+              "at": "2026-11-24T08:18:59.718Z",
+              "label": "Skupina A • Kolo 6"
+            },
+            "invalidated": []
+          },
+          {
+            "at": "2026-11-24T08:18:59.719Z",
+            "byUid": "isolated-owner",
+            "action": "score",
+            "key": "g_0_17",
+            "previous": null,
+            "next": {
+              "p1": "G",
+              "p2": "F",
+              "names": [
+                "G",
+                "F"
+              ],
+              "s1": 1,
+              "s2": 5,
+              "by": "isolated-owner",
+              "at": "2026-11-24T08:18:59.719Z",
+              "label": "Skupina A • Kolo 6"
+            },
+            "invalidated": []
+          },
+          {
+            "at": "2026-11-24T08:18:59.719Z",
+            "byUid": "isolated-owner",
+            "action": "score",
+            "key": "g_0_18",
+            "previous": null,
+            "next": {
+              "p1": "A",
+              "p2": "B",
+              "names": [
+                "A",
+                "B"
+              ],
+              "s1": 5,
+              "s2": 1,
+              "by": "isolated-owner",
+              "at": "2026-11-24T08:18:59.719Z",
+              "label": "Skupina A • Kolo 7"
+            },
+            "invalidated": []
+          },
+          {
+            "at": "2026-11-24T08:18:59.720Z",
+            "byUid": "isolated-owner",
+            "action": "score",
+            "key": "g_0_19",
+            "previous": null,
+            "next": {
+              "p1": "D",
+              "p2": "G",
+              "names": [
+                "D",
+                "G"
+              ],
+              "s1": 5,
+              "s2": 1,
+              "by": "isolated-owner",
+              "at": "2026-11-24T08:18:59.720Z",
+              "label": "Skupina A • Kolo 7"
+            },
+            "invalidated": []
+          },
+          {
+            "at": "2026-11-24T08:18:59.720Z",
+            "byUid": "isolated-owner",
+            "action": "score",
+            "key": "g_0_20",
+            "previous": null,
+            "next": {
+              "p1": "E",
+              "p2": "F",
+              "names": [
+                "E",
+                "F"
+              ],
+              "s1": 5,
+              "s2": 1,
+              "by": "isolated-owner",
+              "at": "2026-11-24T08:18:59.720Z",
+              "label": "Skupina A • Kolo 7"
+            },
+            "invalidated": []
+          }
+        ],
+        "revision": 0,
+        "manualPlaces": null
+      },
+      "updatedAt": "2026-10-01T12:00:00.000Z",
+      "awaitingPlayoffSeeding": false,
+      "ko": {
+        "participantIds": [
+          "A",
+          "G",
+          "B",
+          "F",
+          "C",
+          "E",
+          "D"
+        ],
+        "rounds": [
+          {
+            "id": "4dfd58c5-63f8-49e4-8aa0-f604c35385ac",
+            "label": "SKO • kolo 1",
+            "type": "KO",
+            "matches": [
+              {
+                "id": "d3d43b19-caf3-4a0d-bf9e-7cfc3018d342",
+                "player1Id": "A",
+                "player2Id": "G",
+                "roundLabel": "SKO • kolo 1",
+                "bracket": "KO",
+                "status": "assigned",
+                "tableNumber": 1,
+                "score1": null,
+                "score2": null,
+                "winnerId": null,
+                "loserId": null,
+                "scoreboardMatchId": null
+              },
+              {
+                "id": "392a2ca3-c750-4cd4-bc49-ef5a7946b888",
+                "player1Id": "B",
+                "player2Id": "F",
+                "roundLabel": "SKO • kolo 1",
+                "bracket": "KO",
+                "status": "pending",
+                "tableNumber": null,
+                "score1": null,
+                "score2": null,
+                "winnerId": null,
+                "loserId": null,
+                "scoreboardMatchId": null
+              },
+              {
+                "id": "660196ef-00ad-4b69-8c87-077785b456c9",
+                "player1Id": "C",
+                "player2Id": "E",
+                "roundLabel": "SKO • kolo 1",
+                "bracket": "KO",
+                "status": "pending",
+                "tableNumber": null,
+                "score1": null,
+                "score2": null,
+                "winnerId": null,
+                "loserId": null,
+                "scoreboardMatchId": null
+              }
+            ],
+            "byes": [
+              {
+                "playerId": "D",
+                "bracket": "KO"
+              }
+            ]
+          }
+        ],
+        "wave": 1,
+        "eliminatedIds": [],
+        "eliminations": [],
+        "championId": null,
+        "runnerUpId": null,
+        "thirdPlacePlayoff": false,
+        "thirdPlaceWinnerId": null,
+        "thirdPlaceLoserId": null,
+        "semifinalRouting": "cross13"
+      }
+    },
+    "partial": {
+      "id": "f4de464f-d9cb-48f4-a603-0312ffdab2cb",
+      "createdByUid": "isolated-owner",
+      "managerUids": {
+        "isolated-owner": true
+      },
+      "name": "Legacy historical seven",
+      "format": "groups_sko",
+      "discipline": "9-ball",
+      "raceTo": 5,
+      "breakMode": "alternate",
+      "seedingMode": "manual",
+      "tableCount": 1,
+      "createdAt": "2026-10-01T12:00:00.000Z",
+      "status": "active",
+      "playerIds": [
+        "A",
+        "B",
+        "C",
+        "D",
+        "E",
+        "F",
+        "G"
+      ],
+      "guests": {},
+      "groups": [
+        {
+          "id": "A",
+          "players": [
+            "A",
+            "B",
+            "C",
+            "D",
+            "E",
+            "F",
+            "G"
+          ],
+          "matches": [
+            {
+              "id": "3a90c005-3837-4507-9d4a-8fe31e12e302",
+              "player1Id": "B",
+              "player2Id": "G",
+              "status": "done",
+              "tableNumber": null,
+              "score1": 5,
+              "score2": 1,
+              "winnerId": "B",
+              "loserId": "G",
+              "roundNumber": 1,
+              "roundOrder": 1,
+              "roundLabel": "Kolo 1",
+              "resumable": false,
+              "finishedAt": "2026-11-24T08:18:59.710Z",
+              "scoreboardMatchId": null,
+              "manualResult": true,
+              "manualResultByUid": "isolated-owner",
+              "manualResultAt": "2026-11-24T08:18:59.710Z"
+            },
+            {
+              "id": "622404f0-c594-4c6b-9cc6-ece834ead4a4",
+              "player1Id": "C",
+              "player2Id": "F",
+              "status": "done",
+              "tableNumber": null,
+              "score1": 5,
+              "score2": 1,
+              "winnerId": "C",
+              "loserId": "F",
+              "roundNumber": 1,
+              "roundOrder": 2,
+              "roundLabel": "Kolo 1",
+              "resumable": false,
+              "finishedAt": "2026-11-24T08:18:59.711Z",
+              "scoreboardMatchId": null,
+              "manualResult": true,
+              "manualResultByUid": "isolated-owner",
+              "manualResultAt": "2026-11-24T08:18:59.711Z"
+            },
+            {
+              "id": "07d56f73-fdcf-40ef-b6e7-0b83ff6d9139",
+              "player1Id": "D",
+              "player2Id": "E",
+              "status": "done",
+              "tableNumber": null,
+              "score1": 5,
+              "score2": 1,
+              "winnerId": "D",
+              "loserId": "E",
+              "roundNumber": 1,
+              "roundOrder": 3,
+              "roundLabel": "Kolo 1",
+              "resumable": false,
+              "finishedAt": "2026-11-24T08:18:59.711Z",
+              "scoreboardMatchId": null,
+              "manualResult": true,
+              "manualResultByUid": "isolated-owner",
+              "manualResultAt": "2026-11-24T08:18:59.711Z"
+            },
+            {
+              "id": "a224a26e-6905-48ba-8e0f-0dc36bcb1ade",
+              "player1Id": "G",
+              "player2Id": "A",
+              "status": "done",
+              "tableNumber": null,
+              "score1": 1,
+              "score2": 5,
+              "winnerId": "A",
+              "loserId": "G",
+              "roundNumber": 2,
+              "roundOrder": 1,
+              "roundLabel": "Kolo 2",
+              "resumable": false,
+              "finishedAt": "2026-11-24T08:18:59.712Z",
+              "scoreboardMatchId": null,
+              "manualResult": true,
+              "manualResultByUid": "isolated-owner",
+              "manualResultAt": "2026-11-24T08:18:59.712Z"
+            },
+            {
+              "id": "1eb0aa22-ab06-49e0-8308-774541624b13",
+              "player1Id": "E",
+              "player2Id": "B",
+              "status": "done",
+              "tableNumber": null,
+              "score1": 1,
+              "score2": 5,
+              "winnerId": "B",
+              "loserId": "E",
+              "roundNumber": 2,
+              "roundOrder": 2,
+              "roundLabel": "Kolo 2",
+              "resumable": false,
+              "finishedAt": "2026-11-24T08:18:59.712Z",
+              "scoreboardMatchId": null,
+              "manualResult": true,
+              "manualResultByUid": "isolated-owner",
+              "manualResultAt": "2026-11-24T08:18:59.712Z"
+            },
+            {
+              "id": "9f83bf1d-74b8-4da3-998c-4ac4493c453e",
+              "player1Id": "D",
+              "player2Id": "C",
+              "status": "done",
+              "tableNumber": null,
+              "score1": 1,
+              "score2": 5,
+              "winnerId": "C",
+              "loserId": "D",
+              "roundNumber": 2,
+              "roundOrder": 3,
+              "roundLabel": "Kolo 2",
+              "resumable": false,
+              "finishedAt": "2026-11-24T08:18:59.713Z",
+              "scoreboardMatchId": null,
+              "manualResult": true,
+              "manualResultByUid": "isolated-owner",
+              "manualResultAt": "2026-11-24T08:18:59.713Z"
+            },
+            {
+              "id": "f82142e3-f8f4-475d-81db-ba15af01812c",
+              "player1Id": "A",
+              "player2Id": "F",
+              "status": "done",
+              "tableNumber": null,
+              "score1": 5,
+              "score2": 1,
+              "winnerId": "A",
+              "loserId": "F",
+              "roundNumber": 3,
+              "roundOrder": 1,
+              "roundLabel": "Kolo 3",
+              "resumable": false,
+              "finishedAt": "2026-11-24T08:18:59.713Z",
+              "scoreboardMatchId": null,
+              "manualResult": true,
+              "manualResultByUid": "isolated-owner",
+              "manualResultAt": "2026-11-24T08:18:59.713Z"
+            },
+            {
+              "id": "dc3ab6e1-2e36-4b42-aec7-61991a26063c",
+              "player1Id": "G",
+              "player2Id": "E",
+              "status": "done",
+              "tableNumber": null,
+              "score1": 1,
+              "score2": 5,
+              "winnerId": "E",
+              "loserId": "G",
+              "roundNumber": 3,
+              "roundOrder": 2,
+              "roundLabel": "Kolo 3",
+              "resumable": false,
+              "finishedAt": "2026-11-24T08:18:59.713Z",
+              "scoreboardMatchId": null,
+              "manualResult": true,
+              "manualResultByUid": "isolated-owner",
+              "manualResultAt": "2026-11-24T08:18:59.713Z"
+            },
+            {
+              "id": "85c0dba2-6a2a-4b73-92ef-b4f3e8ce043e",
+              "player1Id": "B",
+              "player2Id": "C",
+              "status": "done",
+              "tableNumber": null,
+              "score1": 5,
+              "score2": 1,
+              "winnerId": "B",
+              "loserId": "C",
+              "roundNumber": 3,
+              "roundOrder": 3,
+              "roundLabel": "Kolo 3",
+              "resumable": false,
+              "finishedAt": "2026-11-24T08:18:59.714Z",
+              "scoreboardMatchId": null,
+              "manualResult": true,
+              "manualResultByUid": "isolated-owner",
+              "manualResultAt": "2026-11-24T08:18:59.714Z"
+            },
+            {
+              "id": "233347d6-5334-4454-b90b-8a5b00b8c30b",
+              "player1Id": "E",
+              "player2Id": "A",
+              "status": "done",
+              "tableNumber": null,
+              "score1": 1,
+              "score2": 5,
+              "winnerId": "A",
+              "loserId": "E",
+              "roundNumber": 4,
+              "roundOrder": 1,
+              "roundLabel": "Kolo 4",
+              "resumable": false,
+              "finishedAt": "2026-11-24T08:18:59.715Z",
+              "scoreboardMatchId": null,
+              "manualResult": true,
+              "manualResultByUid": "isolated-owner",
+              "manualResultAt": "2026-11-24T08:18:59.715Z"
+            },
+            {
+              "id": "4b94e5cf-f1fc-4391-a9c1-7f0375c06018",
+              "player1Id": "D",
+              "player2Id": "F",
+              "status": "done",
+              "tableNumber": null,
+              "score1": 5,
+              "score2": 1,
+              "winnerId": "D",
+              "loserId": "F",
+              "roundNumber": 4,
+              "roundOrder": 2,
+              "roundLabel": "Kolo 4",
+              "resumable": false,
+              "finishedAt": "2026-11-24T08:18:59.715Z",
+              "scoreboardMatchId": null,
+              "manualResult": true,
+              "manualResultByUid": "isolated-owner",
+              "manualResultAt": "2026-11-24T08:18:59.715Z"
+            },
+            {
+              "id": "acab9a7d-3392-4d85-b0d5-9444616d42ec",
+              "player1Id": "C",
+              "player2Id": "G",
+              "status": "done",
+              "tableNumber": null,
+              "score1": 5,
+              "score2": 1,
+              "winnerId": "C",
+              "loserId": "G",
+              "roundNumber": 4,
+              "roundOrder": 3,
+              "roundLabel": "Kolo 4",
+              "resumable": false,
+              "finishedAt": "2026-11-24T08:18:59.716Z",
+              "scoreboardMatchId": null,
+              "manualResult": true,
+              "manualResultByUid": "isolated-owner",
+              "manualResultAt": "2026-11-24T08:18:59.716Z"
+            },
+            {
+              "id": "c2492b21-94db-4f6b-96f9-eebfe04b0e3b",
+              "player1Id": "A",
+              "player2Id": "D",
+              "status": "done",
+              "tableNumber": null,
+              "score1": 5,
+              "score2": 1,
+              "winnerId": "A",
+              "loserId": "D",
+              "roundNumber": 5,
+              "roundOrder": 1,
+              "roundLabel": "Kolo 5",
+              "resumable": false,
+              "finishedAt": "2026-11-24T08:18:59.716Z",
+              "scoreboardMatchId": null,
+              "manualResult": true,
+              "manualResultByUid": "isolated-owner",
+              "manualResultAt": "2026-11-24T08:18:59.716Z"
+            },
+            {
+              "id": "b64c07aa-5985-4a28-8f34-83abce23e42e",
+              "player1Id": "E",
+              "player2Id": "C",
+              "status": "done",
+              "tableNumber": null,
+              "score1": 1,
+              "score2": 5,
+              "winnerId": "C",
+              "loserId": "E",
+              "roundNumber": 5,
+              "roundOrder": 2,
+              "roundLabel": "Kolo 5",
+              "resumable": false,
+              "finishedAt": "2026-11-24T08:18:59.716Z",
+              "scoreboardMatchId": null,
+              "manualResult": true,
+              "manualResultByUid": "isolated-owner",
+              "manualResultAt": "2026-11-24T08:18:59.716Z"
+            },
+            {
+              "id": "5ab6a9b3-195d-4e18-b4a7-87f473ece758",
+              "player1Id": "F",
+              "player2Id": "B",
+              "status": "done",
+              "tableNumber": null,
+              "score1": 1,
+              "score2": 5,
+              "winnerId": "B",
+              "loserId": "F",
+              "roundNumber": 5,
+              "roundOrder": 3,
+              "roundLabel": "Kolo 5",
+              "resumable": false,
+              "finishedAt": "2026-11-24T08:18:59.717Z",
+              "scoreboardMatchId": null,
+              "manualResult": true,
+              "manualResultByUid": "isolated-owner",
+              "manualResultAt": "2026-11-24T08:18:59.717Z"
+            },
+            {
+              "id": "7904119d-2109-4de5-89ae-32eb6141dec8",
+              "player1Id": "C",
+              "player2Id": "A",
+              "status": "done",
+              "tableNumber": null,
+              "score1": 1,
+              "score2": 5,
+              "winnerId": "A",
+              "loserId": "C",
+              "roundNumber": 6,
+              "roundOrder": 1,
+              "roundLabel": "Kolo 6",
+              "resumable": false,
+              "finishedAt": "2026-11-24T08:18:59.717Z",
+              "scoreboardMatchId": null,
+              "manualResult": true,
+              "manualResultByUid": "isolated-owner",
+              "manualResultAt": "2026-11-24T08:18:59.717Z"
+            },
+            {
+              "id": "dd54112b-3d93-4c8d-914e-2cf5523da58a",
+              "player1Id": "B",
+              "player2Id": "D",
+              "status": "done",
+              "tableNumber": null,
+              "score1": 5,
+              "score2": 1,
+              "winnerId": "B",
+              "loserId": "D",
+              "roundNumber": 6,
+              "roundOrder": 2,
+              "roundLabel": "Kolo 6",
+              "resumable": false,
+              "finishedAt": "2026-11-24T08:18:59.718Z",
+              "scoreboardMatchId": null,
+              "manualResult": true,
+              "manualResultByUid": "isolated-owner",
+              "manualResultAt": "2026-11-24T08:18:59.718Z"
+            },
+            {
+              "id": "cdf2eed2-18f0-4205-8aac-30e4f26aa57d",
+              "player1Id": "G",
+              "player2Id": "F",
+              "status": "done",
+              "tableNumber": null,
+              "score1": 1,
+              "score2": 5,
+              "winnerId": "F",
+              "loserId": "G",
+              "roundNumber": 6,
+              "roundOrder": 3,
+              "roundLabel": "Kolo 6",
+              "resumable": false,
+              "finishedAt": "2026-11-24T08:18:59.719Z",
+              "scoreboardMatchId": null,
+              "manualResult": true,
+              "manualResultByUid": "isolated-owner",
+              "manualResultAt": "2026-11-24T08:18:59.719Z"
+            },
+            {
+              "id": "1b0642bc-124e-4380-bc08-f5621dd2f624",
+              "player1Id": "A",
+              "player2Id": "B",
+              "status": "done",
+              "tableNumber": null,
+              "score1": 5,
+              "score2": 1,
+              "winnerId": "A",
+              "loserId": "B",
+              "roundNumber": 7,
+              "roundOrder": 1,
+              "roundLabel": "Kolo 7",
+              "resumable": false,
+              "finishedAt": "2026-11-24T08:18:59.719Z",
+              "scoreboardMatchId": null,
+              "manualResult": true,
+              "manualResultByUid": "isolated-owner",
+              "manualResultAt": "2026-11-24T08:18:59.719Z"
+            },
+            {
+              "id": "dcd2df6a-bdd7-45af-a07c-8b389789f477",
+              "player1Id": "D",
+              "player2Id": "G",
+              "status": "done",
+              "tableNumber": null,
+              "score1": 5,
+              "score2": 1,
+              "winnerId": "D",
+              "loserId": "G",
+              "roundNumber": 7,
+              "roundOrder": 2,
+              "roundLabel": "Kolo 7",
+              "resumable": false,
+              "finishedAt": "2026-11-24T08:18:59.720Z",
+              "scoreboardMatchId": null,
+              "manualResult": true,
+              "manualResultByUid": "isolated-owner",
+              "manualResultAt": "2026-11-24T08:18:59.720Z"
+            },
+            {
+              "id": "b4ad32cf-7674-46c1-946d-2d36709f9c36",
+              "player1Id": "E",
+              "player2Id": "F",
+              "status": "done",
+              "tableNumber": null,
+              "score1": 5,
+              "score2": 1,
+              "winnerId": "E",
+              "loserId": "F",
+              "roundNumber": 7,
+              "roundOrder": 3,
+              "roundLabel": "Kolo 7",
+              "resumable": false,
+              "finishedAt": "2026-11-24T08:18:59.720Z",
+              "scoreboardMatchId": null,
+              "manualResult": true,
+              "manualResultByUid": "isolated-owner",
+              "manualResultAt": "2026-11-24T08:18:59.720Z"
+            }
+          ],
+          "seedOrder": [
+            "A",
+            "B",
+            "C",
+            "D",
+            "E",
+            "F",
+            "G"
+          ]
+        }
+      ],
+      "advancePerGroup": 7,
+      "playoffType": "sko",
+      "playoffStarted": true,
+      "groupEliminations": [],
+      "thirdPlacePlayoff": false,
+      "groupDiscipline": "9-ball",
+      "playoffDiscipline": "9-ball",
+      "playoffRaceTo": 5,
+      "historicalEditMode": true,
+      "historicalDate": "2026-10-01",
+      "seriesPlacementTieBreak": "legacy",
+      "groupAdvanceTieRule": "points",
+      "groupPenaltyTieBreak": false,
+      "historicalStructure": {
+        "version": 1,
+        "creationKey": "f4de464f-d9cb-48f4-a603-0312ffdab2cb",
+        "seriesId": "legacy-series",
+        "initial": {
+          "id": "f4de464f-d9cb-48f4-a603-0312ffdab2cb",
+          "createdByUid": "isolated-owner",
+          "managerUids": {
+            "isolated-owner": true
+          },
+          "name": "Legacy historical seven",
+          "format": "groups_sko",
+          "discipline": "9-ball",
+          "raceTo": 5,
+          "breakMode": "alternate",
+          "seedingMode": "manual",
+          "tableCount": 1,
+          "createdAt": "2026-10-01T12:00:00.000Z",
+          "status": "active",
+          "playerIds": [
+            "A",
+            "B",
+            "C",
+            "D",
+            "E",
+            "F",
+            "G"
+          ],
+          "guests": {},
+          "groups": [
+            {
+              "id": "A",
+              "players": [
+                "A",
+                "B",
+                "C",
+                "D",
+                "E",
+                "F",
+                "G"
+              ],
+              "matches": [
+                {
+                  "id": "3a90c005-3837-4507-9d4a-8fe31e12e302",
+                  "player1Id": "B",
+                  "player2Id": "G",
+                  "status": "assigned",
+                  "tableNumber": 1,
+                  "score1": 0,
+                  "score2": 0,
+                  "winnerId": null,
+                  "loserId": null,
+                  "roundNumber": 1,
+                  "roundOrder": 1,
+                  "roundLabel": "Kolo 1"
+                },
+                {
+                  "id": "622404f0-c594-4c6b-9cc6-ece834ead4a4",
+                  "player1Id": "C",
+                  "player2Id": "F",
+                  "status": "pending",
+                  "tableNumber": null,
+                  "score1": 0,
+                  "score2": 0,
+                  "winnerId": null,
+                  "loserId": null,
+                  "roundNumber": 1,
+                  "roundOrder": 2,
+                  "roundLabel": "Kolo 1"
+                },
+                {
+                  "id": "07d56f73-fdcf-40ef-b6e7-0b83ff6d9139",
+                  "player1Id": "D",
+                  "player2Id": "E",
+                  "status": "pending",
+                  "tableNumber": null,
+                  "score1": 0,
+                  "score2": 0,
+                  "winnerId": null,
+                  "loserId": null,
+                  "roundNumber": 1,
+                  "roundOrder": 3,
+                  "roundLabel": "Kolo 1"
+                },
+                {
+                  "id": "a224a26e-6905-48ba-8e0f-0dc36bcb1ade",
+                  "player1Id": "G",
+                  "player2Id": "A",
+                  "status": "pending",
+                  "tableNumber": null,
+                  "score1": 0,
+                  "score2": 0,
+                  "winnerId": null,
+                  "loserId": null,
+                  "roundNumber": 2,
+                  "roundOrder": 1,
+                  "roundLabel": "Kolo 2"
+                },
+                {
+                  "id": "1eb0aa22-ab06-49e0-8308-774541624b13",
+                  "player1Id": "E",
+                  "player2Id": "B",
+                  "status": "pending",
+                  "tableNumber": null,
+                  "score1": 0,
+                  "score2": 0,
+                  "winnerId": null,
+                  "loserId": null,
+                  "roundNumber": 2,
+                  "roundOrder": 2,
+                  "roundLabel": "Kolo 2"
+                },
+                {
+                  "id": "9f83bf1d-74b8-4da3-998c-4ac4493c453e",
+                  "player1Id": "D",
+                  "player2Id": "C",
+                  "status": "pending",
+                  "tableNumber": null,
+                  "score1": 0,
+                  "score2": 0,
+                  "winnerId": null,
+                  "loserId": null,
+                  "roundNumber": 2,
+                  "roundOrder": 3,
+                  "roundLabel": "Kolo 2"
+                },
+                {
+                  "id": "f82142e3-f8f4-475d-81db-ba15af01812c",
+                  "player1Id": "A",
+                  "player2Id": "F",
+                  "status": "pending",
+                  "tableNumber": null,
+                  "score1": 0,
+                  "score2": 0,
+                  "winnerId": null,
+                  "loserId": null,
+                  "roundNumber": 3,
+                  "roundOrder": 1,
+                  "roundLabel": "Kolo 3"
+                },
+                {
+                  "id": "dc3ab6e1-2e36-4b42-aec7-61991a26063c",
+                  "player1Id": "G",
+                  "player2Id": "E",
+                  "status": "pending",
+                  "tableNumber": null,
+                  "score1": 0,
+                  "score2": 0,
+                  "winnerId": null,
+                  "loserId": null,
+                  "roundNumber": 3,
+                  "roundOrder": 2,
+                  "roundLabel": "Kolo 3"
+                },
+                {
+                  "id": "85c0dba2-6a2a-4b73-92ef-b4f3e8ce043e",
+                  "player1Id": "B",
+                  "player2Id": "C",
+                  "status": "pending",
+                  "tableNumber": null,
+                  "score1": 0,
+                  "score2": 0,
+                  "winnerId": null,
+                  "loserId": null,
+                  "roundNumber": 3,
+                  "roundOrder": 3,
+                  "roundLabel": "Kolo 3"
+                },
+                {
+                  "id": "233347d6-5334-4454-b90b-8a5b00b8c30b",
+                  "player1Id": "E",
+                  "player2Id": "A",
+                  "status": "pending",
+                  "tableNumber": null,
+                  "score1": 0,
+                  "score2": 0,
+                  "winnerId": null,
+                  "loserId": null,
+                  "roundNumber": 4,
+                  "roundOrder": 1,
+                  "roundLabel": "Kolo 4"
+                },
+                {
+                  "id": "4b94e5cf-f1fc-4391-a9c1-7f0375c06018",
+                  "player1Id": "D",
+                  "player2Id": "F",
+                  "status": "pending",
+                  "tableNumber": null,
+                  "score1": 0,
+                  "score2": 0,
+                  "winnerId": null,
+                  "loserId": null,
+                  "roundNumber": 4,
+                  "roundOrder": 2,
+                  "roundLabel": "Kolo 4"
+                },
+                {
+                  "id": "acab9a7d-3392-4d85-b0d5-9444616d42ec",
+                  "player1Id": "C",
+                  "player2Id": "G",
+                  "status": "pending",
+                  "tableNumber": null,
+                  "score1": 0,
+                  "score2": 0,
+                  "winnerId": null,
+                  "loserId": null,
+                  "roundNumber": 4,
+                  "roundOrder": 3,
+                  "roundLabel": "Kolo 4"
+                },
+                {
+                  "id": "c2492b21-94db-4f6b-96f9-eebfe04b0e3b",
+                  "player1Id": "A",
+                  "player2Id": "D",
+                  "status": "pending",
+                  "tableNumber": null,
+                  "score1": 0,
+                  "score2": 0,
+                  "winnerId": null,
+                  "loserId": null,
+                  "roundNumber": 5,
+                  "roundOrder": 1,
+                  "roundLabel": "Kolo 5"
+                },
+                {
+                  "id": "b64c07aa-5985-4a28-8f34-83abce23e42e",
+                  "player1Id": "E",
+                  "player2Id": "C",
+                  "status": "pending",
+                  "tableNumber": null,
+                  "score1": 0,
+                  "score2": 0,
+                  "winnerId": null,
+                  "loserId": null,
+                  "roundNumber": 5,
+                  "roundOrder": 2,
+                  "roundLabel": "Kolo 5"
+                },
+                {
+                  "id": "5ab6a9b3-195d-4e18-b4a7-87f473ece758",
+                  "player1Id": "F",
+                  "player2Id": "B",
+                  "status": "pending",
+                  "tableNumber": null,
+                  "score1": 0,
+                  "score2": 0,
+                  "winnerId": null,
+                  "loserId": null,
+                  "roundNumber": 5,
+                  "roundOrder": 3,
+                  "roundLabel": "Kolo 5"
+                },
+                {
+                  "id": "7904119d-2109-4de5-89ae-32eb6141dec8",
+                  "player1Id": "C",
+                  "player2Id": "A",
+                  "status": "pending",
+                  "tableNumber": null,
+                  "score1": 0,
+                  "score2": 0,
+                  "winnerId": null,
+                  "loserId": null,
+                  "roundNumber": 6,
+                  "roundOrder": 1,
+                  "roundLabel": "Kolo 6"
+                },
+                {
+                  "id": "dd54112b-3d93-4c8d-914e-2cf5523da58a",
+                  "player1Id": "B",
+                  "player2Id": "D",
+                  "status": "pending",
+                  "tableNumber": null,
+                  "score1": 0,
+                  "score2": 0,
+                  "winnerId": null,
+                  "loserId": null,
+                  "roundNumber": 6,
+                  "roundOrder": 2,
+                  "roundLabel": "Kolo 6"
+                },
+                {
+                  "id": "cdf2eed2-18f0-4205-8aac-30e4f26aa57d",
+                  "player1Id": "G",
+                  "player2Id": "F",
+                  "status": "pending",
+                  "tableNumber": null,
+                  "score1": 0,
+                  "score2": 0,
+                  "winnerId": null,
+                  "loserId": null,
+                  "roundNumber": 6,
+                  "roundOrder": 3,
+                  "roundLabel": "Kolo 6"
+                },
+                {
+                  "id": "1b0642bc-124e-4380-bc08-f5621dd2f624",
+                  "player1Id": "A",
+                  "player2Id": "B",
+                  "status": "pending",
+                  "tableNumber": null,
+                  "score1": 0,
+                  "score2": 0,
+                  "winnerId": null,
+                  "loserId": null,
+                  "roundNumber": 7,
+                  "roundOrder": 1,
+                  "roundLabel": "Kolo 7"
+                },
+                {
+                  "id": "dcd2df6a-bdd7-45af-a07c-8b389789f477",
+                  "player1Id": "D",
+                  "player2Id": "G",
+                  "status": "pending",
+                  "tableNumber": null,
+                  "score1": 0,
+                  "score2": 0,
+                  "winnerId": null,
+                  "loserId": null,
+                  "roundNumber": 7,
+                  "roundOrder": 2,
+                  "roundLabel": "Kolo 7"
+                },
+                {
+                  "id": "b4ad32cf-7674-46c1-946d-2d36709f9c36",
+                  "player1Id": "E",
+                  "player2Id": "F",
+                  "status": "pending",
+                  "tableNumber": null,
+                  "score1": 0,
+                  "score2": 0,
+                  "winnerId": null,
+                  "loserId": null,
+                  "roundNumber": 7,
+                  "roundOrder": 3,
+                  "roundLabel": "Kolo 7"
+                }
+              ],
+              "seedOrder": [
+                "A",
+                "B",
+                "C",
+                "D",
+                "E",
+                "F",
+                "G"
+              ]
+            }
+          ],
+          "advancePerGroup": 7,
+          "playoffType": "sko",
+          "playoffStarted": false,
+          "groupEliminations": [],
+          "thirdPlacePlayoff": false,
+          "groupDiscipline": "9-ball",
+          "playoffDiscipline": "9-ball",
+          "playoffRaceTo": 5,
+          "historicalEditMode": true,
+          "historicalDate": "2026-10-01",
+          "seriesPlacementTieBreak": "legacy",
+          "groupAdvanceTieRule": "points",
+          "groupPenaltyTieBreak": false
+        },
+        "results": {
+          "g_0_0": {
+            "p1": "B",
+            "p2": "G",
+            "names": [
+              "B",
+              "G"
+            ],
+            "s1": 5,
+            "s2": 1,
+            "by": "isolated-owner",
+            "at": "2026-11-24T08:18:59.710Z",
+            "label": "Skupina A • Kolo 1"
+          },
+          "g_0_1": {
+            "p1": "C",
+            "p2": "F",
+            "names": [
+              "C",
+              "F"
+            ],
+            "s1": 5,
+            "s2": 1,
+            "by": "isolated-owner",
+            "at": "2026-11-24T08:18:59.711Z",
+            "label": "Skupina A • Kolo 1"
+          },
+          "g_0_2": {
+            "p1": "D",
+            "p2": "E",
+            "names": [
+              "D",
+              "E"
+            ],
+            "s1": 5,
+            "s2": 1,
+            "by": "isolated-owner",
+            "at": "2026-11-24T08:18:59.711Z",
+            "label": "Skupina A • Kolo 1"
+          },
+          "g_0_3": {
+            "p1": "G",
+            "p2": "A",
+            "names": [
+              "G",
+              "A"
+            ],
+            "s1": 1,
+            "s2": 5,
+            "by": "isolated-owner",
+            "at": "2026-11-24T08:18:59.712Z",
+            "label": "Skupina A • Kolo 2"
+          },
+          "g_0_4": {
+            "p1": "E",
+            "p2": "B",
+            "names": [
+              "E",
+              "B"
+            ],
+            "s1": 1,
+            "s2": 5,
+            "by": "isolated-owner",
+            "at": "2026-11-24T08:18:59.712Z",
+            "label": "Skupina A • Kolo 2"
+          },
+          "g_0_5": {
+            "p1": "D",
+            "p2": "C",
+            "names": [
+              "D",
+              "C"
+            ],
+            "s1": 1,
+            "s2": 5,
+            "by": "isolated-owner",
+            "at": "2026-11-24T08:18:59.713Z",
+            "label": "Skupina A • Kolo 2"
+          },
+          "g_0_6": {
+            "p1": "A",
+            "p2": "F",
+            "names": [
+              "A",
+              "F"
+            ],
+            "s1": 5,
+            "s2": 1,
+            "by": "isolated-owner",
+            "at": "2026-11-24T08:18:59.713Z",
+            "label": "Skupina A • Kolo 3"
+          },
+          "g_0_7": {
+            "p1": "G",
+            "p2": "E",
+            "names": [
+              "G",
+              "E"
+            ],
+            "s1": 1,
+            "s2": 5,
+            "by": "isolated-owner",
+            "at": "2026-11-24T08:18:59.713Z",
+            "label": "Skupina A • Kolo 3"
+          },
+          "g_0_8": {
+            "p1": "B",
+            "p2": "C",
+            "names": [
+              "B",
+              "C"
+            ],
+            "s1": 5,
+            "s2": 1,
+            "by": "isolated-owner",
+            "at": "2026-11-24T08:18:59.714Z",
+            "label": "Skupina A • Kolo 3"
+          },
+          "g_0_9": {
+            "p1": "E",
+            "p2": "A",
+            "names": [
+              "E",
+              "A"
+            ],
+            "s1": 1,
+            "s2": 5,
+            "by": "isolated-owner",
+            "at": "2026-11-24T08:18:59.715Z",
+            "label": "Skupina A • Kolo 4"
+          },
+          "g_0_10": {
+            "p1": "D",
+            "p2": "F",
+            "names": [
+              "D",
+              "F"
+            ],
+            "s1": 5,
+            "s2": 1,
+            "by": "isolated-owner",
+            "at": "2026-11-24T08:18:59.715Z",
+            "label": "Skupina A • Kolo 4"
+          },
+          "g_0_11": {
+            "p1": "C",
+            "p2": "G",
+            "names": [
+              "C",
+              "G"
+            ],
+            "s1": 5,
+            "s2": 1,
+            "by": "isolated-owner",
+            "at": "2026-11-24T08:18:59.716Z",
+            "label": "Skupina A • Kolo 4"
+          },
+          "g_0_12": {
+            "p1": "A",
+            "p2": "D",
+            "names": [
+              "A",
+              "D"
+            ],
+            "s1": 5,
+            "s2": 1,
+            "by": "isolated-owner",
+            "at": "2026-11-24T08:18:59.716Z",
+            "label": "Skupina A • Kolo 5"
+          },
+          "g_0_13": {
+            "p1": "E",
+            "p2": "C",
+            "names": [
+              "E",
+              "C"
+            ],
+            "s1": 1,
+            "s2": 5,
+            "by": "isolated-owner",
+            "at": "2026-11-24T08:18:59.716Z",
+            "label": "Skupina A • Kolo 5"
+          },
+          "g_0_14": {
+            "p1": "F",
+            "p2": "B",
+            "names": [
+              "F",
+              "B"
+            ],
+            "s1": 1,
+            "s2": 5,
+            "by": "isolated-owner",
+            "at": "2026-11-24T08:18:59.717Z",
+            "label": "Skupina A • Kolo 5"
+          },
+          "g_0_15": {
+            "p1": "C",
+            "p2": "A",
+            "names": [
+              "C",
+              "A"
+            ],
+            "s1": 1,
+            "s2": 5,
+            "by": "isolated-owner",
+            "at": "2026-11-24T08:18:59.717Z",
+            "label": "Skupina A • Kolo 6"
+          },
+          "g_0_16": {
+            "p1": "B",
+            "p2": "D",
+            "names": [
+              "B",
+              "D"
+            ],
+            "s1": 5,
+            "s2": 1,
+            "by": "isolated-owner",
+            "at": "2026-11-24T08:18:59.718Z",
+            "label": "Skupina A • Kolo 6"
+          },
+          "g_0_17": {
+            "p1": "G",
+            "p2": "F",
+            "names": [
+              "G",
+              "F"
+            ],
+            "s1": 1,
+            "s2": 5,
+            "by": "isolated-owner",
+            "at": "2026-11-24T08:18:59.719Z",
+            "label": "Skupina A • Kolo 6"
+          },
+          "g_0_18": {
+            "p1": "A",
+            "p2": "B",
+            "names": [
+              "A",
+              "B"
+            ],
+            "s1": 5,
+            "s2": 1,
+            "by": "isolated-owner",
+            "at": "2026-11-24T08:18:59.719Z",
+            "label": "Skupina A • Kolo 7"
+          },
+          "g_0_19": {
+            "p1": "D",
+            "p2": "G",
+            "names": [
+              "D",
+              "G"
+            ],
+            "s1": 5,
+            "s2": 1,
+            "by": "isolated-owner",
+            "at": "2026-11-24T08:18:59.720Z",
+            "label": "Skupina A • Kolo 7"
+          },
+          "g_0_20": {
+            "p1": "E",
+            "p2": "F",
+            "names": [
+              "E",
+              "F"
+            ],
+            "s1": 5,
+            "s2": 1,
+            "by": "isolated-owner",
+            "at": "2026-11-24T08:18:59.720Z",
+            "label": "Skupina A • Kolo 7"
+          },
+          "ko_0_0": {
+            "p1": "A",
+            "p2": "G",
+            "names": [
+              "A",
+              "G"
+            ],
+            "s1": 5,
+            "s2": 1,
+            "by": "isolated-owner",
+            "at": "2026-11-24T08:18:59.723Z",
+            "label": "SKO • kolo 1 • 1"
+          }
+        },
+        "playoffOrder": [
+          "A",
+          "G",
+          "B",
+          "F",
+          "C",
+          "E",
+          "D"
+        ],
+        "audit": [
+          {
+            "at": "2026-11-24T08:18:59.710Z",
+            "byUid": "isolated-owner",
+            "action": "score",
+            "key": "g_0_0",
+            "previous": null,
+            "next": {
+              "p1": "B",
+              "p2": "G",
+              "names": [
+                "B",
+                "G"
+              ],
+              "s1": 5,
+              "s2": 1,
+              "by": "isolated-owner",
+              "at": "2026-11-24T08:18:59.710Z",
+              "label": "Skupina A • Kolo 1"
+            },
+            "invalidated": []
+          },
+          {
+            "at": "2026-11-24T08:18:59.711Z",
+            "byUid": "isolated-owner",
+            "action": "score",
+            "key": "g_0_1",
+            "previous": null,
+            "next": {
+              "p1": "C",
+              "p2": "F",
+              "names": [
+                "C",
+                "F"
+              ],
+              "s1": 5,
+              "s2": 1,
+              "by": "isolated-owner",
+              "at": "2026-11-24T08:18:59.711Z",
+              "label": "Skupina A • Kolo 1"
+            },
+            "invalidated": []
+          },
+          {
+            "at": "2026-11-24T08:18:59.711Z",
+            "byUid": "isolated-owner",
+            "action": "score",
+            "key": "g_0_2",
+            "previous": null,
+            "next": {
+              "p1": "D",
+              "p2": "E",
+              "names": [
+                "D",
+                "E"
+              ],
+              "s1": 5,
+              "s2": 1,
+              "by": "isolated-owner",
+              "at": "2026-11-24T08:18:59.711Z",
+              "label": "Skupina A • Kolo 1"
+            },
+            "invalidated": []
+          },
+          {
+            "at": "2026-11-24T08:18:59.712Z",
+            "byUid": "isolated-owner",
+            "action": "score",
+            "key": "g_0_3",
+            "previous": null,
+            "next": {
+              "p1": "G",
+              "p2": "A",
+              "names": [
+                "G",
+                "A"
+              ],
+              "s1": 1,
+              "s2": 5,
+              "by": "isolated-owner",
+              "at": "2026-11-24T08:18:59.712Z",
+              "label": "Skupina A • Kolo 2"
+            },
+            "invalidated": []
+          },
+          {
+            "at": "2026-11-24T08:18:59.712Z",
+            "byUid": "isolated-owner",
+            "action": "score",
+            "key": "g_0_4",
+            "previous": null,
+            "next": {
+              "p1": "E",
+              "p2": "B",
+              "names": [
+                "E",
+                "B"
+              ],
+              "s1": 1,
+              "s2": 5,
+              "by": "isolated-owner",
+              "at": "2026-11-24T08:18:59.712Z",
+              "label": "Skupina A • Kolo 2"
+            },
+            "invalidated": []
+          },
+          {
+            "at": "2026-11-24T08:18:59.713Z",
+            "byUid": "isolated-owner",
+            "action": "score",
+            "key": "g_0_5",
+            "previous": null,
+            "next": {
+              "p1": "D",
+              "p2": "C",
+              "names": [
+                "D",
+                "C"
+              ],
+              "s1": 1,
+              "s2": 5,
+              "by": "isolated-owner",
+              "at": "2026-11-24T08:18:59.713Z",
+              "label": "Skupina A • Kolo 2"
+            },
+            "invalidated": []
+          },
+          {
+            "at": "2026-11-24T08:18:59.713Z",
+            "byUid": "isolated-owner",
+            "action": "score",
+            "key": "g_0_6",
+            "previous": null,
+            "next": {
+              "p1": "A",
+              "p2": "F",
+              "names": [
+                "A",
+                "F"
+              ],
+              "s1": 5,
+              "s2": 1,
+              "by": "isolated-owner",
+              "at": "2026-11-24T08:18:59.713Z",
+              "label": "Skupina A • Kolo 3"
+            },
+            "invalidated": []
+          },
+          {
+            "at": "2026-11-24T08:18:59.713Z",
+            "byUid": "isolated-owner",
+            "action": "score",
+            "key": "g_0_7",
+            "previous": null,
+            "next": {
+              "p1": "G",
+              "p2": "E",
+              "names": [
+                "G",
+                "E"
+              ],
+              "s1": 1,
+              "s2": 5,
+              "by": "isolated-owner",
+              "at": "2026-11-24T08:18:59.713Z",
+              "label": "Skupina A • Kolo 3"
+            },
+            "invalidated": []
+          },
+          {
+            "at": "2026-11-24T08:18:59.714Z",
+            "byUid": "isolated-owner",
+            "action": "score",
+            "key": "g_0_8",
+            "previous": null,
+            "next": {
+              "p1": "B",
+              "p2": "C",
+              "names": [
+                "B",
+                "C"
+              ],
+              "s1": 5,
+              "s2": 1,
+              "by": "isolated-owner",
+              "at": "2026-11-24T08:18:59.714Z",
+              "label": "Skupina A • Kolo 3"
+            },
+            "invalidated": []
+          },
+          {
+            "at": "2026-11-24T08:18:59.715Z",
+            "byUid": "isolated-owner",
+            "action": "score",
+            "key": "g_0_9",
+            "previous": null,
+            "next": {
+              "p1": "E",
+              "p2": "A",
+              "names": [
+                "E",
+                "A"
+              ],
+              "s1": 1,
+              "s2": 5,
+              "by": "isolated-owner",
+              "at": "2026-11-24T08:18:59.715Z",
+              "label": "Skupina A • Kolo 4"
+            },
+            "invalidated": []
+          },
+          {
+            "at": "2026-11-24T08:18:59.715Z",
+            "byUid": "isolated-owner",
+            "action": "score",
+            "key": "g_0_10",
+            "previous": null,
+            "next": {
+              "p1": "D",
+              "p2": "F",
+              "names": [
+                "D",
+                "F"
+              ],
+              "s1": 5,
+              "s2": 1,
+              "by": "isolated-owner",
+              "at": "2026-11-24T08:18:59.715Z",
+              "label": "Skupina A • Kolo 4"
+            },
+            "invalidated": []
+          },
+          {
+            "at": "2026-11-24T08:18:59.716Z",
+            "byUid": "isolated-owner",
+            "action": "score",
+            "key": "g_0_11",
+            "previous": null,
+            "next": {
+              "p1": "C",
+              "p2": "G",
+              "names": [
+                "C",
+                "G"
+              ],
+              "s1": 5,
+              "s2": 1,
+              "by": "isolated-owner",
+              "at": "2026-11-24T08:18:59.716Z",
+              "label": "Skupina A • Kolo 4"
+            },
+            "invalidated": []
+          },
+          {
+            "at": "2026-11-24T08:18:59.716Z",
+            "byUid": "isolated-owner",
+            "action": "score",
+            "key": "g_0_12",
+            "previous": null,
+            "next": {
+              "p1": "A",
+              "p2": "D",
+              "names": [
+                "A",
+                "D"
+              ],
+              "s1": 5,
+              "s2": 1,
+              "by": "isolated-owner",
+              "at": "2026-11-24T08:18:59.716Z",
+              "label": "Skupina A • Kolo 5"
+            },
+            "invalidated": []
+          },
+          {
+            "at": "2026-11-24T08:18:59.716Z",
+            "byUid": "isolated-owner",
+            "action": "score",
+            "key": "g_0_13",
+            "previous": null,
+            "next": {
+              "p1": "E",
+              "p2": "C",
+              "names": [
+                "E",
+                "C"
+              ],
+              "s1": 1,
+              "s2": 5,
+              "by": "isolated-owner",
+              "at": "2026-11-24T08:18:59.716Z",
+              "label": "Skupina A • Kolo 5"
+            },
+            "invalidated": []
+          },
+          {
+            "at": "2026-11-24T08:18:59.717Z",
+            "byUid": "isolated-owner",
+            "action": "score",
+            "key": "g_0_14",
+            "previous": null,
+            "next": {
+              "p1": "F",
+              "p2": "B",
+              "names": [
+                "F",
+                "B"
+              ],
+              "s1": 1,
+              "s2": 5,
+              "by": "isolated-owner",
+              "at": "2026-11-24T08:18:59.717Z",
+              "label": "Skupina A • Kolo 5"
+            },
+            "invalidated": []
+          },
+          {
+            "at": "2026-11-24T08:18:59.717Z",
+            "byUid": "isolated-owner",
+            "action": "score",
+            "key": "g_0_15",
+            "previous": null,
+            "next": {
+              "p1": "C",
+              "p2": "A",
+              "names": [
+                "C",
+                "A"
+              ],
+              "s1": 1,
+              "s2": 5,
+              "by": "isolated-owner",
+              "at": "2026-11-24T08:18:59.717Z",
+              "label": "Skupina A • Kolo 6"
+            },
+            "invalidated": []
+          },
+          {
+            "at": "2026-11-24T08:18:59.718Z",
+            "byUid": "isolated-owner",
+            "action": "score",
+            "key": "g_0_16",
+            "previous": null,
+            "next": {
+              "p1": "B",
+              "p2": "D",
+              "names": [
+                "B",
+                "D"
+              ],
+              "s1": 5,
+              "s2": 1,
+              "by": "isolated-owner",
+              "at": "2026-11-24T08:18:59.718Z",
+              "label": "Skupina A • Kolo 6"
+            },
+            "invalidated": []
+          },
+          {
+            "at": "2026-11-24T08:18:59.719Z",
+            "byUid": "isolated-owner",
+            "action": "score",
+            "key": "g_0_17",
+            "previous": null,
+            "next": {
+              "p1": "G",
+              "p2": "F",
+              "names": [
+                "G",
+                "F"
+              ],
+              "s1": 1,
+              "s2": 5,
+              "by": "isolated-owner",
+              "at": "2026-11-24T08:18:59.719Z",
+              "label": "Skupina A • Kolo 6"
+            },
+            "invalidated": []
+          },
+          {
+            "at": "2026-11-24T08:18:59.719Z",
+            "byUid": "isolated-owner",
+            "action": "score",
+            "key": "g_0_18",
+            "previous": null,
+            "next": {
+              "p1": "A",
+              "p2": "B",
+              "names": [
+                "A",
+                "B"
+              ],
+              "s1": 5,
+              "s2": 1,
+              "by": "isolated-owner",
+              "at": "2026-11-24T08:18:59.719Z",
+              "label": "Skupina A • Kolo 7"
+            },
+            "invalidated": []
+          },
+          {
+            "at": "2026-11-24T08:18:59.720Z",
+            "byUid": "isolated-owner",
+            "action": "score",
+            "key": "g_0_19",
+            "previous": null,
+            "next": {
+              "p1": "D",
+              "p2": "G",
+              "names": [
+                "D",
+                "G"
+              ],
+              "s1": 5,
+              "s2": 1,
+              "by": "isolated-owner",
+              "at": "2026-11-24T08:18:59.720Z",
+              "label": "Skupina A • Kolo 7"
+            },
+            "invalidated": []
+          },
+          {
+            "at": "2026-11-24T08:18:59.720Z",
+            "byUid": "isolated-owner",
+            "action": "score",
+            "key": "g_0_20",
+            "previous": null,
+            "next": {
+              "p1": "E",
+              "p2": "F",
+              "names": [
+                "E",
+                "F"
+              ],
+              "s1": 5,
+              "s2": 1,
+              "by": "isolated-owner",
+              "at": "2026-11-24T08:18:59.720Z",
+              "label": "Skupina A • Kolo 7"
+            },
+            "invalidated": []
+          },
+          {
+            "at": "2026-11-24T08:18:59.723Z",
+            "byUid": "isolated-owner",
+            "action": "score",
+            "key": "ko_0_0",
+            "previous": null,
+            "next": {
+              "p1": "A",
+              "p2": "G",
+              "names": [
+                "A",
+                "G"
+              ],
+              "s1": 5,
+              "s2": 1,
+              "by": "isolated-owner",
+              "at": "2026-11-24T08:18:59.723Z",
+              "label": "SKO • kolo 1 • 1"
+            },
+            "invalidated": []
+          }
+        ],
+        "revision": 0,
+        "manualPlaces": null
+      },
+      "updatedAt": "2026-10-01T12:00:00.000Z",
+      "awaitingPlayoffSeeding": false,
+      "ko": {
+        "participantIds": [
+          "A",
+          "G",
+          "B",
+          "F",
+          "C",
+          "E",
+          "D"
+        ],
+        "rounds": [
+          {
+            "id": "ca871e51-bd7f-451b-bd9c-4f3001026570",
+            "label": "SKO • kolo 1",
+            "type": "KO",
+            "matches": [
+              {
+                "id": "aa803a7d-1f07-444f-b5ca-60b556d36927",
+                "player1Id": "A",
+                "player2Id": "G",
+                "roundLabel": "SKO • kolo 1",
+                "bracket": "KO",
+                "status": "done",
+                "tableNumber": null,
+                "score1": 5,
+                "score2": 1,
+                "winnerId": "A",
+                "loserId": "G",
+                "scoreboardMatchId": null,
+                "resumable": false,
+                "finishedAt": "2026-11-24T08:18:59.723Z",
+                "manualResult": true,
+                "manualResultByUid": "isolated-owner",
+                "manualResultAt": "2026-11-24T08:18:59.723Z"
+              },
+              {
+                "id": "284c2b39-2b79-436b-8107-048aa21ee141",
+                "player1Id": "B",
+                "player2Id": "F",
+                "roundLabel": "SKO • kolo 1",
+                "bracket": "KO",
+                "status": "assigned",
+                "tableNumber": 1,
+                "score1": null,
+                "score2": null,
+                "winnerId": null,
+                "loserId": null,
+                "scoreboardMatchId": null
+              },
+              {
+                "id": "437e48de-fd18-409e-9eb1-9a8f52e6d8eb",
+                "player1Id": "C",
+                "player2Id": "E",
+                "roundLabel": "SKO • kolo 1",
+                "bracket": "KO",
+                "status": "pending",
+                "tableNumber": null,
+                "score1": null,
+                "score2": null,
+                "winnerId": null,
+                "loserId": null,
+                "scoreboardMatchId": null
+              }
+            ],
+            "byes": [
+              {
+                "playerId": "D",
+                "bracket": "KO"
+              }
+            ]
+          }
+        ],
+        "wave": 1,
+        "eliminatedIds": [
+          "G"
+        ],
+        "eliminations": [
+          {
+            "playerId": "G",
+            "place": 7,
+            "matchId": "aa803a7d-1f07-444f-b5ca-60b556d36927",
+            "at": "2026-11-24T08:18:59.724Z"
+          }
+        ],
+        "championId": null,
+        "runnerUpId": null,
+        "thirdPlacePlayoff": false,
+        "thirdPlaceWinnerId": null,
+        "thirdPlaceLoserId": null,
+        "semifinalRouting": "cross13"
+      }
+    }
+  }
+}
