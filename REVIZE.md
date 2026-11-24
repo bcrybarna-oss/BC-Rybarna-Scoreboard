@@ -1,5 +1,13 @@
 # Revize aplikace Poolčítadlo
 
+## Dominik – diagnostika ukládání turnajových sérií (bez nového vydání)
+Zadavatel: Dominik
+Datum: 24. 11. 2026
+Změny: Dokumentovaný nesoulad canManageSeries a globálního writeru; izolovaný syntetický audit skutečného produkčního kódu. Návrh samostatné autority sérií s Rules a řízeným přechodem předložen k odsouhlasení. Aplikace, Rules a data se nemění, v4.51.122 RC zůstává posledním vydáním.
+Testy: Audit reprodukuje známé vady (nejde o akceptační sadu opravy), role, selhání sítě/cache, dva správce, změnu identity. Produkční baseline 416 PASS/0 FAIL; experimentální 28 PASS/2 nezměněné FAIL. [Diagnóza, měření a návrh](docs/series-persistence-diagnosis-and-plan.md).
+Nasazení: Žádné; změna architektury/migrace vyžaduje další schválení. Produkční data i původní záloha beze změny.
+Omezení: Minulý produkční síťový log a živé Auth/Rules nejsou k dispozici. Reprodukce je izolovaná; plná oprava vlastníků a spolupořadatelů není implementovaná. 10b1 nezahájena.
+
 ## Dominik – vizuální pozice volných losů v SKO (v4.51.122 RC)
 Zadavatel: Dominik
 Datum: 24. 11. 2026
