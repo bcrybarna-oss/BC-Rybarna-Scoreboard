@@ -4,7 +4,7 @@
 Zadavatel: Dominik
 Datum: 24. 11. 2026
 Změny: Čistě prezentační pořadí zápasů a volných losů podle uloženého slotu, jednotné karty, CSS mřížka se správnými vazbami a zarovnáním kol v detailu i modálním pavouku. Vodorovný posun a fullscreen. Staré pavouky bez seedSlots se nepřelosovávají, DKO a datové operace beze změny.
-Testy: Produkční Node 416 PASS/0 FAIL, 16 cílených SKO testů; dvě browserové matice po 15 scénářích PASS, custom cross13/cross14 a staré fullscreen pavouky PASS, mobilní 8 + sólo 3 PASS, historický a stream-isolation browser PASS, release gate PASS. Experimentální 28 PASS/2 nezměněné FAIL odděleně. [Rozsah a výsledky](docs/sko-visual-slots-v4.51.122.md).
+Testy: Produkční Node 416 PASS/0 FAIL, 16 cílených SKO testů; dvě browserové matice po 15 scénářích PASS, custom cross13/cross14 a staré fullscreen pavouky PASS, mobilní 8 + sólo 3 PASS, historický a stream-isolation browser PASS, release gate PASS. Experimentální 28 PASS/2 nezměněné FAIL odděleně. GitHub release/produkce a mobilní CI PASS; první streamové CI timeout ř.103, následný lokální stream-controls na baseline i kandidátu a stream-lag PASS; původní FAIL zůstává evidovaný. [Rozsah a výsledky](docs/sko-visual-slots-v4.51.122.md).
 Nasazení: Kandidát v samostatné větvi, nesloučeno a nenasazeno; produkce v4.51.121 RC.
 Omezení: Živé Auth/Rules a fyzická zařízení se netestují; dvě experimentální vady a starší baseline selhání zůstávají odděleně evidované.
 
