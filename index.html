@@ -678,6 +678,31 @@
   .bracket-legend{display:flex;gap:14px;flex-wrap:wrap;color:var(--muted);font-size:12px}
   @media(max-width:760px){.bracket-modal-card{width:98vw}.bracket-wrap{min-width:760px}.bracket-round{width:220px;min-width:220px}}
 
+  /* Fixed SKO: one row coordinate system for cards and truthful branch edges. */
+  .bracket-wrap.sko-fixed-wrap{min-width:0}
+  .sko-fixed-wrap>.bracket-section{min-width:0}
+  .sko-fixed-scroll{width:100%;min-width:0;max-width:100%;overflow-x:auto;padding-bottom:12px}
+  .sko-fixed-columns{--sko-card:250px;--sko-pitch:176px;--sko-head:32px;--sko-gap:40px;display:flex;width:max-content;min-width:100%;align-items:flex-start;gap:0}
+  .sko-fixed-columns.sko-fixed-detail{--sko-card:300px;--sko-pitch:300px}
+  .sko-fixed-columns .sko-round{display:block;flex:none;width:var(--sko-card);min-width:var(--sko-card);padding:0;margin:0;border:0;background:none}
+  .sko-fixed-columns .sko-round h4{height:var(--sko-head);line-height:var(--sko-head);margin:0;text-align:center;color:var(--gold2);font-size:13px}
+  .sko-round-positions{display:grid;grid-template-columns:minmax(0,1fr);grid-template-rows:repeat(var(--sko-rows),calc(var(--sko-pitch)/2))}
+  .sko-slot{min-width:0;margin:8px 0;grid-column:1}
+  .sko-slot>.bracket-match,.sko-slot>.tournament-match{height:100%;box-sizing:border-box;margin:0}
+  .sko-fixed-columns .bracket-match::after,.sko-legacy-wrap .bracket-match::after,.sko-extra-matches .bracket-match::after{content:none}
+  .sko-fixed-columns .bracket-player>span:first-child,.sko-fixed-columns .tm-p{min-width:0;overflow-wrap:anywhere}
+  .sko-freepass{border:1px dashed rgba(212,175,55,.65);border-radius:12px;background:rgba(212,175,55,.05)}
+  .sko-freepass-note{padding:7px 10px;color:var(--muted);font-size:11px;line-height:1.35}
+  .sko-freepass .bracket-player{font-weight:700}
+  .sko-freepass .bracket-player+.bracket-player{font-size:12px;color:var(--gold2)}
+  .sko-links{flex:none;width:var(--sko-gap);padding-top:var(--sko-head)}
+  .sko-links svg{display:block;width:var(--sko-gap);height:calc(var(--sko-rows)*var(--sko-pitch)/2);overflow:visible}
+  .sko-links path{fill:none;stroke:rgba(212,175,55,.65);stroke-width:1.2;vector-effect:non-scaling-stroke}
+  .sko-links .sko-wire-clearance{stroke:var(--bg);stroke-width:4}
+  .sko-extra-matches{margin-top:16px;max-width:360px}
+  .bracket-modal-card:fullscreen:has(.sko-fixed-wrap){width:100vw;height:100vh;max-height:100vh;box-sizing:border-box;background:var(--bg);padding:20px;overflow:auto}
+  @media(max-width:760px){.sko-fixed-columns{--sko-card:220px}.sko-fixed-columns.sko-fixed-detail{--sko-card:270px;--sko-pitch:320px}}
+
     /* Světlý režim – vyšší kontrast pro čitelnost */
     html[data-theme="light"]{
       --bg:#f2f0e9;
@@ -1046,15 +1071,15 @@
   </div>
 
 <script src="assets/js/federal-statistics.js?v=4.51.98"></script>
-<script src="assets/js/federal-report-renderer.js?v=4.51.121"></script>
-<script src="assets/js/federal-report-controller.js?v=4.51.121"></script>
-<script src="assets/js/livescore-reader.js?v=4.51.121"></script>
-<script src="assets/js/livescore-renderer.js?v=4.51.121"></script>
-<script src="assets/js/online-presence.js?v=4.51.121"></script>
-<script src="assets/js/match-challenge-actions.js?v=4.51.121"></script>
-<script src="assets/js/players-read-repository.js?v=4.51.121"></script>
-<script src="assets/js/match-challenges.js?v=4.51.121"></script>
-<script src="assets/js/notification-center.js?v=4.51.121"></script>
+<script src="assets/js/federal-report-renderer.js?v=4.51.122"></script>
+<script src="assets/js/federal-report-controller.js?v=4.51.122"></script>
+<script src="assets/js/livescore-reader.js?v=4.51.122"></script>
+<script src="assets/js/livescore-renderer.js?v=4.51.122"></script>
+<script src="assets/js/online-presence.js?v=4.51.122"></script>
+<script src="assets/js/match-challenge-actions.js?v=4.51.122"></script>
+<script src="assets/js/players-read-repository.js?v=4.51.122"></script>
+<script src="assets/js/match-challenges.js?v=4.51.122"></script>
+<script src="assets/js/notification-center.js?v=4.51.122"></script>
 <script src="assets/js/cloud-refresh.js?v=4.51.99"></script>
 <script src="assets/js/own-reports.js?v=4.51.102"></script>
 <script src="assets/js/federal-viewer.js?v=4.51.103"></script>
@@ -3170,7 +3195,7 @@ html[data-theme="light"] #leagueSchedule .history-item .muted{
           <span class="by">by</span>
           <span class="club">BC Rybárna</span>
         </div>
-        <small class="modern-brand-version">v4.51.121 RC</small>
+        <small class="modern-brand-version">v4.51.122 RC</small>
       </div>
     </div>
     <div class="nav">
@@ -3789,7 +3814,7 @@ html[data-theme="light"] #leagueSchedule .history-item .muted{
         </div>
         <div class="subpanel" style="min-width:210px;text-align:center;margin:0">
           <div class="muted" style="font-size:10px;font-weight:950;letter-spacing:1px">AKTUÁLNÍ VERZE</div>
-          <div style="font-size:22px;font-weight:950;color:var(--gold2);margin-top:5px">v4.51.121 RC</div>
+          <div style="font-size:22px;font-weight:950;color:var(--gold2);margin-top:5px">v4.51.122 RC</div>
         </div>
       </div>
     </div>
@@ -6565,7 +6590,7 @@ html[data-theme="light"] #leagueSchedule .history-item .muted{
       </div>
 
       <div id="groupPlayoffSeedStatus" class="muted" style="margin-top:12px;min-height:20px"></div>
-      <div class="muted" style="margin-top:4px;font-size:11px">RC v4.51.121</div>
+      <div class="muted" style="margin-top:4px;font-size:11px">RC v4.51.122</div>
       <div class="modal-actions">
         <button id="groupPlayoffSeedApplyBtn" class="btn primary big" type="button">NASADIT DO PLAY-OFF</button>
         <button id="groupPlayoffSeedCancelBtn" class="btn">ZRUŠIT</button>
@@ -7713,7 +7738,7 @@ html[data-theme="light"] #leagueSchedule .history-item .muted{
     const btn=$('submitReportBtn');if(btn)btn.disabled=true;
     try{
       const id=uid(),p=currentUserPlayerId?data.players?.[currentUserPlayerId]:null;
-      const report={id,createdByUid:cloudUid,createdByPlayerId:currentUserPlayerId||'',createdByName:p?playerSelectionLabel(p):(cloudUserEmail||'Uživatel'),email:cloudUserEmail||'',type,area,description,appVersion:'v4.51.121 RC',createdAt:new Date().toISOString(),updatedAt:new Date().toISOString(),status:'new',adminNote:''};
+      const report={id,createdByUid:cloudUid,createdByPlayerId:currentUserPlayerId||'',createdByName:p?playerSelectionLabel(p):(cloudUserEmail||'Uživatel'),email:cloudUserEmail||'',type,area,description,appVersion:'v4.51.122 RC',createdAt:new Date().toISOString(),updatedAt:new Date().toISOString(),status:'new',adminNote:''};
       await reportRequest(id,'PUT',report);
       try{
         await writeReportUserMirror(report);
@@ -19658,22 +19683,69 @@ $('winnerText').textContent = match.solo14
       ' '+(Math.floor(b.slot/2)+1)+'.';
   }
 
-  function fixedKnockoutPreviewRounds(t,bracket=false){
-    if(!t.ko?.seedSlots)return '';
-    return fixedKnockoutPlan(t).slice(t.ko.rounds.length).map(round=>
-      `<div class="${bracket?'bracket-round':'tournament-round'} knockout-preview">
-        <h4>${esc(round.label)}</h4>
-        ${round.entries.map(entry=>`<div class="${bracket?'bracket-match':'tournament-match'}">
-          <div class="muted" style="margin-bottom:8px">NÁHLED • ${esc(round.label)} ${entry.slot+1}</div>
-          ${[entry.a,entry.b].map(player=>`<div class="${bracket?'bracket-player':''}" style="padding:8px">
-            ${esc(player.id?tournamentPlayerName(player.id,t):player.label)}
-          </div>`).join('')}
-        </div>`).join('')}
-      </div>`).join('');
+  function fixedKnockoutRoundPositions(t){
+    if(!t.ko?.seedSlots)return null;
+    return fixedKnockoutPlan(t).map((plan,index)=>{
+      const stored=t.ko.rounds[index];
+      return {label:stored?.label||plan.label,preview:!stored,entries:plan.entries.map(entry=>({
+        ...entry,byeRecord:(stored?.byes||[]).find(b=>b.slot===entry.slot)||null
+      })).sort((a,b)=>a.slot-b.slot),extraMatches:(stored?.matches||[]).filter(m=>!Number.isInteger(m.slot))};
+    });
   }
 
-  function renderTournamentBye(t,b,label='VOLNÝ LOS'){
+  function fixedKnockoutPreviewHtml(t,entry,label,bracket){
+    return `<div class="${bracket?'bracket-match':'tournament-match'}">
+      <div class="bracket-match-head">NÁHLED • ${esc(label)} ${entry.slot+1}</div>
+      ${[entry.a,entry.b].map(player=>`<div class="bracket-player"><span>${esc(player.id?tournamentPlayerName(player.id,t):(player.label||'VOLNÝ LOS'))}</span></div>`).join('')}
+    </div>`;
+  }
+
+  function fixedKnockoutLayoutHtml(t,bracket=false){
+    const rounds=fixedKnockoutRoundPositions(t);
+    if(!rounds?.length)return '';
+    const rows=rounds[0].entries.length*2;
+    const columns=rounds.map((round,index)=>{
+      const cards=round.entries.map(entry=>{
+        const kind=entry.byeRecord?'bye':entry.match?'match':'preview';
+        const content=entry.byeRecord
+          ? renderTournamentBye(t,entry.byeRecord,'VOLNÝ LOS',{label:round.label,bracket})
+          : entry.match?(bracket?bracketMatchHtml(t,entry.match):renderTournamentMatch(t,entry.match))
+            : fixedKnockoutPreviewHtml(t,entry,round.label,bracket);
+        return `<div class="sko-slot" data-sko-slot="${entry.slot}" data-sko-kind="${kind}" style="grid-row:${(2*entry.slot+1)*2**index} / span 2">${content}</div>`;
+      }).join('');
+      let links='';
+      if(index<rounds.length-1){
+        const order=round.entries.map(e=>e.slot);
+        if(index===0 && rounds[0].entries.length===4){
+          if(t.ko.semifinalRouting==='cross13')order.splice(0,4,0,2,1,3);
+          if(t.ko.semifinalRouting==='cross14')order.splice(0,4,0,3,1,2);
+        }
+        const crossed=index===0 && rounds[0].entries.length===4 && ['cross13','cross14'].includes(t.ko.semifinalRouting);
+        links=`<div class="sko-links" aria-hidden="true"><svg viewBox="0 0 40 ${rows}" preserveAspectRatio="none">
+          ${round.entries.map(entry=>{
+            const target=Math.floor(order.indexOf(entry.slot)/2),from=(2*entry.slot+1)*2**index,to=(2*target+1)*2**(index+1);
+            const bend=crossed?40*(target+1)/(rounds[index+1].entries.length+1):20;
+            const d=`M0 ${from} H${bend} V${to} H40`;
+            return `<g>${crossed?`<path class="sko-wire-clearance" d="${d}"/>`:''}<path data-sko-from="${index}:${entry.slot}" data-sko-to="${index+1}:${target}" d="${d}"/></g>`;
+          }).join('')}</svg></div>`;
+      }
+      return `<section class="sko-round ${bracket?'bracket-round':'tournament-round'} ${round.preview?'knockout-preview':''}" data-sko-round="${index}">
+        <h4>${esc(round.label)}</h4><div class="sko-round-positions">${cards}</div></section>${links}`;
+    }).join('');
+    const extra=rounds.flatMap(r=>r.extraMatches);
+    return `<div class="sko-fixed-scroll" tabindex="0" role="region" aria-label="SKO pavouk – vodorovně posuvný">
+      <div class="sko-fixed-columns ${bracket?'':'sko-fixed-detail'}" style="--sko-rows:${rows}">${columns}</div>
+    </div>${extra.length?`<div class="sko-extra-matches">${extra.map(m=>bracket?bracketMatchHtml(t,m):renderTournamentMatch(t,m)).join('')}</div>`:''}`;
+  }
+
+  function renderTournamentBye(t,b,label='VOLNÝ LOS',position=null){
     if(!b?.playerId)return '';
+    if(position)return `<div class="${position.bracket?'bracket-match':'tournament-match'} sko-freepass" role="group" aria-label="${esc(position.label)} ${b.slot+1} – volný postup">
+      <div class="bracket-match-head"><span>${esc(position.label)} ${b.slot+1}</span><span>PŘÍMÝ POSTUP</span></div>
+      <div class="bracket-player"><span>${esc(tournamentPlayerName(b.playerId,t))}</span></div>
+      <div class="bracket-player"><span>VOLNÝ LOS</span></div>
+      <div class="sko-freepass-note">${esc(knockoutByeDestination(t,b))}</div>
+    </div>`;
     return `<div class="tournament-match done" style="border-color:rgba(212,175,55,.48);background:rgba(212,175,55,.06)">
       <div style="display:flex;justify-content:space-between;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:7px">
         <span class="tournament-badge gold">${esc(label)}</span>
@@ -19707,11 +19779,11 @@ function renderSKOTournament(t){
         <div class="muted" style="margin-top:3px">Jedna prohra = vyřazení • ${k.thirdPlacePlayoff?'hraje se o 3. místo':'bez zápasu o 3. místo = dvě 3. místa'}.</div>
       </div>
 
-      <div class="tournament-columns">${(k.rounds||[]).map(r=>`<div class="tournament-round">
+      ${k.seedSlots?fixedKnockoutLayoutHtml(t):`<div class="tournament-columns">${(k.rounds||[]).map(r=>`<div class="tournament-round">
         <h4>${esc(r.label)}</h4>
         ${(r.byes||[]).map(b=>renderTournamentBye(t,b,'VOLNÝ LOS')).join('')}
         ${(r.matches||[]).map(m=>renderTournamentMatch(t,m)).join('')}
-      </div>`).join('')}${fixedKnockoutPreviewRounds(t)}</div>`;
+      </div>`).join('')}</div>`}`;
   }
 
 
@@ -20045,10 +20117,10 @@ function renderSKOTournament(t){
   }
 
   function buildSKOBracketHtml(t){
-    return `<div class="bracket-wrap">
+    return `<div class="bracket-wrap ${t.ko?.seedSlots?'sko-fixed-wrap':'sko-legacy-wrap'}">
       <div class="bracket-section">
         <div class="bracket-section-title"><strong>SKO PAVOUK</strong><span class="muted">jedna prohra = konec</span></div>
-        <div class="bracket-columns">${(t.ko?.rounds||[]).map(r=>bracketRoundHtml(t,r,r.label)).join('')}${fixedKnockoutPreviewRounds(t,true)}</div>
+        ${t.ko?.seedSlots?fixedKnockoutLayoutHtml(t,true):`<div class="bracket-columns">${(t.ko?.rounds||[]).map(r=>bracketRoundHtml(t,r,r.label)).join('')}</div>`}
       </div>
     </div>`;
   }

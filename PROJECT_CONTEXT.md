@@ -1,3 +1,7 @@
+# Prezentační sloty SKO — kandidát v4.51.122 RC
+
+Pro pevné pavouky se seedSlots vytváří `fixedKnockoutRoundPositions` dočasný model sloučených pozic zápasů, volných losů a budoucích náhledů. Používá uložený slot; původní pole se neřadí ani nepřepisují. Detail a modal používají společný layout s CSS řádky odvozenými ze slotu a hloubky kola. SVG spojuje pouze skutečné zdrojové a cílové pozice včetně ručního napojení semifinále. Zápas o třetí místo je mimo postupovou větev. Pro staré pavouky bez slotových metadat zůstává dosavadní seznam uložených zápasů a volných losů, bez vymyšlených spojnic. [Rozsah a ověření](docs/sko-visual-slots-v4.51.122.md).
+
 # Nové pevné pozice Skupiny → SKO ve v4.51.121 RC
 
 Nasazená v4.51.121 RC doplňuje do nově vytvářeného hybridního SKO `ko.seedSlots` a číslo `slot` zápasu či BYE v daném kole. Návaznost se odvozuje z těchto pozic a skutečných vítězů. Budoucí větve jsou pouze prezentační náhled. Automatický návrh více skupin omezí rematche pouze výměnami obsazených úvodních pozic; BYE se nepřesouvají a každá výměna striktně snižuje počet rematchů. Ruční pořadí zůstává autoritativní. Česká prezentace používá výhradně VOLNÝ LOS; interní `bye`, `byes` a `seedSlots` se nemění. Staré pavouky bez tohoto označení se dál vyhodnocují původním způsobem, včetně přehrávání historické struktury. [Rozsah, kompatibilita a návrat](docs/hybrid-sko-byes-v4.51.121.md)

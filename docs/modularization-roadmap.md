@@ -1,5 +1,9 @@
 # Aktuální roadmapa modularizace Poolčítadla
 
+## Samostatná UI oprava SKO — kandidát v4.51.122 RC
+
+Vizuální pořadí volných losů a spojnice se řeší mimo modularizaci. Datové a sportovní vrstvy se nemění; 10b1/10b2 zůstávají nezahájené. [Rozsah](sko-visual-slots-v4.51.122.md).
+
 ## Samostatná oprava hybridního nasazení — nasazeno v4.51.121 RC
 
 Oprava pevného nasazení Skupiny → SKO, ručních editorů, více skupin a českého označení VOLNÝ LOS je nasazena přes PR #68 (merge `78124feb1c62e23aafccd576f13c3721fd615c09`, Pages 45373366579 SUCCESS). [Deployment report](deployment-v4.51.121.md). Zůstává mimo modularizaci. Etapy 10b1 a 10b2 zůstávají nezahájené. [Rozsah a ověření](hybrid-sko-byes-v4.51.121.md)

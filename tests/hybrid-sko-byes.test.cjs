@@ -8,7 +8,7 @@ function body(name){
 }
 const names=['tournamentMatchObject','ensureSKOState','knockoutRegisterElimination','knockoutThirdCandidates',
   'knockoutThirdMatch','knockoutSeedRanks','groupPlayoffSlots','knockoutRoundLabel','fixedKnockoutPlan',
-  'knockoutCreateFixedWave','knockoutCreateWave','groupPlayoffFixedSeeds','groupPlayoffSeeds','startHybridPlayoff'];
+  'knockoutCreateFixedWave','knockoutCreateWave','groupPlayoffFixedSeeds','groupPlayoffSeeds','startHybridPlayoff','fixedKnockoutRoundPositions'];
 const api=new Function(`
   let sequence=0;
   const uid=()=>String(++sequence),cloudUid='test';
@@ -16,7 +16,7 @@ const api=new Function(`
   const tournamentHasGroups=t=>['groups_sko','groups_dko'].includes(t.format);
   const groupPhaseComplete=()=>true,assignTournamentTables=()=>{};
   ${names.map(body).join('\n')}
-  return {groupPlayoffFixedSeeds,groupPlayoffSeeds,startHybridPlayoff,knockoutCreateWave,knockoutRegisterElimination,fixedKnockoutPlan};
+  return {fixedKnockoutRoundPositions,groupPlayoffFixedSeeds,groupPlayoffSeeds,startHybridPlayoff,knockoutCreateWave,knockoutRegisterElimination,fixedKnockoutPlan};
 `)();
 function create(count,order=null,routing=null){
   const ids=Array.from({length:count},(_,i)=>String.fromCharCode(65+i));
@@ -172,4 +172,28 @@ test('uneven groups achieve the independent minimum rematches, including unavoid
     cases++;if(minimum)unavoidable++;
   }
   assert.equal(cases,80);assert.ok(unavoidable>0);
+});
+
+test('presentation merges stored slots without sorting or changing stored data',()=>{
+  for(const [n,kinds] of [[5,['bye','match','bye','bye']],[6,['bye','match','match','bye']],[7,['bye','match','match','match']],[8,['match','match','match','match']]]){
+    const t=create(n);t.ko.rounds[0].matches.reverse();t.ko.rounds[0].byes.reverse();
+    const before=JSON.stringify(t);
+    const freeze=x=>{if(x&&typeof x==='object'){Object.values(x).forEach(freeze);Object.freeze(x);}};freeze(t);
+    const rounds=api.fixedKnockoutRoundPositions(t);
+    assert.deepEqual(rounds[0].entries.map(e=>e.byeRecord?'bye':e.match?'match':'preview'),kinds);
+    assert.deepEqual(rounds[0].entries.map(e=>e.slot),[0,1,2,3]);
+    assert.equal(rounds.length,3);assert.ok(rounds.slice(1).every(r=>r.preview));
+    assert.equal(JSON.stringify(t),before);assert.equal(t.ko.rounds.length,1);
+    for(const e of rounds[0].entries){if(e.byeRecord)assert.equal(e.byeRecord,t.ko.rounds[0].byes.find(b=>b.slot===e.slot));if(e.match)assert.equal(e.match,t.ko.rounds[0].matches.find(m=>m.slot===e.slot));}
+  }
+});
+test('non-positioned third-place match stays outside the fixed tree',()=>{
+  const t=create(4),bronze={id:'bronze',bracket:'3P',player1Id:'C',player2Id:'D'};
+  t.ko.rounds[0].matches.push(bronze);const before=JSON.stringify(t);
+  const rounds=api.fixedKnockoutRoundPositions(t);
+  assert.deepEqual(rounds[0].extraMatches,[bronze]);assert.ok(rounds[0].entries.every(e=>e.match!==bronze));assert.equal(JSON.stringify(t),before);
+});
+test('legacy brackets without seedSlots never receive invented presentation positions',()=>{
+  const t=create(7);delete t.ko.seedSlots;const before=JSON.stringify(t);
+  assert.equal(api.fixedKnockoutRoundPositions(t),null);assert.equal(JSON.stringify(t),before);
 });

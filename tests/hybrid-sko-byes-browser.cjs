@@ -2,6 +2,7 @@
 const fs=require('node:fs'),path=require('node:path'),assert=require('node:assert/strict');
 const {chromium}=require('playwright');
 const {execFileSync}=require('node:child_process');
+const {checkSkoLayout}=require('./helpers/sko-layout.cjs');
 const root=path.resolve(__dirname,'..'),out=path.resolve(process.env.HYBRID_OUT||path.join(root,'output/hybrid-sko-byes'));
 fs.mkdirSync(out,{recursive:true});
 const baseline=process.env.HYBRID_BASELINE_REF;
@@ -16,6 +17,7 @@ window.byeProbe={
   async restore(players){this.auth();data=defaultData();data.players=players;await loadSecureTournaments();await openTournamentDetail(data.tournaments[0].id);},
   name(id,name){Object.assign(data.players[id],{name,firstName:name,lastName:''});renderTournamentDetail();},
 
+  layoutAudit(){const t=data.tournaments[0],before=JSON.stringify(t);renderSKOTournament(t);buildSKOBracketHtml(t);return before===JSON.stringify(t);},
   historical(t){return historicalReplay(t).t;},
   snapshot(){
     const t=data.tournaments[0];
@@ -104,6 +106,7 @@ function firebase(x){
         async function capture(stage,bracket=false){
           const state=await snap();
           s.stages[stage]=state;
+          if(!baseline && state.t.ko?.seedSlots)await checkSkoLayout(page,state.t,{out,label:n+'-'+width+'-'+stage,fullscreen:stage==='seeded'});
           if(n!==7)return;
           if(bracket){
             await page.evaluate(id=>openSKOBracket(id),id);
@@ -178,6 +181,7 @@ function firebase(x){
         assert.equal(s.manualSlots,n);
         assert.equal((await snap()).t.playoffStarted,true);
         s.inlineSeeded=(await snap()).t.ko;
+        if(format==='groups_sko')await checkSkoLayout(page,(await snap()).t,{out,label:n+'-'+width+'-inline'});
         // Open the standalone dialog through the supported UI for explicit reseeding.
         if(n===7)await page.evaluate(()=>byeProbe.name('A',`A & <img src=x onerror="window.injected=true"> ' " >`));
         await page.getByRole('button',{name:'UPRAVIT TURNAJ',exact:true}).click();
@@ -230,6 +234,7 @@ function firebase(x){
           await page.locator('#groupPlayoffSeedModal').waitFor({state:'hidden'});
           assert.equal((await snap()).t.ko.rounds[0].byes[0].playerId,'G');
           s.dialogManualChanged=(await snap()).t.ko;
+          await checkSkoLayout(page,(await snap()).t,{out,label:n+'-'+width+'-manual-G'});
           await page.getByRole('button',{name:'UPRAVIT TURNAJ',exact:true}).click();
           await page.getByRole('button',{name:'RUČNĚ PŘENASADIT PLAY-OFF',exact:true}).click();
           await page.locator('#groupPlayoffSeedModal.show').waitFor();
@@ -308,6 +313,9 @@ function firebase(x){
             await page.evaluate(id=>openSKOBracket(id),saved.t.id);
             const legacyText=await page.locator('#bracketModalBody').innerText();
             assert.doesNotMatch(legacyText,/\bBYE\b/i);assert.match(legacyText,/VOLNÝ LOS/);
+            assert.equal(await page.locator('#bracketModalBody .sko-fixed-columns,#bracketModalBody path[data-sko-from]').count(),0);
+            assert.equal(await page.locator('#bracketModalBody .bracket-match').first().evaluate(el=>getComputedStyle(el,'::after').content),'none');
+            if(stage==='seeded'){await page.locator('#bracketFullscreenBtn').click();await page.waitForFunction(()=>!!document.fullscreenElement);await page.locator('#bracketFullscreenBtn').click();await page.waitForFunction(()=>!document.fullscreenElement);}
             await page.locator('#bracketCloseBtn').click();
             s.legacy.push({stage,unchanged:true});
           }
