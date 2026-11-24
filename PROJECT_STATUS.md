@@ -1,6 +1,6 @@
-# Kandidát v4.51.121 RC — pevné nasazení Skupiny → SKO (Dominik, 24. 11. 2026)
+# Nasazeno v4.51.121 RC — pevné nasazení a český VOLNÝ LOS (Dominik, 24. 11. 2026)
 
-Aktuální verze: **v4.51.121 RC**, kandidát z main `f3f513b`. Produkce je v4.51.120 RC. Nové hybridní SKO používá pevné pozice a BYE podle nasazení. Oba editory podporují lichý počet a ukazují volný postup. Historické uložené pavouky používají dosavadní pravidla. PR #68 doplněn o ochranu automatického nasazení více skupin před rematchem při zachování BYE a ručního pořadí. Produkční Node 413/0; dvě experimentální vady a shodná baseline selhání starších ordinary/viewer/stream browserů jsou odděleně evidovaná v diagnostickém dokumentu. [Rozsah a ověření](docs/hybrid-sko-byes-v4.51.121.md)
+Aktuální verze: **v4.51.121 RC**, nasazeno a v popsaném rozsahu ověřeno. [PR #68](https://github.com/bcrybarna-oss/BC-Rybarna-Scoreboard/pull/68), aplikační merge `78124feb1c62e23aafccd576f13c3721fd615c09`; [Pages 45373366579](https://github.com/bcrybarna-oss/BC-Rybarna-Scoreboard/actions/runs/45373366579) build/deploy SUCCESS. Veřejný anonymní desktop/mobil: verze, HTML/overlay/vlastní JS shodné s merge, navigace, 0 JS chyb, 0 zápisů. Na publikovaném kódu izolovaně 9 scénářů 6/7/8 hráčů a 6 scénářů více skupin PASS, české texty a staré pavouky/statistiky zachované. Lokálně Node 413/0, GitHub 410 PASS/3 SKIP; release, mobilní a streamové CI PASS, experimentální 28 PASS/2 nezměněné FAIL. Baseline vady ordinary/FC viewer/stream a neověřené živé Auth/Rules i fyzická zařízení zůstávají evidované. PR #55 otevřený, nedotčený. [Deployment report](docs/deployment-v4.51.121.md).
 
 # Nasazeno v4.51.120 RC — jednorázové tempo ve streamu (Jaroslav, 18. 11. 2026)
 
