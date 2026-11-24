@@ -17382,6 +17382,40 @@ $('winnerText').textContent = match.solo14
     toast('Penalty rozhodnuty • postupující byli zařazeni do pavouka.');
   };
 
+  function groupPlayoffFixedSeeds(qualifiers){
+    const slots=knockoutSeedRanks(qualifiers.length).map(rank=>qualifiers[rank-1]?{id:qualifiers[rank-1].id,group:qualifiers[rank-1].group,rank}:null);
+    if(new Set(qualifiers.map(p=>p.group)).size<2)return slots.filter(Boolean).map(p=>p.id);
+    const original=slots.map(p=>p?.rank||0);
+    // Only real first-round opponents can move. BYE recipients/branches stay fixed.
+    const movable=slots.map((p,i)=>p&&slots[i^1]?i:-1).filter(i=>i>=0);
+    const sameGroup=i=>Number(!!slots[i] && slots[i]?.group===slots[i^1]?.group);
+    const swap=(a,b)=>{[slots[a],slots[b]]=[slots[b],slots[a]];};
+    const less=(a,b)=>{for(let i=0;i<a.length;i++){if(a[i]!==b[i])return a[i]<b[i];}return false;};
+    for(;;){
+      let best=null;
+      for(let x=0;x<movable.length;x++)for(let y=x+1;y<movable.length;y++){
+        const a=movable[x],b=movable[y];
+        if((a>>1)===(b>>1))continue;
+        const before=sameGroup(a)+sameGroup(b);
+        if(!before)continue;
+        swap(a,b);
+        const change=sameGroup(a)+sameGroup(b)-before;
+        if(change<0){
+          const moves=Array(qualifiers.length).fill(0);
+          slots.forEach((p,i)=>{if(p)moves[p.rank-1]=Math.abs(p.rank-original[i]);});
+          const score=[change,moves.filter(Boolean).length,moves.reduce((a,b)=>a+b,0),...moves,a,b];
+          if(!best || less(score,best.score))best={a,b,score};
+        }
+        swap(a,b);
+      }
+      if(!best)break;
+      // Strictly fewer rematches each time; no cycling. If XX cannot swap with
+      // any pair free of X, every other pair contains X: the remaining XX is unavoidable.
+      swap(best.a,best.b);
+    }
+    return slots.filter(Boolean).map(p=>p.id);
+  }
+
   function groupPlayoffSeeds(t){
     const advance=Math.max(1,Number(t.advancePerGroup||2));
     const qualifiers=[];
@@ -17392,8 +17426,7 @@ $('winnerText').textContent = match.solo14
     qualifiers.sort((a,b)=>a.pos-b.pos||a.gi-b.gi);
 
     if(t.format==='groups_sko'){
-      return knockoutSeedRanks(qualifiers.length).filter(rank=>rank<=qualifiers.length)
-        .map(rank=>qualifiers[rank-1].id);
+      return groupPlayoffFixedSeeds(qualifiers);
     }
 
     // High vs low seed, with a simple swap to avoid same-group rematch in first playoff round.

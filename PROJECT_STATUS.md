@@ -1,6 +1,6 @@
 # Kandidát v4.51.121 RC — pevné nasazení Skupiny → SKO (Dominik, 24. 11. 2026)
 
-Aktuální verze: **v4.51.121 RC**, kandidát z main `f3f513b`. Produkce je v4.51.120 RC. Nové hybridní SKO používá pevné pozice a BYE podle nasazení. Oba editory podporují lichý počet a ukazují volný postup. Historické uložené pavouky používají dosavadní pravidla. [Rozsah a ověření](docs/hybrid-sko-byes-v4.51.121.md)
+Aktuální verze: **v4.51.121 RC**, kandidát z main `f3f513b`. Produkce je v4.51.120 RC. Nové hybridní SKO používá pevné pozice a BYE podle nasazení. Oba editory podporují lichý počet a ukazují volný postup. Historické uložené pavouky používají dosavadní pravidla. PR #68 doplněn o ochranu automatického nasazení více skupin před rematchem při zachování BYE a ručního pořadí. Produkční Node 413/0; dvě experimentální vady a shodná baseline selhání starších ordinary/viewer/stream browserů jsou odděleně evidovaná v diagnostickém dokumentu. [Rozsah a ověření](docs/hybrid-sko-byes-v4.51.121.md)
 
 # Nasazeno v4.51.120 RC — jednorázové tempo ve streamu (Jaroslav, 18. 11. 2026)
 

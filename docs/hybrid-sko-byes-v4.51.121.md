@@ -14,6 +14,38 @@ Izolovaný turnaj: jedna skupina A–G, každý s každým, všech sedm postupuj
 
 Původní diagnostika je lokálně v `output/seven-player-diagnostic/diagnostika.txt`. Baseline UI reproduktor používá přesný git zdroj uvedeného SHA, nikoliv dodatečně upravenou implementaci.
 
+## Doplnění revize PR #68: více skupin
+
+Regrese byla reprodukována na přesném `97eddf36aa8de65746f107999d3eeb34d31d8811`. Nový browserový reproduktor na tomto zdroji selže na očekávání „avoidable same-group rematch“. Po opravě tentýž scénář projde. Příčina: předchozí přechod na pevné seed rank pozice odstranil původní heuristiku oddělení skupin.
+
+Tři skupiny × dva postupující, výkonnostní pořadí A1/B1/C1/A2/B2/C2:
+
+| Zdroj | První hrané zápasy | BYE v úvodním kole |
+| --- | --- | --- |
+| main f3f513b | A1–C2; B1–A2; C1–B2 | žádný; původní chyba šestičlenného pavouka |
+| PR 97eddf3 | A2–B2; C1–C2 | A1/B1, pevné opačné poloviny |
+| Opravený PR #68 | **A2–C2; C1–B2** | **A1/B1 na stejných pozicích** |
+
+Změní se jen dvě pozice, B2 a C2. Semifinále zůstávají pevná: **A1 proti vítězi A2–C2**, **vítěz C1–B2 proti B1**. Při výhrách výše nasazených se do finále dostanou A1/B1. Opačné pořadí zadání výsledků ani jiní vítězové nemění vazby.
+
+`groupPlayoffFixedSeeds` zpracuje pouze automatický návrh více skupin. Startuje od standardních pevných pozic; BYE a jejich příjemci jsou neměnní. Zkouší výměny mezi dvěma skutečně hranými úvodními zápasy. Přijme jen výměnu, která **striktně sníží počet střetnutí stejné skupiny**. Mezi kandidáty porovnává v tomto pořadí: snížení rematchů, počet pozic změněných vůči standardu, součet posunů v pořadí nasazení, posuny postupně od nejvýše nasazeného a nakonec indexy pozic. Jde o deterministickou, nejméně rušivou lokální opravu; neslibuje globální minimum všech možných cen celého přelosování.
+
+Počet rematchů v každém kroku klesá, takže cyklus nemůže nastat. Pokud zbývá dvojice XX a žádná výměna ji nedokáže rozdělit, každá jiná hraná dvojice již obsahuje X. V tom případě počet hráčů X převyšuje počet dostupných soupeřů a zbylé rematche jsou nevyhnutelné při zachování BYE. Jednotkové testy ověřují nezávislou dolní mez `max(0, největší skupina mezi skutečnými soupeři − počet úvodních zápasů)` na 80 různých rozděleních. Příklad A4/B1/C1 má po odečtení pevných BYE tři hráče A na dva zápasy, takže jeden rematch objektivně zbývá.
+
+Tato ochrana se týká prvního kola pavouka se skutečnými zápasy, nikoliv zákazu střetnutí ve všech budoucích kolech. Další soupeři závisí na výsledcích. Ruční potvrzení organizátora je autoritativní, i když záměrně ponechá C1–C2. Samotný reload, staré `seedSlots`, staré pavouky bez markeru ani historické přehrání se automaticky neupravují. Nezavádí se žádné nové ukládané pole, protokol nebo změna DKO.
+
+| Skupiny × postup | Opravené úvodní hrané dvojice | BYE |
+| --- | --- | --- |
+| 2 × 2 | A1–B2; A2–B1 | žádný |
+| 2 × 3 | B2–A3; A2–B3 | A1/B1 |
+| 3 × 2 | A2–C2; C1–B2 | A1/B1 |
+| 3 × 4 | B3–C3; B2–C4; C2–A4; A3–B4 | A1/B1/C1/A2 |
+| 4 × 2 | A1–D2; D1–A2; C1–B2; B1–C2 | žádný |
+
+Jedna skupina 6/7/8 zůstává přesně podle níže uvedené původní tabulky. Přímé jednotkové testy ověřují oba směry výher a opačné pořadí zápisů ve všech pěti kombinacích. Nový browser `hybrid-sko-multigroup-browser.cjs` má 15 scénářů: každá kombinace na 1440/390/320 px, oba editory se záměrným standardním ručním pořadím, přepnutí na automatická pravidla, reload před a po prvním čtvrtfinále, všechna kola, finále, skutečné statistiky každého hráče a nulový vznik scoreboard zápasů. Existující `hybrid-sko-byes-browser.cjs` znovu prošel všech 15 scénářů jedné skupiny, včetně starých běžných a historických fixtures.
+
+Screenshoty nového příkladu: [1440 px](screenshots/hybrid-sko-121-multigroup-1440.png), [390 px](screenshots/hybrid-sko-121-multigroup-390.png), [320 px](screenshots/hybrid-sko-121-multigroup-320.png).
+
 ## Algoritmus a datová hranice
 
 Pouze nové play-off `groups_sko` ukládá `ko.seedSlots`: pozice nejbližší vyšší mocniny dvou, prázdná pozice je BYE. Skutečné zápasy a záznamy BYE mají `slot` v daném kole. `participantIds` nadále obsahuje jen skutečné hráče. Další kolo používá vítěze konkrétních větví, nikoliv aktuální pořadí aktivních hráčů.
@@ -42,17 +74,19 @@ Fixtures `hybrid-sko-legacy.json` a `hybrid-sko-legacy-historical.json` jsou syn
 
 ## Ověření
 
+Tabulka zachovává také dřívější ověření první části PR (97eddf3); aktuální doplnění má samostatné výsledky výše a explicitní selhání níže. PNG/PDF/XLSX regrese v této tabulce jsou z prvního předání, renderer ani exportní controller se nyní neměnily.
+
 Veškeré browserové zápisy skončily výhradně v izolovaných mockách. Produkční Firebase, účty a zápasy nebyly změněny.
 
 | Kontrola | Výsledek |
 | --- | --- |
 | Produkční Node na přesném main | 400 PASS, 0 FAIL, 0 SKIP |
-| Produkční Node kandidáta, včetně šesti nových testů | 406 PASS, 0 FAIL, 0 SKIP |
+| Produkční Node aktuálního kandidáta, včetně 13 testů tohoto PR | 413 PASS, 0 FAIL, 0 SKIP |
 | Nový SKO browser: 4/5/6/7/8 × 1440/390/320 px | 15 scénářů PASS; skutečné založení, oba editory, odmítnutí duplicit, výsledky, reload a dokončení |
 | Dodatečný finální sedmičlenný průchod | PASS na všech třech šířkách, včetně bezpečných jmen v obou editorech a mobilního posunu k semifinále |
 | Liché groups → DKO | PASS 7 hráčů × tři šířky, inline/dialog/duplicita/reload, nezměněný DKO model |
 | Historical structure browser | PASS: skupiny, SKO/BYE, opravy výsledků, bronz, DKO, hybridy, více skupin, body, ETag a reload |
-| Ordinary tournament create browser | PASS: SKO/DKO/hybrid/skupiny/Swiss, různé režimy nasazení, quota/denied storage, A→B→A, opuštění neověřeného pokusu |
+| Ordinary tournament create browser | Původní běh 97eddf3 PASS; aktuální běh **FAIL :508 shodně s main**, viz níže. Původně ověřeno: SKO/DKO/hybrid/skupiny/Swiss, různé režimy nasazení, quota/denied storage, A→B→A, opuštění neověřeného pokusu |
 | Tournament setup browser | PASS na reálném archivu pouze v paměti: běžný/historický, plné úložiště, fáze 8-ball/3 a 10-ball/7, skutečně založené zápasy, izolace Federal Cupu |
 | Production recovery browser | PASS: opožděná identita, stale UID, jiný vlastník, pokračování, skóre/undo, pozastavené hodiny |
 | Match read session browser (D4) | PASS desktop/mobil, stale publish/repair reproduktor i ochrany aktuální implementace |
@@ -65,13 +99,17 @@ Veškeré browserové zápisy skončily výhradně v izolovaných mockách. Prod
 
 BYE není zápas: u sedmi hráčů existuje přesně šest skutečných play-off zápasů. A má šest skupinových a dvě play-off výhry, tedy osm zápasů/osm výher, nikoliv devět. BYE neobsahuje skóre ani vítězný strk; nevzniká žádný nový scoreboard zápas nebo osobní herní evidence. Jednotkové testy počtů 2–17 navíc dokončí N−1 skutečných zápasů bez pozdějšího BYE.
 
-Testovaný produkční `index.html` SHA-256: `7f83bca87c417f6ea0b1641c091d6c5faa8dfedf53e71509dfd3b045ddc68943`. Git baseline SHA-256 odpovídá původní diagnostice; při přípravě testovacího archivu byl použit přesný git blob (bez převodu LF→CRLF, který jinak mění chování textového testu hesla).
+Testovaný produkční `index.html` SHA-256: `fd6e02eea4ec744c90667a0b04233d9c591386d0aa3d082b639dcb32c694240c`. Git baseline SHA-256 odpovídá původní diagnostice; při přípravě testovacího archivu byl použit přesný git blob (bez převodu LF→CRLF, který jinak mění chování textového testu hesla).
 
 ### Selhání evidovaná odděleně
 
 - Experimentální sada: **28 PASS / 2 FAIL** na main i kandidátu, nezměněné testy i `test-modular/assets/js/pool-core.js`. První vada: při dočasně nedostupné identitě experimentální recovery neodpojí aktuální zápas od editace (`discardForeignLocalActiveMatch` vrátí `false` místo `true`); požadovaná uložená recovery data se přitom mají zachovat. Test končí na tomto prvním porušeném očekávání, neprokazuje smazání uloženého zápasu. Druhá: stale UID bez autentizace nesprávně opravňuje uloženého vlastníka (`true` místo `false`). Experimentální core není produkční implementace a jeho vady se touto opravou nemění ani neskrývají.
 - Historický audit odstraněného žurnálu: **0 PASS / 2 FAIL**, pouze starý fixture `213f87f`; chybně vydává GET shodu za ověření operace a špatně zachází s nejasným zápisem. Není součástí produkční ani experimentální sady.
 - `federal-cup-browser.cjs`: na kandidátu **i baseline** projde prvních osm skupin scénářů, pak selže na řádku 198 při kliknutí na skryté `streamLagP1`. Test očekává další změnu vítěze po prvním kliknutí, zatímco schválená v120 celý panel po volbě skryje. V tomto PR nebyl test ani stream změněn. Odpovídající současný `stream-lag-browser.cjs` prošel. Zbytek souhrnného FC browseru za touto chybou nebyl tímto během proveden; samostatné quick-finish a reportové/exportní regrese prošly.
+
+- Nově zaznamenané samostatné selhání `ordinary-tournament-create-browser.cjs:508`: při zpožděné odpovědi A a čekajícím vytvoření B je v místním seznamu již cloudový turnaj A, kde test očekává prázdný seznam. **Stejná chyba byla reprodukována na přesném main f3f513b i kandidátu**, po úspěšných předchozích částech včetně quota a opuštění pokusu. Není vyřešena ani vydávána za PASS; tento PR nemění tuto ukládací cestu.
+- `federal-viewer-browser.cjs:17`: **7 GET místo očekávaného 1**, identicky na přesném main i kandidátu. Jde o nově zachycené selhání staršího izolovaného browseru, nikoliv prokázanou novou regresi této opravy. V tomto PR se neřeší a není započítáno mezi PASS.
+- První streamový CI timeout na commitu 97eddf3 (ř.103, ověření spojení) a jeho úspěšný druhý pokus zůstávají v [Actions 45357248049](https://github.com/bcrybarna-oss/BC-Rybarna-Scoreboard/actions/runs/45357248049). Při lokální revizi více skupin byl navíc zachycen timeout na stejném řádku a v dalším běhu závod testu s prvním publikováním SOON (ř.65, ještě neexistující payload), který byl následně stejně reprodukován i na přesném main. Výsledky těchto běhů se neskrývají; streamové zdroje a testy zde nebyly měněny.
 
 GitHub CI se vykazuje zvlášť v PR: lokální úspěch není důkaz výsledku GitHub Actions a celé CI nelze označit za zelené při experimentálních selháních.
 
@@ -81,6 +119,7 @@ GitHub CI se vykazuje zvlášť v PR: lokální úspěch není důkaz výsledku 
 node scripts/check-release.cjs --base origin/main
 node scripts/run-tests.cjs production
 node tests/hybrid-sko-byes-browser.cjs
+node tests/hybrid-sko-multigroup-browser.cjs
 $env:HYBRID_FORMAT='groups_dko'; $env:HYBRID_COUNTS='7'
 node tests/hybrid-sko-byes-browser.cjs
 Remove-Item Env:HYBRID_FORMAT,Env:HYBRID_COUNTS

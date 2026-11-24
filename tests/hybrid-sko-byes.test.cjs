@@ -8,7 +8,7 @@ function body(name){
 }
 const names=['tournamentMatchObject','ensureSKOState','knockoutRegisterElimination','knockoutThirdCandidates',
   'knockoutThirdMatch','knockoutSeedRanks','groupPlayoffSlots','knockoutRoundLabel','fixedKnockoutPlan',
-  'knockoutCreateFixedWave','knockoutCreateWave','groupPlayoffSeeds','startHybridPlayoff'];
+  'knockoutCreateFixedWave','knockoutCreateWave','groupPlayoffFixedSeeds','groupPlayoffSeeds','startHybridPlayoff'];
 const api=new Function(`
   let sequence=0;
   const uid=()=>String(++sequence),cloudUid='test';
@@ -16,7 +16,7 @@ const api=new Function(`
   const tournamentHasGroups=t=>['groups_sko','groups_dko'].includes(t.format);
   const groupPhaseComplete=()=>true,assignTournamentTables=()=>{};
   ${names.map(body).join('\n')}
-  return {groupPlayoffSeeds,startHybridPlayoff,knockoutCreateWave,knockoutRegisterElimination,fixedKnockoutPlan};
+  return {groupPlayoffFixedSeeds,groupPlayoffSeeds,startHybridPlayoff,knockoutCreateWave,knockoutRegisterElimination,fixedKnockoutPlan};
 `)();
 function create(count,order=null,routing=null){
   const ids=Array.from({length:count},(_,i)=>String.fromCharCode(65+i));
@@ -110,4 +110,66 @@ test('manual order is respected and pre-existing unmarked playoff retains the ol
   assert.equal(legacy.ko.rounds[0].byes[0].playerId,'D');
   assert.deepEqual(pairs(legacy.ko.rounds[0]),[['A','G'],['B','F'],['C','E']]);
   assert.equal(legacy.ko.seedSlots,undefined);
+});
+
+function multi(groups,advance=null,manualOrder=null){
+  const rows=groups.map((count,i)=>({id:String.fromCharCode(65+i),players:Array.from({length:count},(_,j)=>String.fromCharCode(65+i)+(j+1))}));
+  const t={id:'multi',format:'groups_sko',groups:rows,playerIds:rows.flatMap(g=>g.players),advancePerGroup:advance||Math.max(...groups),status:'active'};
+  assert.equal(api.startHybridPlayoff(t,manualOrder),true);return t;
+}
+const rematches=t=>t.ko.rounds[0].matches.filter(m=>t.groups.some(g=>g.players.includes(m.player1Id)&&g.players.includes(m.player2Id))).length;
+for(const [groups,advance] of [[2,2],[2,3],[3,2],[3,4],[4,2]]){
+  test(groups+' groups × '+advance+': no avoidable rematch, fixed top byes and stable complete brackets',()=>{
+    const all=[];
+    for(const second of [false,true]){
+      const variants=[];
+      for(const reverse of [false,true]){
+        const t=multi(Array(groups).fill(advance)),slots=[...t.ko.seedSlots],byes=t.ko.rounds[0].byes.map(b=>b.playerId);
+        const ranked=Array.from({length:advance},(_,j)=>Array.from({length:groups},(_,i)=>String.fromCharCode(65+i)+(j+1))).flat();
+        assert.equal(rematches(t),0);
+        assert.deepEqual([...byes].sort(),ranked.slice(0,slots.length-ranked.length).sort());
+        assert.equal(new Set(slots.filter(Boolean)).size,ranked.length);
+        if(byes.length===2){assert.ok(slots.indexOf(byes[0])<slots.length/2);assert.ok(slots.indexOf(byes[1])>=slots.length/2);}
+        const trace=[];let expected=slots;
+        for(let pass=0;t.status!=='complete'&&pass<10;pass++){
+          const round=t.ko.rounds.at(-1),actual=pairs(round),planned=[];
+          for(let i=0;i<expected.length;i+=2)if(expected[i]&&expected[i+1])planned.push([expected[i],expected[i+1]]);
+          assert.deepEqual(actual,planned);
+          trace.push(actual);
+          const next=[];
+          for(let i=0;i<expected.length;i+=2)next.push(!expected[i]?expected[i+1]:!expected[i+1]?expected[i]:expected[i+(second?1:0)]);
+          const matches=[...round.matches];
+          for(const m of reverse?matches.reverse():matches)finish(t,m,second?m.player2Id:m.player1Id);
+          expected=next;
+        }
+        assert.equal(t.status,'complete');assert.equal(t.ko.championId,expected[0]);
+        assert.equal(t.ko.rounds.flatMap(r=>r.matches).length,ranked.length-1);
+        assert.ok(t.ko.rounds.slice(1).every(r=>r.byes.length===0));
+        variants.push({trace,champion:t.ko.championId});
+      }
+      assert.deepEqual(variants[0],variants[1]);all.push(variants[0]);
+    }
+    assert.notEqual(all[0].champion,all[1].champion);
+  });
+}
+test('3×2 precise regression and explicit manual rematch remain distinct',()=>{
+  const t=multi([2,2,2]);
+  assert.deepEqual(t.ko.seedSlots,['A1',null,'A2','C2','C1','B2','B1',null]);
+  assert.deepEqual(pairs(t.ko.rounds[0]),[['A2','C2'],['C1','B2']]);
+  const manual=multi([2,2,2],null,['A1','A2','B2','C1','C2','B1']);
+  assert.deepEqual(pairs(manual.ko.rounds[0]),[['A2','B2'],['C1','C2']]);
+  assert.deepEqual(manual.ko.seedSlots,['A1',null,'A2','B2','C1','C2','B1',null]);
+});
+test('uneven groups achieve the independent minimum rematches, including unavoidable collisions',()=>{
+  let cases=0,unavoidable=0;
+  for(let a=1;a<=5;a++)for(let b=1;b<=4;b++)for(let c=0;c<=3;c++){
+    const t=multi(c?[a,b,c]:[a,b]);
+    const real=t.ko.rounds[0].matches.flatMap(m=>[m.player1Id,m.player2Id]);
+    const maxGroup=Math.max(...t.groups.map(g=>real.filter(id=>g.players.includes(id)).length));
+    const minimum=Math.max(0,maxGroup-real.length/2);
+    assert.equal(rematches(t),minimum,JSON.stringify([a,b,c]));
+    assert.deepEqual(api.groupPlayoffSeeds(t),t.ko.participantIds,'deterministic repeated computation');
+    cases++;if(minimum)unavoidable++;
+  }
+  assert.equal(cases,80);assert.ok(unavoidable>0);
 });

@@ -1,6 +1,6 @@
 # Nové pevné pozice Skupiny → SKO ve v4.51.121 RC
 
-Kandidát doplňuje do nově vytvářeného hybridního SKO `ko.seedSlots` a číslo `slot` zápasu či BYE v daném kole. Návaznost se odvozuje z těchto pozic a skutečných vítězů. Budoucí větve jsou pouze prezentační náhled. Staré pavouky bez tohoto označení se dál vyhodnocují původním způsobem, včetně přehrávání historické struktury. [Rozsah, kompatibilita a návrat](docs/hybrid-sko-byes-v4.51.121.md)
+Kandidát doplňuje do nově vytvářeného hybridního SKO `ko.seedSlots` a číslo `slot` zápasu či BYE v daném kole. Návaznost se odvozuje z těchto pozic a skutečných vítězů. Budoucí větve jsou pouze prezentační náhled. Automatický návrh více skupin omezí rematche pouze výměnami obsazených úvodních pozic; BYE se nepřesouvají a každá výměna striktně snižuje počet rematchů. Ruční pořadí zůstává autoritativní. Staré pavouky bez tohoto označení se dál vyhodnocují původním způsobem, včetně přehrávání historické struktury. [Rozsah, kompatibilita a návrat](docs/hybrid-sko-byes-v4.51.121.md)
 
 # Streamované tempo 8/9/10-ball jedním klikem — v4.51.120 RC
 
