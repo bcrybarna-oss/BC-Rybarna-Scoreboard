@@ -1,5 +1,9 @@
 # Aktuální roadmapa modularizace Poolčítadla
 
+## Samostatná kritická vada persistence sérií — návrh, bez implementace
+
+24. 11. 2026, Dominik: potvrzen lokální zápis vlastníka/managera bez cloudového PUT. [Diagnóza a návrh](series-persistence-diagnosis-and-plan.md) vyžadují zvlášť schválenou autoritu/Rules a řízený přechod. Nevydává se nová RC, nemění se cache/archiv, nezahajuje se 10b1. Toto nesmí být potichu přibráno do pouhého přesunu datové vrstvy.
+
 ## Samostatná UI oprava SKO — nasazeno v4.51.122 RC
 
 Vizuální pořadí volných losů a spojnice nasazeno přes PR #70, merge `f3a503f6fb5122d76e36a044cc6bc2872ae6d4ce`, Pages 45387811562 SUCCESS. [Deployment report](deployment-v4.51.122.md). Jde o práci mimo modularizaci. Datové a sportovní vrstvy se nemění; 10b1/10b2 zůstávají nezahájené. [Rozsah](sko-visual-slots-v4.51.122.md).

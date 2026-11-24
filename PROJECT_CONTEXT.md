@@ -1,3 +1,7 @@
+# Persistence sérií — zjištěná vada, návrh čeká na schválení
+
+Dominik, 24. 11. 2026: tournamentSeries je stále pole uvnitř globálního appData. canManageSeries dovolí vlastníka/managera, ale canWriteGlobalAppData dovolí pouze systémového správce. saveData není potvrzený zápis; přidání/odebrání/bodování mohou existovat pouze lokálně a být nahrazeny cloudem. Zápisové rozšíření vlastníků na celou appData je nepřípustné. [Doložená diagnóza a návrh samostatné autority, Rules, přechodu a návratu](docs/series-persistence-diagnosis-and-plan.md). Návrh není implementovaný, žádná migrace ani Rules změna, poslední vydání v4.51.122 RC. Živé serverové oprávnění nelze odvozovat z mocků; jeho kopie zatím chybí. Toto není etapa 10b1.
+
 # Prezentační sloty SKO — nasazeno v4.51.122 RC
 
 Pro pevné pavouky se seedSlots vytváří `fixedKnockoutRoundPositions` dočasný model sloučených pozic zápasů, volných losů a budoucích náhledů. Používá uložený slot; původní pole se neřadí ani nepřepisují. Detail a modal používají společný layout s CSS řádky odvozenými ze slotu a hloubky kola. SVG spojuje pouze skutečné zdrojové a cílové pozice včetně ručního napojení semifinále. Zápas o třetí místo je mimo postupovou větev. Pro staré pavouky bez slotových metadat zůstává dosavadní seznam uložených zápasů a volných losů, bez vymyšlených spojnic. [Rozsah a ověření](docs/sko-visual-slots-v4.51.122.md).

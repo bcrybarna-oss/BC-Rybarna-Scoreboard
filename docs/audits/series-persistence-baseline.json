@@ -1,0 +1,626 @@
+{
+  "auditOfDefects": true,
+  "sha256": "da60aa45d86f7b07b92f720b8e186d10cfa3c6a8ab6bf9de24a858797460c2c2",
+  "liveAuthRules": false,
+  "scenarios": [
+    {
+      "role": "admin",
+      "width": 1440,
+      "storage": "normal",
+      "status": 200,
+      "actualBackup": false,
+      "allowed": true,
+      "global": true,
+      "beforeIds": 2,
+      "immediateIds": 3,
+      "serverLinked": true,
+      "puts": 1,
+      "cloudError": "",
+      "cachedLinked": true,
+      "pointsBefore": 600,
+      "pointsAfter": 900,
+      "requests": [
+        {
+          "method": "GET",
+          "path": "/appData.json",
+          "role": "admin",
+          "ifMatch": null
+        },
+        {
+          "method": "PUT",
+          "path": "/appData.json",
+          "role": "admin",
+          "ifMatch": "\"1\""
+        },
+        {
+          "method": "GET",
+          "path": "/appData.json",
+          "role": "admin",
+          "ifMatch": null
+        }
+      ],
+      "otherWrites": [],
+      "errors": []
+    },
+    {
+      "role": "owner",
+      "width": 1440,
+      "storage": "normal",
+      "status": 200,
+      "actualBackup": false,
+      "allowed": true,
+      "global": false,
+      "beforeIds": 2,
+      "immediateIds": 3,
+      "serverLinked": false,
+      "puts": 0,
+      "cloudError": "",
+      "cachedLinked": true,
+      "pointsBefore": 600,
+      "pointsAfter": 900,
+      "requests": [
+        {
+          "method": "GET",
+          "path": "/appData.json",
+          "role": "owner",
+          "ifMatch": null
+        },
+        {
+          "method": "GET",
+          "path": "/appData.json",
+          "role": "owner",
+          "ifMatch": null
+        }
+      ],
+      "otherWrites": [],
+      "errors": []
+    },
+    {
+      "role": "manager",
+      "width": 1440,
+      "storage": "normal",
+      "status": 200,
+      "actualBackup": false,
+      "allowed": true,
+      "global": false,
+      "beforeIds": 2,
+      "immediateIds": 3,
+      "serverLinked": false,
+      "puts": 0,
+      "cloudError": "",
+      "cachedLinked": true,
+      "pointsBefore": 600,
+      "pointsAfter": 900,
+      "requests": [
+        {
+          "method": "GET",
+          "path": "/appData.json",
+          "role": "manager",
+          "ifMatch": null
+        },
+        {
+          "method": "GET",
+          "path": "/appData.json",
+          "role": "manager",
+          "ifMatch": null
+        }
+      ],
+      "otherWrites": [],
+      "errors": []
+    },
+    {
+      "role": "club",
+      "width": 1440,
+      "storage": "normal",
+      "status": 200,
+      "actualBackup": false,
+      "allowed": false,
+      "global": false,
+      "beforeIds": 2,
+      "immediateIds": 2,
+      "serverLinked": false,
+      "puts": 0,
+      "cloudError": "",
+      "cachedLinked": false,
+      "pointsBefore": 600,
+      "pointsAfter": 600,
+      "requests": [],
+      "otherWrites": [],
+      "errors": []
+    },
+    {
+      "role": "player",
+      "width": 1440,
+      "storage": "normal",
+      "status": 200,
+      "actualBackup": false,
+      "allowed": false,
+      "global": false,
+      "beforeIds": 2,
+      "immediateIds": 2,
+      "serverLinked": false,
+      "puts": 0,
+      "cloudError": "",
+      "cachedLinked": false,
+      "pointsBefore": 600,
+      "pointsAfter": 600,
+      "requests": [],
+      "otherWrites": [],
+      "errors": []
+    },
+    {
+      "role": "logout",
+      "width": 1440,
+      "storage": "normal",
+      "status": 200,
+      "actualBackup": false,
+      "allowed": false,
+      "global": false,
+      "beforeIds": 2,
+      "immediateIds": 2,
+      "serverLinked": false,
+      "puts": 0,
+      "cloudError": "",
+      "cachedLinked": false,
+      "pointsBefore": 600,
+      "pointsAfter": 600,
+      "requests": [],
+      "otherWrites": [],
+      "errors": []
+    },
+    {
+      "role": "owner",
+      "width": 1440,
+      "storage": "quota",
+      "status": 200,
+      "actualBackup": false,
+      "allowed": true,
+      "global": false,
+      "beforeIds": 2,
+      "immediateIds": 3,
+      "serverLinked": false,
+      "puts": 0,
+      "cloudError": "",
+      "cachedLinked": false,
+      "pointsBefore": 600,
+      "pointsAfter": 900,
+      "requests": [
+        {
+          "method": "GET",
+          "path": "/appData.json",
+          "role": "owner",
+          "ifMatch": null
+        },
+        {
+          "method": "GET",
+          "path": "/appData.json",
+          "role": "owner",
+          "ifMatch": null
+        }
+      ],
+      "otherWrites": [],
+      "errors": []
+    },
+    {
+      "role": "admin",
+      "width": 1440,
+      "storage": "quota",
+      "status": 200,
+      "actualBackup": false,
+      "allowed": true,
+      "global": true,
+      "beforeIds": 2,
+      "immediateIds": 3,
+      "serverLinked": true,
+      "puts": 1,
+      "cloudError": "",
+      "cachedLinked": false,
+      "pointsBefore": 600,
+      "pointsAfter": 900,
+      "requests": [
+        {
+          "method": "GET",
+          "path": "/appData.json",
+          "role": "admin",
+          "ifMatch": null
+        },
+        {
+          "method": "PUT",
+          "path": "/appData.json",
+          "role": "admin",
+          "ifMatch": "\"1\""
+        },
+        {
+          "method": "GET",
+          "path": "/appData.json",
+          "role": "admin",
+          "ifMatch": null
+        }
+      ],
+      "otherWrites": [],
+      "errors": []
+    },
+    {
+      "role": "owner",
+      "width": 1440,
+      "storage": "denied",
+      "status": 200,
+      "actualBackup": false,
+      "allowed": true,
+      "global": false,
+      "beforeIds": 2,
+      "immediateIds": 3,
+      "serverLinked": false,
+      "puts": 0,
+      "cloudError": "",
+      "cachedLinked": false,
+      "pointsBefore": 600,
+      "pointsAfter": 900,
+      "requests": [
+        {
+          "method": "GET",
+          "path": "/appData.json",
+          "role": "owner",
+          "ifMatch": null
+        },
+        {
+          "method": "GET",
+          "path": "/appData.json",
+          "role": "owner",
+          "ifMatch": null
+        }
+      ],
+      "otherWrites": [],
+      "errors": []
+    },
+    {
+      "role": "admin",
+      "width": 1440,
+      "storage": "denied",
+      "status": 200,
+      "actualBackup": false,
+      "allowed": true,
+      "global": true,
+      "beforeIds": 2,
+      "immediateIds": 3,
+      "serverLinked": true,
+      "puts": 1,
+      "cloudError": "",
+      "cachedLinked": false,
+      "pointsBefore": 600,
+      "pointsAfter": 900,
+      "requests": [
+        {
+          "method": "GET",
+          "path": "/appData.json",
+          "role": "admin",
+          "ifMatch": null
+        },
+        {
+          "method": "PUT",
+          "path": "/appData.json",
+          "role": "admin",
+          "ifMatch": "\"1\""
+        },
+        {
+          "method": "GET",
+          "path": "/appData.json",
+          "role": "admin",
+          "ifMatch": null
+        }
+      ],
+      "otherWrites": [],
+      "errors": []
+    },
+    {
+      "role": "admin",
+      "width": 1440,
+      "storage": "normal",
+      "status": 401,
+      "actualBackup": false,
+      "allowed": true,
+      "global": true,
+      "beforeIds": 2,
+      "immediateIds": 3,
+      "serverLinked": false,
+      "puts": 1,
+      "cloudError": "CLOUD_WRITE_401",
+      "cachedLinked": true,
+      "pointsBefore": 600,
+      "pointsAfter": 900,
+      "requests": [
+        {
+          "method": "GET",
+          "path": "/appData.json",
+          "role": "admin",
+          "ifMatch": null
+        },
+        {
+          "method": "PUT",
+          "path": "/appData.json",
+          "role": "admin",
+          "ifMatch": "\"1\""
+        },
+        {
+          "method": "GET",
+          "path": "/appData.json",
+          "role": "admin",
+          "ifMatch": null
+        },
+        {
+          "method": "GET",
+          "path": "/appData.json",
+          "role": "admin",
+          "ifMatch": null
+        }
+      ],
+      "otherWrites": [],
+      "errors": []
+    },
+    {
+      "role": "admin",
+      "width": 1440,
+      "storage": "normal",
+      "status": 403,
+      "actualBackup": false,
+      "allowed": true,
+      "global": true,
+      "beforeIds": 2,
+      "immediateIds": 3,
+      "serverLinked": false,
+      "puts": 1,
+      "cloudError": "CLOUD_WRITE_403",
+      "cachedLinked": true,
+      "pointsBefore": 600,
+      "pointsAfter": 900,
+      "requests": [
+        {
+          "method": "GET",
+          "path": "/appData.json",
+          "role": "admin",
+          "ifMatch": null
+        },
+        {
+          "method": "PUT",
+          "path": "/appData.json",
+          "role": "admin",
+          "ifMatch": "\"1\""
+        },
+        {
+          "method": "GET",
+          "path": "/appData.json",
+          "role": "admin",
+          "ifMatch": null
+        },
+        {
+          "method": "GET",
+          "path": "/appData.json",
+          "role": "admin",
+          "ifMatch": null
+        }
+      ],
+      "otherWrites": [],
+      "errors": []
+    },
+    {
+      "role": "admin",
+      "width": 1440,
+      "storage": "normal",
+      "status": 412,
+      "actualBackup": false,
+      "allowed": true,
+      "global": true,
+      "beforeIds": 2,
+      "immediateIds": 3,
+      "serverLinked": false,
+      "puts": 1,
+      "cloudError": "CLOUD_WRITE_412",
+      "cachedLinked": true,
+      "pointsBefore": 600,
+      "pointsAfter": 900,
+      "requests": [
+        {
+          "method": "GET",
+          "path": "/appData.json",
+          "role": "admin",
+          "ifMatch": null
+        },
+        {
+          "method": "PUT",
+          "path": "/appData.json",
+          "role": "admin",
+          "ifMatch": "\"1\""
+        },
+        {
+          "method": "GET",
+          "path": "/appData.json",
+          "role": "admin",
+          "ifMatch": null
+        },
+        {
+          "method": "GET",
+          "path": "/appData.json",
+          "role": "admin",
+          "ifMatch": null
+        }
+      ],
+      "otherWrites": [],
+      "errors": []
+    },
+    {
+      "role": "admin",
+      "width": 1440,
+      "storage": "normal",
+      "status": 500,
+      "actualBackup": false,
+      "allowed": true,
+      "global": true,
+      "beforeIds": 2,
+      "immediateIds": 3,
+      "serverLinked": false,
+      "puts": 1,
+      "cloudError": "CLOUD_WRITE_500",
+      "cachedLinked": true,
+      "pointsBefore": 600,
+      "pointsAfter": 900,
+      "requests": [
+        {
+          "method": "GET",
+          "path": "/appData.json",
+          "role": "admin",
+          "ifMatch": null
+        },
+        {
+          "method": "PUT",
+          "path": "/appData.json",
+          "role": "admin",
+          "ifMatch": "\"1\""
+        },
+        {
+          "method": "GET",
+          "path": "/appData.json",
+          "role": "admin",
+          "ifMatch": null
+        },
+        {
+          "method": "GET",
+          "path": "/appData.json",
+          "role": "admin",
+          "ifMatch": null
+        }
+      ],
+      "otherWrites": [],
+      "errors": []
+    },
+    {
+      "role": "admin",
+      "width": 1440,
+      "storage": "normal",
+      "status": 200,
+      "actualBackup": false,
+      "allowed": true,
+      "global": true,
+      "beforeIds": 2,
+      "immediateIds": 3,
+      "serverLinked": true,
+      "puts": 1,
+      "cloudError": "Failed to fetch",
+      "cachedLinked": true,
+      "pointsBefore": 600,
+      "pointsAfter": 900,
+      "requests": [
+        {
+          "method": "GET",
+          "path": "/appData.json",
+          "role": "admin",
+          "ifMatch": null
+        },
+        {
+          "method": "PUT",
+          "path": "/appData.json",
+          "role": "admin",
+          "ifMatch": "\"1\""
+        },
+        {
+          "method": "GET",
+          "path": "/appData.json",
+          "role": "admin",
+          "ifMatch": null
+        }
+      ],
+      "otherWrites": [],
+      "errors": []
+    },
+    {
+      "role": "owner",
+      "width": 390,
+      "storage": "normal",
+      "status": 200,
+      "actualBackup": false,
+      "allowed": true,
+      "global": false,
+      "beforeIds": 2,
+      "immediateIds": 3,
+      "serverLinked": false,
+      "puts": 0,
+      "cloudError": "",
+      "cachedLinked": true,
+      "pointsBefore": 600,
+      "pointsAfter": 900,
+      "requests": [
+        {
+          "method": "GET",
+          "path": "/appData.json",
+          "role": "owner",
+          "ifMatch": null
+        },
+        {
+          "method": "GET",
+          "path": "/appData.json",
+          "role": "owner",
+          "ifMatch": null
+        }
+      ],
+      "otherWrites": [],
+      "errors": []
+    },
+    {
+      "role": "owner",
+      "width": 320,
+      "storage": "normal",
+      "status": 200,
+      "actualBackup": false,
+      "allowed": true,
+      "global": false,
+      "beforeIds": 2,
+      "immediateIds": 3,
+      "serverLinked": false,
+      "puts": 0,
+      "cloudError": "",
+      "cachedLinked": true,
+      "pointsBefore": 600,
+      "pointsAfter": 900,
+      "requests": [
+        {
+          "method": "GET",
+          "path": "/appData.json",
+          "role": "owner",
+          "ifMatch": null
+        },
+        {
+          "method": "GET",
+          "path": "/appData.json",
+          "role": "owner",
+          "ifMatch": null
+        }
+      ],
+      "otherWrites": [],
+      "errors": []
+    }
+  ],
+  "concurrentAdmins": {
+    "statuses": [
+      412,
+      200
+    ],
+    "noBlindOverwrite": true
+  },
+  "uidDuringUpload": {
+    "putUsesNewIdentity": true,
+    "mockPolicyRefused": true,
+    "liveRulesNotTested": true
+  },
+  "delayedRead": {
+    "olderReadAfterConfirmedUploadIgnored": true
+  },
+  "otherMutations": {
+    "scoringAndRemovalLost": true
+  },
+  "duplicates": {
+    "oneLocalMembershipAndOneSetOfPoints": true,
+    "notProofOfCloudPersistence": true
+  },
+  "accountRoundTrip": {
+    "localOnlyThenLost": true
+  }
+}
