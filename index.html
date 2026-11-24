@@ -1070,6 +1070,7 @@
     </div>
   </div>
 
+<script src="assets/js/tournament-series-repository.js?v=4.51.123"></script>
 <script src="assets/js/federal-statistics.js?v=4.51.98"></script>
 <script src="assets/js/federal-report-renderer.js?v=4.51.123"></script>
 <script src="assets/js/federal-report-controller.js?v=4.51.123"></script>
@@ -6685,6 +6686,7 @@ html[data-theme="light"] #leagueSchedule .history-item .muted{
     const error=document.createElement('div');error.id='federalReportRendererLoadError';error.setAttribute('role','alert');error.textContent='Nepodařilo se načíst vykreslování reportů Federal Cupu. Obnovte stránku.';document.body.prepend(error);throw new Error('FEDERAL_REPORT_RENDERER_MODULE_UNAVAILABLE');
   }
   if(!window.MatchChallengeActions){const error=document.createElement('div');error.id='matchChallengeActionsLoadError';error.setAttribute('role','alert');error.textContent='Nepodařilo se načíst ovládání výzev. Obnovte stránku.';document.body.prepend(error);throw Error('MATCH_CHALLENGE_ACTIONS_MODULE_UNAVAILABLE');}
+  if(!window.TournamentSeriesRepository){const error=document.createElement('div');error.id='tournamentSeriesRepositoryLoadError';error.setAttribute('role','alert');error.textContent='Nepodařilo se načíst správu sérií. Obnovte stránku.';document.body.prepend(error);throw Error('TOURNAMENT_SERIES_REPOSITORY_MODULE_UNAVAILABLE');}
   if(!window.PlayersReadRepository){const error=document.createElement('div');error.id='playersReadRepositoryLoadError';error.setAttribute('role','alert');error.textContent='Nepodařilo se načíst hráčské profily. Obnovte stránku.';document.body.prepend(error);throw Error('PLAYERS_READ_REPOSITORY_MODULE_UNAVAILABLE');}
   if(!window.MatchChallenges){const error=document.createElement('div');error.id='matchChallengesLoadError';error.setAttribute('role','alert');error.textContent='Nepodařilo se načíst výzvy k zápasu. Obnovte stránku.';document.body.prepend(error);throw Error('MATCH_CHALLENGES_MODULE_UNAVAILABLE');}
   if(!window.NotificationCenter){const error=document.createElement('div');error.id='notificationCenterLoadError';error.setAttribute('role','alert');error.textContent='Nepodařilo se načíst upozornění. Obnovte stránku.';document.body.prepend(error);throw Error('NOTIFICATION_CENTER_MODULE_UNAVAILABLE');}
@@ -6718,6 +6720,8 @@ html[data-theme="light"] #leagueSchedule .history-item .muted{
     return Date.now().toString(36)+Math.random().toString(36).slice(2)+Math.random().toString(36).slice(2);
   };
 
+  // Build-time cutover switch. Production activation is NOT approved. Tests replace this literal only.
+  const SERIES_AUTHORITY_ENABLED=false;
   const DB_KEY = 'bc_rybarna_scoreboard_v1';
   const CLOUD_LOCAL_TS_KEY = 'bc_rybarna_cloud_local_updated_at';
   const CLOUD_REFRESH_KEY = 'bc_rybarna_cloud_refresh_token';
@@ -7189,6 +7193,7 @@ html[data-theme="light"] #leagueSchedule .history-item .muted{
   let manualTournamentSeedOrder=[];
 
   let data = loadData();
+  if(SERIES_AUTHORITY_ENABLED)data.tournamentSeries=[];
   let match = loadDeviceActiveMatch();
   if(!match && data.currentMatch){
     match=JSON.parse(JSON.stringify(data.currentMatch));
@@ -7495,7 +7500,7 @@ html[data-theme="light"] #leagueSchedule .history-item .muted{
       players,
       matches:arrayMergeById(l.matches,r.matches,preferRemote).filter(m=>!deletedMatchSet.has(m.id)),
       tournaments:mergeTournamentArrays(l.tournaments,r.tournaments,preferRemote).filter(t=>!deletedTournamentSet.has(t.id)),
-      tournamentSeries:arrayMergeById(l.tournamentSeries,r.tournamentSeries,preferRemote),
+      tournamentSeries:SERIES_AUTHORITY_ENABLED?l.tournamentSeries:arrayMergeById(l.tournamentSeries,r.tournamentSeries,preferRemote),
       leagues:mergeLeagueArrays(l.leagues,r.leagues,preferRemote),
       federalCup2026:JSON.parse(JSON.stringify(preferRemote ? r.federalCup2026 : l.federalCup2026)),
       deletedMatchIds,
@@ -7507,6 +7512,7 @@ html[data-theme="light"] #leagueSchedule .history-item .muted{
   }
 
   function restoreSafetyBackup(){
+    if(SERIES_AUTHORITY_ENABLED){toast('Obnova celé zálohy je při nové autoritě sérií blokovaná. Vyžaduje samostatné porovnání dat.');return;}
     let raw='';
     try{raw=localStorage.getItem(CLOUD_BACKUP_KEY)||'';}catch(e){}
     if(!raw){toast('Žádná lokální záloha zatím není k dispozici.');return;}
@@ -8539,6 +8545,86 @@ html[data-theme="light"] #leagueSchedule .history-item .muted{
     fetch:(...args)=>fetch(...args),url:()=>cloudUrl('players'),now:Date.now,
     apply:players=>{data.players=players;try{window.renderModernHome?.();}catch(e){}}
   });
+  // One app-session owner. No per-dialog instance; no fallback to appData.
+  const secureSeriesIdentity=()=>({uid:cloudUid,authenticated:cloudAuthenticated,emailVerified:cloudEmailVerified,role:currentUserRole,profileId:currentUserPlayerId||'',generation:cloudSessionGeneration});
+  const secureSeriesRepository=window.TournamentSeriesRepository.create({
+    enabled:()=>SERIES_AUTHORITY_ENABLED,identity:secureSeriesIdentity,
+    authorize:async context=>{if(!await ensureCloudToken(context))return null;return {uid:cloudUid,idToken:cloudIdToken};},
+    url:(path,credential)=>FIREBASE_DB+'/'+path+'.json?auth='+encodeURIComponent(credential),fetch:(...args)=>fetch(...args)
+  });
+  let secureSeriesScope=JSON.stringify(secureSeriesIdentity()),secureSeriesLoaded=false,secureSeriesCreateDraft=null;
+  const seriesEditorBase=new Map(),seriesCreateDrafts=new Map(),seriesCreateForms=new Map();
+  const seriesCreateFields=['seriesName','seriesClub','seriesSeason','seriesBestCount','seriesPlacementTieBreak','seriesScoringMode','seriesPointsTop','seriesPointsBands','seriesCustomPoints'];
+  const seriesCreateDefaults=Object.fromEntries(seriesCreateFields.map(id=>[id,$(id)?.value||'']));
+  const seriesActor=who=>JSON.stringify([who.uid,who.profileId||'']);
+  function seriesPersistenceMessage(text){
+    let el=$('seriesPersistenceStatus');if(!el){el=document.createElement('p');el.id='seriesPersistenceStatus';el.setAttribute('role','status');el.style.cssText='padding:10px;overflow-wrap:anywhere';$('tournamentSeriesPanel').prepend(el);}
+    el.textContent=text;toast(text);
+  }
+  function publishSecureSeries(series){
+    const index=data.tournamentSeries.findIndex(s=>s.id===series.id);if(index<0)data.tournamentSeries.push(series);else data.tournamentSeries[index]=series;
+    renderSeriesList();renderTournamentSeriesSelect();if(selectedSeriesId)renderSeriesModal();renderResultsSeries();
+    localStorage.setItem(DB_KEY,JSON.stringify(data));
+  }
+  const secureSeriesActions=window.TournamentSeriesRepository.createActions({repository:secureSeriesRepository,identity:secureSeriesIdentity,
+    pending:busy=>{document.querySelectorAll('#seriesModalBody button').forEach(b=>b.disabled=busy||!!(selectedSeriesId&&!canManageSeries(data.tournamentSeries.find(s=>s.id===selectedSeriesId))));if($('createSeriesBtn'))$('createSeriesBtn').disabled=busy;},confirmed:publishSecureSeries,message:seriesPersistenceMessage});
+  function syncSecureSeriesIdentity(){
+    if(!SERIES_AUTHORITY_ENABLED)return;
+    secureSeriesRepository.syncIdentity();const scope=JSON.stringify(secureSeriesIdentity());if(scope===secureSeriesScope)return;
+    const previous=JSON.parse(secureSeriesScope);if(previous.authenticated&&previous.uid){const key=seriesActor(previous);seriesCreateForms.set(key,Object.fromEntries(seriesCreateFields.map(id=>[id,$(id)?.value||''])));if(secureSeriesCreateDraft)seriesCreateDrafts.set(key,secureSeriesCreateDraft);}
+    const who=secureSeriesIdentity(),form=seriesCreateForms.get(seriesActor(who))||seriesCreateDefaults;for(const id of seriesCreateFields)if($(id))$(id).value=form[id]??seriesCreateDefaults[id];
+    secureSeriesScope=scope;secureSeriesCreateDraft=who.authenticated?seriesCreateDrafts.get(seriesActor(who))||null:null;renderSecureSeriesCreateAttempt();updateSeriesScoringCreateUI();seriesEditorBase.clear();document.querySelectorAll('#seriesModalBody button,#createSeriesBtn').forEach(b=>b.disabled=false);secureSeriesActions.invalidate();secureSeriesLoaded=false;data.tournamentSeries=[];
+    const status=$('seriesPersistenceStatus');if(status)status.textContent='';$('seriesUncertaintyControls')?.remove();selectedSeriesId=null;$('seriesModal')?.classList.remove('show');renderSeriesList();renderTournamentSeriesSelect();
+  }
+  async function loadSecureSeries(){
+    if(!SERIES_AUTHORITY_ENABLED)return;syncSecureSeriesIdentity();const scope=JSON.stringify(secureSeriesIdentity());
+    const list=await secureSeriesRepository.readAll();if(scope!==JSON.stringify(secureSeriesIdentity()))return;
+    const changed=JSON.stringify(window.TournamentSeriesRepository.canonical(data.tournamentSeries))!==JSON.stringify(window.TournamentSeriesRepository.canonical(list));
+    data.tournamentSeries=list;secureSeriesLoaded=true;
+    if(changed){renderSeriesList();renderTournamentSeriesSelect();renderResultsSeries();
+      if(selectedSeriesId&&$('seriesModal')?.classList.contains('show')){
+        if($('seriesModalBody')?.querySelector('input,select,textarea')){
+          if(!canManageSeries(list.find(s=>s.id===selectedSeriesId))){document.querySelectorAll('#seriesModalBody input,#seriesModalBody select,#seriesModalBody textarea,#seriesModalBody button').forEach(el=>el.disabled=true);seriesPersistenceMessage('Oprávnění ke správě série bylo odebráno. Rozepsané údaje nejsou uložené. Zavři a znovu otevři přehled.');}
+          else seriesPersistenceMessage('Načten novější stav série. Rozepsaný formulář zůstává zachovaný; při ukládání se ověří konflikt.');
+        }else renderSeriesModal();
+      }
+    }else renderSeriesList();
+    try{localStorage.setItem(DB_KEY,JSON.stringify(data));}catch(e){seriesPersistenceMessage('Série byly načteny z cloudu; místní cache není dostupná. Po reloadu je nutné nové načtení.');}
+    return list;
+  }
+  function refreshSecureSeriesView(){const scope=JSON.stringify(secureSeriesIdentity());return loadSecureSeries().catch(error=>{if(scope===JSON.stringify(secureSeriesIdentity())&&!['SERIES_SESSION_CHANGED','SERIES_READ_SUPERSEDED','SERIES_BUSY'].includes(error.code))seriesPersistenceMessage('Série nelze načíst; stará appData nejsou náhradní autorita.');});}
+  function runSecureSeries(id,operation){if(!secureSeriesLoaded){seriesPersistenceMessage('Nejprve načti aktuální série z cloudu.');return Promise.resolve(null);}const scope=JSON.stringify(secureSeriesIdentity());return secureSeriesActions.run(id,operation).catch(()=>{if(scope===JSON.stringify(secureSeriesIdentity())&&secureSeriesRepository.isUncertain(id))renderSecureSeriesUncertainty(id);return null;});}
+  function renderSecureSeriesUncertainty(id){
+    $('seriesUncertaintyControls')?.remove();if(!SERIES_AUTHORITY_ENABLED||!secureSeriesRepository.isUncertain(id))return;
+    const scope=JSON.stringify(secureSeriesIdentity()),box=document.createElement('div'),label=document.createElement('p'),preview=document.createElement('pre'),inspect=document.createElement('button'),release=document.createElement('button');let inspection=null;
+    box.id='seriesUncertaintyControls';preview.style.cssText='white-space:pre-wrap;overflow-wrap:anywhere;max-height:240px;overflow:auto';
+    label.textContent='Nejasný výsledek zápisu série '+id+'. Čtení neprokazuje dokončení operace. Reload zápis neruší. Žádná akce se neopakuje automaticky.';
+    inspect.className=release.className='btn';inspect.type=release.type='button';inspect.textContent='PROHLÉDNOUT AKTUÁLNÍ STAV';release.textContent='POKRAČOVAT PO VLASTNÍM OVĚŘENÍ';release.disabled=true;
+    const current=()=>scope===JSON.stringify(secureSeriesIdentity())&&box.isConnected;
+    inspect.onclick=async()=>{inspect.disabled=true;release.disabled=true;try{const result=await secureSeriesRepository.inspectUncertain(id);if(!current())return;inspection=result.inspection;preview.textContent=JSON.stringify(result.series,null,2);label.textContent='Pouze aktuální stav serveru, nikoliv potvrzení minulé operace. Null znamená nyní nenalezený záznam, ne záruku neprovedení zápisu.';release.disabled=false;}catch(e){if(current())label.textContent='Stav nelze načíst; blokace zůstává. Nic nebylo opakováno.';}finally{if(current())inspect.disabled=false;}};
+    release.onclick=()=>{if(!current()||!inspection)return;if(!confirm('Čtení nepotvrzuje minulou operaci a již odeslaný požadavek může stále doběhnout. Potvrzuješ, že jsi ručně porovnal stav a sám rozhodneš o další akci? Toto pouze uvolní místní blokaci; žádný zápis se neprovede ani bezpečné opakování nezaručuje.'))return;if(!current())return;try{secureSeriesRepository.acknowledgeUncertainty(id,inspection);box.remove();seriesPersistenceMessage('Blokace uvolněna ručním rozhodnutím. Žádná akce nebyla opakována.');}catch(e){label.textContent='Relace nebo kontrola se změnila. Znovu načti stav; blokace zůstává.';}};
+    box.append(label,inspect,release,preview);(selectedSeriesId===id?$('seriesModalBody').parentElement:$('seriesCreatePanel').parentElement).append(box);
+  }
+  function renderSecureSeriesCreateAttempt(){
+    if(!SERIES_AUTHORITY_ENABLED)return;let el=$('seriesCreateAttempt');
+    if(!el){el=document.createElement('div');el.id='seriesCreateAttempt';const label=document.createElement('p'),button=document.createElement('button');label.setAttribute('role','status');button.className='btn';button.type='button';button.textContent='OPUSTIT NEPOTVRZENOU PŘÍPRAVU SÉRIE';button.onclick=()=>{
+      const draft=secureSeriesCreateDraft,scope=JSON.stringify(secureSeriesIdentity());if(!draft||draft.promise)return;
+      if(!confirm('Předchozí zápis mohl v cloudu uspět. Série „'+draft.fields.name+'“ (ID '+draft.id+') může existovat. Nejprve zkontroluj cloudový přehled. Opouštíš pouze místní přípravu; nic na serveru nemažeme a nové založení může vytvořit duplicitu. Opravdu opustit?'))return;
+      if(scope!==JSON.stringify(secureSeriesIdentity())||draft!==secureSeriesCreateDraft)return;
+      const key=seriesActor(secureSeriesIdentity());if(seriesCreateDrafts.get(key)===draft)seriesCreateDrafts.delete(key);secureSeriesCreateDraft=null;renderSecureSeriesCreateAttempt();seriesPersistenceMessage('Místní příprava opuštěna. Případná cloudová série nebyla změněna ani smazána.');
+    };el.append(label,button);$('seriesCreatePanel').append(el);}
+    el.hidden=!secureSeriesCreateDraft;if(secureSeriesCreateDraft){el.firstChild.textContent='Nepotvrzená příprava: '+secureSeriesCreateDraft.fields.name+' • ID '+secureSeriesCreateDraft.id+'. Při nejistotě zkontroluj cloud; reload zápis neruší.';el.lastChild.disabled=!!secureSeriesCreateDraft.promise;}
+  }
+  function createSecureSeries(fields){
+    const scope=JSON.stringify(secureSeriesIdentity()),actor=seriesActor(secureSeriesIdentity());
+    if(!secureSeriesCreateDraft){secureSeriesCreateDraft={id:uid(),fields:JSON.parse(JSON.stringify(fields)),promise:null};seriesCreateDrafts.set(actor,secureSeriesCreateDraft);}
+    const draft=secureSeriesCreateDraft;if(draft.promise)return draft.promise;
+    if(JSON.stringify(fields)!==JSON.stringify(draft.fields)){seriesPersistenceMessage('Předchozí vytvoření nebylo potvrzeno. Zachovej původní vstupy a ověř stav; nevytvářej náhradu naslepo.');renderSecureSeriesCreateAttempt();return;}
+    draft.promise=runSecureSeries(draft.id,{type:'create',fields:draft.fields}).then(result=>{if(result&&seriesCreateDrafts.get(actor)===draft)seriesCreateDrafts.delete(actor);if(result&&secureSeriesCreateDraft===draft&&scope===JSON.stringify(secureSeriesIdentity()))secureSeriesCreateDraft=null;return result;}).finally(()=>{draft.promise=null;if(scope===JSON.stringify(secureSeriesIdentity()))renderSecureSeriesCreateAttempt();});
+    renderSecureSeriesCreateAttempt();return draft.promise;
+  }
+  function blockedSeriesOperation(){seriesPersistenceMessage('Tato operace je před dokončením bezpečného přechodu blokovaná. Data nebyla změněna.');return true;}
+  if(SERIES_AUTHORITY_ENABLED)window.addEventListener('pagehide',e=>{if(!e.persisted)secureSeriesActions.dispose();});
   function loadSecurePlayers(){return securePlayersReader.read();}
 
   async function saveSecurePlayer(player){
@@ -9107,6 +9193,7 @@ html[data-theme="light"] #leagueSchedule .history-item .muted{
     window.syncNotificationIdentity?.();
     window.syncOnlinePresence?.();
     securePlayersReader.syncIdentity();
+    syncSecureSeriesIdentity();
     window.syncMatchChallengeIdentity?.();
     window.syncMatchChallengeActions?.();
     const el=$('accountPlayerStatus');
@@ -9207,6 +9294,7 @@ html[data-theme="light"] #leagueSchedule .history-item .muted{
   }
 
   async function uploadCloudData(){
+    if(SERIES_AUTHORITY_ENABLED){setCloudStatus('GLOBÁLNÍ ZÁPIS POZASTAVEN',false);return false;}
     if(cloudSyncInProgress) return;
     if(!await ensureCloudToken()) return;
     // Globální /appData smí měnit pouze systémový administrátor.
@@ -9305,7 +9393,7 @@ html[data-theme="light"] #leagueSchedule .history-item .muted{
         refreshViewsAfterCloudLoad();
       }finally{cloudApplyingRemote=false;}
     },
-    success(){cloudLastError='';setCloudStatus('ONLINE • AUTO',true);},
+    success(){cloudLastError='';setCloudStatus('ONLINE • AUTO',true);if(SERIES_AUTHORITY_ENABLED)refreshSecureSeriesView();},
     error(error){cloudLastError=String(error.message||error);console.warn('Cloud auto sync:',error);}
   });
   function pollCloudData(){return cloudAutoSync.refresh();}
@@ -9320,13 +9408,14 @@ html[data-theme="light"] #leagueSchedule .history-item .muted{
   // Secure-list refresh is a separate app-owned job, outside this module's /appData scope.
   document.addEventListener('visibilitychange',()=>{
     if(!document.hidden && cloudAuthenticated){
-      Promise.all([loadSecureMatches(),loadSecureTournaments()])
+      Promise.all([loadSecureMatches(),loadSecureTournaments(),...(SERIES_AUTHORITY_ENABLED?[loadSecureSeries()]:[])])
         .then(()=>{try{renderHistory();renderStats();renderPlayers();renderTournament();}catch(e){}})
         .catch(()=>{});
     }
   });
 
   async function initialCloudMerge(){
+    if(SERIES_AUTHORITY_ENABLED)await loadSecureSeries();
     if(!await ensureCloudToken()) return false;
     setCloudStatus('SYNC…',true);
 
@@ -9701,6 +9790,7 @@ html[data-theme="light"] #leagueSchedule .history-item .muted{
     }
   });
   function showScreen(name){
+    if(SERIES_AUTHORITY_ENABLED&&name==='tournament'&&cloudAuthenticated)refreshSecureSeriesView();
     // Navigace nesmí měnit stav zápasu; před opuštěním skóre pouze vytvoříme záchranný snapshot.
     try{if(match&&!match.endedAt&&name!=='match')recordActiveMatchRecoverySnapshot(match);}catch(e){}
     // Po dokončení turnajového zápasu nesmí žádné pozdější volání
@@ -10423,6 +10513,7 @@ $('useClock').addEventListener('change',e=>$('clockSettings').classList.toggle('
   }
   function federalConfigFingerprint(c){return historicalFingerprint(normalizeFederalConfig(c,data.players));}
   async function saveFederalConfig(next,expected){
+    if(SERIES_AUTHORITY_ENABLED)throw Error('Globální konfigurace je během přechodu sérií uzamčená. Federal Cup nebyl změněn.');
     if(!currentUserIsSystemAdmin()||!await ensureCloudToken())throw Error('Nemáš oprávnění uložit Federal Cup.');
     if(federalConfigFingerprint(next)===federalConfigFingerprint(expected))return normalizeFederalConfig(expected,data.players);
     if(federalConfigFingerprint(data.federalCup2026)!==federalConfigFingerprint(expected))throw Error('Konflikt Federal Cupu: konfigurace se změnila. Obnov soupisku a zadej úpravu znovu.');
@@ -20780,6 +20871,7 @@ function renderTournamentDetail(){
 
   function renderTournamentSeriesSelect(){
     const el=$('tournamentSeriesSelect');
+    if(SERIES_AUTHORITY_ENABLED&&el){el.innerHTML='<option value="">Připojení až po dokončení turnaje</option>';el.disabled=true;return;}
     if(!el)return;
     const old=el.value;
     const list=(data.tournamentSeries||[]).slice().sort((a,b)=>String(a.name||'').localeCompare(String(b.name||''),'cs'));
@@ -21386,6 +21478,7 @@ function renderTournamentDetail(){
     return t;
   }
   async function historicalPersist(next,previous=null){
+    if(SERIES_AUTHORITY_ENABLED)throw Error('Úpravy rekonstruované historické struktury jsou při přechodu blokované; turnaj ani série nebyly změněny.');
     if(!historicalCanManage(next) || !await ensureCloudToken())throw Error('Nemáš oprávnění k uložení turnaje.');
     const url=cloudUrl('tournaments/'+next.id);
     const read=await fetch(url,{cache:'no-store',headers:{'X-Firebase-ETag':'true'}});
@@ -21419,6 +21512,7 @@ function renderTournamentDetail(){
     historicalDraftStorageStatus();return !historicalDraftVolatile;
   }
   window.openHistoricalStructureSetup=function(seriesId){
+    if(SERIES_AUTHORITY_ENABLED)return blockedSeriesOperation();
     const s=(data.tournamentSeries||[]).find(x=>x.id===seriesId);if(!s||!canManageSeries(s))return;
     historicalActiveId=null;
     if(historicalBuildDraft?.seriesId!==seriesId){
@@ -21489,6 +21583,7 @@ function renderTournamentDetail(){
   window.historicalSeedChanged=function(el){historicalBuildDraft.order[Number(el.dataset.index)]=el.value;historicalSaveDraft();};
   window.historicalResetSetup=function(){historicalBuildDraft.stage='config';historicalSaveDraft();openHistoricalStructureSetup(historicalBuildDraft.seriesId);};
   async function historicalUiAction(action){
+    if(SERIES_AUTHORITY_ENABLED)return blockedSeriesOperation();
     if(historicalUiBusy)return;historicalUiBusy=true;$('historicalStructureMessage').textContent='Ukládám…';
     document.querySelectorAll('[data-historical-action]').forEach(b=>b.disabled=true);
     try{const result=await action();$('historicalStructureMessage').textContent=result===false?'Změna byla zrušena; uložené výsledky zůstaly zachované.':'Uloženo.';}
@@ -21742,6 +21837,7 @@ function renderTournamentDetail(){
   function renderSeriesList(){
     const wrap=$('tournamentSeriesList');
     if(!wrap)return;
+    if(SERIES_AUTHORITY_ENABLED&&!secureSeriesLoaded){wrap.innerHTML='<div class="muted">Série nejsou načtené. Přihlas se a obnov přehled; místní záloha není nová autorita.</div>';return;}
     const list=(data.tournamentSeries||[]).slice().sort((a,b)=>String(b.season||'').localeCompare(String(a.season||''))||String(a.name||'').localeCompare(String(b.name||''),'cs'));
     if(!list.length){
       wrap.innerHTML='<div class="muted">Zatím není vytvořená žádná série.</div>';
@@ -21775,6 +21871,7 @@ function renderTournamentDetail(){
     if(!s)return;
     $('seriesModalTitle').textContent=s.name+(s.season?' • '+s.season:'');
     renderSeriesModal();
+    if(SERIES_AUTHORITY_ENABLED)renderSecureSeriesUncertainty(seriesId);
     $('seriesModal').classList.add('show');
   };
 
@@ -21806,6 +21903,7 @@ function renderTournamentDetail(){
     if(!s||!canManageSeriesOrganizers(s))return;
     const uid=$('seriesOrganizerSelect_'+s.id)?.value||'';
     if(!uid)return;
+    if(SERIES_AUTHORITY_ENABLED)return runSecureSeries(seriesId,{type:'manager-add',uid});
     s.managerUids=s.managerUids||{};
     s.managerUids[uid]=true;
     s.updatedAt=new Date().toISOString();
@@ -21816,6 +21914,7 @@ function renderTournamentDetail(){
   window.removeSeriesOrganizer=function(seriesId,uid){
     const s=(data.tournamentSeries||[]).find(x=>x.id===seriesId);
     if(!s||!canManageSeriesOrganizers(s))return;
+    if(SERIES_AUTHORITY_ENABLED)return runSecureSeries(seriesId,{type:'manager-remove',uid});
     if(s.managerUids)delete s.managerUids[uid];
     s.updatedAt=new Date().toISOString();
     saveData();renderSeriesList();renderSeriesModal();
@@ -21844,6 +21943,7 @@ function renderTournamentDetail(){
 
   function renderSeriesModal(){
     const s=(data.tournamentSeries||[]).find(x=>x.id===selectedSeriesId);
+    if(SERIES_AUTHORITY_ENABLED&&s){const base={};for(const k of window.TournamentSeriesRepository.fields.filter(k=>!['tournamentIds','updatedAt'].includes(k)))if(Object.prototype.hasOwnProperty.call(s,k))base[k]=JSON.parse(JSON.stringify(s[k]));seriesEditorBase.set(s.id,base);}
     const body=$('seriesModalBody');
     if(!s||!body)return;
 
@@ -22047,6 +22147,9 @@ function renderTournamentDetail(){
       return;
     }
 
+    if(SERIES_AUTHORITY_ENABLED)return runSecureSeries(seriesId,{type:'scoring',expected:seriesEditorBase.get(seriesId)||{},fields:{scoringMode:mode,
+      placementTieBreak:$('seriesEditPlacementTieBreak_'+seriesId)?.value||'legacy',bestCount:Math.max(0,Number($('seriesEditBestCount_'+seriesId)?.value||0)),
+      pointsTop:parsePointList($('seriesEditTop_'+seriesId)?.value,[100,80,65,55]),pointsBands:parsePointList($('seriesEditBandsPts_'+seriesId)?.value,[45,25,10,5]),customPointsText:customText,customPoints:custom}});
     s.scoringMode=mode;
     s.placementTieBreak=$('seriesEditPlacementTieBreak_'+seriesId)?.value||'legacy';
     s.bestCount=Math.max(0,Number($('seriesEditBestCount_'+seriesId)?.value||0));
@@ -22467,12 +22570,14 @@ function renderTournamentDetail(){
       if(results.length<2)throw new Error('Historický turnaj musí mít alespoň 2 hráče.');
       if(!results.some(x=>x.place===1))throw new Error('V pořadí chybí 1. místo.');
 
-      s.historicalTournaments=Array.isArray(s.historicalTournaments)?s.historicalTournaments:[];
-      s.historicalTournaments.push({
+      const historicalRecord={
         id:'hist_'+uid(),name,date,mode:mode==='full'?'full':'placements',
         statsComplete,manualPlacement,results,matches,
         createdAt:new Date().toISOString(),createdByUid:cloudUid||''
-      });
+      };
+      if(SERIES_AUTHORITY_ENABLED)return runSecureSeries(seriesId,{type:'history-add',record:historicalRecord});
+      s.historicalTournaments=Array.isArray(s.historicalTournaments)?s.historicalTournaments:[];
+      s.historicalTournaments.push(historicalRecord);
       s.updatedAt=new Date().toISOString();
       saveData();renderSeriesList();renderSeriesModal();renderResultsSeries();
       try{renderTournamentStats();}catch(e){}
@@ -22486,6 +22591,7 @@ function renderTournamentDetail(){
     const ht=(s.historicalTournaments||[]).find(x=>x.id===historicalId);
     if(!ht)return;
     if(!confirm('Opravdu smazat historický turnaj „'+(ht.name||'')+'“ ze série?'))return;
+    if(SERIES_AUTHORITY_ENABLED)return runSecureSeries(seriesId,{type:'history-remove',historicalId});
     s.historicalTournaments=(s.historicalTournaments||[]).filter(x=>x.id!==historicalId);
     s.updatedAt=new Date().toISOString();
     saveData();
@@ -22496,6 +22602,7 @@ function renderTournamentDetail(){
   };
 
   window.addTournamentToSeries=function(seriesId,tournamentId){
+    if(SERIES_AUTHORITY_ENABLED)return runSecureSeries(seriesId,{type:'add',tournamentId});
     const s=(data.tournamentSeries||[]).find(x=>x.id===seriesId);
     if(!s||!canManageSeries(s))return;
     if(!(s.tournamentIds||[]).includes(tournamentId))s.tournamentIds.push(tournamentId);
@@ -22506,6 +22613,7 @@ function renderTournamentDetail(){
   };
 
   window.removeTournamentFromSeries=function(seriesId,tournamentId){
+    if(SERIES_AUTHORITY_ENABLED)return runSecureSeries(seriesId,{type:'remove',tournamentId});
     const s=(data.tournamentSeries||[]).find(x=>x.id===seriesId);
     if(!s||!canManageSeries(s))return;
     s.tournamentIds=(s.tournamentIds||[]).filter(id=>id!==tournamentId);
@@ -22514,6 +22622,7 @@ function renderTournamentDetail(){
   };
 
   window.deleteTournamentSeries=function(seriesId){
+    if(SERIES_AUTHORITY_ENABLED)return blockedSeriesOperation();
     const s=(data.tournamentSeries||[]).find(x=>x.id===seriesId);
     if(!s||!canManageSeriesOrganizers(s))return;
     if(!confirm('Opravdu smazat sérii „'+s.name+'“? Samotné turnaje zůstanou zachované.'))return;
@@ -22566,6 +22675,7 @@ function renderTournamentDetail(){
   };
 
   function renderResultsSeries(){
+    if(SERIES_AUTHORITY_ENABLED&&!secureSeriesLoaded){const el=$('resultsSeriesList');if(el)el.textContent='Série nejsou načtené z cloudu.';return;}
     const wrap=$('resultsSeriesList');
     if(!wrap)return;
 
@@ -24039,6 +24149,7 @@ function renderTournamentDetail(){
       customPoints:parseCustomSeriesPoints(customPointsText),
       tournamentIds:[],createdAt:new Date().toISOString(),updatedAt:new Date().toISOString()
     };
+    if(SERIES_AUTHORITY_ENABLED){const fields={};for(const key of ['name','club','season',...window.TournamentSeriesRepository.fields.filter(k=>!['tournamentIds','updatedAt'].includes(k))])if(Object.prototype.hasOwnProperty.call(s,key))fields[key]=s[key];return createSecureSeries(fields);}
     data.tournamentSeries.push(s);
     saveData();
     $('seriesCreatePanel').classList.add('hidden');
@@ -24368,6 +24479,7 @@ function renderTournamentDetail(){
 
     const pending=tournamentCreationPending;
     const {tournament:t,seriesId}=pending;
+    if(SERIES_AUTHORITY_ENABLED&&seriesId){showTournamentCreateFeedback('Původní pokus obsahuje vazbu série a je během přechodu blokovaný. Turnaj již mohl být uložen. Zkontroluj cloudový seznam; nic se nemaže ani nepřipojuje automaticky.');return;}
     if(!cloudAuthenticated || cloudUid!==t.createdByUid){
       showTournamentCreateFeedback('Přihlas se účtem, který turnaj připravil, a zkus uložení znovu.');
       return;
@@ -24418,7 +24530,7 @@ function renderTournamentDetail(){
     clearTournamentCheckinDraft();
     resetTournamentCreationCheckin();
 
-    const series=(data.tournamentSeries||[]).find(item=>item.id===seriesId);
+    const series=SERIES_AUTHORITY_ENABLED?null:(data.tournamentSeries||[]).find(item=>item.id===seriesId);
     if(series && !series.tournamentIds.includes(t.id)){
       series.tournamentIds.push(t.id);
       series.updatedAt=new Date().toISOString();
@@ -29454,7 +29566,8 @@ function renderStats(){
   $('h2hPlayer2').addEventListener('change',renderH2H);
   $('h2hDiscipline').addEventListener('change',renderH2H);
 
-  $('exportBtn').onclick=()=>{
+  $('exportBtn').onclick=async()=>{
+    if(SERIES_AUTHORITY_ENABLED){try{await loadSecureSeries();}catch(e){seriesPersistenceMessage('Export byl zastaven: aktuální série nelze načíst.');return;}}
     const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});
     const a=document.createElement('a'); a.href=URL.createObjectURL(blob);
     a.download='BC_Rybarna_Scoreboard_Backup_'+new Date().toISOString().slice(0,10)+'.json';
@@ -29462,6 +29575,7 @@ function renderStats(){
   };
   $('importFile').addEventListener('change',async e=>{
     const f=(e.target.files && e.target.files[0]); if(!f) return;
+    if(SERIES_AUTHORITY_ENABLED){seriesPersistenceMessage('Import celé zálohy je blokovaný; nemůže přepsat aktuální série.');e.target.value='';return;}
     try{
       const parsed=JSON.parse(await f.text());
       if(!parsed || !parsed.players || !Array.isArray(parsed.matches)) throw new Error('bad');

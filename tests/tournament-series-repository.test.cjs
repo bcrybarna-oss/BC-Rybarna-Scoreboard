@@ -24,3 +24,26 @@ test('CLI dry run preserves inputs and refuses existing output, wrong paths and 
  fs.writeFileSync(l,JSON.stringify({capture,value:{tournamentSeries:[]}}));fs.writeFileSync(t,JSON.stringify({capture:{...capture,path:'/tournamentSeries'},value:{}}));
  const wrong=spawnSync(process.execPath,[script,'--legacy',l,'--target',t,'--source-kind','server-snapshot']);assert.equal(wrong.status,1);assert.match(wrong.stderr.toString(),/Snapshot path mismatch/);
 });
+
+test('authorization wait is invalidated by UID, generation, profile, role, verification or logout without GET',async()=>{
+ for(const change of [{uid:'B'},{generation:2},{profileId:'other'},{role:'system_admin'},{emailVerified:false},{authenticated:false}]){
+  let who={uid:'A',authenticated:true,emailVerified:true,generation:1,profileId:'profile',role:'player'},resolve,calls=0;const credential=new Promise(r=>resolve=r);
+  const r=api.create({enabled:()=>true,identity:()=>who,authorize:()=>credential,url:()=>'',fetch:()=>calls++});
+  const reading=r.read('s');who={...who,...change};r.syncIdentity();resolve({uid:'A',idToken:'synthetic'});
+  await assert.rejects(reading,{code:'SERIES_SESSION_CHANGED'});assert.equal(calls,0);assert.equal(r.snapshot().activeJobs,0);r.dispose();
+ }
+});
+test('old readAll finalizer cannot clear newer single flight',async()=>{
+ let who={uid:'owner',authenticated:true,emailVerified:true,generation:1},resolveOld,resolveNew,calls=0,auth=0;
+ const old=new Promise(r=>resolveOld=r),next=new Promise(r=>resolveNew=r);
+ const r=api.create({enabled:()=>true,identity:()=>who,authorize:()=>++auth===1?old:next,url:()=> 'http://synthetic.invalid',fetch:async()=>{calls++;return new Response(JSON.stringify({s:api.encodeLegacy(legacy())}));}});
+ const a=r.readAll();await new Promise(r=>setImmediate(r));who={...who,generation:2};r.syncIdentity();const b=r.readAll();await new Promise(r=>setImmediate(r));
+ resolveOld({uid:'owner',idToken:'synthetic'});await assert.rejects(a,{code:'SERIES_SESSION_CHANGED'});assert.equal(r.readAll(),b);
+ resolveNew({uid:'owner',idToken:'synthetic'});assert.equal((await b).length,1);assert.equal(calls,1);assert.equal(r.snapshot().activeJobs,0);r.dispose();
+});
+
+test('new authority rejects unsafe rendered identifiers without dropping or repairing source data',()=>{
+ const raw={...legacy(),id:"unsafe'"},before=JSON.stringify(raw),report=plan([raw],{});assert.equal(report.counts.invalid,1);assert.ok(report.rows[0].issues.includes('UNSAFE_SERIES_IDENTIFIER'));assert.equal(JSON.stringify(raw),before);
+ assert.throws(()=>api.decodeRecord(api.encodeLegacy(raw),raw.id),{code:'UNSAFE_SERIES_IDENTIFIER'});
+ let calls=0;const r=api.create({enabled:()=>true,identity:()=>({uid:'owner',authenticated:true,emailVerified:true}),authorize:async()=>{},fetch:()=>calls++,url:()=>''});assert.throws(()=>r.mutate('s',{type:'manager-add',uid:"unsafe'"}),{code:'UNSAFE_SERIES_IDENTIFIER'});assert.equal(calls,0);r.dispose();
+});

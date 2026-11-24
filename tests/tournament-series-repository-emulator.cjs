@@ -21,7 +21,7 @@ function client(uid='owner',transport){const state={who:{uid,profileId:'p-'+uid,
  const repo=api.create({identity:()=>state.who,enabled:()=>state.enabled,authorize:async()=>({uid:state.who.uid,idToken:token(state.who)}),url,fetch:async(u,o)=>{state.calls.push({path:new URL(u).pathname,method:o.method});return transport?transport(u,o):fetch(u,o);}});return{state,repo};}
 let pass=0;
 async function test(name,fn){await control('','PUT',fixture());await fn();pass++;console.log('PASS emulator',name);}
-(async()=>{
+if(require.main===module)(async()=>{
  await control('.settings/rules','PUT',rules);
  for(const role of ['admin','owner','manager'])await test(role+' add/remove/scoring/reload and second device',async()=>{
   const c=client(role);let r=await c.repo.mutate('s',{type:'add',tournamentId:'november'});assert.equal(r.outcome,'saved');assert.deepEqual(r.series.tournamentIds,['legacy-unresolved','b','november']);
@@ -47,3 +47,5 @@ async function test(name,fn){await control('','PUT',fixture());await fn();pass++
  await test('post-send A reply cannot update B UI',async()=>{const gate=defer(),sent=defer();const c=client('owner',async(u,o)=>{const r=await fetch(u,o);if(o.method==='PUT'){sent.resolve();await gate.promise;}return r;});let count=0;const a=api.createActions({repository:c.repo,identity:()=>c.state.who,pending:()=>{},message:()=>{},confirmed:()=>count++});const p=a.run('s',{type:'add',tournamentId:'november'});await sent.promise;c.state.who={...c.state.who,uid:'stranger',generation:2};a.invalidate();gate.resolve();await assert.rejects(p,{code:'SERIES_SESSION_CHANGED'});assert.equal(count,0);assert.ok((await client().repo.read('s')).series.tournamentIds.includes('november'),'already sent write was not rolled back');a.dispose();});
  assert.equal(sha(fs.readFileSync(file)),sha(raw));console.log('PASS real local RTDB engine:',pass,'repository scenarios; candidate file unchanged; no production requests; synthetic Auth only');
 })().catch(e=>{console.error(e);process.exitCode=1;});
+
+module.exports={api,client,control,fixture,token,url,rules,test,defer};

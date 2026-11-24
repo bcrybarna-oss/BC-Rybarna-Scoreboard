@@ -1,12 +1,12 @@
 # Revize aplikace Poolčítadlo
 
-## Dominik – neaktivní příprava bezpečného ukládání sérií (v4.51.123 RC)
+## Dominik – izolovaná integrace bezpečné persistence sérií (v4.51.123 RC)
 Zadavatel: Dominik
 Datum: 24. 11. 2026
-Změny: Soukromý lokální audit dodané kopie Rules a nepublikovaný návrh; neaktivní repository pro samostatnou autoritu sérií, oddělený content/ACL/historie, podmíněné zápisy ETag, read-only migrační inventář a syntetické testy. Produkční handlery/autorita se nepřepínají, index mění pouze verzi kandidáta. [Rozsah, bezpečnostní hranice a přechod](docs/series-storage-preparation.md).
-Testy: Rules engine původní kopie 23/23 a soukromý draft 39/39; repository proti skutečnému lokálnímu emulátoru 18/18; desktop/mobil 1440/390/320 PASS, Lounská/standardní série a historie 1440/390/320 PASS. Produkční Node 425 PASS/0 FAIL/0 SKIP, release gate PASS; experiment 28 PASS/2 FAIL odděleně. GitHub CI zaznamenáno v předání.
-Nasazení: Nenasazeno, neaktivní přípravný kandidát; produkce zůstává v4.51.122 RC. Žádná publikace Rules ani migrace.
-Omezení: Nová autorita není integrována do produkčního bootstrapu/handlerů; cutover vyžaduje všechny writery, čerstvé snapshoty a další schválení. Živé Auth a aktuální remote revize Rules neověřeny. Nejistota zápisu není trvalý operation receipt a nepřežije restart. Dvě experimentální vady zůstávají oddělené. PR #55/#72 nedotčené; 10b1 nezahájena.
+Změny: Pokračování draft PR #73. Načtená app-owned repository, za vypnutým přepínačem integrované read/vazby/bodování/create/ACL/jednoduchá historie. Whitelist, identity/generace, child ETag, čtecí revize, stale editor a ACK bez falešného selhání při plné cache. Blokované staré import/restore/delete/reconstructed-history cesty. Soukromé přechodové/migrační Rules a ruční read-only snapshot tool; skutečný inventář nepořízen. [Matice, testy a cutover](docs/series-storage-preparation.md).
+Testy: Rules audit23 a první draft39 odděleně PASS; repository18 a integrace16 reálných lokálních engine scénářů; integrovaný browser1440/390/320 a skutečné staré v122 generic/FC root PUT proti emulátoru PASS. Lounská/standardní série a bootstrap PASS. Produkční Node435 PASS/0 FAIL/0 SKIP, release gate PASS. Experiment28 PASS/2 nezměněné FAIL odděleně. GitHub CI uvedeno při předání.
+Nasazení: Nenasazeno; autorita vypnutá. Produkce v4.51.122 RC. Žádné produkční čtení pro snapshoty, zápisy, Rules publikace ani migrace.
+Omezení: Produkční rozhodnutí A/B (globální appData freeze versus per-child writery), schválení blokovaných editorů, čerstvé snapshoty a živé izolované Auth chybí. Blokace nejasného zápisu nepřežije restart; GET není potvrzení operace. PR #55/#72 nedotčené, 10b1 nezahájena.
 
 ## Dominik – vizuální pozice volných losů v SKO (v4.51.122 RC)
 Zadavatel: Dominik

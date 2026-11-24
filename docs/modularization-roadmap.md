@@ -1,6 +1,6 @@
-# Samostatný úkol — příprava persistence sérií (24. 11. 2026)
+# Samostatný úkol — izolovaná integrace sérií (24. 11. 2026)
 
-Kandidát v4.51.123 RC pouze připravuje neaktivní repository, soukromý návrh Rules a read-only migraci; nejde o zahájení 10b1/10b2. Produkce zůstává v122. PR #55 a diagnostický #72 nedotčené. [Hranice, podmínky cutover a návrat](series-storage-preparation.md). Žádná nová datová autorita ani publikace Rules není povolena tímto přípravným PR.
+Draft PR #73 / kandidát v4.51.123 RC integruje samostatnou repository za vypnutou autoritou. Nové conditional operace, blokované editory, read-only snapshot tool a soukromé přechodové/migrační Rules. [Matice, bezpečnostní rozhodnutí a přesné cutover pořadí](series-storage-preparation.md). Produkce zůstává v122; není schválená publikace Rules, skutečný inventář/migrace ani přepnutí. Rozhodnutí A/B pro globální appData writery je blokující. PR55/72 nedotčené. 10b1/10b2 nezahájené.
 
 # Aktuální roadmapa modularizace Poolčítadla
 

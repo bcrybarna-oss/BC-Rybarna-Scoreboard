@@ -12,7 +12,7 @@ function plan(legacy,target,tournaments){
   const row={id:s?.id??null,issues:[]};
   try{
    if(seen.has(s.id))row.issues.push('DUPLICATE_SERIES_ID');seen.add(s.id);
-   const proposed=contract.encodeLegacy(s),ids=Object.values(s.tournamentIds||{}),history=Object.values(s.historicalTournaments||{});
+   const proposed=contract.encodeLegacy(s);try{contract.decodeRecord(proposed,s.id);}catch(error){row.issues.push(error.code||'UNREADABLE_TARGET_RECORD');row.migrationBlocked=true;}const ids=Object.values(s.tournamentIds||{}),history=Object.values(s.historicalTournaments||{});
    row.owner=s.createdByUid;row.managers=Object.keys(s.managerUids||{}).filter(k=>s.managerUids[k]===true);
    row.links=ids.length;row.tournamentIds=ids;row.duplicateLinks=ids.filter((id,i)=>ids.indexOf(id)!==i);
    row.missingReferences=known?ids.filter(id=>!known.has(id)):null;
@@ -24,7 +24,7 @@ function plan(legacy,target,tournaments){
    if(s.managerUids&&(!s.managerUids||typeof s.managerUids!=='object'||Array.isArray(s.managerUids)||Object.values(s.managerUids).some(v=>typeof v!=='boolean')))row.issues.push('INVALID_MANAGER_MAP');
    if(ids.some(v=>typeof v!=='string'))row.issues.push('INVALID_REFERENCE');
    if(row.duplicateLinks.length)row.issues.push('DUPLICATE_REFERENCES_NOT_REPAIRED');
-   row.status=!destination[s.id]?'missingTarget':row.proposedSha256===row.targetSha256?'identical':'conflict';
+   row.status=row.migrationBlocked?'invalid':!destination[s.id]?'missingTarget':row.proposedSha256===row.targetSha256?'identical':'conflict';
    row.firebaseRepresentationEquivalent=destination[s.id]?JSON.stringify(contract.canonical(proposed))===JSON.stringify(contract.canonical(destination[s.id])):null;
    counts[row.status]++;counts.links+=ids.length;counts.historicalTournaments+=history.length;
   }catch(error){row.status='invalid';row.issues.push(error.code||error.message);counts.invalid++;}
@@ -44,8 +44,8 @@ function cli(argv){
   const capture=input.json.capture;if(!capture?.databaseUrl||!capture.capturedAt||!capture.etag||!Object.prototype.hasOwnProperty.call(input.json,'value'))throw Error('server-snapshot inputs require capture.databaseUrl/capturedAt/etag and value; old application backups are not authoritative snapshots');
   const expectedPath=input===l?'/appData':input===t?'/tournamentSeries':'/tournaments';
   if(capture.path!==expectedPath)throw Error('Snapshot path mismatch: expected '+expectedPath);
-  if(input===l&&(!input.json.value||!Object.prototype.hasOwnProperty.call(input.json.value,'tournamentSeries')))throw Error('appData snapshot has no explicit tournamentSeries; do not infer an empty source');
-  return input===l?input.json.value.tournamentSeries:input.json.value;
+  if(input===l&&(!input.json.value||!Object.prototype.hasOwnProperty.call(input.json.value?.data||{},'tournamentSeries')))throw Error('appData snapshot has no explicit tournamentSeries; do not infer an empty source');
+  return input===l?input.json.value.data.tournamentSeries:input.json.value;
  };
  const report=plan(value(l),value(t),m?value(m):undefined);report.sourceKind=args['--source-kind'];
  report.inputs=inputs.map(x=>({sha256:x.sha256,capture:x.json.capture||null}));

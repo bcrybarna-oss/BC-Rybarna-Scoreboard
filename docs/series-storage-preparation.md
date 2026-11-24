@@ -1,80 +1,128 @@
-# Příprava bezpečné persistence turnajových sérií
+# Zabezpečené ukládání sérií — izolovaná integrace PR #73
 
-Zadavatel: Dominik. Datum: 24. 11. 2026. Kandidát v4.51.123 RC, základ `e29b5ed31c002b7a6b3911b20cec37ae404cba66` (nasazeno v4.51.122 RC).
+Zadavatel: Dominik. Datum: 24. 11. 2026. Kandidát v4.51.123 RC. Základ main `e29b5ed31c002b7a6b3911b20cec37ae404cba66`, produkce zůstává v4.51.122 RC. Toto pokračování nahrazuje stav přípravy z commitu `6d0f7b2`.
 
-## Stav a hranice
+## Stav
 
-Toto je **neaktivní příprava**, nikoliv dokončená oprava produkční persistence. `index.html` nový modul neimportuje a stávající handlery ani autoritu nemění. Jeho jedinou změnou je povinné číslo kandidáta. Produkční problém tím ještě není vyřešen. PR #55 a diagnostický PR #72 zůstávají nedotčené; nejde o modularizaci 10b1.
+Repository je nyní načítána a má jednu app-owned instanci. **Produkční autorita zůstává vypnutá konstantou `SERIES_AUTHORITY_ENABLED=false`.** Aktivní testy mění tuto konstantu pouze v izolovaném HTML. Při zapnutém režimu neexistuje fallback na appData, import ani místní zálohu. Při vypnutém režimu zůstávají původní produkční operace pro kontinuitu; nejde o schválení jejich persistence. Není povolen merge/deployment/aktivace/migrace. PR #55/#72 jsou nedotčené, 10b1 nezahájena.
 
-Dodanou skutečnou kopii Rules jsme lokálně validovali a auditovali. Originál i soukromý návrh Rules zůstávají mimo tento veřejný checkout. Veřejné soubory neobsahují kopii Rules, privilegované identifikátory ani podrobný návod k nedostatkům stávajících jiných větví. Úplný audit a návrh jsou předány lokálně zadavateli. Vazba kopie na konkrétní živou databázi vychází z jeho doloženého původu; JSON neobsahuje projektový manifest nebo publikovanou revizi. Živá pravidla jsme znovu nestahovali.
+Skutečné Rules, jejich lokální návrhy a podrobný bezpečnostní audit zůstávají mimo veřejný checkout. V jiných větvích nejsou opravovány nesouvisející slabiny. Zveřejněny jsou pouze kontrakty, kód a syntetické důkazy, nikoliv skutečné Rules nebo privilegované identifikátory.
 
-## Doporučený kontrakt
-
-Budoucí autorita `/tournamentSeries/{seriesId}`:
+## Kontrakt a oprávnění
 
 ```text
-schemaVersion: 1
-id, createdByUid             povinná neměnná identita
-managerUids                 správci série; mění vlastník / system_admin
-content                     běžně měnitelná část
-  tournamentIds             stávající číselné pozice vazeb
-  scoringMode, placementTieBreak, bestCount
-  pointsTop, pointsBands, customPointsText, customPoints, updatedAt
-preserved                   všechna ostatní původní pole beze změny
+/tournamentSeries/{id}
+  schemaVersion: 1
+  id, createdByUid            povinné a neměnné
+  managerUids                owner / serverově ověřený system_admin
+  content                    owner / manager / system_admin
+    tournamentIds
+    scoringMode, placementTieBreak, bestCount
+    pointsTop, pointsBands, customPointsText, customPoints, updatedAt
+  preserved
+    name, club, season, createdAt
+    historicalTournaments    samostatná owner / manager / admin zapisovací cesta
+    ...ostatní původní a neznámá pole, bez běžného write grantu
 ```
 
-`preserved` zahrnuje jméno, klub, sezónu, historické turnaje a jejich výsledky i neznámá budoucí pole. Převod neslučuje ani neopravuje existující vazby. Adaptér vrací současnému rendereru původní logický tvar. Není to nový sportovní výpočet. Duplicitní/nevyřešené reference zůstávají evidované k rozhodnutí, nikoliv automaticky odstraněné.
+Čtení zachovává rozsah ověřených přihlášených uživatelů. Role jsou při rozhodování Rules načítány ze serveru; klientská role slouží jen pro UI/preflight. Manager nesmí měnit vlastníka ani ACL. Nové ACL granty vyžadují existující serverový uživatelský záznam. Identifikátory série/pořadatelů/historických záznamů mají bezpečný znakový kontrakt; nepřípustné staré ID zastaví čtení nové autority a dry-run je označí jako blokované, nikdy je nepřejmenuje či nezahodí. To chrání stávající inline UI handlery před nově zapisovanými nebezpečnými klíči, nejde o přepis obecného rendereru. Vlastník smí vytvořit vlastní novou sérii s whitelisted poli a prázdným ACL; nesmí při vytvoření přibalit cizího vlastníka, manažery či systémová metadata. Migrační správce může zachovat původní neznámé hodnoty. Existující nezměněné staré historické řádky nejsou nuceny splňovat novější požadovaná pole.
 
-Navrhovaná politika: čtou ověřené přihlášené účty; `content` mění vlastník, explicitní manager nebo systémový správce. Manager nesmí přidělovat oprávnění, měnit vlastníka či chráněná pole. Kořenové vytvoření při migraci provádí pouze správce; delete záznamu není součástí tohoto návrhu. Běžné vytvoření nové série a úprava historických dat vyžadují před cutover doplnění samostatných chráněných operací. Vlastník/manager nedostává právo přepsat `/appData` ani celý záznam série.
+Každá operace zachytí vstupy/identitu/generaci před čekáním, autorizuje před odesláním a ověří credential owner. GET a PUT používají **stejnou konkrétní cestu a její ETag**: root pro vytvoření; content pro vazby/bodování; managerUids pro ACL; preserved/historicalTournaments pro historii. PUT nenahrazuje sourozence. Žádný write do turnaje kvůli změně série, žádné dual-write do appData. Neznámá pole, ostatní pořadatelé a historické výsledky se berou z čerstvého serverového stavu a zachovávají. Nové klientské vstupy mají whitelist včetně vnořených historických results/matches.
 
-Oddělená zapisovatelná větev chrání i neznámá pole a jejich odstranění. RTDB `.validate` se při mazání nevyhodnocuje a porovnání objektů přes `RuleDataSnapshot.val()` není generická hluboká rovnost. Nestačí proto povolit rodičovský PUT a spoléhat na validační pravidla potomků. [Syntaxe Rules](https://firebase.google.com/docs/database/security/core-syntax), [RuleDataSnapshot](https://firebase.google.com/docs/reference/security/database).
+ID a číselné pozice vazeb/historií jsou stabilní; odebrání ponechá mezery. View adaptér vrátí logicky uspořádaná pole. Nová vazba vyžaduje dokončený turnaj v repo i Rules. Více sérií může používat tentýž turnaj se svým bodováním. Nezapisuje se globální seriesPlacementTieBreak do společného turnaje. Výpočty Lounské a standardní série zůstávají původní.
 
-## Připravená ukládací vrstva
+## Funkční matice v zapnutém izolovaném režimu
 
-`assets/js/tournament-series-repository.js` je samostatná knihovna, ve výchozím stavu vypnutá. Má explicitní identity/authorize/url/fetch/now závislosti, žádné automatické spouštění, storage, polling ani produkční fallback. Vlastní ji budoucí relace aplikace; úklid náhodného dialogu ji nesmí restartovat.
+| Editor / cesta | Stav | Ověření / hranice |
+|---|---|---|
+| Bootstrap, seznamy, výsledky sérií | Integrované čtení nové autority | Žádná stará lokální série při startu nebo změně účtu; selhání není prázdný známý seznam. |
+| Přidat/odebrat dokončený turnaj | Integrovaný conditional content PUT | Potvrzení, druhé zařízení, reload, stejné ID nepřidává další body. |
+| Bodování, limity, tie-break | Integrovaný conditional content PUT | Zachovaný baseline vykresleného formuláře; zastaralá editace skončí konfliktem před PUT. |
+| Vytvořit sérii | Integrovaný root PUT, ETag prázdného cíle | Vlastník z identity, prázdné ACL; stejné probíhající vytvoření sdílí ID/Promise; odmítnutí/nejistota nezahodí přípravu. |
+| Přidat/odebrat spolupořadatele | Integrovaný managerUids PUT | Vlastník/admin, server odmítá managera i podvrženou klientskou roli. |
+| Jednoduchá historie — pořadí / plné zápasy | Integrované přidání/odebrání | Původní parser a sportovní výpočty, whitelist nové evidence, zachování starých řádků. |
+| Přejmenování existující série/klubu/sezóny | Není nově nabízený editor | Stávající UI vytváří tato metadata při založení. Jejich nová write capability se nezavádí. |
+| Smazat celou sérii | **Blokováno** | Bez schválené politiky mazání, tombstonů a návratu; žádný DELETE. |
+| Rekonstruovaný historický pavouk | **Zápis blokován** | Vyžaduje provázané změny /tournaments a série; zachován read-only přístup k existujícím výsledkům. Guard před plánem i v historicalPersist. |
+| Automatická vazba při založení běžného turnaje | **Blokováno** | Selector vysvětluje připojení až po dokončení. Obnovený pending s původní vazbou zůstává zachován a je výslovně blokován. |
+| Export celé aplikace | Integrované čerstvé načtení sérií | Pokud se autorita nenačte, export se zastaví. Bez zápisu. |
+| Import celé zálohy / restoreSafetyBackup | **Blokováno** | Stará kopie nesmí nahradit novou autoritu; soubor ani server se nemění. |
+| Generic upload /appData | **Pozastaven** | V zapnutém režimu neodesílá request; nepoužívá skrytý legacy upload. |
+| Uložení konfigurace Federal Cupu | **Dočasně blokováno** | Přímý root appData writer; nutné produktové rozhodnutí níže. |
 
-Postup: zachytit vstupy a generaci identity → autorizovat → zkontrolovat vlastníka credential → čerstvý GET série → GET **content včetně jeho ETag** → whitelist změny nad čerstvým obsahem → podmíněný PUT **pouze content**. ETag rodiče se nikdy nepoužije pro potomka. URL s tokenem vzniká až po kontrolách; diagnostika neobsahuje credentials. U nové vazby repo i návrh Rules vyžadují dokončený turnaj. Odebrání ponechá mezery v číselných pozicích, aby nepřeskládalo ostatní staré odkazy. Turnaj samotný ani jeho výsledky se nezapisují. Jediný turnaj může být v libovolném počtu sérií s nezávislým bodováním.
+Background obnovy využívají stávající životní cyklus CloudRefresh: po úspěšném globálním čtení samostatné sdílené čtení sérií, nezávislé na appData revizi. Žádný nový timer. Navigace a visibility používají stejnou instanci/readAll Promise. Otevřený editovatelný formulář se background obnovou neničí, změna je oznámena. Souběžná editace bodování se před PUT porovná s vykresleným základem. Odpovědi staré relace, starý finalizer a čtení před novějším zápisem nepublikují. Bfcache pagehide nedisponuje instanci; skutečný odchod ano. U již odeslaného PUT se netvrdí odvolání.
 
-Stejná souběžná akce sdílí Promise. UI publikuje stav až po přímém potvrzení PUT. Selhání místní cache po potvrzení nezmění cloudový úspěch na neúspěch a pravdivě upozorní na nespolehlivou obnovu místního stavu. Účet/role/profil/generace jsou kontrolovány před požadavkem i po dekódování. Již odeslaný PUT není odhlášením odvolán; jeho dokončení nesmí změnit UI nové relace.
+## Konflikty a nejistota
 
-HTTP 412 znamená konflikt, zobrazení aktuálního stavu a **žádný druhý PUT**. HTTP 401/403 je odmítnutí. Ztracená odpověď, 5xx nebo neplatné potvrzení po PUT znamenají nejistý výsledek. Následný GET poskytuje jen současný stav, nikoliv důkaz provedení konkrétní operace. Stejný profil/série zůstane v otevřené službě blokovaný do nového čtení a explicitního rozhodnutí uživatele. Žádný automatický retry/verified/reconcile ani trvalý žurnál. Blokace nepřežije restart stránky/služby; návrh neslibuje exactly-once historii operací. [Firebase conditional REST writes](https://firebase.google.com/docs/database/rest/save-data#section-conditional-requests).
+Jeden pending job na profil/sérii, stejné kliknutí sdílí Promise. HTTP412 žádný opakovaný PUT, aktuální serverový stav a nové rozhodnutí uživatele. HTTP401/403 odmítnutí bez falešného accepted/saved. Přímý ACK zůstává úspěchem i při následném selhání cache/renderu. Offline před PUT neodešle zápis. Ztracená odpověď/5xx/neplatný ACK po PUT = nejasný výsledek, nikoliv automatický neúspěch. GET slouží jen k prohlédnutí současného stavu; není receipt konkrétní minulé operace. Další zápis stejného profilu/série je v otevřené službě blokován do explicitního rozhodnutí po novém čtení. UI nabízí oddělené prohlédnutí aktuálního stavu (včetně nynějšího null) a potvrzené ruční uvolnění bez PUT. Odmítnutí dialogu blokaci zachová; nejde o průkazné dokončení ani záruku bezpečného opakování. Nejasná příprava vytvoření má samostatné vědomé opuštění s názvem/ID a varováním, bez DELETE. Blokace nepřežije restart; exactly-once historie se neslibuje. Žádný žurnál, automatický retry ani serverový protokol výzev.
 
-## Read-only inventář a migrace
+## Staré klienty a rozhodnutí před cutover
 
-`scripts/series-migration-dry-run.cjs` nemá síťový klient. Jen porovnává vstupní soubory a případně vytváří nový report výhradním zápisem `wx`. Nikdy nepřepisuje vstupy/zálohy/report. Reálný `server-snapshot` požaduje čas, databázovou origin, cestu a ETag: zdroj `/appData` včetně explicitního `tournamentSeries`, cíl `/tournamentSeries`, volitelně `/tournaments`. Smí být stejná databáze. Tyto popisky nejsou kryptografickým důkazem původu; autorizované pořízení snapshotů je samostatný krok. Starý export aplikace není živý inventář. Reálný podrobný report nesmí být uložen do veřejného checkoutu.
+RTDB parent `.write` grant nelze odebrat child `.write:false`. Test skutečného enginu to pozitivně prokazuje. Samotný zákaz /appData/data/tournamentSeries je proto nedostatečný. [Dědění Rules](https://firebase.google.com/docs/database/security/core-syntax).
 
-Veřejná fixture `tests/fixtures/series-storage-synthetic/` je výhradně syntetická. Skutečně spuštěný dry-run: 3 zdrojové série, 3 cílové, 4 vazby, 3 historické turnaje; 1 shodný, 1 konfliktní a 1 chybějící cíl, 1 osiřelý cíl. Report obsahuje hashe vstupů, historie, navržených a cílových záznamů, vlastníky/ACL, bodování, neznámá pole, duplicity a chybějící odkazy. Nic neopravuje. Test ověřuje nezměněné vstupy, odmítnutí existujícího výstupu, špatné cesty i neautoritativní zálohy.
+Soukromý **přechodový návrh** zakazuje veškeré appData zápisy, včetně systémového správce. Emulátor odmítá parent/child PUT, PATCH, DELETE a root multipath PATCH. Skutečný kód v4.51.122 z main byl spuštěn proti emulátoru: generic uploader i saveFederalConfig skutečně odešlou root PUT a dostanou odmítnutí, nová série zůstává nezměněná. Starý klient může stále ukázat starou lokální optimistickou změnu; server ji nepřijal a klient musí být obnoven. Nejde o nápravu starého UI.
 
-Budoucí přechod vyžaduje:
+Dopad zámku: čtení appData funguje, samostatné players/matches/tournaments/leagues/stream cesty nezískávají ani neztrácejí práva. Globální admin upload/inicializace konfigurace a editace FC konfigurace/rosteru/lineupů se neuloží. Zámek nevrací už odeslané operace. Jde o běžné REST/Auth klienty; administrativní IAM/Admin SDK bypass Rules tím zastaven není a vyžaduje skutečný organizační klid operátorů. [Admin přístup](https://firebase.google.com/docs/database/admin/start). Při publikaci pravidel nutno vyčkat ukončení starých requestů a po zámku pořídit nové snapshoty.
 
-1. Čerstvé autorizované snapshoty legacy i případné nové větve, referencovaných turnajů a zálohu; klid writerů nebo jinou prokázanou ochranu proti změnám během inventáře. Porovnat všechny série, vlastníky/ACL, vazby, historii a bodování.
-2. Samostatné schválení obálky a Rules; porovnat čerstvou živou revizi s auditovanou kopií. Znovu spustit engine testy a testy skutečného izolovaného Auth. Nalezené vady jiných větví řešit odděleně.
-3. Po schválení kopírovat pod stejnými ID pouze do prázdných cílů s podmínkou, konflikt zastavit. Zpětně načíst a porovnat úplné hodnoty i Firebase reprezentaci. Legacy nemazat, neobnovovat starou databázovou zálohu.
-4. Dopracovat **všechny** editory sérií, vytváření, historii, bootstrap, refresh, export/import a oddělení od obecného appData uploaderu. Žádné dvojí zápisy ani tichý fallback. Serverově ochránit legacy série před starými klienty; samotný nový JS flag nestačí. Vynutit reload kompatibilního klienta.
-5. Teprve po dalším schválení zapnout novou autoritu a ověřit na obou zařízeních. Tato příprava kroky 1–5 neprovádí.
+**Výběr produkčního řešení není schválený:**
 
-## Návrat
+- A: krátké oznámené okno globálního appData write freeze, poté kompatibilní klient s uvedenými blokacemi. Lze emulátorově připravit, ale vyžaduje výslovný souhlas s nedostupností globální správy i po aktivaci série; její ukončení čeká na další ověřené per-child řešení, není automaticky omezené délkou migračního okna.
+- B: před cutover rozdělit ostatní globální writery na výslovně povolené child cesty, odstranit parent grant a ponechat legacy série zamčené. Doporučeno pro dlouhodobý provoz bez blokace FC; vyžaduje samostatně schválený rozsah a úplný inventář globálních polí. Nyní neimplementováno.
 
-Před aktivací stačí revert celého přípravného PR, nejsou změněná data. **Po budoucím cutover nestačí vrátit starou aplikaci**: nečetla by nově uložené změny. Zastavit zápisy, zachovat novou autoritu a použít kompatibilní read-only klient; případný zpětný převod pouze z aktuálních snapshotů s porovnáním a zvláštním schválením. Nikdy nepřekrýt nová data starým exportem.
+Není připraveno automatické obnovení původního parent grantu. Dokud zůstává legacy pole pod zapisovatelným parentem, takové uvolnění by obnovilo problém. Implementace této části se zastavuje na rozhodnutí A/B; testovací návrh není povolení k publikaci.
 
-## Provedené testy a reprodukce
+## Read-only snapshot tool a dry-run
 
-- Neupravená privátní kopie: 23/23 skutečných Rules kontrol; místní návrh 39/39. Stávající větve jsou beze změny. Podrobnosti pouze v lokálním bezpečnostním auditu.
-- `tests/tournament-series-repository-emulator.cjs`: 18/18, skutečný RTDB engine 4.11.2, loopback/demo namespace. Role owner/manager/admin/club/stranger/anonymous/unverified, reload/nová instance a druhé zařízení, 412, revokace ACL po GET, single-flight, A→B→A během JSON, offline, 401/403/5xx, ztráta odpovědi po skutečném PUT, úklid, ACK a selhání cache, starý účet po odeslání. Síťové chyby jsou řízená injekce, Auth jsou syntetické tokeny.
-- `tests/tournament-series-preparation-browser.cjs`: 1440/390/320 px PASS. Skutečný renderer aplikace a nová knihovna napojená **jen izolovaným testovacím hookem**, reálný lokální emulator. Pending bez falešné publikace, jeden PUT, ACK, skutečný reload a čtení, odebrání, scoring, quota/denied storage po ACK, nezměněné jiné série a celá turnajová data, 0 JS chyb. Screenshoty jsou místně v `output/series-preparation-ui/`; nejde o nasazené ovládání.
-- `tests/lounska-round-robin-browser.cjs`: PASS 1440/390/320, standardní i Lounská série v obou pořadích, minitabulky, cyklus, nedokončené výsledky, historická data, umístění a body.
-- Produkční Node: 425 PASS/0 FAIL/0 SKIP (včetně dostupných lokálních reálných FC fixture); release gate PASS. GitHub běží bez soukromých fixture, očekávané tři SKIP nesmí být zaměněny za lokální ověření. Experiment: 28 PASS/2 FAIL; první ztrácí při nedostupné identitě vazbu obnovovaného zápasu, druhý povoluje cizí editaci přes zbytkové UID bez autentizace. Test i experimentální core jsou vůči origin/main beze změny, core se produkčně nenačítá. Historický audit odstraněného žurnálu není test současného produktu a nebyl přičten. GitHub CI bude uvedeno při předání.
+`scripts/series-readonly-snapshots.js` je ručně instalovatelná factory, bez automatického běhu. `create()`/`plan()` nečtou síť. `capture()` vyžaduje oddělené explicitní schválení operátora a autorizovaný adapter aktuální relace, přijme jen /appData, /tournamentSeries, /tournaments a očekávanou databázi (nebo výslovný loopback demo režim). Vytváří pouze GET, no-store, X-Firebase-ETag, redirect:error. Kontroluje identitu před/po autorizaci a dekódování; při chybě neposkytne částečný bundle. Nečte Rules/uživatele/Auth a nepíše Firebase.
 
-Spuštění lokálních testů vyžaduje již spuštěný RTDB emulátor na 127.0.0.1:19006 a soukromý draft v `SERIES_RULES_FILE`. Bez něj testy skončí chybou, nepřepnou se tiše na mock. Soukromý loader a engine testy jsou předány lokálně; nekopírovat Rules do tohoto repozitáře. [Firebase Emulator](https://firebase.google.com/docs/emulator-suite/install_and_configure).
+Uložení zachyceného bundle se po změně identity/dispose odmítne; již zahájené stažení se neprohlašuje za vrácené. Vrací soubory s obálkou `capture.databaseUrl/path/capturedAt/etag` + původní `value`. Credentials se neserializují do metadat ani chyb; samotná serverová data se neredigují a celý výstup je soukromý. Tři oddělené snapshoty nejsou atomická transakce. Metadata původu jsou tvrzení pořizovatele, nikoliv kryptografické ověření živé Rules revize.
+
+Pro budoucí ruční použití bez kopírování tokenů: po samostatném schválení zastavit běžný `showScreen` v DevTools přihlášené aplikace (žádný zapisovací helper), načíst ověřený zdroj snapshot toolu a ve stejném lexical scope sestavit factory s identity funkcí vracející UID/authenticated/emailVerified/role/profile/generation a authorize adapterem `ensureCloudToken(context)` + aktuální cloudUid/cloudIdToken. Autorizační callback nic nevypisuje. Nejprve pouze plan; po kontrole a novém výslovném souhlasu capture. Uložit vrácené JSON přes stažení do soukromé složky, spočítat SHA256 a nikdy nevkládat obsah do veřejného PR. Samotný řetězec approval v API není náhradou souhlasu zadavatele. Nyní taková instalace ani produkční čtení neproběhla.
+
+Konkrétní adapter je v `scripts/series-snapshot-console-adapter.js`. Po načtení prověřené factory vložit tento text do konzole pozastavené aplikační closure (nikoliv jako globální script tag). Instalace vrací jen stav bez credentials a bez requestu. `seriesSnapshotHelper.plan()` je bez čtení. Odstranit breakpoint a pokračovat v běhu. Až po samostatném schválení: `const privateFiles=await seriesSnapshotHelper.capture({approval:'READ ONLY SERIES SNAPSHOTS'});` a `await seriesSnapshotHelper.save(privateFiles);`. Bundle nevypisovat. Uloží se3 JSON a manifest s SHA256/velikostí; objektové URL se uvolní až po ochranné lhůtě. `dispose()` zruší ještě probíhající čtení, nikoliv již stažený soubor. Dialogy vícenásobného stažení patří běžnému ovládání prohlížeče, neobcházet je. Adapter byl ověřen jen v izolované closure, ne v živé produkci.
+
+`series-migration-dry-run.cjs` zpracovává skutečný wrapper **/appData.data.tournamentSeries** (opraveno oproti první přípravě), ne raw zálohu aplikace. Vyžaduje shodnou origin, správné cesty, čas a ETag, odmítne chybějící explicitní zdroj. Jen reportuje ID, ACL, vazby/duplicity/missing reference, historické a celkové hashe, bodování, rozdíly a orphan cíle. Žádná oprava, deduplikace, inventární read, migrace ani write. Report vytváří výhradně `wx` a reálné podrobnosti jen mimo veřejný checkout.
+
+Emulátorové snapshoty byly skutečně pořízeny tímto tool a porovnány dry-runem, ale jsou **výhradně syntetické**. Produkční snapshoty a skutečný migrační dry-run chybí záměrně: zadavatel je zatím nepovolil. Stará JSON záloha tuto mezeru nenahrazuje.
+
+## Přesné pořadí budoucího cutover — žádný krok se nyní neprovádí
+
+1. Vyřešit rozhodnutí A/B a schválit zbývající blokované editory nebo jejich dočasnou nedostupnost. Potvrdit konkrétní vydání/klienta a role operátorů. Před další funkční publikací znovu fetch/verze/release gate. Nelze vydat dva odlišné buildy pod jednou již nasazenou verzí.
+2. Samostatně schválit read-only produkční snapshoty a zajistit autorizovanou relaci. Ověřit projekt/namespace a **čerstvou revizi živých Rules**; lokální kopie má jen doložený původ od zadavatele. Zálohovat skutečné aktuální Rules i vybrané datové větve mimo Git a ověřit čitelnost a SHA256.
+3. Prozatímní read-only dry-run: žádná ztracená/duplicitní série, známý vlastník/ACL, všechny vazby, history hash, Lounská i standardní pravidla. Konfliktní cíle/ID nebo nejasné vlastníky zastavit; nic neslučovat ani neopravovat automaticky.
+4. Oznámit klid všech administrátorů/pořadatelů a ukončení otevřených zápisů. Po schválení publikovat **migrační lock**: freeze appData, v nové větvi admin-only writes, bez owner/manager child grantů. Emulátor otestoval skutečné tokenové admin kopírování, ne bypass jako důkaz oprávnění. Ověřit odmítnutí starého klienta a znovu získat snapshoty po zámku. Pokud se něco změnilo, nový dry-run.
+5. Po samostatném schválení migrace kopírovat každý záznam pod původním ID. Číst prázdný cíl s ETag, vytvořit if-match jen pro tuto verzi. Existující shodný cíl přečíst a zaznamenat, odlišný zastavit. Neopírat ochranu o předchozí GET bez conditional PUT. Nedělat full /appData PUT, DELETE nebo obnovu databáze ze zálohy.
+6. Každý cíl zpětně načíst, zkontrolovat úplnost a kanonické hashe všech částí, ACL/vlastníka, historii, reference a bodování. Zapsat soukromý migrační manifest s ID, zdrojovou/cílovou ETag, časy a hashi. Firebase null/prázdná pole/numerické mapy porovnávat kanonicky, surové rozdíly dále evidovat. V průběhu ověřit neměnnost zdroje a referencovaných turnajů; více snapshotů není atomická záloha. Legacy ponechat beze změny.
+7. Teprve po shodě schválit přechodové operation Rules a kompatibilní klient s aktivovanou autoritou. Starý parent grant nevracet. Vynutit reload starých klientů, ukázat blokace, ověřit nové čtení před jakoukoli akcí. Obě nasazení koordinovat v zamčeném okně; nový klient nesmí předčasně zapisovat do nedokončené migrace.
+8. Bez testovacích produkčních zápisů ověřit manifest, všechny série, historie, nezávislé pořadí/bodování a read-only export. Funkční zápisy pouze v odděleném schváleném testovacím prostředí. Sledovat odmítnuté staré writery a nejasné ACK, nikoliv je automaticky opakovat.
+9. Zaznamenat skutečné SHA/verzi/Rules revizi/manifest/testy, omezení a schválení případného uvolnění zámku výhradně podle vybrané varianty. Legacy neodstraňovat v témže vydání.
+
+## Návrat bez ztráty nových dat
+
+Před aktivací lze revertovat celé PR bez datové změny. Po zahájení migrace držet lock a manifest; existující shodné cíle ověřit, nikdy neprovádět blind retry nejasného PUT. Po aktivaci nejprve zastavit nové zápisy, uchovat aktuální novou autoritu a snapshoty obou větví. Vrátit kompatibilní read-only klient, který čte nová data. Prostý návrat v122 nebo obnovování starého exportu by nové změny skrylo/ztratilo. Případný zpětný převod jen z aktuálních snapshotů, s kontrolou každého ID/ETag a samostatným schválením; žádné automatické reverse-migration.
+
+## Testy a reprodukce
+
+- Původní soukromý Rules audit 23 PASS a první návrh39 PASS zůstávají oddělené. Nový přechodový a migrační draft je soukromý a nepublikovaný.
+- Repository:18 scénářů skutečného lokálního RTDB enginu; nová integrace16 dalších scénářů (create/ACL/history, serverové role, dvě zařízení/412, stale editor, read ordering, skutečné syntetické snapshoty, migrační lock/admin stable-ID conditional copy, parent-grant důkaz).
+- Browser skutečných handlerů1440/390/320: vazby, scoring, create single-flight, pořadatelé, historie pořadí i plné zápasy, reload, quota/denied storage, zachovaný rozepsaný formulář a konflikt druhého zařízení,A→B→A s nejasným create ACK a stabilním ID, potvrzení/odmítnutí ručního inspection release i opuštění přípravy bez dalšího PUT, odebrání manager práv bez ztráty rozepsaných hodnot,12 navigačních cyklů, bfcache vs normální odchod, změna účtu, blokované import/restore/legacy write/historická rekonstrukce/pending vazba. Úplné turnajové hodnoty se porovnávají kanonicky podle ID, nikoliv pořadí JSON klíčů/řádků po Firebase čtení.
+- Skutečný legacy v122 uploader a saveFederalConfig:2 odmítnuté root PUT, žádná změna nové autority.
+- Regrese Lounské/standardní série1440/390/320 PASS; bootstrap všech modulů včetně explicitně chybějící nové knihovny PASS. Helper aktivních browser harnessů doplněn o skutečný modul; první timeout chybějícího assetu byl opraven, nebyl označen za známou produkční chybu.
+- Produkční Node lokálně435 PASS/0 FAIL/0 SKIP, release gate PASS. Experiment28 PASS/2 FAIL: detach uloženého zápasu při dočasně nedostupné identitě; druhá vada povoluje saved owner přes zbytkové UID bez autentizace. Experimentální core i tyto testy jsou vůči main beze změny a core není v produkčním načítání. Historický audit odstraněného žurnálu není aktuální produktový test, nebyl započítán. GitHub CI uvedeno při předání; soukromé emulátorové testy neběží v GitHubu a nejsou vydávány za cloudové CI.
 
 ```text
-node --test tests/tournament-series-repository.test.cjs
+node --test tests/tournament-series-repository.test.cjs tests/series-readonly-snapshots.test.cjs
 node tests/tournament-series-repository-emulator.cjs
+node tests/tournament-series-integration-emulator.cjs
 node tests/tournament-series-preparation-browser.cjs
+node tests/tournament-series-legacy-client-browser.cjs
 node tests/lounska-round-robin-browser.cjs
+node tests/federal-module-browser.cjs
 node scripts/run-tests.cjs production
 node scripts/run-tests.cjs experimental
 node scripts/check-release.cjs --base origin/main
 ```
 
-Emulátorové sady spouštět postupně; používají stejný syntetický namespace. Živé Auth, kopie živé revize Rules na izolovaném projektu, fyzické mobily a skutečný produkční cutover **nebyly ověřeny**. Produkční data/Rules nebyly změněny; nic není sloučeno ani nasazeno.
+Emulátor4.11.2 poslouchá jen127.0.0.1:19006, namespace demo-pool-series. `SERIES_RULES_FILE` musí ukazovat na soukromý přechodový návrh, `SERIES_LOCK_RULES_FILE` na soukromý migrační lock. Sady běží postupně, používají stejný namespace. Bez souborů skončí chybou, nikoliv tichým mockem/skipem. Síťové chyby jsou řízené injekce nad enginem; tokeny jsou syntetické. **Živý Auth/živá Rules revize/produkční migrace/fyzická zařízení tím ověřené nejsou.**
+
+Zbývající blokery: rozhodnutí A/B; schválení ponechaných blokací; čerstvé autorizované produkční snapshoty a skutečný inventář; izolované živé Auth; publikace Rules/migrace/aktivace/merge/deployment vyžadují další schválení. Žádný takový krok nebyl proveden. Nesouvisející bezpečnostní slabiny jsou jen v soukromém auditu.

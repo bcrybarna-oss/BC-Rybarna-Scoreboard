@@ -18,6 +18,7 @@ function instrumented(){
 }
 function serve(route,transform,cloudTransform){
   const request=route.request(),url=new URL(request.url());
+  if(url.pathname==='/assets/js/tournament-series-repository.js')return route.fulfill({contentType:'application/javascript',body:fs.readFileSync(path.join(root,'assets/js/tournament-series-repository.js'),'utf8')});
   if(url.pathname==='/assets/js/online-presence.js')return route.fulfill({contentType:'application/javascript',body:fs.readFileSync(path.join(root,'assets/js/online-presence.js'),'utf8')});
   if(url.pathname==='/assets/js/match-challenge-actions.js')return route.fulfill({contentType:'application/javascript',body:fs.readFileSync(path.join(root,'assets/js/match-challenge-actions.js'),'utf8')});
   if(url.pathname==='/assets/js/players-read-repository.js')return route.fulfill({contentType:'application/javascript',body:fs.readFileSync(path.join(root,'assets/js/players-read-repository.js'),'utf8')});
