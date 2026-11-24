@@ -1,6 +1,8 @@
 # Nové pevné pozice Skupiny → SKO ve v4.51.121 RC
 
-Kandidát doplňuje do nově vytvářeného hybridního SKO `ko.seedSlots` a číslo `slot` zápasu či BYE v daném kole. Návaznost se odvozuje z těchto pozic a skutečných vítězů. Budoucí větve jsou pouze prezentační náhled. Automatický návrh více skupin omezí rematche pouze výměnami obsazených úvodních pozic; BYE se nepřesouvají a každá výměna striktně snižuje počet rematchů. Ruční pořadí zůstává autoritativní. Česká prezentace používá výhradně VOLNÝ LOS; interní `bye`, `byes` a `seedSlots` se nemění. Staré pavouky bez tohoto označení se dál vyhodnocují původním způsobem, včetně přehrávání historické struktury. [Rozsah, kompatibilita a návrat](docs/hybrid-sko-byes-v4.51.121.md)
+Nasazená v4.51.121 RC doplňuje do nově vytvářeného hybridního SKO `ko.seedSlots` a číslo `slot` zápasu či BYE v daném kole. Návaznost se odvozuje z těchto pozic a skutečných vítězů. Budoucí větve jsou pouze prezentační náhled. Automatický návrh více skupin omezí rematche pouze výměnami obsazených úvodních pozic; BYE se nepřesouvají a každá výměna striktně snižuje počet rematchů. Ruční pořadí zůstává autoritativní. Česká prezentace používá výhradně VOLNÝ LOS; interní `bye`, `byes` a `seedSlots` se nemění. Staré pavouky bez tohoto označení se dál vyhodnocují původním způsobem, včetně přehrávání historické struktury. [Rozsah, kompatibilita a návrat](docs/hybrid-sko-byes-v4.51.121.md)
+
+Nasazeno přes PR #68, merge `78124feb1c62e23aafccd576f13c3721fd615c09`, Pages 45373366579 SUCCESS; veřejná shoda zdrojů a izolované scénáře publikovaného kódu jsou doložené v [deployment reportu](docs/deployment-v4.51.121.md). Bez migrace dat; živé Auth/Rules a fyzická zařízení neověřeny.
 
 # Streamované tempo 8/9/10-ball jedním klikem — v4.51.120 RC
 

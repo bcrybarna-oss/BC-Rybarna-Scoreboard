@@ -1,6 +1,6 @@
 # Skupiny → SKO: pevné nasazení a volné losy
 
-Zadavatel: Dominik. Datum: 24. 11. 2026. Kandidát **v4.51.121 RC**, zatím nesloučený a nenasazený.
+Zadavatel: Dominik. Datum: 24. 11. 2026. **v4.51.121 RC nasazeno a ověřeno v uvedeném rozsahu**, [deployment report](deployment-v4.51.121.md).
 
 ## Výchozí stav a reprodukce
 
@@ -149,6 +149,6 @@ Návrat aplikační změny: nový opravný PR s reverzí tohoto vydání a nový
 
 ## Závěrečná kosmetická revize a schválení vydání
 
-Dominik schválil nasazení po závěrečných kontrolách. Diff proti 805ab365 mění v aplikaci pouze čtyři viditelné texty: fallback náhledu ručního přímého KO, označení volného losu v ručních hybridních editorech, v detailu SKO a v modálním pavouku. Všude je nyní VOLNÝ LOS. Technické názvy, datový model, počet účastníků, napojení kol, algoritmus rematchů a staré záznamy se nemění. Browserové testy nově kontrolují absenci anglického slova v obou editorech, detailu a pavouku nových i uložených starších turnajů na 1440/390/320 px. Nasazení je zatím neprovedeno; skutečný výsledek bude v deployment reportu v121.
+Dominik schválil nasazení po závěrečných kontrolách. Diff proti 805ab365 mění v aplikaci pouze čtyři viditelné texty: fallback náhledu ručního přímého KO, označení volného losu v ručních hybridních editorech, v detailu SKO a v modálním pavouku. Všude je nyní VOLNÝ LOS. Technické názvy, datový model, počet účastníků, napojení kol, algoritmus rematchů a staré záznamy se nemění. Browserové testy nově kontrolují absenci anglického slova v obou editorech, detailu a pavouku nových i uložených starších turnajů na 1440/390/320 px. Nasazení bylo dokončeno a výsledek je v [deployment reportu v121](deployment-v4.51.121.md).
 
 Závěrečný běh zachytil výjimku pouze ve vloženém diagnostickém `byeProbe.snapshot`: Firebase vynechá prázdné `eliminatedIds`, ale diagnostika volala `.includes` bez výchozího prázdného pole. Pomocné čtení nyní považuje chybějící prázdné pole za žádné vyřazení; nemutuje aplikaci, neovlivňuje sportovní výpočty a nesnižuje žádné očekávání výsledků, reloadu či statistik. Celý hybridní browser byl znovu spuštěn.
