@@ -4,6 +4,7 @@ const fs=require('node:fs'),path=require('node:path'),assert=require('node:asser
 const {execFileSync}=require('node:child_process'),{chromium}=require('playwright');
 const root=path.resolve(__dirname,'..'),out=path.resolve(process.env.MULTI_OUT||'output/hybrid-sko-multigroup');
 fs.mkdirSync(out,{recursive:true});
+const {checkSkoLayout}=require('./helpers/sko-layout.cjs');
 const ref=process.env.MULTI_SOURCE_REF;
 const source=ref?execFileSync('git',['show',ref+':index.html'],{cwd:root,encoding:'utf8',maxBuffer:10e6}):fs.readFileSync(path.join(root,'index.html'),'utf8');
 const hook=`window.multiProbe={
@@ -12,6 +13,7 @@ const hook=`window.multiProbe={
  document.querySelectorAll('.modal.show').forEach(e=>e.classList.remove('show'));},
  setup(players){this.auth();data=defaultData();data.players=players;showScreen('tournament');},
  async restore(players){this.auth();data=defaultData();data.players=players;await loadSecureTournaments();await openTournamentDetail(data.tournaments[0].id);},
+ layoutAudit(){const t=data.tournaments[0],before=JSON.stringify(t);renderSKOTournament(t);buildSKOBracketHtml(t);return before===JSON.stringify(t);},
  snapshot(){const t=data.tournaments[0];return {t,rows:t.groups.map(g=>groupStandings(g,t)),seeds:groupPlayoffSeeds(t),
  placements:tournamentPlacementRecords(t),stats:buildTournamentStats(),matches:data.matches};}
 };`;
@@ -80,7 +82,7 @@ const patterns={4:[1,4,3,2],8:[1,8,4,5,3,6,2,7],16:[1,16,8,9,4,13,5,12,3,14,6,11
     const inline=p.locator('.inline-manual-playoff-slot');assert.equal(await inline.count(),ids.length);
     for(let i=0;i<standard.length;i++)await inline.nth(i).selectOption(standard[i]);
     await p.locator('.inline-manual-playoff-apply').click();await p.waitForFunction(()=>!!multiProbe.snapshot().t.playoffStarted);
-    const manualInline=(await snap()).t.ko.seedSlots;assert.deepEqual(manualInline,pattern.map(r=>ranked[r-1]||null));
+    const manualInline=(await snap()).t.ko.seedSlots;assert.deepEqual(firebase(manualInline),firebase(pattern.map(r=>ranked[r-1]||null)));
     async function openDialog(){
      await p.getByRole('button',{name:'UPRAVIT TURNAJ',exact:true}).click();
      await p.getByRole('button',{name:'RUČNĚ PŘENASADIT PLAY-OFF',exact:true}).click();await p.locator('#groupPlayoffSeedModal.show').waitFor();
@@ -88,11 +90,20 @@ const patterns={4:[1,4,3,2],8:[1,8,4,5,3,6,2,7],16:[1,16,8,9,4,13,5,12,3,14,6,11
     await openDialog();assert.doesNotMatch(await p.locator('#groupPlayoffManualList').innerText(),/\bBYE\b/i);const fields=p.locator('.manual-playoff-slot');assert.equal(await fields.count(),ids.length);
     for(let i=0;i<standard.length;i++)await fields.nth(i).selectOption(standard[i]);
     await p.locator('#groupPlayoffSeedApplyBtn').click();await p.locator('#groupPlayoffSeedModal').waitFor({state:'hidden'});
-    assert.deepEqual((await snap()).t.ko.seedSlots,manualInline);
+    assert.deepEqual(firebase((await snap()).t.ko.seedSlots),firebase(manualInline));
+    if(ids.length===8 && process.env.SKO_LAYOUT_BASELINE!=='1'){
+     for(const routing of ['cross13','cross14']){
+      await openDialog();await p.locator('#groupPlayoffSemiRouting').selectOption(routing);
+      await p.locator('#groupPlayoffSeedApplyBtn').click();await p.locator('#groupPlayoffSeedModal').waitFor({state:'hidden'});
+      const custom=(await snap()).t;assert.equal(custom.ko.semifinalRouting,routing);
+      await checkSkoLayout(p,custom,{out,label:groups+'x'+advance+'-'+width+'-'+routing,fullscreen:true});
+     }
+    }
     await openDialog();await p.locator('#groupPlayoffSeedMode').selectOption('rules');await p.locator('#groupPlayoffTieRule').selectOption('points');await p.locator('#groupPlayoffPenaltyTieBreak').uncheck();
     await p.locator('#groupPlayoffSeedApplyBtn').click();await p.locator('#groupPlayoffSeedModal').waitFor({state:'hidden'});
     const seeded=(await snap()).t,first=seeded.ko.rounds[0],byes=first.byes||[];
     assert.doesNotMatch(await p.locator('#tournamentDetailBody').innerText(),/\bBYE\b/i);
+    await checkSkoLayout(p,seeded,{out,label:groups+'x'+advance+'-'+width+'-seeded',fullscreen:true,baseline:process.env.SKO_LAYOUT_BASELINE==='1'});
     const result={groups,advance,width,manualInline,seeded,byes,writes,errors};
     fs.writeFileSync(path.join(out,'latest.json'),JSON.stringify(result,null,2));
     assert.ok(first.matches.every(m=>m.player1Id[0]!==m.player2Id[0]),'avoidable same-group rematch');
@@ -124,6 +135,7 @@ const patterns={4:[1,4,3,2],8:[1,8,4,5,3,6,2,7],16:[1,16,8,9,4,13,5,12,3,14,6,11
      assert.equal(stat.tournamentMatches,actual.length);assert.equal(stat.tournamentMatchWins,actual.filter(m=>m.winnerId===stat.playerId).length);
     }
     const champion=done.placements.find(r=>r.playerId===done.t.ko.championId);assert.equal(champion.value,1);
+    await checkSkoLayout(p,done.t,{out,label:groups+'x'+advance+'-'+width+'-complete'});
     result.complete=done;assert.deepEqual(errors,[]);report.scenarios.push(result);
     fs.writeFileSync(path.join(out,'verification.json'),JSON.stringify(report,null,2));
     console.log('PASS multi-group',groups+'x'+advance,width,'pairs',JSON.stringify(first.matches.map(m=>[m.player1Id,m.player2Id])),'byes',JSON.stringify(byes.map(b=>b.playerId)));

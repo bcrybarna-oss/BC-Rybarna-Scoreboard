@@ -1,3 +1,7 @@
+# Kandidát v4.51.122 RC — pozice volných losů v SKO (Dominik, 24. 11. 2026)
+
+Aktuální verze: **v4.51.122 RC**, samostatný kandidát z main `a4960aa24dfb041157202a9a38c765ec6391c813`. Produkce zůstává v4.51.121 RC. Pouze UI: jednotné pořadí podle slotu, karty VOLNÝ LOS uvnitř pavouka, mřížka a skutečné spojnice, detail i modal/fullscreen. Sportovní algoritmy, uložená data a staré pavouky se nepřepisují. [Rozsah a ověření](docs/sko-visual-slots-v4.51.122.md). Node 416/0, release gate a cílené browserové/mobilní matice PASS. Experimentální 28/2 se vykazuje odděleně. Nic nesloučeno ani nenasazeno.
+
 # Nasazeno v4.51.121 RC — pevné nasazení a český VOLNÝ LOS (Dominik, 24. 11. 2026)
 
 Aktuální verze: **v4.51.121 RC**, nasazeno a v popsaném rozsahu ověřeno. [PR #68](https://github.com/bcrybarna-oss/BC-Rybarna-Scoreboard/pull/68), aplikační merge `78124feb1c62e23aafccd576f13c3721fd615c09`; [Pages 45373366579](https://github.com/bcrybarna-oss/BC-Rybarna-Scoreboard/actions/runs/45373366579) build/deploy SUCCESS. Veřejný anonymní desktop/mobil: verze, HTML/overlay/vlastní JS shodné s merge, navigace, 0 JS chyb, 0 zápisů. Na publikovaném kódu izolovaně 9 scénářů 6/7/8 hráčů a 6 scénářů více skupin PASS, české texty a staré pavouky/statistiky zachované. Lokálně Node 413/0, GitHub 410 PASS/3 SKIP; release, mobilní a streamové CI PASS, experimentální 28 PASS/2 nezměněné FAIL. Baseline vady ordinary/FC viewer/stream a neověřené živé Auth/Rules i fyzická zařízení zůstávají evidované. PR #55 otevřený, nedotčený. [Deployment report](docs/deployment-v4.51.121.md).

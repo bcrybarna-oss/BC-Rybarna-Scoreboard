@@ -1,0 +1,19 @@
+{
+  "baseline": "a4960aa24dfb041157202a9a38c765ec6391c813",
+  "indexSha256": "da60aa45d86f7b07b92f720b8e186d10cfa3c6a8ab6bf9de24a858797460c2c2",
+  "unchangedFunctionSha256": {
+    "knockoutSeedRanks": "56d73c92eab9b605835e0e594936b19f384f976c54ee8f5ae0c381475a869730",
+    "groupPlayoffSlots": "92cf6aee88bf69af2a3d06679a70639c5ac9dcbee605b5baffa24bfc45dceb42",
+    "fixedKnockoutPlan": "2402d23f302ae01b17793b68ac251151191d9ad0e940350cba3f2697acbbdcb3",
+    "knockoutCreateFixedWave": "bd68357c234baeb15342fa60cd38af621a1b42204573520e361da52342f87cda",
+    "knockoutCreateWave": "9f2c587fd4daa1f0a6d12b964df1afe13d4cd977e1cd4bfac7c86e7c2ed66790",
+    "groupPlayoffFixedSeeds": "e1720cfd6edb5abae02c963609cadb4f74805617d0ffba04ee439946e5dd6294",
+    "groupPlayoffSeeds": "3df928190ea232889c9b2bde984184267fb1d7f77bc4cbc84bc4c70673e24760",
+    "startHybridPlayoff": "5da297c124cab7344134e0e3fc1dc9a97c4b83ad24b2b85481d8561a86367c65",
+    "processTournamentResult": "2ff5dc009aaef3bc780b32bb91235fbc07328840ea70c8a08f9a2fbeb714f2d0",
+    "historicalReplay": "c9eeecd17045b12920040e5513c2b2a4fd9a507d61b09c2a3acb2518e4a25939",
+    "bracketRoundHtml": "b6779232f2a00dfc0399f4a6d69bab191f73c8d6b0815aad6beb4b897d0016f2",
+    "buildDKOBracketHtml": "f795ee30b08a1c5c310585c2dd9ac4be01674ad41c291e05273b905871edb8ef"
+  },
+  "experimentalSourceDiff": ""
+}
