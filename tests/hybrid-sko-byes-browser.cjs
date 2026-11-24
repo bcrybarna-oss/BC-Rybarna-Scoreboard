@@ -21,7 +21,7 @@ window.byeProbe={
     const t=data.tournaments[0];
     return {t:JSON.parse(JSON.stringify(t)),order:groupStandings(t.groups[0],t),seeds:groupPlayoffSeeds(t),
       placements:tournamentPlacementRecords(t),stats:buildTournamentStats(),scoreboardMatches:data.matches,
-      active:t.ko?.participantIds.filter(id=>!t.ko.eliminatedIds.includes(id))};
+      active:t.ko?.participantIds.filter(id=>!(t.ko.eliminatedIds||[]).includes(id))};
   }
 };`;
 const html=source.replace(/(<script>\s*\(\(\) => \{)([\s\S]*?)(\}\)\(\);\s*<\/script>)/,

@@ -150,3 +150,5 @@ Návrat aplikační změny: nový opravný PR s reverzí tohoto vydání a nový
 ## Závěrečná kosmetická revize a schválení vydání
 
 Dominik schválil nasazení po závěrečných kontrolách. Diff proti 805ab365 mění v aplikaci pouze čtyři viditelné texty: fallback náhledu ručního přímého KO, označení volného losu v ručních hybridních editorech, v detailu SKO a v modálním pavouku. Všude je nyní VOLNÝ LOS. Technické názvy, datový model, počet účastníků, napojení kol, algoritmus rematchů a staré záznamy se nemění. Browserové testy nově kontrolují absenci anglického slova v obou editorech, detailu a pavouku nových i uložených starších turnajů na 1440/390/320 px. Nasazení je zatím neprovedeno; skutečný výsledek bude v deployment reportu v121.
+
+Závěrečný běh zachytil výjimku pouze ve vloženém diagnostickém `byeProbe.snapshot`: Firebase vynechá prázdné `eliminatedIds`, ale diagnostika volala `.includes` bez výchozího prázdného pole. Pomocné čtení nyní považuje chybějící prázdné pole za žádné vyřazení; nemutuje aplikaci, neovlivňuje sportovní výpočty a nesnižuje žádné očekávání výsledků, reloadu či statistik. Celý hybridní browser byl znovu spuštěn.
