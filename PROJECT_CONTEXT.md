@@ -1,6 +1,8 @@
-# Prezentační sloty SKO — kandidát v4.51.122 RC
+# Prezentační sloty SKO — nasazeno v4.51.122 RC
 
 Pro pevné pavouky se seedSlots vytváří `fixedKnockoutRoundPositions` dočasný model sloučených pozic zápasů, volných losů a budoucích náhledů. Používá uložený slot; původní pole se neřadí ani nepřepisují. Detail a modal používají společný layout s CSS řádky odvozenými ze slotu a hloubky kola. SVG spojuje pouze skutečné zdrojové a cílové pozice včetně ručního napojení semifinále. Zápas o třetí místo je mimo postupovou větev. Pro staré pavouky bez slotových metadat zůstává dosavadní seznam uložených zápasů a volných losů, bez vymyšlených spojnic. [Rozsah a ověření](docs/sko-visual-slots-v4.51.122.md).
+
+Nasazeno přes PR #70, merge `f3a503f6fb5122d76e36a044cc6bc2872ae6d4ce`, Pages 45387811562 SUCCESS. Veřejná shoda všech vlastních zdrojů a izolovaná geometrie publikovaného kódu 1440/390/320 jsou v [deployment reportu](docs/deployment-v4.51.122.md). Bez změny dat, algoritmů a Rules; živé Auth a fyzická zařízení neověřeny.
 
 # Nové pevné pozice Skupiny → SKO ve v4.51.121 RC
 

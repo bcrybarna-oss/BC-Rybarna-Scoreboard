@@ -1,0 +1,1354 @@
+{
+  "version": "v4.51.122 RC",
+  "applicationMerge": "f3a503f6fb5122d76e36a044cc6bc2872ae6d4ce",
+  "approvedHead": "1c551e1bcfb35946b6ab5ef9249916fcb0df946b",
+  "pagesRun": 45387811562,
+  "publicAnonymous": {
+    "commit": "f3a503f6fb5122d76e36a044cc6bc2872ae6d4ce",
+    "actualPublic": true,
+    "liveAuthRules": false,
+    "http": [
+      {
+        "file": "index.html",
+        "status": 200,
+        "sha256": "da60aa45d86f7b07b92f720b8e186d10cfa3c6a8ab6bf9de24a858797460c2c2"
+      },
+      {
+        "file": "overlay.html",
+        "status": 200,
+        "sha256": "54ad8de46f5b1051bb601b4f2340ce5bec71f5d8f03860c7b1e2d2977eadd73d"
+      },
+      {
+        "file": "assets/js/players-read-repository.js",
+        "status": 200,
+        "sha256": "96ef669eaca40ef25d854df6cd957fd72bfdd6819a5976c981b4e9e8627c60e5"
+      },
+      {
+        "file": "assets/js/match-challenges.js",
+        "status": 200,
+        "sha256": "338637e8721d2f54cce26263737d46e2b1a2f2f5929f41df195fa89b0a70e56e"
+      }
+    ],
+    "clients": [
+      {
+        "mobile": false,
+        "version": "v4.51.122 RC",
+        "visited": [
+          "home",
+          "results",
+          "stats",
+          "players",
+          "tournament",
+          "federal-cup-2026",
+          "live"
+        ],
+        "jsErrors": [],
+        "blockedWrites": [],
+        "modules": [
+          {
+            "path": "/BC-Rybarna-Scoreboard/assets/js/players-read-repository.js",
+            "status": 200
+          },
+          {
+            "path": "/BC-Rybarna-Scoreboard/assets/js/match-challenges.js",
+            "status": 200
+          },
+          {
+            "path": "/BC-Rybarna-Scoreboard/assets/js/livescore-renderer.js",
+            "status": 200
+          },
+          {
+            "path": "/BC-Rybarna-Scoreboard/assets/js/federal-report-controller.js",
+            "status": 200
+          },
+          {
+            "path": "/BC-Rybarna-Scoreboard/assets/js/federal-statistics.js",
+            "status": 200
+          },
+          {
+            "path": "/BC-Rybarna-Scoreboard/assets/js/notification-center.js",
+            "status": 200
+          },
+          {
+            "path": "/BC-Rybarna-Scoreboard/assets/pushout-xlsx.js",
+            "status": 200
+          },
+          {
+            "path": "/BC-Rybarna-Scoreboard/assets/js/online-presence.js",
+            "status": 200
+          },
+          {
+            "path": "/BC-Rybarna-Scoreboard/assets/js/match-challenge-actions.js",
+            "status": 200
+          },
+          {
+            "path": "/BC-Rybarna-Scoreboard/assets/js/federal-viewer.js",
+            "status": 200
+          },
+          {
+            "path": "/BC-Rybarna-Scoreboard/assets/js/cloud-refresh.js",
+            "status": 200
+          },
+          {
+            "path": "/BC-Rybarna-Scoreboard/assets/js/admin-reports.js",
+            "status": 200
+          },
+          {
+            "path": "/BC-Rybarna-Scoreboard/assets/js/federal-report-renderer.js",
+            "status": 200
+          },
+          {
+            "path": "/BC-Rybarna-Scoreboard/assets/js/own-reports.js",
+            "status": 200
+          },
+          {
+            "path": "/BC-Rybarna-Scoreboard/assets/js/livescore-reader.js",
+            "status": 200
+          }
+        ],
+        "moduleHashes": {
+          "assets/js/federal-statistics.js": "7e1cae131f79f6bf5bdd2c417fe5b4272408c361053024a6e5f1c411a9ea7d21",
+          "assets/js/federal-report-renderer.js": "d971eee277927874208b9a6d35d0e5d901277d9beb266a4112e4b3e5f051bc7d",
+          "assets/js/federal-report-controller.js": "c26836da7d6ec3c24cb3e1ef2216f124b592bdbd94d4b93299dd0eb73f3c4a0a",
+          "assets/js/livescore-reader.js": "db9f55386b0e1016fd6ad636f7d77de0357795e72ccdf2387b6e63ba06758772",
+          "assets/js/livescore-renderer.js": "282e580a04dd0ce845211bdd918b6d0dd2921dd65d3b24a68be62839be794047",
+          "assets/js/online-presence.js": "c9d65d7783a3ab0014d93d01c5ae12f9668fe02b817874e091f2c278e1c2677a",
+          "assets/js/match-challenge-actions.js": "a76a693208098ae1649a8b14fd213af18e58196472fc5a2a1ccfc50b9466bdcc",
+          "assets/js/players-read-repository.js": "96ef669eaca40ef25d854df6cd957fd72bfdd6819a5976c981b4e9e8627c60e5",
+          "assets/js/match-challenges.js": "338637e8721d2f54cce26263737d46e2b1a2f2f5929f41df195fa89b0a70e56e",
+          "assets/js/notification-center.js": "d381bb944a2fd3507b02048201a46e80ec2b608e3a4ef5082310cc13c2a8369f",
+          "assets/js/cloud-refresh.js": "ac53937d949b561a52b379c32f468bc2e927ad3a78e2295184a231dcf6da98b7",
+          "assets/js/own-reports.js": "44be6dc2526ecd6deff8461b08bbb8a8f4789a691d2aa456663feeebb160a3d5",
+          "assets/js/federal-viewer.js": "18c56c268fb394cab25225dfd032b1401b109254d4142c4f2db976ce7f2234c8",
+          "assets/js/admin-reports.js": "7d294f2c634ef567db20352ce85b3d8a0aad4abd829d8d4a3ca6e8dd625d3070",
+          "assets/pushout-xlsx.js": "5e4436656444c3f87b2c8550414b49070eb7d8974455e321425388bc639ae874"
+        },
+        "authenticated": false
+      },
+      {
+        "mobile": true,
+        "version": "v4.51.122 RC",
+        "visited": [
+          "home",
+          "results",
+          "stats",
+          "players",
+          "tournament",
+          "federal-cup-2026",
+          "live"
+        ],
+        "jsErrors": [],
+        "blockedWrites": [],
+        "modules": [
+          {
+            "path": "/BC-Rybarna-Scoreboard/assets/js/livescore-reader.js",
+            "status": 200
+          },
+          {
+            "path": "/BC-Rybarna-Scoreboard/assets/js/federal-report-renderer.js",
+            "status": 200
+          },
+          {
+            "path": "/BC-Rybarna-Scoreboard/assets/js/federal-report-controller.js",
+            "status": 200
+          },
+          {
+            "path": "/BC-Rybarna-Scoreboard/assets/js/federal-statistics.js",
+            "status": 200
+          },
+          {
+            "path": "/BC-Rybarna-Scoreboard/assets/js/match-challenges.js",
+            "status": 200
+          },
+          {
+            "path": "/BC-Rybarna-Scoreboard/assets/js/federal-viewer.js",
+            "status": 200
+          },
+          {
+            "path": "/BC-Rybarna-Scoreboard/assets/js/online-presence.js",
+            "status": 200
+          },
+          {
+            "path": "/BC-Rybarna-Scoreboard/assets/js/notification-center.js",
+            "status": 200
+          },
+          {
+            "path": "/BC-Rybarna-Scoreboard/assets/js/match-challenge-actions.js",
+            "status": 200
+          },
+          {
+            "path": "/BC-Rybarna-Scoreboard/assets/js/own-reports.js",
+            "status": 200
+          },
+          {
+            "path": "/BC-Rybarna-Scoreboard/assets/js/livescore-renderer.js",
+            "status": 200
+          },
+          {
+            "path": "/BC-Rybarna-Scoreboard/assets/js/cloud-refresh.js",
+            "status": 200
+          },
+          {
+            "path": "/BC-Rybarna-Scoreboard/assets/pushout-xlsx.js",
+            "status": 200
+          },
+          {
+            "path": "/BC-Rybarna-Scoreboard/assets/js/players-read-repository.js",
+            "status": 200
+          },
+          {
+            "path": "/BC-Rybarna-Scoreboard/assets/js/admin-reports.js",
+            "status": 200
+          }
+        ],
+        "moduleHashes": {
+          "assets/js/federal-statistics.js": "7e1cae131f79f6bf5bdd2c417fe5b4272408c361053024a6e5f1c411a9ea7d21",
+          "assets/js/federal-report-renderer.js": "d971eee277927874208b9a6d35d0e5d901277d9beb266a4112e4b3e5f051bc7d",
+          "assets/js/federal-report-controller.js": "c26836da7d6ec3c24cb3e1ef2216f124b592bdbd94d4b93299dd0eb73f3c4a0a",
+          "assets/js/livescore-reader.js": "db9f55386b0e1016fd6ad636f7d77de0357795e72ccdf2387b6e63ba06758772",
+          "assets/js/livescore-renderer.js": "282e580a04dd0ce845211bdd918b6d0dd2921dd65d3b24a68be62839be794047",
+          "assets/js/online-presence.js": "c9d65d7783a3ab0014d93d01c5ae12f9668fe02b817874e091f2c278e1c2677a",
+          "assets/js/match-challenge-actions.js": "a76a693208098ae1649a8b14fd213af18e58196472fc5a2a1ccfc50b9466bdcc",
+          "assets/js/players-read-repository.js": "96ef669eaca40ef25d854df6cd957fd72bfdd6819a5976c981b4e9e8627c60e5",
+          "assets/js/match-challenges.js": "338637e8721d2f54cce26263737d46e2b1a2f2f5929f41df195fa89b0a70e56e",
+          "assets/js/notification-center.js": "d381bb944a2fd3507b02048201a46e80ec2b608e3a4ef5082310cc13c2a8369f",
+          "assets/js/cloud-refresh.js": "ac53937d949b561a52b379c32f468bc2e927ad3a78e2295184a231dcf6da98b7",
+          "assets/js/own-reports.js": "44be6dc2526ecd6deff8461b08bbb8a8f4789a691d2aa456663feeebb160a3d5",
+          "assets/js/federal-viewer.js": "18c56c268fb394cab25225dfd032b1401b109254d4142c4f2db976ce7f2234c8",
+          "assets/js/admin-reports.js": "7d294f2c634ef567db20352ce85b3d8a0aad4abd829d8d4a3ca6e8dd625d3070",
+          "assets/pushout-xlsx.js": "5e4436656444c3f87b2c8550414b49070eb7d8974455e321425388bc639ae874"
+        },
+        "authenticated": false
+      },
+      {
+        "mobile": true,
+        "version": "v4.51.122 RC",
+        "visited": [
+          "home",
+          "results",
+          "stats",
+          "players",
+          "tournament",
+          "federal-cup-2026",
+          "live"
+        ],
+        "jsErrors": [],
+        "blockedWrites": [],
+        "modules": [
+          {
+            "path": "/BC-Rybarna-Scoreboard/assets/js/federal-report-controller.js",
+            "status": 200
+          },
+          {
+            "path": "/BC-Rybarna-Scoreboard/assets/js/federal-statistics.js",
+            "status": 200
+          },
+          {
+            "path": "/BC-Rybarna-Scoreboard/assets/js/federal-report-renderer.js",
+            "status": 200
+          },
+          {
+            "path": "/BC-Rybarna-Scoreboard/assets/js/online-presence.js",
+            "status": 200
+          },
+          {
+            "path": "/BC-Rybarna-Scoreboard/assets/js/livescore-renderer.js",
+            "status": 200
+          },
+          {
+            "path": "/BC-Rybarna-Scoreboard/assets/js/livescore-reader.js",
+            "status": 200
+          },
+          {
+            "path": "/BC-Rybarna-Scoreboard/assets/js/match-challenge-actions.js",
+            "status": 200
+          },
+          {
+            "path": "/BC-Rybarna-Scoreboard/assets/js/match-challenges.js",
+            "status": 200
+          },
+          {
+            "path": "/BC-Rybarna-Scoreboard/assets/js/admin-reports.js",
+            "status": 200
+          },
+          {
+            "path": "/BC-Rybarna-Scoreboard/assets/js/notification-center.js",
+            "status": 200
+          },
+          {
+            "path": "/BC-Rybarna-Scoreboard/assets/pushout-xlsx.js",
+            "status": 200
+          },
+          {
+            "path": "/BC-Rybarna-Scoreboard/assets/js/federal-viewer.js",
+            "status": 200
+          },
+          {
+            "path": "/BC-Rybarna-Scoreboard/assets/js/cloud-refresh.js",
+            "status": 200
+          },
+          {
+            "path": "/BC-Rybarna-Scoreboard/assets/js/own-reports.js",
+            "status": 200
+          },
+          {
+            "path": "/BC-Rybarna-Scoreboard/assets/js/players-read-repository.js",
+            "status": 200
+          }
+        ],
+        "moduleHashes": {
+          "assets/js/federal-statistics.js": "7e1cae131f79f6bf5bdd2c417fe5b4272408c361053024a6e5f1c411a9ea7d21",
+          "assets/js/federal-report-renderer.js": "d971eee277927874208b9a6d35d0e5d901277d9beb266a4112e4b3e5f051bc7d",
+          "assets/js/federal-report-controller.js": "c26836da7d6ec3c24cb3e1ef2216f124b592bdbd94d4b93299dd0eb73f3c4a0a",
+          "assets/js/livescore-reader.js": "db9f55386b0e1016fd6ad636f7d77de0357795e72ccdf2387b6e63ba06758772",
+          "assets/js/livescore-renderer.js": "282e580a04dd0ce845211bdd918b6d0dd2921dd65d3b24a68be62839be794047",
+          "assets/js/online-presence.js": "c9d65d7783a3ab0014d93d01c5ae12f9668fe02b817874e091f2c278e1c2677a",
+          "assets/js/match-challenge-actions.js": "a76a693208098ae1649a8b14fd213af18e58196472fc5a2a1ccfc50b9466bdcc",
+          "assets/js/players-read-repository.js": "96ef669eaca40ef25d854df6cd957fd72bfdd6819a5976c981b4e9e8627c60e5",
+          "assets/js/match-challenges.js": "338637e8721d2f54cce26263737d46e2b1a2f2f5929f41df195fa89b0a70e56e",
+          "assets/js/notification-center.js": "d381bb944a2fd3507b02048201a46e80ec2b608e3a4ef5082310cc13c2a8369f",
+          "assets/js/cloud-refresh.js": "ac53937d949b561a52b379c32f468bc2e927ad3a78e2295184a231dcf6da98b7",
+          "assets/js/own-reports.js": "44be6dc2526ecd6deff8461b08bbb8a8f4789a691d2aa456663feeebb160a3d5",
+          "assets/js/federal-viewer.js": "18c56c268fb394cab25225dfd032b1401b109254d4142c4f2db976ce7f2234c8",
+          "assets/js/admin-reports.js": "7d294f2c634ef567db20352ce85b3d8a0aad4abd829d8d4a3ca6e8dd625d3070",
+          "assets/pushout-xlsx.js": "5e4436656444c3f87b2c8550414b49070eb7d8974455e321425388bc639ae874"
+        },
+        "authenticated": false
+      }
+    ]
+  },
+  "isolatedPublishedCode": {
+    "liveAuthRules": false,
+    "transport": "Every request intercepted; all Firebase reads/writes only in RAM; no production writes",
+    "singleGroup": [
+      {
+        "width": 1440,
+        "players": 6,
+        "firstRound": {
+          "id": "7686fca7-c54c-48c8-aa44-b94e033dede6",
+          "label": "Čtvrtfinále",
+          "type": "KO",
+          "matches": [
+            {
+              "id": "eb59e545-0e6f-483c-bc6d-870f5e4bfa43",
+              "player1Id": "D",
+              "player2Id": "E",
+              "roundLabel": "Čtvrtfinále 2",
+              "bracket": "KO",
+              "status": "assigned",
+              "tableNumber": 1,
+              "score1": null,
+              "score2": null,
+              "winnerId": null,
+              "loserId": null,
+              "scoreboardMatchId": null,
+              "slot": 1
+            },
+            {
+              "id": "356ed9e9-25ec-44aa-9dc8-67934969773e",
+              "player1Id": "C",
+              "player2Id": "F",
+              "roundLabel": "Čtvrtfinále 3",
+              "bracket": "KO",
+              "status": "assigned",
+              "tableNumber": 2,
+              "score1": null,
+              "score2": null,
+              "winnerId": null,
+              "loserId": null,
+              "scoreboardMatchId": null,
+              "slot": 2
+            }
+          ],
+          "byes": [
+            {
+              "playerId": "A",
+              "bracket": "KO",
+              "slot": 0
+            },
+            {
+              "playerId": "B",
+              "bracket": "KO",
+              "slot": 3
+            }
+          ]
+        },
+        "complete": true,
+        "reloadSeeded": true,
+        "reloadPlaying": true,
+        "legacy": []
+      },
+      {
+        "width": 1440,
+        "players": 7,
+        "firstRound": {
+          "id": "5e9df91a-3014-449c-823c-1ca7306ac844",
+          "label": "Čtvrtfinále",
+          "type": "KO",
+          "matches": [
+            {
+              "id": "9dfb8e3e-cbec-4471-a006-afa95c670e40",
+              "player1Id": "D",
+              "player2Id": "E",
+              "roundLabel": "Čtvrtfinále 2",
+              "bracket": "KO",
+              "status": "assigned",
+              "tableNumber": 1,
+              "score1": null,
+              "score2": null,
+              "winnerId": null,
+              "loserId": null,
+              "scoreboardMatchId": null,
+              "slot": 1
+            },
+            {
+              "id": "2814ab55-1bd2-4374-a3ec-7063daf25ccf",
+              "player1Id": "C",
+              "player2Id": "F",
+              "roundLabel": "Čtvrtfinále 3",
+              "bracket": "KO",
+              "status": "assigned",
+              "tableNumber": 2,
+              "score1": null,
+              "score2": null,
+              "winnerId": null,
+              "loserId": null,
+              "scoreboardMatchId": null,
+              "slot": 2
+            },
+            {
+              "id": "035f1a5f-d6cd-4485-9913-faf742661eba",
+              "player1Id": "B",
+              "player2Id": "G",
+              "roundLabel": "Čtvrtfinále 4",
+              "bracket": "KO",
+              "status": "pending",
+              "tableNumber": null,
+              "score1": null,
+              "score2": null,
+              "winnerId": null,
+              "loserId": null,
+              "scoreboardMatchId": null,
+              "slot": 3
+            }
+          ],
+          "byes": [
+            {
+              "playerId": "A",
+              "bracket": "KO",
+              "slot": 0
+            }
+          ]
+        },
+        "complete": true,
+        "reloadSeeded": true,
+        "reloadPlaying": true,
+        "legacy": [
+          {
+            "stage": "seeded",
+            "unchanged": true
+          },
+          {
+            "stage": "one-quarterfinal",
+            "unchanged": true
+          },
+          {
+            "stage": "complete",
+            "unchanged": true
+          }
+        ]
+      },
+      {
+        "width": 1440,
+        "players": 8,
+        "firstRound": {
+          "id": "8473cf5c-601a-42e2-a82e-986606f1d0c1",
+          "label": "Čtvrtfinále",
+          "type": "KO",
+          "matches": [
+            {
+              "id": "979e6b59-6253-467e-a186-3a7a95ff2fd8",
+              "player1Id": "A",
+              "player2Id": "H",
+              "roundLabel": "Čtvrtfinále 1",
+              "bracket": "KO",
+              "status": "assigned",
+              "tableNumber": 1,
+              "score1": null,
+              "score2": null,
+              "winnerId": null,
+              "loserId": null,
+              "scoreboardMatchId": null,
+              "slot": 0
+            },
+            {
+              "id": "56c963e2-da19-4186-b2ec-ba38717aadae",
+              "player1Id": "D",
+              "player2Id": "E",
+              "roundLabel": "Čtvrtfinále 2",
+              "bracket": "KO",
+              "status": "assigned",
+              "tableNumber": 2,
+              "score1": null,
+              "score2": null,
+              "winnerId": null,
+              "loserId": null,
+              "scoreboardMatchId": null,
+              "slot": 1
+            },
+            {
+              "id": "7547e8f4-b024-4135-8b21-caa49f804fea",
+              "player1Id": "C",
+              "player2Id": "F",
+              "roundLabel": "Čtvrtfinále 3",
+              "bracket": "KO",
+              "status": "pending",
+              "tableNumber": null,
+              "score1": null,
+              "score2": null,
+              "winnerId": null,
+              "loserId": null,
+              "scoreboardMatchId": null,
+              "slot": 2
+            },
+            {
+              "id": "105b9982-d783-4ded-b5b3-8a7a7037ea6b",
+              "player1Id": "B",
+              "player2Id": "G",
+              "roundLabel": "Čtvrtfinále 4",
+              "bracket": "KO",
+              "status": "pending",
+              "tableNumber": null,
+              "score1": null,
+              "score2": null,
+              "winnerId": null,
+              "loserId": null,
+              "scoreboardMatchId": null,
+              "slot": 3
+            }
+          ],
+          "byes": []
+        },
+        "complete": true,
+        "reloadSeeded": true,
+        "reloadPlaying": true,
+        "legacy": []
+      },
+      {
+        "width": 390,
+        "players": 6,
+        "firstRound": {
+          "id": "87f83797-df14-49fb-84d1-45e0bc07a8d8",
+          "label": "Čtvrtfinále",
+          "type": "KO",
+          "matches": [
+            {
+              "id": "ac92c302-3cb9-4399-ae3c-a6f8687daa75",
+              "player1Id": "D",
+              "player2Id": "E",
+              "roundLabel": "Čtvrtfinále 2",
+              "bracket": "KO",
+              "status": "assigned",
+              "tableNumber": 1,
+              "score1": null,
+              "score2": null,
+              "winnerId": null,
+              "loserId": null,
+              "scoreboardMatchId": null,
+              "slot": 1
+            },
+            {
+              "id": "1320329d-1636-4979-9062-0ea1f20641b4",
+              "player1Id": "C",
+              "player2Id": "F",
+              "roundLabel": "Čtvrtfinále 3",
+              "bracket": "KO",
+              "status": "assigned",
+              "tableNumber": 2,
+              "score1": null,
+              "score2": null,
+              "winnerId": null,
+              "loserId": null,
+              "scoreboardMatchId": null,
+              "slot": 2
+            }
+          ],
+          "byes": [
+            {
+              "playerId": "A",
+              "bracket": "KO",
+              "slot": 0
+            },
+            {
+              "playerId": "B",
+              "bracket": "KO",
+              "slot": 3
+            }
+          ]
+        },
+        "complete": true,
+        "reloadSeeded": true,
+        "reloadPlaying": true,
+        "legacy": []
+      },
+      {
+        "width": 390,
+        "players": 7,
+        "firstRound": {
+          "id": "a093e354-4ef5-44e2-a4b3-111b89a5f084",
+          "label": "Čtvrtfinále",
+          "type": "KO",
+          "matches": [
+            {
+              "id": "d3838691-6965-42bd-84ed-6ad81f891ce1",
+              "player1Id": "D",
+              "player2Id": "E",
+              "roundLabel": "Čtvrtfinále 2",
+              "bracket": "KO",
+              "status": "assigned",
+              "tableNumber": 1,
+              "score1": null,
+              "score2": null,
+              "winnerId": null,
+              "loserId": null,
+              "scoreboardMatchId": null,
+              "slot": 1
+            },
+            {
+              "id": "8934354d-061c-40b2-bab5-695bc48818cf",
+              "player1Id": "C",
+              "player2Id": "F",
+              "roundLabel": "Čtvrtfinále 3",
+              "bracket": "KO",
+              "status": "assigned",
+              "tableNumber": 2,
+              "score1": null,
+              "score2": null,
+              "winnerId": null,
+              "loserId": null,
+              "scoreboardMatchId": null,
+              "slot": 2
+            },
+            {
+              "id": "cb176afc-2bc0-46ed-b124-e8984ff99491",
+              "player1Id": "B",
+              "player2Id": "G",
+              "roundLabel": "Čtvrtfinále 4",
+              "bracket": "KO",
+              "status": "pending",
+              "tableNumber": null,
+              "score1": null,
+              "score2": null,
+              "winnerId": null,
+              "loserId": null,
+              "scoreboardMatchId": null,
+              "slot": 3
+            }
+          ],
+          "byes": [
+            {
+              "playerId": "A",
+              "bracket": "KO",
+              "slot": 0
+            }
+          ]
+        },
+        "complete": true,
+        "reloadSeeded": true,
+        "reloadPlaying": true,
+        "legacy": [
+          {
+            "stage": "seeded",
+            "unchanged": true
+          },
+          {
+            "stage": "one-quarterfinal",
+            "unchanged": true
+          },
+          {
+            "stage": "complete",
+            "unchanged": true
+          }
+        ]
+      },
+      {
+        "width": 390,
+        "players": 8,
+        "firstRound": {
+          "id": "b16e9628-5f10-4963-9011-8be483474a89",
+          "label": "Čtvrtfinále",
+          "type": "KO",
+          "matches": [
+            {
+              "id": "d15e01ae-1b74-49c5-9b26-0510374a6ae4",
+              "player1Id": "A",
+              "player2Id": "H",
+              "roundLabel": "Čtvrtfinále 1",
+              "bracket": "KO",
+              "status": "assigned",
+              "tableNumber": 1,
+              "score1": null,
+              "score2": null,
+              "winnerId": null,
+              "loserId": null,
+              "scoreboardMatchId": null,
+              "slot": 0
+            },
+            {
+              "id": "31285236-9f17-4a56-92e9-799d6a0da876",
+              "player1Id": "D",
+              "player2Id": "E",
+              "roundLabel": "Čtvrtfinále 2",
+              "bracket": "KO",
+              "status": "assigned",
+              "tableNumber": 2,
+              "score1": null,
+              "score2": null,
+              "winnerId": null,
+              "loserId": null,
+              "scoreboardMatchId": null,
+              "slot": 1
+            },
+            {
+              "id": "b44efaff-f640-426b-a9d8-229f4eafd406",
+              "player1Id": "C",
+              "player2Id": "F",
+              "roundLabel": "Čtvrtfinále 3",
+              "bracket": "KO",
+              "status": "pending",
+              "tableNumber": null,
+              "score1": null,
+              "score2": null,
+              "winnerId": null,
+              "loserId": null,
+              "scoreboardMatchId": null,
+              "slot": 2
+            },
+            {
+              "id": "93551bb4-5332-4135-b1fa-8ed9040df6a8",
+              "player1Id": "B",
+              "player2Id": "G",
+              "roundLabel": "Čtvrtfinále 4",
+              "bracket": "KO",
+              "status": "pending",
+              "tableNumber": null,
+              "score1": null,
+              "score2": null,
+              "winnerId": null,
+              "loserId": null,
+              "scoreboardMatchId": null,
+              "slot": 3
+            }
+          ],
+          "byes": []
+        },
+        "complete": true,
+        "reloadSeeded": true,
+        "reloadPlaying": true,
+        "legacy": []
+      },
+      {
+        "width": 320,
+        "players": 6,
+        "firstRound": {
+          "id": "64752e92-a598-4b48-80dd-dbaafc8b864d",
+          "label": "Čtvrtfinále",
+          "type": "KO",
+          "matches": [
+            {
+              "id": "5430ae6c-88d9-41d6-b7b0-e555d45679d1",
+              "player1Id": "D",
+              "player2Id": "E",
+              "roundLabel": "Čtvrtfinále 2",
+              "bracket": "KO",
+              "status": "assigned",
+              "tableNumber": 1,
+              "score1": null,
+              "score2": null,
+              "winnerId": null,
+              "loserId": null,
+              "scoreboardMatchId": null,
+              "slot": 1
+            },
+            {
+              "id": "09dc9886-237b-42f0-aeda-650bc3a5dbd1",
+              "player1Id": "C",
+              "player2Id": "F",
+              "roundLabel": "Čtvrtfinále 3",
+              "bracket": "KO",
+              "status": "assigned",
+              "tableNumber": 2,
+              "score1": null,
+              "score2": null,
+              "winnerId": null,
+              "loserId": null,
+              "scoreboardMatchId": null,
+              "slot": 2
+            }
+          ],
+          "byes": [
+            {
+              "playerId": "A",
+              "bracket": "KO",
+              "slot": 0
+            },
+            {
+              "playerId": "B",
+              "bracket": "KO",
+              "slot": 3
+            }
+          ]
+        },
+        "complete": true,
+        "reloadSeeded": true,
+        "reloadPlaying": true,
+        "legacy": []
+      },
+      {
+        "width": 320,
+        "players": 7,
+        "firstRound": {
+          "id": "04b615fa-2885-4c0e-9e2c-57282cbfc17b",
+          "label": "Čtvrtfinále",
+          "type": "KO",
+          "matches": [
+            {
+              "id": "63a2762d-17cf-400f-98ab-2a7334484b73",
+              "player1Id": "D",
+              "player2Id": "E",
+              "roundLabel": "Čtvrtfinále 2",
+              "bracket": "KO",
+              "status": "assigned",
+              "tableNumber": 1,
+              "score1": null,
+              "score2": null,
+              "winnerId": null,
+              "loserId": null,
+              "scoreboardMatchId": null,
+              "slot": 1
+            },
+            {
+              "id": "e76a0d47-4793-46b4-8992-0cd5e90c6ae3",
+              "player1Id": "C",
+              "player2Id": "F",
+              "roundLabel": "Čtvrtfinále 3",
+              "bracket": "KO",
+              "status": "assigned",
+              "tableNumber": 2,
+              "score1": null,
+              "score2": null,
+              "winnerId": null,
+              "loserId": null,
+              "scoreboardMatchId": null,
+              "slot": 2
+            },
+            {
+              "id": "065b0090-66e9-42b5-b786-5167fe5b8076",
+              "player1Id": "B",
+              "player2Id": "G",
+              "roundLabel": "Čtvrtfinále 4",
+              "bracket": "KO",
+              "status": "pending",
+              "tableNumber": null,
+              "score1": null,
+              "score2": null,
+              "winnerId": null,
+              "loserId": null,
+              "scoreboardMatchId": null,
+              "slot": 3
+            }
+          ],
+          "byes": [
+            {
+              "playerId": "A",
+              "bracket": "KO",
+              "slot": 0
+            }
+          ]
+        },
+        "complete": true,
+        "reloadSeeded": true,
+        "reloadPlaying": true,
+        "legacy": [
+          {
+            "stage": "seeded",
+            "unchanged": true
+          },
+          {
+            "stage": "one-quarterfinal",
+            "unchanged": true
+          },
+          {
+            "stage": "complete",
+            "unchanged": true
+          }
+        ]
+      },
+      {
+        "width": 320,
+        "players": 8,
+        "firstRound": {
+          "id": "4d994134-3331-48a7-b5b4-cf35d1c823b2",
+          "label": "Čtvrtfinále",
+          "type": "KO",
+          "matches": [
+            {
+              "id": "423b6c96-28f4-4515-86b8-9f4a493f0faa",
+              "player1Id": "A",
+              "player2Id": "H",
+              "roundLabel": "Čtvrtfinále 1",
+              "bracket": "KO",
+              "status": "assigned",
+              "tableNumber": 1,
+              "score1": null,
+              "score2": null,
+              "winnerId": null,
+              "loserId": null,
+              "scoreboardMatchId": null,
+              "slot": 0
+            },
+            {
+              "id": "de46ed28-d3c7-479d-8f74-d3fa60a642bc",
+              "player1Id": "D",
+              "player2Id": "E",
+              "roundLabel": "Čtvrtfinále 2",
+              "bracket": "KO",
+              "status": "assigned",
+              "tableNumber": 2,
+              "score1": null,
+              "score2": null,
+              "winnerId": null,
+              "loserId": null,
+              "scoreboardMatchId": null,
+              "slot": 1
+            },
+            {
+              "id": "17578193-82c2-40c8-bf41-72ee32de4926",
+              "player1Id": "C",
+              "player2Id": "F",
+              "roundLabel": "Čtvrtfinále 3",
+              "bracket": "KO",
+              "status": "pending",
+              "tableNumber": null,
+              "score1": null,
+              "score2": null,
+              "winnerId": null,
+              "loserId": null,
+              "scoreboardMatchId": null,
+              "slot": 2
+            },
+            {
+              "id": "20acada1-dc88-46ba-8e56-49efb10915e2",
+              "player1Id": "B",
+              "player2Id": "G",
+              "roundLabel": "Čtvrtfinále 4",
+              "bracket": "KO",
+              "status": "pending",
+              "tableNumber": null,
+              "score1": null,
+              "score2": null,
+              "winnerId": null,
+              "loserId": null,
+              "scoreboardMatchId": null,
+              "slot": 3
+            }
+          ],
+          "byes": []
+        },
+        "complete": true,
+        "reloadSeeded": true,
+        "reloadPlaying": true,
+        "legacy": []
+      }
+    ],
+    "multipleGroups": [
+      {
+        "width": 1440,
+        "groups": 3,
+        "advance": 2,
+        "firstRound": {
+          "id": "60207084-b4dd-4b3a-a1aa-78736a8c55b5",
+          "label": "Čtvrtfinále",
+          "type": "KO",
+          "matches": [
+            {
+              "id": "673f2a84-ecd6-4e81-b548-96b4ce226573",
+              "player1Id": "A2",
+              "player2Id": "C2",
+              "roundLabel": "Čtvrtfinále 2",
+              "bracket": "KO",
+              "status": "assigned",
+              "tableNumber": 1,
+              "score1": null,
+              "score2": null,
+              "winnerId": null,
+              "loserId": null,
+              "scoreboardMatchId": null,
+              "slot": 1
+            },
+            {
+              "id": "5ab2d9ba-17b5-4bd2-a381-4b11cd736606",
+              "player1Id": "C1",
+              "player2Id": "B2",
+              "roundLabel": "Čtvrtfinále 3",
+              "bracket": "KO",
+              "status": "assigned",
+              "tableNumber": 2,
+              "score1": null,
+              "score2": null,
+              "winnerId": null,
+              "loserId": null,
+              "scoreboardMatchId": null,
+              "slot": 2
+            }
+          ],
+          "byes": [
+            {
+              "playerId": "A1",
+              "bracket": "KO",
+              "slot": 0
+            },
+            {
+              "playerId": "B1",
+              "bracket": "KO",
+              "slot": 3
+            }
+          ]
+        },
+        "complete": true
+      },
+      {
+        "width": 1440,
+        "groups": 4,
+        "advance": 2,
+        "firstRound": {
+          "id": "9e1e5f4e-ebfa-4e19-97a0-b7749c464f78",
+          "label": "Čtvrtfinále",
+          "type": "KO",
+          "matches": [
+            {
+              "id": "2b4c54ea-7248-4b4b-bb03-63cac45979c6",
+              "player1Id": "A1",
+              "player2Id": "D2",
+              "roundLabel": "Čtvrtfinále 1",
+              "bracket": "KO",
+              "status": "assigned",
+              "tableNumber": 1,
+              "score1": null,
+              "score2": null,
+              "winnerId": null,
+              "loserId": null,
+              "scoreboardMatchId": null,
+              "slot": 0
+            },
+            {
+              "id": "b5a739f5-c745-47bd-a0b6-62a455ab3e6d",
+              "player1Id": "D1",
+              "player2Id": "A2",
+              "roundLabel": "Čtvrtfinále 2",
+              "bracket": "KO",
+              "status": "assigned",
+              "tableNumber": 2,
+              "score1": null,
+              "score2": null,
+              "winnerId": null,
+              "loserId": null,
+              "scoreboardMatchId": null,
+              "slot": 1
+            },
+            {
+              "id": "49d170e1-69b9-4884-895c-bbd4a32551d8",
+              "player1Id": "C1",
+              "player2Id": "B2",
+              "roundLabel": "Čtvrtfinále 3",
+              "bracket": "KO",
+              "status": "pending",
+              "tableNumber": null,
+              "score1": null,
+              "score2": null,
+              "winnerId": null,
+              "loserId": null,
+              "scoreboardMatchId": null,
+              "slot": 2
+            },
+            {
+              "id": "291210b8-29e5-4e5f-837c-2f972b789125",
+              "player1Id": "B1",
+              "player2Id": "C2",
+              "roundLabel": "Čtvrtfinále 4",
+              "bracket": "KO",
+              "status": "pending",
+              "tableNumber": null,
+              "score1": null,
+              "score2": null,
+              "winnerId": null,
+              "loserId": null,
+              "scoreboardMatchId": null,
+              "slot": 3
+            }
+          ],
+          "byes": []
+        },
+        "complete": true
+      },
+      {
+        "width": 390,
+        "groups": 3,
+        "advance": 2,
+        "firstRound": {
+          "id": "bfec9b1c-5dbb-4621-9cce-c20f71d3acd9",
+          "label": "Čtvrtfinále",
+          "type": "KO",
+          "matches": [
+            {
+              "id": "45c05cb1-4988-4589-a813-bf2aa36b233f",
+              "player1Id": "A2",
+              "player2Id": "C2",
+              "roundLabel": "Čtvrtfinále 2",
+              "bracket": "KO",
+              "status": "assigned",
+              "tableNumber": 1,
+              "score1": null,
+              "score2": null,
+              "winnerId": null,
+              "loserId": null,
+              "scoreboardMatchId": null,
+              "slot": 1
+            },
+            {
+              "id": "58e920b5-1ccd-4b42-b305-3c827e0b912c",
+              "player1Id": "C1",
+              "player2Id": "B2",
+              "roundLabel": "Čtvrtfinále 3",
+              "bracket": "KO",
+              "status": "assigned",
+              "tableNumber": 2,
+              "score1": null,
+              "score2": null,
+              "winnerId": null,
+              "loserId": null,
+              "scoreboardMatchId": null,
+              "slot": 2
+            }
+          ],
+          "byes": [
+            {
+              "playerId": "A1",
+              "bracket": "KO",
+              "slot": 0
+            },
+            {
+              "playerId": "B1",
+              "bracket": "KO",
+              "slot": 3
+            }
+          ]
+        },
+        "complete": true
+      },
+      {
+        "width": 390,
+        "groups": 4,
+        "advance": 2,
+        "firstRound": {
+          "id": "ffef6992-6565-4f36-95fc-f6de43e4a56f",
+          "label": "Čtvrtfinále",
+          "type": "KO",
+          "matches": [
+            {
+              "id": "761e837f-23c9-4bbe-9e40-72a9a27c3cc6",
+              "player1Id": "A1",
+              "player2Id": "D2",
+              "roundLabel": "Čtvrtfinále 1",
+              "bracket": "KO",
+              "status": "assigned",
+              "tableNumber": 1,
+              "score1": null,
+              "score2": null,
+              "winnerId": null,
+              "loserId": null,
+              "scoreboardMatchId": null,
+              "slot": 0
+            },
+            {
+              "id": "3d0fbb2e-e001-4155-9196-b60a251c7c9d",
+              "player1Id": "D1",
+              "player2Id": "A2",
+              "roundLabel": "Čtvrtfinále 2",
+              "bracket": "KO",
+              "status": "assigned",
+              "tableNumber": 2,
+              "score1": null,
+              "score2": null,
+              "winnerId": null,
+              "loserId": null,
+              "scoreboardMatchId": null,
+              "slot": 1
+            },
+            {
+              "id": "034a65d6-2231-4789-a4f5-9a02a9a1b7c4",
+              "player1Id": "C1",
+              "player2Id": "B2",
+              "roundLabel": "Čtvrtfinále 3",
+              "bracket": "KO",
+              "status": "pending",
+              "tableNumber": null,
+              "score1": null,
+              "score2": null,
+              "winnerId": null,
+              "loserId": null,
+              "scoreboardMatchId": null,
+              "slot": 2
+            },
+            {
+              "id": "2ee01b4f-8486-479a-8db3-c295f2b0a3f4",
+              "player1Id": "B1",
+              "player2Id": "C2",
+              "roundLabel": "Čtvrtfinále 4",
+              "bracket": "KO",
+              "status": "pending",
+              "tableNumber": null,
+              "score1": null,
+              "score2": null,
+              "winnerId": null,
+              "loserId": null,
+              "scoreboardMatchId": null,
+              "slot": 3
+            }
+          ],
+          "byes": []
+        },
+        "complete": true
+      },
+      {
+        "width": 320,
+        "groups": 3,
+        "advance": 2,
+        "firstRound": {
+          "id": "77e77151-3141-4cd1-bc3b-6124ab4a594e",
+          "label": "Čtvrtfinále",
+          "type": "KO",
+          "matches": [
+            {
+              "id": "337fed11-a7e7-4f47-a58a-c969bce74988",
+              "player1Id": "A2",
+              "player2Id": "C2",
+              "roundLabel": "Čtvrtfinále 2",
+              "bracket": "KO",
+              "status": "assigned",
+              "tableNumber": 1,
+              "score1": null,
+              "score2": null,
+              "winnerId": null,
+              "loserId": null,
+              "scoreboardMatchId": null,
+              "slot": 1
+            },
+            {
+              "id": "a9ea7521-fc1a-4149-89f7-b6cfed7be6e1",
+              "player1Id": "C1",
+              "player2Id": "B2",
+              "roundLabel": "Čtvrtfinále 3",
+              "bracket": "KO",
+              "status": "assigned",
+              "tableNumber": 2,
+              "score1": null,
+              "score2": null,
+              "winnerId": null,
+              "loserId": null,
+              "scoreboardMatchId": null,
+              "slot": 2
+            }
+          ],
+          "byes": [
+            {
+              "playerId": "A1",
+              "bracket": "KO",
+              "slot": 0
+            },
+            {
+              "playerId": "B1",
+              "bracket": "KO",
+              "slot": 3
+            }
+          ]
+        },
+        "complete": true
+      },
+      {
+        "width": 320,
+        "groups": 4,
+        "advance": 2,
+        "firstRound": {
+          "id": "dbe54984-308c-46c1-87da-457244f3b9e0",
+          "label": "Čtvrtfinále",
+          "type": "KO",
+          "matches": [
+            {
+              "id": "f5c03a3c-93ad-4ba1-9eee-004ede8b1699",
+              "player1Id": "A1",
+              "player2Id": "D2",
+              "roundLabel": "Čtvrtfinále 1",
+              "bracket": "KO",
+              "status": "assigned",
+              "tableNumber": 1,
+              "score1": null,
+              "score2": null,
+              "winnerId": null,
+              "loserId": null,
+              "scoreboardMatchId": null,
+              "slot": 0
+            },
+            {
+              "id": "1422aaf1-b579-4813-8148-d26c783fbe23",
+              "player1Id": "D1",
+              "player2Id": "A2",
+              "roundLabel": "Čtvrtfinále 2",
+              "bracket": "KO",
+              "status": "assigned",
+              "tableNumber": 2,
+              "score1": null,
+              "score2": null,
+              "winnerId": null,
+              "loserId": null,
+              "scoreboardMatchId": null,
+              "slot": 1
+            },
+            {
+              "id": "7deb285e-2200-46c3-9300-4b91f3517ef1",
+              "player1Id": "C1",
+              "player2Id": "B2",
+              "roundLabel": "Čtvrtfinále 3",
+              "bracket": "KO",
+              "status": "pending",
+              "tableNumber": null,
+              "score1": null,
+              "score2": null,
+              "winnerId": null,
+              "loserId": null,
+              "scoreboardMatchId": null,
+              "slot": 2
+            },
+            {
+              "id": "5719c0c4-5fb9-41e6-8e1a-b496f4e9647f",
+              "player1Id": "B1",
+              "player2Id": "C2",
+              "roundLabel": "Čtvrtfinále 4",
+              "bracket": "KO",
+              "status": "pending",
+              "tableNumber": null,
+              "score1": null,
+              "score2": null,
+              "winnerId": null,
+              "loserId": null,
+              "scoreboardMatchId": null,
+              "slot": 3
+            }
+          ],
+          "byes": []
+        },
+        "complete": true
+      }
+    ]
+  }
+}
