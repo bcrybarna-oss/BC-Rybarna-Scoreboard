@@ -99,7 +99,7 @@ Veškeré browserové zápisy skončily výhradně v izolovaných mockách. Prod
 
 BYE není zápas: u sedmi hráčů existuje přesně šest skutečných play-off zápasů. A má šest skupinových a dvě play-off výhry, tedy osm zápasů/osm výher, nikoliv devět. BYE neobsahuje skóre ani vítězný strk; nevzniká žádný nový scoreboard zápas nebo osobní herní evidence. Jednotkové testy počtů 2–17 navíc dokončí N−1 skutečných zápasů bez pozdějšího BYE.
 
-Testovaný produkční `index.html` SHA-256: `fd6e02eea4ec744c90667a0b04233d9c591386d0aa3d082b639dcb32c694240c`. Git baseline SHA-256 odpovídá původní diagnostice; při přípravě testovacího archivu byl použit přesný git blob (bez převodu LF→CRLF, který jinak mění chování textového testu hesla).
+Testovaný produkční `index.html` SHA-256: `62c72135fd01aa06fb53b726f99769bf7de3d85197d4fcce2f4cc2a76067b436`. Git baseline SHA-256 odpovídá původní diagnostice; při přípravě testovacího archivu byl použit přesný git blob (bez převodu LF→CRLF, který jinak mění chování textového testu hesla).
 
 ### Selhání evidovaná odděleně
 
@@ -146,3 +146,7 @@ Všechny obrázky používají izolované A–G, nikoliv skutečné hráče. „
 Živé Auth/Rules a fyzický iPhone/Android nejsou ověřeny. Desktop a mobil jsou izolované Chrome viewporty. Staré chybné nasazení zůstává záměrně zachováno; oprava nepřelosovává historii.
 
 Návrat aplikační změny: nový opravný PR s reverzí tohoto vydání a novým číslem podle tehdejšího main, release gate a dotčené regrese; žádné vracení databáze, mazání turnajů nebo přepisování výsledků. Revert by zároveň vrátil původní chybu nového nasazování. Po případném nasazení v121 je před návratem nutné zohlednit nové rozpracované historické pavouky: starý `historicalReplay` neumí nové pevné pozice. Do kompatibilního opravného vydání je nepřegenerovávat starým kódem; bezpečnější je cílená dopředná oprava. Uložená data se kvůli návratu nemigrují.
+
+## Závěrečná kosmetická revize a schválení vydání
+
+Dominik schválil nasazení po závěrečných kontrolách. Diff proti 805ab365 mění v aplikaci pouze čtyři viditelné texty: fallback náhledu ručního přímého KO, označení volného losu v ručních hybridních editorech, v detailu SKO a v modálním pavouku. Všude je nyní VOLNÝ LOS. Technické názvy, datový model, počet účastníků, napojení kol, algoritmus rematchů a staré záznamy se nemění. Browserové testy nově kontrolují absenci anglického slova v obou editorech, detailu a pavouku nových i uložených starších turnajů na 1440/390/320 px. Nasazení je zatím neprovedeno; skutečný výsledek bude v deployment reportu v121.

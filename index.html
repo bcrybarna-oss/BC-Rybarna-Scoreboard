@@ -16657,7 +16657,7 @@ $('winnerText').textContent = match.solo14
         const b=manualTournamentSeedOrder[i+1];
         pairs.push(`<div style="padding:6px 0;border-bottom:1px solid #29292d">
           <strong>Zápas ${Math.floor(i/2)+1}:</strong>
-          ${esc(tournamentPlayerName(a))} <span class="muted">vs</span> ${b?esc(tournamentPlayerName(b)):'BYE'}
+          ${esc(tournamentPlayerName(a))} <span class="muted">vs</span> ${b?esc(tournamentPlayerName(b)):'VOLNÝ LOS'}
         </div>`);
       }
       wrap.innerHTML+=`<div class="subpanel" style="margin-top:10px">
@@ -19127,7 +19127,7 @@ $('winnerText').textContent = match.solo14
               ${candidates.map(p=>`<option value="${esc(p.id)}" ${slots[slot]===p.id?'selected':''}>${esc(p.label)}</option>`).join('')}
             </select></div>`
           : `<div class="manual-playoff-bye" data-bye-player-slot="${slot===i?i+1:i}" data-bye-target="${esc(target)}">
-              <strong>VOLNÝ LOS (BYE)</strong><p class="muted">${esc(tournamentPlayerName(slots[slot===i?i+1:i],t))} — postupuje přímo do ${esc(target)}.</p>
+              <strong>VOLNÝ LOS</strong><p class="muted">${esc(tournamentPlayerName(slots[slot===i?i+1:i],t))} — postupuje přímo do ${esc(target)}.</p>
             </div>`).join('')}
         </div></div>`);
     }
@@ -19709,7 +19709,7 @@ function renderSKOTournament(t){
 
       <div class="tournament-columns">${(k.rounds||[]).map(r=>`<div class="tournament-round">
         <h4>${esc(r.label)}</h4>
-        ${(r.byes||[]).map(b=>renderTournamentBye(t,b,'VOLNÝ LOS • BYE')).join('')}
+        ${(r.byes||[]).map(b=>renderTournamentBye(t,b,'VOLNÝ LOS')).join('')}
         ${(r.matches||[]).map(m=>renderTournamentMatch(t,m)).join('')}
       </div>`).join('')}${fixedKnockoutPreviewRounds(t)}</div>`;
   }
@@ -20006,7 +20006,7 @@ function renderSKOTournament(t){
 
   function bracketRoundHtml(t,r,title){
     const matches=(r.matches||[]).map(m=>bracketMatchHtml(t,m)).join('');
-    const byes=(r.byes||[]).map(b=>`<div class="bracket-bye"><strong>${esc(tournamentPlayerName(b.playerId,t))}</strong> • VOLNÝ LOS / BYE<br>${esc(knockoutByeDestination(t,b))}</div>`).join('');
+    const byes=(r.byes||[]).map(b=>`<div class="bracket-bye"><strong>${esc(tournamentPlayerName(b.playerId,t))}</strong> • VOLNÝ LOS<br>${esc(knockoutByeDestination(t,b))}</div>`).join('');
     return `<div class="bracket-round"><h4>${esc(title||r.label||'KOLO')}</h4>${matches}${byes}</div>`;
   }
 

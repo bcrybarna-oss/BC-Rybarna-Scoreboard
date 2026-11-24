@@ -113,6 +113,7 @@ function firebase(x){
             await page.screenshot({path:file});
             s.screenshots.push(file);
             s.stages[stage].bracketText=await page.locator('#bracketModalBody').innerText();
+            if(!baseline){assert.doesNotMatch(s.stages[stage].bracketText,/\bBYE\b/i);if(state.t.ko?.rounds.some(r=>r.byes?.length))assert.match(s.stages[stage].bracketText,/VOLNÝ LOS/);}
             s.stages[stage].layout=await page.locator('#bracketModalBody').evaluate(el=>({client:el.clientWidth,scroll:el.scrollWidth,viewport:innerWidth}));
             if(stage==='seeded'&&width<1440){
               await modal.locator('.knockout-preview').first().scrollIntoViewIfNeeded();
@@ -129,10 +130,12 @@ function firebase(x){
           }
           await page.screenshot({path:detail,fullPage:true});s.screenshots.push(detail);
           s.stages[stage].detailText=await page.locator('#tournamentDetailBody').innerText();
+          if(!baseline)assert.doesNotMatch(s.stages[stage].detailText,/\bBYE\b/i);
         }
         await capture('groups');
         assert.deepEqual((await snap()).order.map(r=>[r.id,r.v]),Object.keys(players).map((id,i)=>[id,n-i-1]));
         s.manualSlots=await page.locator('.inline-manual-playoff-slot').count();
+        if(!baseline)assert.doesNotMatch(await page.locator('.manual-playoff-positions').innerText(),/\bBYE\b/i);
         if(!baseline&&n===7&&format==='groups_sko'){
           const special='A & <img src=x onerror="window.injected=true"> \' " >';
           await page.evaluate(s=>byeProbe.name('A',s),special);
@@ -181,6 +184,7 @@ function firebase(x){
         await page.getByRole('button',{name:'RUČNĚ PŘENASADIT PLAY-OFF',exact:true}).click();
         await page.locator('#groupPlayoffSeedModal.show').waitFor();
         assert.equal(await page.locator('.manual-playoff-slot').count(),n);
+        assert.doesNotMatch(await page.locator('#groupPlayoffManualList').innerText(),/\bBYE\b/i);
         if(n===7){
           assert.match(await page.locator('.manual-playoff-slot').first().innerText(),/A & <img/);
           assert.equal(await page.locator('#groupPlayoffManualList img').count(),0);
@@ -300,6 +304,11 @@ function firebase(x){
             assert.deepEqual(state.stats,saved.stats);
             assert.equal(JSON.stringify(db[saved.t.id]),cloudBefore);
             assert.equal(state.t.ko.seedSlots,undefined);
+            assert.doesNotMatch(await page.locator('#tournamentDetailBody').innerText(),/\bBYE\b/i);
+            await page.evaluate(id=>openSKOBracket(id),saved.t.id);
+            const legacyText=await page.locator('#bracketModalBody').innerText();
+            assert.doesNotMatch(legacyText,/\bBYE\b/i);assert.match(legacyText,/VOLNÝ LOS/);
+            await page.locator('#bracketCloseBtn').click();
             s.legacy.push({stage,unchanged:true});
           }
           const historical=JSON.parse(fs.readFileSync(path.join(root,'tests/fixtures/hybrid-sko-legacy-historical.json'),'utf8'));

@@ -85,13 +85,14 @@ const patterns={4:[1,4,3,2],8:[1,8,4,5,3,6,2,7],16:[1,16,8,9,4,13,5,12,3,14,6,11
      await p.getByRole('button',{name:'UPRAVIT TURNAJ',exact:true}).click();
      await p.getByRole('button',{name:'RUČNĚ PŘENASADIT PLAY-OFF',exact:true}).click();await p.locator('#groupPlayoffSeedModal.show').waitFor();
     }
-    await openDialog();const fields=p.locator('.manual-playoff-slot');assert.equal(await fields.count(),ids.length);
+    await openDialog();assert.doesNotMatch(await p.locator('#groupPlayoffManualList').innerText(),/\bBYE\b/i);const fields=p.locator('.manual-playoff-slot');assert.equal(await fields.count(),ids.length);
     for(let i=0;i<standard.length;i++)await fields.nth(i).selectOption(standard[i]);
     await p.locator('#groupPlayoffSeedApplyBtn').click();await p.locator('#groupPlayoffSeedModal').waitFor({state:'hidden'});
     assert.deepEqual((await snap()).t.ko.seedSlots,manualInline);
     await openDialog();await p.locator('#groupPlayoffSeedMode').selectOption('rules');await p.locator('#groupPlayoffTieRule').selectOption('points');await p.locator('#groupPlayoffPenaltyTieBreak').uncheck();
     await p.locator('#groupPlayoffSeedApplyBtn').click();await p.locator('#groupPlayoffSeedModal').waitFor({state:'hidden'});
     const seeded=(await snap()).t,first=seeded.ko.rounds[0],byes=first.byes||[];
+    assert.doesNotMatch(await p.locator('#tournamentDetailBody').innerText(),/\bBYE\b/i);
     const result={groups,advance,width,manualInline,seeded,byes,writes,errors};
     fs.writeFileSync(path.join(out,'latest.json'),JSON.stringify(result,null,2));
     assert.ok(first.matches.every(m=>m.player1Id[0]!==m.player2Id[0]),'avoidable same-group rematch');
