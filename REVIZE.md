@@ -1,5 +1,13 @@
 # Revize aplikace Poolčítadlo
 
+## Dominik – neaktivní příprava bezpečného ukládání sérií (v4.51.123 RC)
+Zadavatel: Dominik
+Datum: 24. 11. 2026
+Změny: Soukromý lokální audit dodané kopie Rules a nepublikovaný návrh; neaktivní repository pro samostatnou autoritu sérií, oddělený content/ACL/historie, podmíněné zápisy ETag, read-only migrační inventář a syntetické testy. Produkční handlery/autorita se nepřepínají, index mění pouze verzi kandidáta. [Rozsah, bezpečnostní hranice a přechod](docs/series-storage-preparation.md).
+Testy: Rules engine původní kopie 23/23 a soukromý draft 39/39; repository proti skutečnému lokálnímu emulátoru 18/18; desktop/mobil 1440/390/320 PASS, Lounská/standardní série a historie 1440/390/320 PASS. Produkční Node 425 PASS/0 FAIL/0 SKIP, release gate PASS; experiment 28 PASS/2 FAIL odděleně. GitHub CI zaznamenáno v předání.
+Nasazení: Nenasazeno, neaktivní přípravný kandidát; produkce zůstává v4.51.122 RC. Žádná publikace Rules ani migrace.
+Omezení: Nová autorita není integrována do produkčního bootstrapu/handlerů; cutover vyžaduje všechny writery, čerstvé snapshoty a další schválení. Živé Auth a aktuální remote revize Rules neověřeny. Nejistota zápisu není trvalý operation receipt a nepřežije restart. Dvě experimentální vady zůstávají oddělené. PR #55/#72 nedotčené; 10b1 nezahájena.
+
 ## Dominik – vizuální pozice volných losů v SKO (v4.51.122 RC)
 Zadavatel: Dominik
 Datum: 24. 11. 2026

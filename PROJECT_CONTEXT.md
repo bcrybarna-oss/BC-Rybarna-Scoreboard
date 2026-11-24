@@ -1,3 +1,7 @@
+# Neaktivní příprava samostatné autority sérií — v4.51.123 RC
+
+Připravená knihovna TournamentSeriesRepository se v produkci nenačítá. Budoucí /tournamentSeries/{id} odděluje content od immutable identity/ACL a preserved historie/neznámých polí; ETag patří přímo content. Neexistuje aktivovaný dual-write nebo fallback. Soukromý audit a návrh Rules nejsou součástí veřejného repozitáře. Před cutover je nutné přepojit všechny writery/refresh/export/import, serverově omezit legacy klienty a samostatně schválit migraci/publikaci. [Kontrakt, testy a omezení](docs/series-storage-preparation.md). Po cutover se nesmí prostě vrátit starý klient a ztratit nové změny; před aktivací lze revertovat přípravný PR bez datové změny. Nejistý zápis není GETem ověřená operace ani restartově trvalá blokace. Živé Auth/aktuální remote Rules revize nebyly testovány.
+
 # Prezentační sloty SKO — nasazeno v4.51.122 RC
 
 Pro pevné pavouky se seedSlots vytváří `fixedKnockoutRoundPositions` dočasný model sloučených pozic zápasů, volných losů a budoucích náhledů. Používá uložený slot; původní pole se neřadí ani nepřepisují. Detail a modal používají společný layout s CSS řádky odvozenými ze slotu a hloubky kola. SVG spojuje pouze skutečné zdrojové a cílové pozice včetně ručního napojení semifinále. Zápas o třetí místo je mimo postupovou větev. Pro staré pavouky bez slotových metadat zůstává dosavadní seznam uložených zápasů a volných losů, bez vymyšlených spojnic. [Rozsah a ověření](docs/sko-visual-slots-v4.51.122.md).

@@ -1,0 +1,134 @@
+{
+  "synthetic-a": {
+    "schemaVersion": 1,
+    "id": "synthetic-a",
+    "createdByUid": "synthetic-owner",
+    "content": {
+      "updatedAt": "2026-11-24T00:00:00Z",
+      "tournamentIds": [
+        "synthetic-complete",
+        "synthetic-missing",
+        "synthetic-complete"
+      ],
+      "scoringMode": "bands",
+      "pointsTop": [
+        100,
+        80,
+        65,
+        55
+      ],
+      "pointsBands": [
+        45,
+        25,
+        10,
+        5
+      ]
+    },
+    "preserved": {
+      "name": "Synthetic synthetic-a",
+      "season": "2026",
+      "historicalTournaments": [
+        {
+          "id": "synthetic-historical-synthetic-a",
+          "results": [
+            {
+              "playerId": "synthetic-player",
+              "place": 1
+            }
+          ]
+        }
+      ],
+      "future": {
+        "retain": true
+      }
+    },
+    "managerUids": {
+      "synthetic-manager": true
+    }
+  },
+  "synthetic-b": {
+    "schemaVersion": 1,
+    "id": "synthetic-b",
+    "createdByUid": "synthetic-owner",
+    "content": {
+      "updatedAt": "2026-11-24T00:00:00Z",
+      "tournamentIds": [
+        "synthetic-complete"
+      ],
+      "scoringMode": "bands",
+      "pointsTop": [
+        999
+      ],
+      "pointsBands": [
+        45,
+        25,
+        10,
+        5
+      ]
+    },
+    "preserved": {
+      "name": "Synthetic synthetic-b",
+      "season": "2026",
+      "historicalTournaments": [
+        {
+          "id": "synthetic-historical-synthetic-b",
+          "results": [
+            {
+              "playerId": "synthetic-player",
+              "place": 1
+            }
+          ]
+        }
+      ],
+      "future": {
+        "retain": true
+      }
+    },
+    "managerUids": {
+      "synthetic-manager": true
+    }
+  },
+  "synthetic-orphan": {
+    "schemaVersion": 1,
+    "id": "synthetic-orphan",
+    "createdByUid": "synthetic-owner",
+    "content": {
+      "updatedAt": "2026-11-24T00:00:00Z",
+      "tournamentIds": [],
+      "scoringMode": "bands",
+      "pointsTop": [
+        100,
+        80,
+        65,
+        55
+      ],
+      "pointsBands": [
+        45,
+        25,
+        10,
+        5
+      ]
+    },
+    "preserved": {
+      "name": "Synthetic synthetic-orphan",
+      "season": "2026",
+      "historicalTournaments": [
+        {
+          "id": "synthetic-historical-synthetic-orphan",
+          "results": [
+            {
+              "playerId": "synthetic-player",
+              "place": 1
+            }
+          ]
+        }
+      ],
+      "future": {
+        "retain": true
+      }
+    },
+    "managerUids": {
+      "synthetic-manager": true
+    }
+  }
+}

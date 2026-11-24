@@ -1,3 +1,7 @@
+# Samostatný úkol — příprava persistence sérií (24. 11. 2026)
+
+Kandidát v4.51.123 RC pouze připravuje neaktivní repository, soukromý návrh Rules a read-only migraci; nejde o zahájení 10b1/10b2. Produkce zůstává v122. PR #55 a diagnostický #72 nedotčené. [Hranice, podmínky cutover a návrat](series-storage-preparation.md). Žádná nová datová autorita ani publikace Rules není povolena tímto přípravným PR.
+
 # Aktuální roadmapa modularizace Poolčítadla
 
 ## Samostatná UI oprava SKO — nasazeno v4.51.122 RC
