@@ -8204,7 +8204,7 @@ html[data-theme="light"] #leagueSchedule .history-item .muted{
     const present=new Set((data.tournaments||[]).filter(t=>t&&state.ids.has(t.id)).map(t=>t.id));
     const missing=new Set(Object.values(s.tournamentIds||{}).filter(id=>!present.has(id))).size;
     if(!missing)return '';
-    return '<div class="subpanel" role="status" style="margin:10px 0;border-color:rgba(212,175,55,.6);overflow-wrap:anywhere"><strong>Neúplná historie série:</strong> U '+missing+' turnajů chybí výsledková data. Zobrazené body vycházejí pouze z dostupných turnajů.</div>';
+    return '<div class="subpanel" role="status" style="margin:10px 0;border-color:rgba(212,175,55,.6);overflow-wrap:anywhere"><strong>Neúplná historie série:</strong> U '+missing+' '+(missing===1?'turnaje':'turnajů')+' chybí výsledková data. Zobrazené body vycházejí pouze z dostupných turnajů.</div>';
   }
   function updateSeriesHistoryNotices(){
     if(!SERIES_AUTHORITY_ENABLED)return;
