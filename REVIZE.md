@@ -1,12 +1,12 @@
 # Revize aplikace Poolčítadlo
 
-## Dominik – izolovaná integrace bezpečné persistence sérií (v4.51.123 RC)
+## Dominik – izolovaná persistence sérií a varianta B globálních writerů (v4.51.123 RC)
 Zadavatel: Dominik
-Datum: 24. 11. 2026
-Změny: Pokračování draft PR #73. Načtená app-owned repository, za vypnutým přepínačem integrované read/vazby/bodování/create/ACL/jednoduchá historie. Whitelist, identity/generace, child ETag, čtecí revize, stale editor a ACK bez falešného selhání při plné cache. Blokované staré import/restore/delete/reconstructed-history cesty. Soukromé přechodové/migrační Rules a ruční read-only snapshot tool; skutečný inventář nepořízen. [Matice, testy a cutover](docs/series-storage-preparation.md).
-Testy: Rules audit23 a první draft39 odděleně PASS; repository18 a integrace16 reálných lokálních engine scénářů; integrovaný browser1440/390/320 a skutečné staré v122 generic/FC root PUT proti emulátoru PASS. Lounská/standardní série a bootstrap PASS. Produkční Node435 PASS/0 FAIL/0 SKIP, release gate PASS. Experiment28 PASS/2 nezměněné FAIL odděleně. GitHub CI uvedeno při předání.
-Nasazení: Nenasazeno; autorita vypnutá. Produkce v4.51.122 RC. Žádné produkční čtení pro snapshoty, zápisy, Rules publikace ani migrace.
-Omezení: Produkční rozhodnutí A/B (globální appData freeze versus per-child writery), schválení blokovaných editorů, čerstvé snapshoty a živé izolované Auth chybí. Blokace nejasného zápisu nepřežije restart; GET není potvrzení operace. PR #55/#72 nedotčené, 10b1 nezahájena.
+Datum: 25. 11. 2026
+Změny: Pokračování draft PR73 z35b36a0. Kompletní zdrojový inventář globálních writerů, samostatný admin FC child writer s ETag a child revizí, obnova FC/sérií i bez root updatedAt/data. Obecný upload a plánování jsou v novém režimu odstraněné, parent grant se nevrací. Původní FC modely/sportovní pravidla zůstávají. Identita, timeout, zneplatnění starého editoru a UI, nejasný výsledek bez retry/GET receipt. Soukromé Rules B, bez publikace. [Inventář, matice a omezení](docs/global-writers-variant-b.md).
+Testy: Nový FC modul10 jednotkových kontraktů a12 scénářů skutečného lokálního Rules enginu; skutečné FC/série handlery na1440/390/320, rootrev beze změny, prázdný root, reload/cache, souběh, identity a nejasné ACK PASS. Předchozí série18+16 a browserové matice zachované. Produkční Node446 PASS/0 FAIL/0 SKIP. Dva nové harness FAIL vyřešeny doplněním explicitního přepínače bez změny původních očekávání. Experiment28 PASS/2 stejné FAIL odděleně. Release/mobil/stream CI uvedeny při předání.
+Nasazení: Nenasazeno, autorita false. Produkce zůstává v4.51.122 RC. Žádné produkční čtení pro inventář, zápis, Rules publikace ani migrace.
+Omezení: Produkční přechod vyžaduje schválení aktuálních Rules B, čerstvé autorizované snapshoty/dry-run, migrační okno a aktivaci. Blokované série editory zůstávají podle předchozí matice. Živý Auth/Rules revize a fyzická zařízení neověřeny. Nejistota není trvalá po restartu. PR55/72 nedotčené; 10b1 nezahájena.
 
 ## Dominik – vizuální pozice volných losů v SKO (v4.51.122 RC)
 Zadavatel: Dominik

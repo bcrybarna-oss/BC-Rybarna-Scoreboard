@@ -132,7 +132,7 @@ const deferred=()=>{let resolve;const promise=new Promise(r=>resolve=r);return{p
   p.once('dialog',d=>d.accept());await abandon.click();assert.equal(await app(p,()=>secureSeriesCreateDraft),null);assert.equal(localPuts,beforeLost+1);
   const beforeBlocked=localPuts;
   await app(p,()=>{deleteTournamentSeries('s');openHistoricalStructureSetup('s');});
-  const blocked=await app(p,async()=>{const previous=tournamentCreationPending;tournamentCreationPending={tournament:{id:'synthetic-old-pending',createdByUid:'owner'},seriesId:'s'};await $('createTournamentBtn').onclick();tournamentCreationPending=previous;await uploadCloudData();restoreSafetyBackup();await historicalUiAction(()=>{throw Error('must not run');});try{await saveFederalConfig({},{});}catch(e){return e.message;}});assert.match(blocked,/uzamčená/);
+  const blocked=await app(p,async()=>{const previous=tournamentCreationPending;tournamentCreationPending={tournament:{id:'synthetic-old-pending',createdByUid:'owner'},seriesId:'s'};await $('createTournamentBtn').onclick();tournamentCreationPending=previous;await uploadCloudData();restoreSafetyBackup();await historicalUiAction(()=>{throw Error('must not run');});try{await saveFederalConfig({},{});}catch(e){return e.message;}});assert.match(blocked,/oprávnění/);
   const idsBeforeImport=await app(p,()=>data.tournamentSeries.map(s=>s.id));
   await p.locator('#importFile').setInputFiles({name:'synthetic-stale.json',mimeType:'application/json',buffer:Buffer.from(JSON.stringify({players:{},matches:[],tournamentSeries:[{id:'stale'}]}))});
   assert.deepEqual(await app(p,()=>data.tournamentSeries.map(s=>s.id)),idsBeforeImport);

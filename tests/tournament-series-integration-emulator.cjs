@@ -39,9 +39,9 @@ async function rest(who,path,method,data){return fetch(url(path,token({uid:who,e
   const first=c.repo.readAll(),second=c.repo.readAll();assert.equal(first,second);await seen.promise;
   await c.repo.mutate('s',{type:'scoring',fields:{bestCount:2}});delaying=false;gate.resolve();await assert.rejects(first,{code:'SERIES_READ_SUPERSEDED'});assert.equal((await c.repo.readAll())[0].bestCount,2);assert.equal(c.repo.snapshot().activeJobs,0);c.repo.dispose();
  });
- await test('transition freezes all appData writes including admin; direct series paths remain independent',async()=>{
+ await test('transition denies parent appData writes including admin; direct series paths remain independent',async()=>{
   await control('appData','PUT',{updatedAt:1,data:{tournamentSeries:[{id:'old'}],other:{keep:42}}});
-  for(const who of ['owner','manager','admin'])for(const path of ['appData','appData/data','appData/data/tournamentSeries','appData/data/federalCup2026'])assert.notEqual((await rest(who,path,'PUT',{stale:true})).status,200);
+  for(const who of ['owner','manager','admin'])for(const path of ['appData','appData/data','appData/data/tournamentSeries'])assert.notEqual((await rest(who,path,'PUT',{stale:true})).status,200);
   for(const method of ['PATCH','DELETE'])assert.notEqual((await rest('admin','appData',method,method==='PATCH'?{data:{stale:true}}:null)).status,200);
   assert.notEqual((await rest('admin','','PATCH',{'appData/data/tournamentSeries':[{id:'stale'}]})).status,200);
   assert.equal((await rest('admin','appData','GET')).status,200);

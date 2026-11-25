@@ -4,6 +4,8 @@ Zadavatel: Dominik. Datum: 24. 11. 2026. Kandidát v4.51.123 RC. Základ main `e
 
 ## Stav
 
+**Aktualizace 25. 11. 2026: varianta B schválená a izolovaně implementovaná.** [Kompletní inventář, FC kontrakt, matice a důkazy](global-writers-variant-b.md). Níže uvedený původní úplný freeze je už jen migrační lock; operation Rules B povolují konkrétní admin FC child. Autorita stále vypnutá.
+
 Repository je nyní načítána a má jednu app-owned instanci. **Produkční autorita zůstává vypnutá konstantou `SERIES_AUTHORITY_ENABLED=false`.** Aktivní testy mění tuto konstantu pouze v izolovaném HTML. Při zapnutém režimu neexistuje fallback na appData, import ani místní zálohu. Při vypnutém režimu zůstávají původní produkční operace pro kontinuitu; nejde o schválení jejich persistence. Není povolen merge/deployment/aktivace/migrace. PR #55/#72 jsou nedotčené, 10b1 nezahájena.
 
 Skutečné Rules, jejich lokální návrhy a podrobný bezpečnostní audit zůstávají mimo veřejný checkout. V jiných větvích nejsou opravovány nesouvisející slabiny. Zveřejněny jsou pouze kontrakty, kód a syntetické důkazy, nikoliv skutečné Rules nebo privilegované identifikátory.
@@ -48,9 +50,9 @@ ID a číselné pozice vazeb/historií jsou stabilní; odebrání ponechá mezer
 | Export celé aplikace | Integrované čerstvé načtení sérií | Pokud se autorita nenačte, export se zastaví. Bez zápisu. |
 | Import celé zálohy / restoreSafetyBackup | **Blokováno** | Stará kopie nesmí nahradit novou autoritu; soubor ani server se nemění. |
 | Generic upload /appData | **Pozastaven** | V zapnutém režimu neodesílá request; nepoužívá skrytý legacy upload. |
-| Uložení konfigurace Federal Cupu | **Dočasně blokováno** | Přímý root appData writer; nutné produktové rozhodnutí níže. |
+| Uložení konfigurace Federal Cupu | Integrovaný admin child writer B | /appData/data/federalCup2026, vlastní ETag/revize, bez globálního grantu; [kontrakt](global-writers-variant-b.md). |
 
-Background obnovy využívají stávající životní cyklus CloudRefresh: po úspěšném globálním čtení samostatné sdílené čtení sérií, nezávislé na appData revizi. Žádný nový timer. Navigace a visibility používají stejnou instanci/readAll Promise. Otevřený editovatelný formulář se background obnovou neničí, změna je oznámena. Souběžná editace bodování se před PUT porovná s vykresleným základem. Odpovědi staré relace, starý finalizer a čtení před novějším zápisem nepublikují. Bfcache pagehide nedisponuje instanci; skutečný odchod ano. U již odeslaného PUT se netvrdí odvolání.
+Background obnovy využívají stávající životní cyklus CloudRefresh: při každém platném poll fetch samostatné sdílené čtení sérií i FC, včetně prázdného globálního rootu, nezávislé na appData revizi. Žádný nový timer. Navigace a visibility používají stejnou instanci/readAll Promise. Otevřený editovatelný formulář se background obnovou neničí, změna je oznámena. Souběžná editace bodování se před PUT porovná s vykresleným základem. Odpovědi staré relace, starý finalizer a čtení před novějším zápisem nepublikují. Bfcache pagehide nedisponuje instanci; skutečný odchod ano. U již odeslaného PUT se netvrdí odvolání.
 
 ## Konflikty a nejistota
 
@@ -64,12 +66,9 @@ Soukromý **přechodový návrh** zakazuje veškeré appData zápisy, včetně s
 
 Dopad zámku: čtení appData funguje, samostatné players/matches/tournaments/leagues/stream cesty nezískávají ani neztrácejí práva. Globální admin upload/inicializace konfigurace a editace FC konfigurace/rosteru/lineupů se neuloží. Zámek nevrací už odeslané operace. Jde o běžné REST/Auth klienty; administrativní IAM/Admin SDK bypass Rules tím zastaven není a vyžaduje skutečný organizační klid operátorů. [Admin přístup](https://firebase.google.com/docs/database/admin/start). Při publikaci pravidel nutno vyčkat ukončení starých requestů a po zámku pořídit nové snapshoty.
 
-**Výběr produkčního řešení není schválený:**
+**Rozhodnutí B bylo schváleno 25. 11. 2026 pro izolovanou implementaci.** Je dokončený úzký FC child writer a obnova oddělená od root revize; obecný upload v novém režimu neexistuje. Žádný další legitimní živý globální writer nebyl ve zdroji nalezen, neznámé serverové položky zůstávají read-only. Parent grant se nevrací. Kompletní aktuální popis a matice je v [inventáři B](global-writers-variant-b.md).
 
-- A: krátké oznámené okno globálního appData write freeze, poté kompatibilní klient s uvedenými blokacemi. Lze emulátorově připravit, ale vyžaduje výslovný souhlas s nedostupností globální správy i po aktivaci série; její ukončení čeká na další ověřené per-child řešení, není automaticky omezené délkou migračního okna.
-- B: před cutover rozdělit ostatní globální writery na výslovně povolené child cesty, odstranit parent grant a ponechat legacy série zamčené. Doporučeno pro dlouhodobý provoz bez blokace FC; vyžaduje samostatně schválený rozsah a úplný inventář globálních polí. Nyní neimplementováno.
-
-Není připraveno automatické obnovení původního parent grantu. Dokud zůstává legacy pole pod zapisovatelným parentem, takové uvolnění by obnovilo problém. Implementace této části se zastavuje na rozhodnutí A/B; testovací návrh není povolení k publikaci.
+Původní úplný appData freeze se použije jen v samostatně schváleném krátkém migračním okně. Po kopii/ověření jsou připravené operation Rules B s konkrétním FC grantem, bez trvalé blokace FC. Publikace všech Rules a aktivace klienta stále nejsou povolené.
 
 ## Read-only snapshot tool a dry-run
 
@@ -87,13 +86,13 @@ Emulátorové snapshoty byly skutečně pořízeny tímto tool a porovnány dry-
 
 ## Přesné pořadí budoucího cutover — žádný krok se nyní neprovádí
 
-1. Vyřešit rozhodnutí A/B a schválit zbývající blokované editory nebo jejich dočasnou nedostupnost. Potvrdit konkrétní vydání/klienta a role operátorů. Před další funkční publikací znovu fetch/verze/release gate. Nelze vydat dva odlišné buildy pod jednou již nasazenou verzí.
+1. Respektovat schválenou B a otestované operation Rules B; schválit zbývající blokované editory nebo jejich dočasnou nedostupnost. Potvrdit konkrétní vydání/klienta a role operátorů. Před další funkční publikací znovu fetch/verze/release gate. Nelze vydat dva odlišné buildy pod jednou již nasazenou verzí.
 2. Samostatně schválit read-only produkční snapshoty a zajistit autorizovanou relaci. Ověřit projekt/namespace a **čerstvou revizi živých Rules**; lokální kopie má jen doložený původ od zadavatele. Zálohovat skutečné aktuální Rules i vybrané datové větve mimo Git a ověřit čitelnost a SHA256.
 3. Prozatímní read-only dry-run: žádná ztracená/duplicitní série, známý vlastník/ACL, všechny vazby, history hash, Lounská i standardní pravidla. Konfliktní cíle/ID nebo nejasné vlastníky zastavit; nic neslučovat ani neopravovat automaticky.
 4. Oznámit klid všech administrátorů/pořadatelů a ukončení otevřených zápisů. Po schválení publikovat **migrační lock**: freeze appData, v nové větvi admin-only writes, bez owner/manager child grantů. Emulátor otestoval skutečné tokenové admin kopírování, ne bypass jako důkaz oprávnění. Ověřit odmítnutí starého klienta a znovu získat snapshoty po zámku. Pokud se něco změnilo, nový dry-run.
 5. Po samostatném schválení migrace kopírovat každý záznam pod původním ID. Číst prázdný cíl s ETag, vytvořit if-match jen pro tuto verzi. Existující shodný cíl přečíst a zaznamenat, odlišný zastavit. Neopírat ochranu o předchozí GET bez conditional PUT. Nedělat full /appData PUT, DELETE nebo obnovu databáze ze zálohy.
 6. Každý cíl zpětně načíst, zkontrolovat úplnost a kanonické hashe všech částí, ACL/vlastníka, historii, reference a bodování. Zapsat soukromý migrační manifest s ID, zdrojovou/cílovou ETag, časy a hashi. Firebase null/prázdná pole/numerické mapy porovnávat kanonicky, surové rozdíly dále evidovat. V průběhu ověřit neměnnost zdroje a referencovaných turnajů; více snapshotů není atomická záloha. Legacy ponechat beze změny.
-7. Teprve po shodě schválit přechodové operation Rules a kompatibilní klient s aktivovanou autoritou. Starý parent grant nevracet. Vynutit reload starých klientů, ukázat blokace, ověřit nové čtení před jakoukoli akcí. Obě nasazení koordinovat v zamčeném okně; nový klient nesmí předčasně zapisovat do nedokončené migrace.
+7. Teprve po shodě schválit operation Rules varianty B a kompatibilní klient s aktivovanou autoritou. Starý parent grant nevracet. Vynutit reload starých klientů, ukázat blokace, ověřit nové čtení před jakoukoli akcí. Obě nasazení koordinovat v zamčeném okně; nový klient nesmí předčasně zapisovat do nedokončené migrace.
 8. Bez testovacích produkčních zápisů ověřit manifest, všechny série, historie, nezávislé pořadí/bodování a read-only export. Funkční zápisy pouze v odděleném schváleném testovacím prostředí. Sledovat odmítnuté staré writery a nejasné ACK, nikoliv je automaticky opakovat.
 9. Zaznamenat skutečné SHA/verzi/Rules revizi/manifest/testy, omezení a schválení případného uvolnění zámku výhradně podle vybrané varianty. Legacy neodstraňovat v témže vydání.
 
@@ -108,7 +107,7 @@ Před aktivací lze revertovat celé PR bez datové změny. Po zahájení migrac
 - Browser skutečných handlerů1440/390/320: vazby, scoring, create single-flight, pořadatelé, historie pořadí i plné zápasy, reload, quota/denied storage, zachovaný rozepsaný formulář a konflikt druhého zařízení,A→B→A s nejasným create ACK a stabilním ID, potvrzení/odmítnutí ručního inspection release i opuštění přípravy bez dalšího PUT, odebrání manager práv bez ztráty rozepsaných hodnot,12 navigačních cyklů, bfcache vs normální odchod, změna účtu, blokované import/restore/legacy write/historická rekonstrukce/pending vazba. Úplné turnajové hodnoty se porovnávají kanonicky podle ID, nikoliv pořadí JSON klíčů/řádků po Firebase čtení.
 - Skutečný legacy v122 uploader a saveFederalConfig:2 odmítnuté root PUT, žádná změna nové autority.
 - Regrese Lounské/standardní série1440/390/320 PASS; bootstrap všech modulů včetně explicitně chybějící nové knihovny PASS. Helper aktivních browser harnessů doplněn o skutečný modul; první timeout chybějícího assetu byl opraven, nebyl označen za známou produkční chybu.
-- Produkční Node lokálně435 PASS/0 FAIL/0 SKIP, release gate PASS. Experiment28 PASS/2 FAIL: detach uloženého zápasu při dočasně nedostupné identitě; druhá vada povoluje saved owner přes zbytkové UID bez autentizace. Experimentální core i tyto testy jsou vůči main beze změny a core není v produkčním načítání. Historický audit odstraněného žurnálu není aktuální produktový test, nebyl započítán. GitHub CI uvedeno při předání; soukromé emulátorové testy neběží v GitHubu a nejsou vydávány za cloudové CI.
+- Produkční Node po B lokálně446 PASS/0 FAIL/0 SKIP, release gate PASS. Experiment28 PASS/2 FAIL: detach uloženého zápasu při dočasně nedostupné identitě; druhá vada povoluje saved owner přes zbytkové UID bez autentizace. Experimentální core i tyto testy jsou vůči main beze změny a core není v produkčním načítání. Historický audit odstraněného žurnálu není aktuální produktový test, nebyl započítán. GitHub CI uvedeno při předání; soukromé emulátorové testy neběží v GitHubu a nejsou vydávány za cloudové CI.
 
 ```text
 node --test tests/tournament-series-repository.test.cjs tests/series-readonly-snapshots.test.cjs
@@ -125,4 +124,4 @@ node scripts/check-release.cjs --base origin/main
 
 Emulátor4.11.2 poslouchá jen127.0.0.1:19006, namespace demo-pool-series. `SERIES_RULES_FILE` musí ukazovat na soukromý přechodový návrh, `SERIES_LOCK_RULES_FILE` na soukromý migrační lock. Sady běží postupně, používají stejný namespace. Bez souborů skončí chybou, nikoliv tichým mockem/skipem. Síťové chyby jsou řízené injekce nad enginem; tokeny jsou syntetické. **Živý Auth/živá Rules revize/produkční migrace/fyzická zařízení tím ověřené nejsou.**
 
-Zbývající blokery: rozhodnutí A/B; schválení ponechaných blokací; čerstvé autorizované produkční snapshoty a skutečný inventář; izolované živé Auth; publikace Rules/migrace/aktivace/merge/deployment vyžadují další schválení. Žádný takový krok nebyl proveden. Nesouvisející bezpečnostní slabiny jsou jen v soukromém auditu.
+Zbývající blokery: schválení úplných čerstvých Rules B; schválení ponechaných blokací; čerstvé autorizované produkční snapshoty a skutečný inventář; izolované živé Auth; publikace Rules/migrace/aktivace/merge/deployment vyžadují další schválení. Žádný takový krok nebyl proveden. Nesouvisející bezpečnostní slabiny jsou jen v soukromém auditu.

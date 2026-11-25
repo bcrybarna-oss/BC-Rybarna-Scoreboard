@@ -1,6 +1,6 @@
-# Samostatný úkol — izolovaná integrace sérií (24. 11. 2026)
+# Samostatný úkol — varianta B persistence sérií (25. 11. 2026)
 
-Draft PR #73 / kandidát v4.51.123 RC integruje samostatnou repository za vypnutou autoritou. Nové conditional operace, blokované editory, read-only snapshot tool a soukromé přechodové/migrační Rules. [Matice, bezpečnostní rozhodnutí a přesné cutover pořadí](series-storage-preparation.md). Produkce zůstává v122; není schválená publikace Rules, skutečný inventář/migrace ani přepnutí. Rozhodnutí A/B pro globální appData writery je blokující. PR55/72 nedotčené. 10b1/10b2 nezahájené.
+Schválená B je izolovaně implementovaná v draft PR73/v4.51.123 RC: admin FC child writer, bez parent grantů, obnova nezávislá na globální revizi, zachovaná nová autorita sérií a předchozí blokace. [Inventář a důkazy](global-writers-variant-b.md). Rozhodnutí A/B už není blocker. Publikace Rules, aktuální snapshoty, migrace a aktivace dál vyžadují schválení; autorita false, produkce v122. PR55/72 nedotčené. 10b1/10b2 nezahájené.
 
 # Aktuální roadmapa modularizace Poolčítadla
 

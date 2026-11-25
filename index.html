@@ -1070,6 +1070,7 @@
     </div>
   </div>
 
+<script src="assets/js/federal-config-repository.js?v=4.51.123"></script>
 <script src="assets/js/tournament-series-repository.js?v=4.51.123"></script>
 <script src="assets/js/federal-statistics.js?v=4.51.98"></script>
 <script src="assets/js/federal-report-renderer.js?v=4.51.123"></script>
@@ -6686,6 +6687,7 @@ html[data-theme="light"] #leagueSchedule .history-item .muted{
     const error=document.createElement('div');error.id='federalReportRendererLoadError';error.setAttribute('role','alert');error.textContent='Nepodařilo se načíst vykreslování reportů Federal Cupu. Obnovte stránku.';document.body.prepend(error);throw new Error('FEDERAL_REPORT_RENDERER_MODULE_UNAVAILABLE');
   }
   if(!window.MatchChallengeActions){const error=document.createElement('div');error.id='matchChallengeActionsLoadError';error.setAttribute('role','alert');error.textContent='Nepodařilo se načíst ovládání výzev. Obnovte stránku.';document.body.prepend(error);throw Error('MATCH_CHALLENGE_ACTIONS_MODULE_UNAVAILABLE');}
+  if(!window.FederalConfigRepository){const error=document.createElement('div');error.id='federalConfigRepositoryLoadError';error.setAttribute('role','alert');error.textContent='Nepodařilo se načíst konfiguraci Federal Cupu.';document.body.prepend(error);throw Error('FEDERAL_CONFIG_REPOSITORY_MODULE_UNAVAILABLE');}
   if(!window.TournamentSeriesRepository){const error=document.createElement('div');error.id='tournamentSeriesRepositoryLoadError';error.setAttribute('role','alert');error.textContent='Nepodařilo se načíst správu sérií. Obnovte stránku.';document.body.prepend(error);throw Error('TOURNAMENT_SERIES_REPOSITORY_MODULE_UNAVAILABLE');}
   if(!window.PlayersReadRepository){const error=document.createElement('div');error.id='playersReadRepositoryLoadError';error.setAttribute('role','alert');error.textContent='Nepodařilo se načíst hráčské profily. Obnovte stránku.';document.body.prepend(error);throw Error('PLAYERS_READ_REPOSITORY_MODULE_UNAVAILABLE');}
   if(!window.MatchChallenges){const error=document.createElement('div');error.id='matchChallengesLoadError';error.setAttribute('role','alert');error.textContent='Nepodařilo se načíst výzvy k zápasu. Obnovte stránku.';document.body.prepend(error);throw Error('MATCH_CHALLENGES_MODULE_UNAVAILABLE');}
@@ -7502,7 +7504,7 @@ html[data-theme="light"] #leagueSchedule .history-item .muted{
       tournaments:mergeTournamentArrays(l.tournaments,r.tournaments,preferRemote).filter(t=>!deletedTournamentSet.has(t.id)),
       tournamentSeries:SERIES_AUTHORITY_ENABLED?l.tournamentSeries:arrayMergeById(l.tournamentSeries,r.tournamentSeries,preferRemote),
       leagues:mergeLeagueArrays(l.leagues,r.leagues,preferRemote),
-      federalCup2026:JSON.parse(JSON.stringify(preferRemote ? r.federalCup2026 : l.federalCup2026)),
+      federalCup2026:JSON.parse(JSON.stringify(SERIES_AUTHORITY_ENABLED?l.federalCup2026:preferRemote ? r.federalCup2026 : l.federalCup2026)),
       deletedMatchIds,
       deletedTournamentIds,
       currentMatch:null
@@ -8552,6 +8554,23 @@ html[data-theme="light"] #leagueSchedule .history-item .muted{
     authorize:async context=>{if(!await ensureCloudToken(context))return null;return {uid:cloudUid,idToken:cloudIdToken};},
     url:(path,credential)=>FIREBASE_DB+'/'+path+'.json?auth='+encodeURIComponent(credential),fetch:(...args)=>fetch(...args)
   });
+  const secureFederalConfig=window.FederalConfigRepository.create({enabled:()=>SERIES_AUTHORITY_ENABLED,identity:secureSeriesIdentity,
+    authorize:async context=>{if(!await ensureCloudToken(context))return null;return {uid:cloudUid,idToken:cloudIdToken};},
+    url:(path,credential)=>FIREBASE_DB+'/'+path+'.json?auth='+encodeURIComponent(credential),fetch:(...args)=>fetch(...args),
+    canWrite:()=>currentUserIsSystemAdmin(),normalize:raw=>normalizeFederalConfig(raw,data.players),fingerprint:federalConfigFingerprint});
+  async function loadSecureFederalConfig(){const scope=JSON.stringify(secureSeriesIdentity()),config=await secureFederalConfig.read();if(scope!==JSON.stringify(secureSeriesIdentity()))return;
+    if(federalConfigFingerprint(data.federalCup2026)!==federalConfigFingerprint(config)){data.federalCup2026=config;window.renderFederalCup2026?.();try{localStorage.setItem(DB_KEY,JSON.stringify(data));}catch(e){toast('FC načten z cloudu; místní cache není dostupná.');}}
+    return config;
+  }
+  function refreshSecureFederalConfig(){const scope=JSON.stringify(secureSeriesIdentity());return loadSecureFederalConfig().catch(e=>{if(scope===JSON.stringify(secureSeriesIdentity())&&!['FC_BUSY','FC_SESSION_CHANGED','FC_READ_SUPERSEDED'].includes(e.code))console.warn('FC čtení:',e.code||'FC_READ_FAILED');});}
+  function federalConfigUncertainNotice(){
+    $('federalConfigUncertainty')?.remove();const scope=JSON.stringify(secureSeriesIdentity()),box=document.createElement('div'),text=document.createElement('p'),inspect=document.createElement('button'),release=document.createElement('button'),preview=document.createElement('pre');let nonce;
+    box.id='federalConfigUncertainty';box.className='subpanel';box.setAttribute('role','alert');text.textContent='Výsledek zápisu FC není jistý. Žádný automatický retry. Reload zápis neruší a blokace nepřežije restart. Čtení není potvrzení operace.';
+    inspect.textContent='PROHLÉDNOUT AKTUÁLNÍ FC';release.textContent='UVOLNIT PO VLASTNÍ KONTROLE';release.disabled=true;inspect.className=release.className='btn';preview.style.cssText='white-space:pre-wrap;max-height:160px;overflow:auto';const current=()=>box.isConnected&&scope===JSON.stringify(secureSeriesIdentity());
+    inspect.onclick=async()=>{try{const result=await secureFederalConfig.inspect();if(!current())return;nonce=result.inspection;preview.textContent=JSON.stringify(result.config,null,2);release.disabled=false;}catch(e){if(current())text.textContent='Aktuální stav nelze načíst; blokace trvá. Nic nebylo opakováno.';}};
+    release.onclick=()=>{if(!current()||!nonce||!confirm('Čtení nedokazuje minulou operaci. Požadavek může doběhnout. Potvrzuješ vlastní kontrolu a rozhodnutí bez záruky bezpečného opakování? Nic se automaticky nezapíše.'))return;if(!current())return;try{secureFederalConfig.acknowledge(nonce);box.remove();}catch(e){text.textContent='Relace se změnila, znovu načti stav.';}};
+    box.append(text,inspect,release,preview);document.body.prepend(box);
+  }
   let secureSeriesScope=JSON.stringify(secureSeriesIdentity()),secureSeriesLoaded=false,secureSeriesCreateDraft=null;
   const seriesEditorBase=new Map(),seriesCreateDrafts=new Map(),seriesCreateForms=new Map();
   const seriesCreateFields=['seriesName','seriesClub','seriesSeason','seriesBestCount','seriesPlacementTieBreak','seriesScoringMode','seriesPointsTop','seriesPointsBands','seriesCustomPoints'];
@@ -8570,10 +8589,10 @@ html[data-theme="light"] #leagueSchedule .history-item .muted{
     pending:busy=>{document.querySelectorAll('#seriesModalBody button').forEach(b=>b.disabled=busy||!!(selectedSeriesId&&!canManageSeries(data.tournamentSeries.find(s=>s.id===selectedSeriesId))));if($('createSeriesBtn'))$('createSeriesBtn').disabled=busy;},confirmed:publishSecureSeries,message:seriesPersistenceMessage});
   function syncSecureSeriesIdentity(){
     if(!SERIES_AUTHORITY_ENABLED)return;
-    secureSeriesRepository.syncIdentity();const scope=JSON.stringify(secureSeriesIdentity());if(scope===secureSeriesScope)return;
+    secureSeriesRepository.syncIdentity();secureFederalConfig.syncIdentity();const scope=JSON.stringify(secureSeriesIdentity());if(scope===secureSeriesScope)return;
     const previous=JSON.parse(secureSeriesScope);if(previous.authenticated&&previous.uid){const key=seriesActor(previous);seriesCreateForms.set(key,Object.fromEntries(seriesCreateFields.map(id=>[id,$(id)?.value||''])));if(secureSeriesCreateDraft)seriesCreateDrafts.set(key,secureSeriesCreateDraft);}
     const who=secureSeriesIdentity(),form=seriesCreateForms.get(seriesActor(who))||seriesCreateDefaults;for(const id of seriesCreateFields)if($(id))$(id).value=form[id]??seriesCreateDefaults[id];
-    secureSeriesScope=scope;secureSeriesCreateDraft=who.authenticated?seriesCreateDrafts.get(seriesActor(who))||null:null;renderSecureSeriesCreateAttempt();updateSeriesScoringCreateUI();seriesEditorBase.clear();document.querySelectorAll('#seriesModalBody button,#createSeriesBtn').forEach(b=>b.disabled=false);secureSeriesActions.invalidate();secureSeriesLoaded=false;data.tournamentSeries=[];
+    data.federalCup2026=defaultFederalCup2026();$('federalConfigUncertainty')?.remove();window.syncFederalConfigEditorSession?.();secureSeriesScope=scope;secureSeriesCreateDraft=who.authenticated?seriesCreateDrafts.get(seriesActor(who))||null:null;renderSecureSeriesCreateAttempt();updateSeriesScoringCreateUI();seriesEditorBase.clear();document.querySelectorAll('#seriesModalBody button,#createSeriesBtn').forEach(b=>b.disabled=false);secureSeriesActions.invalidate();secureSeriesLoaded=false;data.tournamentSeries=[];
     const status=$('seriesPersistenceStatus');if(status)status.textContent='';$('seriesUncertaintyControls')?.remove();selectedSeriesId=null;$('seriesModal')?.classList.remove('show');renderSeriesList();renderTournamentSeriesSelect();
   }
   async function loadSecureSeries(){
@@ -8624,7 +8643,7 @@ html[data-theme="light"] #leagueSchedule .history-item .muted{
     renderSecureSeriesCreateAttempt();return draft.promise;
   }
   function blockedSeriesOperation(){seriesPersistenceMessage('Tato operace je před dokončením bezpečného přechodu blokovaná. Data nebyla změněna.');return true;}
-  if(SERIES_AUTHORITY_ENABLED)window.addEventListener('pagehide',e=>{if(!e.persisted)secureSeriesActions.dispose();});
+  if(SERIES_AUTHORITY_ENABLED)window.addEventListener('pagehide',e=>{if(!e.persisted){secureSeriesActions.dispose();secureFederalConfig.dispose();}});
   function loadSecurePlayers(){return securePlayersReader.read();}
 
   async function saveSecurePlayer(player){
@@ -9286,7 +9305,7 @@ html[data-theme="light"] #leagueSchedule .history-item .muted{
   function canWriteGlobalAppData(){
     // /appData je společná globální konfigurace. Běžný hráč ji pouze čte.
     // Zápasy, profily, turnaje, liga a stream se zapisují do vlastních zabezpečených větví.
-    return currentUserIsSystemAdmin();
+    return !SERIES_AUTHORITY_ENABLED&&currentUserIsSystemAdmin();
   }
 
   function cloudUrl(path){
@@ -9294,7 +9313,7 @@ html[data-theme="light"] #leagueSchedule .history-item .muted{
   }
 
   async function uploadCloudData(){
-    if(SERIES_AUTHORITY_ENABLED){setCloudStatus('GLOBÁLNÍ ZÁPIS POZASTAVEN',false);return false;}
+    if(SERIES_AUTHORITY_ENABLED)return false; // Domain writers alone can confirm their own saves.
     if(cloudSyncInProgress) return;
     if(!await ensureCloudToken()) return;
     // Globální /appData smí měnit pouze systémový administrátor.
@@ -9362,6 +9381,7 @@ html[data-theme="light"] #leagueSchedule .history-item .muted{
   }
 
   function scheduleCloudDataSync(){
+    if(SERIES_AUTHORITY_ENABLED){if(cloudSyncTimer)clearTimeout(cloudSyncTimer);cloudSyncTimer=null;return;}
     if(!cloudAuthenticated || cloudApplyingRemote || !canWriteGlobalAppData()) return;
     if(cloudSyncTimer) clearTimeout(cloudSyncTimer);
     cloudSyncTimer=setTimeout(uploadCloudData,450);
@@ -9373,7 +9393,7 @@ html[data-theme="light"] #leagueSchedule .history-item .muted{
     authorize:request=>ensureCloudToken(request),
     hidden:()=>document.hidden,
     blocked:()=>cloudSyncInProgress||cloudApplyingRemote,
-    fetch:(...args)=>fetch(...args),
+    fetch:(...args)=>{if(SERIES_AUTHORITY_ENABLED){refreshSecureSeriesView();refreshSecureFederalConfig();}return fetch(...args);},
     url:()=>cloudUrl('appData')+'&t='+Date.now(),
     localRevision:localCloudTimestamp,
     intervalMs:CLOUD_POLL_MS,initialDelayMs:700,
@@ -9393,7 +9413,7 @@ html[data-theme="light"] #leagueSchedule .history-item .muted{
         refreshViewsAfterCloudLoad();
       }finally{cloudApplyingRemote=false;}
     },
-    success(){cloudLastError='';setCloudStatus('ONLINE • AUTO',true);if(SERIES_AUTHORITY_ENABLED)refreshSecureSeriesView();},
+    success(){cloudLastError='';setCloudStatus('ONLINE • AUTO',true);},
     error(error){cloudLastError=String(error.message||error);console.warn('Cloud auto sync:',error);}
   });
   function pollCloudData(){return cloudAutoSync.refresh();}
@@ -9408,14 +9428,14 @@ html[data-theme="light"] #leagueSchedule .history-item .muted{
   // Secure-list refresh is a separate app-owned job, outside this module's /appData scope.
   document.addEventListener('visibilitychange',()=>{
     if(!document.hidden && cloudAuthenticated){
-      Promise.all([loadSecureMatches(),loadSecureTournaments(),...(SERIES_AUTHORITY_ENABLED?[loadSecureSeries()]:[])])
+      Promise.all([loadSecureMatches(),loadSecureTournaments(),...(SERIES_AUTHORITY_ENABLED?[loadSecureSeries(),loadSecureFederalConfig()]:[])])
         .then(()=>{try{renderHistory();renderStats();renderPlayers();renderTournament();}catch(e){}})
         .catch(()=>{});
     }
   });
 
   async function initialCloudMerge(){
-    if(SERIES_AUTHORITY_ENABLED)await loadSecureSeries();
+    if(SERIES_AUTHORITY_ENABLED){await Promise.all([loadSecureSeries(),loadSecureFederalConfig()]);startCloudAutoSync();return true;}
     if(!await ensureCloudToken()) return false;
     setCloudStatus('SYNC…',true);
 
@@ -9791,6 +9811,7 @@ html[data-theme="light"] #leagueSchedule .history-item .muted{
   });
   function showScreen(name){
     if(SERIES_AUTHORITY_ENABLED&&name==='tournament'&&cloudAuthenticated)refreshSecureSeriesView();
+    if(SERIES_AUTHORITY_ENABLED&&name==='federal-cup-2026'&&cloudAuthenticated)refreshSecureFederalConfig();
     // Navigace nesmí měnit stav zápasu; před opuštěním skóre pouze vytvoříme záchranný snapshot.
     try{if(match&&!match.endedAt&&name!=='match')recordActiveMatchRecoverySnapshot(match);}catch(e){}
     // Po dokončení turnajového zápasu nesmí žádné pozdější volání
@@ -10513,7 +10534,17 @@ $('useClock').addEventListener('change',e=>$('clockSettings').classList.toggle('
   }
   function federalConfigFingerprint(c){return historicalFingerprint(normalizeFederalConfig(c,data.players));}
   async function saveFederalConfig(next,expected){
-    if(SERIES_AUTHORITY_ENABLED)throw Error('Globální konfigurace je během přechodu sérií uzamčená. Federal Cup nebyl změněn.');
+    if(SERIES_AUTHORITY_ENABLED){
+      const scope=JSON.stringify(secureSeriesIdentity());
+      if(federalConfigFingerprint(data.federalCup2026)!==federalConfigFingerprint(expected))throw Error('Konflikt FC: místní konfigurace se změnila.');
+      try{const result=await secureFederalConfig.save(next,expected);if(scope!==JSON.stringify(secureSeriesIdentity()))throw Error('FC_SESSION_CHANGED');
+        if(federalConfigFingerprint(data.federalCup2026)===federalConfigFingerprint(expected))data.federalCup2026=result.config;
+        try{localStorage.setItem(DB_KEY,JSON.stringify(data));}catch(e){toast('FC uložen v cloudu; místní cache není dostupná.');}return result.config;
+      }catch(e){if(scope!==JSON.stringify(secureSeriesIdentity()))throw e;
+        if(['FC_WRITE_UNCERTAIN','FC_WRITE_UNCERTAIN_PENDING'].includes(e.code))federalConfigUncertainNotice();
+        const messages={FC_CONFLICT:'Konflikt FC: obnov konfiguraci a rozhodni znovu.',FC_ACCESS_DENIED:'Nemáš oprávnění uložit konfiguraci FC.',FC_WRITE_UNCERTAIN:'Výsledek uložení FC není jistý. Neopakuj zápis naslepo.',FC_WRITE_UNCERTAIN_PENDING:'FC zápis je blokovaný do vlastní kontroly nejasného výsledku.'};throw Error(messages[e.code]||('Konfigurace FC nebyla potvrzena: '+(e.code||'FC_ERROR')));
+      }
+    }
     if(!currentUserIsSystemAdmin()||!await ensureCloudToken())throw Error('Nemáš oprávnění uložit Federal Cup.');
     if(federalConfigFingerprint(next)===federalConfigFingerprint(expected))return normalizeFederalConfig(expected,data.players);
     if(federalConfigFingerprint(data.federalCup2026)!==federalConfigFingerprint(expected))throw Error('Konflikt Federal Cupu: konfigurace se změnila. Obnov soupisku a zadej úpravu znovu.');
@@ -30096,13 +30127,15 @@ function renderStats(){
 
   function cfg(){return normalizeFederalConfig(data.federalCup2026,data.players);}
   let federalRosterDraftBase=null;
-  let federalConfigBusy=false;
+  let federalConfigBusy=false,federalConfigBusyScope=null,federalConfigJob=0;
+  window.syncFederalConfigEditorSession=()=>{if(!SERIES_AUTHORITY_ENABLED)return;federalRosterDraftBase=null;federalConfigJob++;federalConfigBusy=false;document.querySelectorAll('.fc26-roster-player').forEach(input=>{input.value='';delete input.dataset.dirty;delete input.dataset.newParticipant;delete input.dataset.participantId;});render();};
+  function configInvocation(){const scope=JSON.stringify(secureSeriesIdentity());return ()=>!SERIES_AUTHORITY_ENABLED||scope===JSON.stringify(secureSeriesIdentity());}
   async function commitConfig(next,base){
-    if(federalConfigBusy){toast('Probíhá ukládání Federal Cupu.');return false;}
-    federalConfigBusy=true;
-    try{await saveFederalConfig(next,base);render();return true;}
-    catch(e){toast(e.message);return false;}
-    finally{federalConfigBusy=false;}
+    const scope=JSON.stringify(secureSeriesIdentity());if(federalConfigBusy&&federalConfigBusyScope===scope){toast('Probíhá ukládání Federal Cupu.');return false;}
+    const job=++federalConfigJob;federalConfigBusy=true;federalConfigBusyScope=scope;
+    try{await saveFederalConfig(next,base);if(scope!==JSON.stringify(secureSeriesIdentity()))return false;render();return true;}
+    catch(e){if(scope===JSON.stringify(secureSeriesIdentity()))toast(e.message);return false;}
+    finally{if(job===federalConfigJob)federalConfigBusy=false;}
   }
   function canEdit(){ return currentUserIsSystemAdmin(); }
   function normalizedName(s){return String(s||'').replace(/\s+/g,' ').trim();}
@@ -30270,6 +30303,7 @@ function renderStats(){
   }
 
   window.fc26SaveTeamResult=async function(n){
+    const invocationCurrent=configInvocation();
     if(!canEdit())return toast('Federal Cup může upravovat systémový administrátor.');
     if(raceState().decided&&!cfg().teamResults?.[n]?.done)
       return toast('Utkání už skončilo na 11 vítězných zápasů. Další výsledek nelze zapsat.');
@@ -30277,7 +30311,7 @@ function renderStats(){
     const b=Math.max(0,Number($('fc26TeamScoreB'+n)?.value||0));
     if(a===b)return toast('Team utkání musí mít vítěze.');
     const base=cfg(),next=cloneForUndo(base);next.teamResults[n]={a,b,done:true,updatedAt:new Date().toISOString()};
-    if(await commitConfig(next,base))toast('Team výsledek uložen.');
+    if(await commitConfig(next,base)&&invocationCurrent())toast('Team výsledek uložen.');
   };
   window.fc26EditTeamResult=async function(n){
     if(!canEdit())return;
@@ -30286,6 +30320,7 @@ function renderStats(){
   };
 
   window.fc26StartFixture=async function(n){
+    const invocationCurrent=configInvocation();
     if(!canEdit())return toast('Zápas Federal Cup může připravit systémový administrátor.');
     if(raceState().decided)return toast('Federal Cup už má vítěze. Další zápasy se nehrají.');
     if(completedMatch(Number(n)))return toast('Tento zápas už má uložený výsledek.');
@@ -30293,7 +30328,7 @@ function renderStats(){
     const active=Object.values(loadDeviceActiveMatches()).find(m=>!m.endedAt&&m.federalCupLink?.year===2026&&Number(m.federalCupLink.fixtureNo)===f.n&&editableMatchOwnedByCurrentUser(m));
     if(active)return resumeLocalMatch(active.id);
     const base=cfg(),prepared=cloneForUndo(base);ensureFederalParticipants(prepared);
-    if(federalConfigFingerprint(base)!==federalConfigFingerprint(prepared)){if(!await commitConfig(prepared,base))return;}
+    if(federalConfigFingerprint(base)!==federalConfigFingerprint(prepared)){if(!await commitConfig(prepared,base)||!invocationCurrent())return;}
     const v=validateFixture(f);if(!v.ok)return toast(v.msg);
     const l=lineup(f.n),a=f.t==='team'?[roster('a')[0]]:l.a.slice(0,requiredSlots(f)),bb=f.t==='team'?[roster('b')[0]]:l.b.slice(0,requiredSlots(f));
     const pa=a.map(value=>({name:normalizedName(participantName('a',value))})).filter(x=>x.name);
@@ -30598,6 +30633,7 @@ function renderStats(){
   }
 
   $('fc26SaveSettings')?.addEventListener('click',async function(){
+    const invocationCurrent=configInvocation();
     if(!canEdit())return;
     const base=federalRosterDraftBase||cfg();
     if(federalConfigFingerprint(base)!==federalConfigFingerprint(cfg())){toast('Konflikt soupisky: konfigurace se změnila. Obnov soupisku a zadej úpravu znovu.');return;}
@@ -30617,7 +30653,7 @@ function renderStats(){
     conf.teamAName='Slovensko';conf.teamBName='Česko';
     conf.rosterA=rosterA;conf.rosterB=rosterB;conf.rosterMode='manual';
     for(const l of Object.values(conf.lineups||{}))for(const side of ['a','b'])if(Array.isArray(l?.[side]))l[side]=l[side].map(id=>conf['rosterParticipantIds'+side.toUpperCase()].includes(id)?id:'');
-    if(!await commitConfig(conf,base))return;
+    if(!await commitConfig(conf,base)||!invocationCurrent())return;
     document.querySelectorAll('.fc26-roster-player').forEach(input=>{delete input.dataset.dirty;delete input.dataset.newParticipant;});
     federalRosterDraftBase=null;render();
     toast(rosterA.every(Boolean)&&rosterB.every(Boolean)
@@ -30636,10 +30672,11 @@ function renderStats(){
     if(e.target?.classList?.contains('fc26-roster-player'))e.target.dataset.dirty='1';
   });
   $('fc26Refresh')?.addEventListener('click',async function(){
+    const scope=JSON.stringify(secureSeriesIdentity()),current=()=>!SERIES_AUTHORITY_ENABLED||scope===JSON.stringify(secureSeriesIdentity());
     try{
-      if(cloudAuthenticated){const r=await fetch(cloudUrl('appData'),{cache:'no-store'});if(!r.ok)throw Error('Obnovení konfigurace selhalo.');const remote=await r.json();data.federalCup2026=normalizeFederalConfig(remote?.data?.federalCup2026,data.players);await loadSecureMatches();}
-      document.querySelectorAll('.fc26-roster-player').forEach(input=>{delete input.dataset.dirty;delete input.dataset.newParticipant;});federalRosterDraftBase=null;render();toast('Federal Cup obnoven.');
-    }catch(e){toast(e.message);}
+      if(SERIES_AUTHORITY_ENABLED){await loadSecureFederalConfig();await loadSecureMatches();}else if(cloudAuthenticated){const r=await fetch(cloudUrl('appData'),{cache:'no-store'});if(!r.ok)throw Error('Obnovení konfigurace selhalo.');const remote=await r.json();data.federalCup2026=normalizeFederalConfig(remote?.data?.federalCup2026,data.players);await loadSecureMatches();}
+      if(!current())return;document.querySelectorAll('.fc26-roster-player').forEach(input=>{delete input.dataset.dirty;delete input.dataset.newParticipant;});federalRosterDraftBase=null;render();toast('Federal Cup obnoven.');
+    }catch(e){if(current())toast(e.message);}
   });
 
   window.renderFederalCup2026=render;
