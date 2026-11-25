@@ -94,13 +94,13 @@ Operator Dominik must separately approve the specific privileged identity, windo
 cutover. IAM access is not per-path merely because application code uses exact paths;
 Admin SDK/IAM bypass is not stopped by client Rules. Inventory and stop those processes
 and all console/system-admin writers, not just ordinary and old clients. If their quiet
-cannot be established, do not proceed. The private runbook details evidence and stop gates.
+cannot be established, do not proceed. The private runbook details evidence and stop gates. See [authorization specification and owner checklist](series-cutover-readiness.md).
 
 Fresh authorized post-lock snapshots with ETags, current Rules comparison, actual isolated
 Auth/Rules verification, complete metadata/priority inventory, checksum review, private
 audit storage and explicit approval are still necessary. Old console exports are only
 reference inputs. Preserve unresolved links with an explicit warning; they are not verified
-complete historical results. That application warning remains a separate unimplemented gate.
+complete historical results. That warning is now implemented in the inactive candidate and browser-tested; acceptance of the incomplete-history presentation remains a release gate.
 Any proposed production Rules publication, migration or client activation needs approval.
 No production read/write or deployment is part of this preparation.
 

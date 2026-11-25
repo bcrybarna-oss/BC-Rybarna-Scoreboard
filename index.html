@@ -8190,11 +8190,37 @@ html[data-theme="light"] #leagueSchedule .history-item .muted{
     return await r.json();
   }
 
+  // Series evidence is valid only after a complete, current-account collection read.
+  let seriesTournamentCoverage=null;
+  function seriesTournamentCoverageForIdentity(){
+    const scope=JSON.stringify(secureSeriesIdentity());
+    if(!seriesTournamentCoverage||seriesTournamentCoverage.scope!==scope)seriesTournamentCoverage={scope,pending:0,latest:0,completed:0,failed:false,ids:new Set()};
+    return seriesTournamentCoverage;
+  }
+  function seriesHistoryNoticeHtml(s){
+    if(!SERIES_AUTHORITY_ENABLED)return '';
+    const state=seriesTournamentCoverageForIdentity();
+    if(state.pending||state.failed||!state.completed||state.completed!==state.latest)return '<div class="muted" role="status">'+(state.failed?'Dostupnost historie nyní nelze ověřit: načtení turnajů selhalo.':'Ověřuji dostupnost výsledkových dat série…')+'</div>';
+    const present=new Set((data.tournaments||[]).filter(t=>t&&state.ids.has(t.id)).map(t=>t.id));
+    const missing=new Set(Object.values(s.tournamentIds||{}).filter(id=>!present.has(id))).size;
+    if(!missing)return '';
+    return '<div class="subpanel" role="status" style="margin:10px 0;border-color:rgba(212,175,55,.6);overflow-wrap:anywhere"><strong>Neúplná historie série:</strong> U '+missing+' turnajů chybí výsledková data. Zobrazené body vycházejí pouze z dostupných turnajů.</div>';
+  }
+  function updateSeriesHistoryNotices(){
+    if(!SERIES_AUTHORITY_ENABLED)return;
+    document.querySelectorAll('[data-series-history-slot]').forEach(el=>{const s=(data.tournamentSeries||[]).find(s=>s.id===el.dataset.seriesHistorySlot);el.innerHTML=s?seriesHistoryNoticeHtml(s):'';});
+  }
   async function loadSecureTournaments(){
-    if(!await ensureCloudToken()) throw new Error('NO_AUTH');
+    const evidence=SERIES_AUTHORITY_ENABLED?seriesTournamentCoverageForIdentity():null,sequence=evidence?++evidence.latest:0;
+    const current=()=>!evidence||(evidence===seriesTournamentCoverageForIdentity()&&sequence===evidence.latest);
+    if(evidence){evidence.pending++;evidence.failed=false;updateSeriesHistoryNotices();}
+    try{
+    if(!await ensureCloudToken(evidence?{current}:undefined)) throw new Error('NO_AUTH');
+    if(!current())throw Error('TOURNAMENTS_SESSION_CHANGED');
     const r=await fetch(cloudUrl('tournaments')+'&t='+Date.now(),{cache:'no-store'});
     if(!r.ok) throw new Error('TOURNAMENTS_READ_'+r.status);
     const raw=await r.json()||{};
+    if(!current())throw Error('TOURNAMENTS_SESSION_CHANGED');
     data.tournaments=Object.values(raw).filter(Boolean);
     const repaired=[];
     data.tournaments.forEach(t=>{
@@ -8208,14 +8234,18 @@ html[data-theme="light"] #leagueSchedule .history-item .muted{
     // Opravu starého chybného stavu zapíšeme i do cloudu, pokud má uživatel oprávnění.
     for(const t of repaired){
       try{
-        if(canManageTournament(t))await secureTournamentRequest(t.id,'PUT',t);
+        if(current()&&canManageTournament(t))await secureTournamentRequest(t.id,'PUT',t,evidence?{current}:null);
       }catch(e){
         console.warn('Hybrid waiting-state repair save:',e);
       }
     }
 
+    if(!current())throw Error('TOURNAMENTS_SESSION_CHANGED');
     try{if(typeof window.renderModernHome==='function')window.renderModernHome();}catch(e){}
+    if(evidence&&current()){evidence.ids=new Set(Object.values(raw).filter(Boolean).map(t=>t.id));evidence.completed=sequence;evidence.failed=false;}
     return data.tournaments;
+    }catch(e){if(evidence&&current())evidence.failed=true;throw e;}
+    finally{if(evidence){evidence.pending--;updateSeriesHistoryNotices();if(evidence===seriesTournamentCoverageForIdentity()&&!evidence.pending&&!evidence.failed&&evidence.completed===evidence.latest){renderResultsSeries();document.querySelectorAll('[data-series-standings-slot]').forEach(el=>{const series=(data.tournamentSeries||[]).find(s=>s.id===el.dataset.seriesStandingsSlot);if(series)el.innerHTML=seriesStandingsHtml(series);});}}}
   }
 
   async function saveSecureTournament(tournament){
@@ -8592,7 +8622,7 @@ html[data-theme="light"] #leagueSchedule .history-item .muted{
     secureSeriesRepository.syncIdentity();secureFederalConfig.syncIdentity();const scope=JSON.stringify(secureSeriesIdentity());if(scope===secureSeriesScope)return;
     const previous=JSON.parse(secureSeriesScope);if(previous.authenticated&&previous.uid){const key=seriesActor(previous);seriesCreateForms.set(key,Object.fromEntries(seriesCreateFields.map(id=>[id,$(id)?.value||''])));if(secureSeriesCreateDraft)seriesCreateDrafts.set(key,secureSeriesCreateDraft);}
     const who=secureSeriesIdentity(),form=seriesCreateForms.get(seriesActor(who))||seriesCreateDefaults;for(const id of seriesCreateFields)if($(id))$(id).value=form[id]??seriesCreateDefaults[id];
-    data.federalCup2026=defaultFederalCup2026();$('federalConfigUncertainty')?.remove();window.syncFederalConfigEditorSession?.();secureSeriesScope=scope;secureSeriesCreateDraft=who.authenticated?seriesCreateDrafts.get(seriesActor(who))||null:null;renderSecureSeriesCreateAttempt();updateSeriesScoringCreateUI();seriesEditorBase.clear();document.querySelectorAll('#seriesModalBody button,#createSeriesBtn').forEach(b=>b.disabled=false);secureSeriesActions.invalidate();secureSeriesLoaded=false;data.tournamentSeries=[];
+    seriesTournamentCoverage=null;data.federalCup2026=defaultFederalCup2026();$('federalConfigUncertainty')?.remove();window.syncFederalConfigEditorSession?.();secureSeriesScope=scope;secureSeriesCreateDraft=who.authenticated?seriesCreateDrafts.get(seriesActor(who))||null:null;renderSecureSeriesCreateAttempt();updateSeriesScoringCreateUI();seriesEditorBase.clear();document.querySelectorAll('#seriesModalBody button,#createSeriesBtn').forEach(b=>b.disabled=false);secureSeriesActions.invalidate();secureSeriesLoaded=false;data.tournamentSeries=[];
     const status=$('seriesPersistenceStatus');if(status)status.textContent='';$('seriesUncertaintyControls')?.remove();selectedSeriesId=null;$('seriesModal')?.classList.remove('show');renderSeriesList();renderTournamentSeriesSelect();
   }
   async function loadSecureSeries(){
@@ -21972,6 +22002,19 @@ function renderTournamentDetail(){
     </details>`;
   }
 
+  function seriesStandingsHtml(s,standings=seriesStandings(s)){return `      <h3>CELKOVÉ POŘADÍ</h3>
+      ${standings.length?`<div style="overflow:auto"><table class="stats-table">
+        <thead><tr><th>#</th><th>Hráč</th><th>Turnaje</th><th>1.</th><th>2.</th><th>3.</th><th>Body</th></tr></thead>
+        <tbody>${standings.map((r,i)=>`<tr>
+          <td class="standings-pos">${i+1}</td>
+          <td>
+            <strong>${esc(r.displayName||r.playerId)}</strong>
+            ${r.guest?'<span class="tournament-badge" style="margin-left:6px">HOST</span>':''}
+          </td>
+          <td class="num">${r.tournaments}</td><td class="num">${r.wins}</td><td class="num">${r.seconds}</td><td class="num">${r.thirds}</td>
+          <td class="num"><strong style="color:var(--gold2)">${r.points}</strong></td>
+        </tr>`).join('')}</tbody>
+      </table></div>`:'<div class="muted">Série zatím nemá dokončené výsledky.</div>'}`;}
   function renderSeriesModal(){
     const s=(data.tournamentSeries||[]).find(x=>x.id===selectedSeriesId);
     if(SERIES_AUTHORITY_ENABLED&&s){const base={};for(const k of window.TournamentSeriesRepository.fields.filter(k=>!['tournamentIds','updatedAt'].includes(k)))if(Object.prototype.hasOwnProperty.call(s,k))base[k]=JSON.parse(JSON.stringify(s[k]));seriesEditorBase.set(s.id,base);}
@@ -21984,6 +22027,7 @@ function renderTournamentDetail(){
     const standings=seriesStandings(s);
 
     body.innerHTML=`
+      <div data-series-history-slot="${esc(s.id)}">${seriesHistoryNoticeHtml(s)}</div>
       <div class="subpanel">
         <div><strong>${esc(s.club||'Klub')}</strong>${s.season?' • '+esc(s.season):''}</div>
         <div class="muted" style="margin-top:5px">Bodování: ${(s.scoringMode||'bands')==='custom'
@@ -22037,19 +22081,7 @@ function renderTournamentDetail(){
 
       ${seriesOrganizerHtml(s)}
 
-      <h3>CELKOVÉ POŘADÍ</h3>
-      ${standings.length?`<div style="overflow:auto"><table class="stats-table">
-        <thead><tr><th>#</th><th>Hráč</th><th>Turnaje</th><th>1.</th><th>2.</th><th>3.</th><th>Body</th></tr></thead>
-        <tbody>${standings.map((r,i)=>`<tr>
-          <td class="standings-pos">${i+1}</td>
-          <td>
-            <strong>${esc(r.displayName||r.playerId)}</strong>
-            ${r.guest?'<span class="tournament-badge" style="margin-left:6px">HOST</span>':''}
-          </td>
-          <td class="num">${r.tournaments}</td><td class="num">${r.wins}</td><td class="num">${r.seconds}</td><td class="num">${r.thirds}</td>
-          <td class="num"><strong style="color:var(--gold2)">${r.points}</strong></td>
-        </tr>`).join('')}</tbody>
-      </table></div>`:'<div class="muted">Série zatím nemá dokončené výsledky.</div>'}
+      <div data-series-standings-slot="${esc(s.id)}">${seriesStandingsHtml(s,standings)}</div>
 
       <h3 style="margin-top:18px">TURNAJE V SÉRII</h3>
       ${included.length?included.map(t=>`<div class="subpanel" style="margin-top:8px">
@@ -22732,6 +22764,7 @@ function renderTournamentDetail(){
       const leaderPts=leader?leader.points:0;
 
       return `<div class="subpanel" style="margin-bottom:12px">
+        <div data-series-history-slot="${esc(s.id)}">${seriesHistoryNoticeHtml(s)}</div>
         <div style="display:flex;justify-content:space-between;gap:12px;align-items:center;flex-wrap:wrap">
           <div style="flex:1;min-width:230px">
             <div style="font-size:22px;font-weight:950">${esc(s.name||'Série')}</div>

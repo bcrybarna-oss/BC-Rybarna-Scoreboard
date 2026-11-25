@@ -1,0 +1,27 @@
+  async function loadSecureTournaments(){
+    if(!await ensureCloudToken()) throw new Error('NO_AUTH');
+    const r=await fetch(cloudUrl('tournaments')+'&t='+Date.now(),{cache:'no-store'});
+    if(!r.ok) throw new Error('TOURNAMENTS_READ_'+r.status);
+    const raw=await r.json()||{};
+    data.tournaments=Object.values(raw).filter(Boolean);
+    const repaired=[];
+    data.tournaments.forEach(t=>{
+      if(!t.managerUids||typeof t.managerUids!=='object'||Array.isArray(t.managerUids))t.managerUids={};
+      try{
+        if(repairHybridWaitingState(t))repaired.push(t);
+      }catch(e){}
+    });
+    try{localStorage.setItem(DB_KEY,JSON.stringify(data));}catch(e){}
+
+    // Opravu starého chybného stavu zapíšeme i do cloudu, pokud má uživatel oprávnění.
+    for(const t of repaired){
+      try{
+        if(canManageTournament(t))await secureTournamentRequest(t.id,'PUT',t);
+      }catch(e){
+        console.warn('Hybrid waiting-state repair save:',e);
+      }
+    }
+
+    try{if(typeof window.renderModernHome==='function')window.renderModernHome();}catch(e){}
+    return data.tournaments;
+  }
