@@ -1,3 +1,5 @@
+> Update 25 November 2026: implementation of the narrow production transport now exists in [series-production-migration.md](series-production-migration.md). Its explicit private approvals still forbid unapproved production reads/writes. The specification-only historical text below does not supersede this update. Live isolated Auth/Rules gate:4PASS, closed.
+
 # Series cutover readiness — specification, no production adapter
 
 Dominik, 25 November 2026. Draft PR #73, candidate v4.51.123 RC, authority **disabled**.

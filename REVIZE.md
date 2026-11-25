@@ -1,3 +1,5 @@
+Doplnění 25.11.2026 (Dominik): Produkční transport existujícího migrátoru je implementovaný s odděleným schválením čtení/zápisu, explicitním projektem/databází/CLI identitou a fail-closed IAM kontrolou, jedním podmíněným PUT, soukromými úplnými receipts a nezávislým offline verifikátorem. Převod a migrační sekvence beze změny. Lokálně 9 nových +6 původních kontraktů PASS, produkční Node459/0/3skip,15 stávajících engine scénářů a stejná první kopie novým transportem+nezávislá kontrola PASS. CLI provider ověřen pouze na testovacím projektu bez RTDB požadavků; uzavřené živé Auth/Rules4PASS neopakovány. První localhost sandbox chyby zaznamenány jako prostředí. Produkční Firebase nekontaktována; aktivace false, nenasazeno. Viz docs/series-production-migration.md.
+
 # Revize aplikace Poolčítadlo
 
 ## Dominik – izolovaná persistence sérií a varianta B globálních writerů (v4.51.123 RC)

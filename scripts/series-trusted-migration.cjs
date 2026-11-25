@@ -1,5 +1,5 @@
 'use strict';
-// EMULATOR ONLY. No production endpoint, credentials, retries, deletes or Rules deployment.
+// Default CLI is emulator-only; createProduction adds an explicitly approved transport.
 const fs=require('node:fs'),path=require('node:path'),crypto=require('node:crypto');
 const contract=require('../assets/js/tournament-series-repository.js');
 const stable=x=>contract.canonical(x),hash=x=>crypto.createHash('sha256').update(JSON.stringify(stable(x))).digest('hex');
@@ -19,7 +19,7 @@ function journal(filename){
   finally{fs.closeSync(guard);fs.unlinkSync(lock);}
  }};
 }
-function create({port=19006,auditFile,fetch:transport=globalThis.fetch,now=Date.now,timeoutMs=15000}={}){
+function engine({port=19006,auditFile,fetch:transport=globalThis.fetch,now=Date.now,timeoutMs=15000}={},boundary){
  if(!Number.isInteger(port)||port<1024||port>65535||typeof auditFile!=='string')throw fail('EMULATOR_CONFIGURATION_REQUIRED');
  const base='http://127.0.0.1:'+port,ns='demo-pool-series',audit=journal(auditFile);let busy=false;
  const log=(type,fields={})=>audit.append({type,time:new Date(now()).toISOString(),...fields});
@@ -60,14 +60,15 @@ function create({port=19006,auditFile,fetch:transport=globalThis.fetch,now=Date.
   if(busy)throw fail('MIGRATION_BUSY');busy=true;let sent=false;
   try{
    const s=selector(options),mode=options.mode||'dry-run';if(!['dry-run','apply','verify'].includes(mode))throw fail('INVALID_MODE');
-   log('start',{mode,source:s.source,target:s.target,emulatorOnly:true});const old=intentFor(s);
+   if(boundary)boundary.guardRun(s,mode);
+   log('start',{mode,source:s.source,target:s.target,emulatorOnly:!boundary});const old=intentFor(s);
    if(mode==='verify'){if(!old)throw fail('NO_PRIOR_INTENT');return await inspect(s,old);}
    if(old){if(mode==='apply')throw fail('PRIOR_ATTEMPT_VERIFY_ONLY');return await inspect(s,old);}
    const src=await request(s.source),p=proposal(src,s),dst=await request(s.target);
    log('prepared',{source:s.source,target:s.target,sourceEtag:p.sourceEtag,sourceHash:p.sourceHash,targetHash:p.targetHash,targetEtag:dst.etag});
    if(dst.value!==null){if(hash(dst.value)!==p.targetHash)throw fail('EXISTING_TARGET_CONFLICT');return {mode,state:'ALREADY_PRESENT_NOT_OPERATION_RECEIPT',writes:0};}
    if(mode==='dry-run')return {mode,state:'EMPTY_TARGET_PLAN_ONLY',writes:0,sourceHash:p.sourceHash,targetHash:p.targetHash};
-   if(options.approval!=='EMULATOR CREATE ONLY')throw fail('EXPLICIT_EMULATOR_APPROVAL_REQUIRED');quiet(options.quiescence);
+   if(boundary)boundary.approve(options,s,p,dst.etag);else if(options.approval!=='EMULATOR CREATE ONLY')throw fail('EXPLICIT_EMULATOR_APPROVAL_REQUIRED');quiet(options.quiescence);
    const fresh=await request(s.source);if(fresh.etag!==p.sourceEtag||hash(fresh.value)!==p.sourceHash)throw fail('SOURCE_CHANGED_BEFORE_WRITE');
    quiet(options.quiescence);
    log('write-intent',{source:s.source,target:s.target,sourceEtag:p.sourceEtag,sourceHash:p.sourceHash,targetHash:p.targetHash,targetEtag:dst.etag,quietEvidence:{attestedBy:options.quiescence.attestedBy,evidenceRefs:options.quiescence.evidenceRefs,expiresAt:options.quiescence.expiresAt}});
@@ -82,10 +83,12 @@ function create({port=19006,auditFile,fetch:transport=globalThis.fetch,now=Date.
  }
  return Object.freeze({run});
 }
+function create(options){return engine(options);}
+function createProduction(options){const boundary=require('./series-migration-production-transport.cjs').create(options);return engine({...options,fetch:boundary.fetch},boundary);}
 async function cli(args){
  const v={};for(let i=0;i<args.length;i+=2){if(!['--mode','--source-index','--series-id','--port','--audit','--approval','--quiet-file'].includes(args[i])||!args[i+1]||Object.hasOwn(v,args[i]))throw fail('INVALID_ARGUMENTS');v[args[i]]=args[i+1];}
  const tool=create({port:v['--port']?Number(v['--port']):19006,auditFile:v['--audit']});
  const result=await tool.run({mode:v['--mode']||'dry-run',sourceIndex:Number(v['--source-index']),seriesId:v['--series-id'],approval:v['--approval'],quiescence:v['--quiet-file']?JSON.parse(fs.readFileSync(v['--quiet-file'],'utf8')):undefined});console.log(JSON.stringify(result));return result;
 }
 if(require.main===module)cli(process.argv.slice(2)).catch(e=>{console.error(e.code||'PROCESS_STOPPED');process.exitCode=1;});
-module.exports={create,journal,hash,cli};
+module.exports={create,createProduction,journal,hash,cli};

@@ -1,3 +1,5 @@
+> Update 25 November 2026: the separately approved production transport is now implemented; see [production boundary and runbook](series-production-migration.md). The emulator entry point below remains unchanged. No production access or cutover is authorized.
+
 # Trusted series migration — emulator preparation only
 
 Dominik, 25 November 2026. Draft PR #73, unpublished candidate v4.51.123 RC.
