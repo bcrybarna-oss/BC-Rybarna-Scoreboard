@@ -17,9 +17,9 @@ test('metadata selection keeps latest fixture, duplicate handling, manual Team, 
  const bad=copy(matches[0]);bad.scores=[2,2];r=copy(c.federalReportSelection([bad],{year:2026}));assert.deepEqual(r.resultIssues,[1]);assert.equal(r.decided,false);
 });
 const cloudSource=process.env.PERF_UNIT_BASELINE?fs.readFileSync(path.join(__dirname,'../tmp/performance-before.html'),'utf8'):h;
-function cloudContext(quota=true){
- const saved=new Map([['ts','1000']]);let writes=0,backups=0,renders=0;
- const c={data:{matches:[],players:{}},match:null,DB_KEY:'db',CLOUD_LOCAL_TS_KEY:'ts',cloudPollInProgress:false,cloudSyncInProgress:false,cloudApplyingRemote:false,document:{hidden:false},cloudLastError:'',
+function cloudContext(quota=true,domainMode=false){
+ const saved=new Map([['ts','1000']]);let writes=0,backups=0,renders=0,fcReads=0,seriesReads=0;
+ const c={SERIES_AUTHORITY_ENABLED:domainMode,refreshSecureFederalConfig(){fcReads++;},refreshSecureSeriesView(){seriesReads++;},data:{matches:[],players:{}},match:null,DB_KEY:'db',CLOUD_LOCAL_TS_KEY:'ts',cloudPollInProgress:false,cloudSyncInProgress:false,cloudApplyingRemote:false,document:{hidden:false},cloudLastError:'',
  localStorage:{getItem:k=>saved.get(k)||null,setItem(k,v){if(k==='db'&&quota)throw Error('QuotaExceededError');saved.set(k,v);writes++;}},
  normalizeDataObject:x=>x,loadDeviceActiveMatch:()=>null,saveDeviceActiveMatch(){},ensureCloudToken:async()=>true,cloudUrl:()=>'',fetch:async()=>({ok:true,json:async()=>({updatedAt:11000,data:{federalCup2026:{year:2026}}})}),saveSafetyBackup(){backups++;},mergeDataObjects:(a,b)=>({...a,...b}),refreshViewsAfterCloudLoad(){renders++;},setCloudStatus(){},console};
  vm.createContext(c);const start=cloudSource.includes('let cloudRuntimeDataTs=0')?cloudSource.indexOf('  // Applied in this tab'):cloudSource.indexOf('  function localCloudTimestamp(');
@@ -30,7 +30,7 @@ function cloudContext(quota=true){
    c.window={addEventListener(){},removeEventListener(){},CloudRefresh:{create:options=>require('../assets/js/cloud-refresh.js').create({...options,clock:{setInterval:()=>1,clearInterval(){},setTimeout:()=>2,clearTimeout(){}}})}};
    const a=cloudSource.indexOf('  // Session-owned /appData auto-refresh.'),b=cloudSource.indexOf('  // Secure-list refresh',a);vm.runInContext(cloudSource.slice(a,b),c);c.startCloudAutoSync();
  }else{const a=cloudSource.indexOf('  async function pollCloudData('),b=cloudSource.indexOf('  function startCloudAutoSync()',a);vm.runInContext(cloudSource.slice(a,b),c);}
- return {c,saved,counts:()=>({writes,backups,renders})};
+ return {c,saved,counts:()=>({writes,backups,renders,fcReads,seriesReads})};
 }
 test('quota: repeated polling applies an already received revision once without persisting an unsafe timestamp',async()=>{
  const {c,saved,counts}=cloudContext(true);await c.pollCloudData();await c.pollCloudData();await c.pollCloudData();assert.equal(counts().renders,1);assert.equal(counts().backups,1);assert.equal(c.localCloudTimestamp(),11000);assert.equal(saved.get('ts'),'1000');assert.equal(saved.has('db'),false);
@@ -49,3 +49,5 @@ test('concurrent match refreshes share one read, retry after failure and never a
  const changed=c.loadSecureMatches();await new Promise(r=>setImmediate(r));c.cloudUid='B';resolve({ok:true,json:async()=>({old:{id:'old'}})});await assert.rejects(changed,/MATCHES_IDENTITY_CHANGED/);assert.equal(c.data.matches[0].id,'m');
  const retry=c.loadSecureMatches();await new Promise(r=>setImmediate(r));resolve({ok:true,json:async()=>({fresh:{id:'fresh'}})});await retry;assert.equal(c.data.matches[0].id,'fresh');assert.equal(calls,4);
 });
+
+test('domain refresh adapters run even when the legacy root is absent or unchanged',async()=>{const {c,counts}=cloudContext(false,true);c.fetch=async()=>({ok:true,json:async()=>null});await c.pollCloudData();await c.pollCloudData();assert.equal(counts().fcReads,2);assert.equal(counts().seriesReads,2);assert.equal(counts().renders,0);assert.equal(c.cloudAutoSync.snapshot().pending,false);});

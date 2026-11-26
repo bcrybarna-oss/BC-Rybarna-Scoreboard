@@ -1,0 +1,122 @@
+[
+  {
+    "id": "synthetic-a",
+    "createdByUid": "synthetic-owner",
+    "managerUids": {
+      "synthetic-manager": true
+    },
+    "name": "Synthetic synthetic-a",
+    "season": "2026",
+    "updatedAt": "2026-11-24T00:00:00Z",
+    "tournamentIds": [
+      "synthetic-complete",
+      "synthetic-missing",
+      "synthetic-complete"
+    ],
+    "scoringMode": "bands",
+    "pointsTop": [
+      100,
+      80,
+      65,
+      55
+    ],
+    "pointsBands": [
+      45,
+      25,
+      10,
+      5
+    ],
+    "historicalTournaments": [
+      {
+        "id": "synthetic-historical-synthetic-a",
+        "results": [
+          {
+            "playerId": "synthetic-player",
+            "place": 1
+          }
+        ]
+      }
+    ],
+    "future": {
+      "retain": true
+    }
+  },
+  {
+    "id": "synthetic-b",
+    "createdByUid": "synthetic-owner",
+    "managerUids": {
+      "synthetic-manager": true
+    },
+    "name": "Synthetic synthetic-b",
+    "season": "2026",
+    "updatedAt": "2026-11-24T00:00:00Z",
+    "tournamentIds": [
+      "synthetic-complete"
+    ],
+    "scoringMode": "bands",
+    "pointsTop": [
+      100,
+      80,
+      65,
+      55
+    ],
+    "pointsBands": [
+      45,
+      25,
+      10,
+      5
+    ],
+    "historicalTournaments": [
+      {
+        "id": "synthetic-historical-synthetic-b",
+        "results": [
+          {
+            "playerId": "synthetic-player",
+            "place": 1
+          }
+        ]
+      }
+    ],
+    "future": {
+      "retain": true
+    }
+  },
+  {
+    "id": "synthetic-c",
+    "createdByUid": "synthetic-owner",
+    "managerUids": {
+      "synthetic-manager": true
+    },
+    "name": "Synthetic synthetic-c",
+    "season": "2026",
+    "updatedAt": "2026-11-24T00:00:00Z",
+    "tournamentIds": [],
+    "scoringMode": "bands",
+    "pointsTop": [
+      100,
+      80,
+      65,
+      55
+    ],
+    "pointsBands": [
+      45,
+      25,
+      10,
+      5
+    ],
+    "historicalTournaments": [
+      {
+        "id": "synthetic-historical-synthetic-c",
+        "results": [
+          {
+            "playerId": "synthetic-player",
+            "place": 1
+          }
+        ]
+      }
+    ],
+    "future": {
+      "retain": true
+    }
+  }
+]

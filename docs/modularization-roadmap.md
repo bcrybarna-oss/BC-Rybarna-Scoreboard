@@ -1,3 +1,11 @@
+# Samostatný úkol — varianta B persistence sérií (25. 11. 2026)
+
+PR73 readiness: aktivované upozornění na historii a cílená session/refresh evidence; produkční autorizace pouze specifikace bez zápisového adapteru. [Ruční brány a dočasná omezení](series-cutover-readiness.md). Nejde o zahájení10b1.
+
+PR #73: migrační Rules výjimka zamítnuta. Oddělená příprava důvěryhodného emulator-only migrátoru, bez produkčního adapteru a bez aktivace. [Omezení a provozní brány](series-trusted-migration.md). Etapa 10b1 se nezahajuje.
+
+Schválená B je izolovaně implementovaná v draft PR73/v4.51.123 RC: admin FC child writer, bez parent grantů, obnova nezávislá na globální revizi, zachovaná nová autorita sérií a předchozí blokace. [Inventář a důkazy](global-writers-variant-b.md). Rozhodnutí A/B už není blocker. Publikace Rules, aktuální snapshoty, migrace a aktivace dál vyžadují schválení; autorita false, produkce v122. PR55/72 nedotčené. 10b1/10b2 nezahájené.
+
 # Aktuální roadmapa modularizace Poolčítadla
 
 ## Samostatná UI oprava SKO — nasazeno v4.51.122 RC

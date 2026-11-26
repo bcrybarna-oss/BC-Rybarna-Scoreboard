@@ -1,0 +1,169 @@
+{
+  "readOnly": true,
+  "counts": {
+    "legacySeries": 3,
+    "targetSeries": 3,
+    "links": 4,
+    "historicalTournaments": 3,
+    "missingTarget": 1,
+    "identical": 1,
+    "conflict": 1,
+    "invalid": 0
+  },
+  "rows": [
+    {
+      "id": "synthetic-a",
+      "issues": [
+        "DUPLICATE_REFERENCES_NOT_REPAIRED"
+      ],
+      "owner": "synthetic-owner",
+      "managers": [
+        "synthetic-manager"
+      ],
+      "links": 3,
+      "tournamentIds": [
+        "synthetic-complete",
+        "synthetic-missing",
+        "synthetic-complete"
+      ],
+      "duplicateLinks": [
+        "synthetic-complete"
+      ],
+      "missingReferences": [
+        "synthetic-missing"
+      ],
+      "scoring": {
+        "scoringMode": "bands",
+        "pointsTop": [
+          100,
+          80,
+          65,
+          55
+        ],
+        "pointsBands": [
+          45,
+          25,
+          10,
+          5
+        ]
+      },
+      "historicalTournaments": 1,
+      "historicalSha256": "ae5264e0a1142a49f5523839e410603bce47dae32818b8d6da582b6ec114888e",
+      "unknownFields": [
+        "name",
+        "season",
+        "historicalTournaments",
+        "future"
+      ],
+      "originalSha256": "4317d6da9d253a4690d4251839c849028398f856005f3f46d58ccf0cb035449e",
+      "proposedSha256": "f7c280715afd0fd0f399f37e6a197cd733b713e6155e894338cd1ed0e8a35b00",
+      "targetSha256": "f7c280715afd0fd0f399f37e6a197cd733b713e6155e894338cd1ed0e8a35b00",
+      "status": "identical",
+      "firebaseRepresentationEquivalent": true
+    },
+    {
+      "id": "synthetic-b",
+      "issues": [],
+      "owner": "synthetic-owner",
+      "managers": [
+        "synthetic-manager"
+      ],
+      "links": 1,
+      "tournamentIds": [
+        "synthetic-complete"
+      ],
+      "duplicateLinks": [],
+      "missingReferences": [],
+      "scoring": {
+        "scoringMode": "bands",
+        "pointsTop": [
+          100,
+          80,
+          65,
+          55
+        ],
+        "pointsBands": [
+          45,
+          25,
+          10,
+          5
+        ]
+      },
+      "historicalTournaments": 1,
+      "historicalSha256": "e1e0b04d69dcda53e382b34b3cb80c7387e0a8bec7fe8db184c7b330ee4ab8d2",
+      "unknownFields": [
+        "name",
+        "season",
+        "historicalTournaments",
+        "future"
+      ],
+      "originalSha256": "148008ed518ba396d38a03bcefcbc8e67284418b0826c3e66ec87b66ed48bac2",
+      "proposedSha256": "e1fa6defa9434d5bf86dfa2f880ea843d86745d04a16ff1c1b820ff6e6f1062e",
+      "targetSha256": "e5054bb88fb28e9232f1e1aaa776192dd2e4a3492524c87dbdbf3e5fbc17debb",
+      "status": "conflict",
+      "firebaseRepresentationEquivalent": false
+    },
+    {
+      "id": "synthetic-c",
+      "issues": [],
+      "owner": "synthetic-owner",
+      "managers": [
+        "synthetic-manager"
+      ],
+      "links": 0,
+      "tournamentIds": [],
+      "duplicateLinks": [],
+      "missingReferences": [],
+      "scoring": {
+        "scoringMode": "bands",
+        "pointsTop": [
+          100,
+          80,
+          65,
+          55
+        ],
+        "pointsBands": [
+          45,
+          25,
+          10,
+          5
+        ]
+      },
+      "historicalTournaments": 1,
+      "historicalSha256": "ed280f6a3f3d5ff0c557f5128cc763faf6598469ecb4f4bcd0fe5c472f5a5578",
+      "unknownFields": [
+        "name",
+        "season",
+        "historicalTournaments",
+        "future"
+      ],
+      "originalSha256": "98732b90de69ad13da435d1cd19e5f97fbebe619762f8bfe42fb5c9c75703867",
+      "proposedSha256": "35e5566341c32a1b57d260cb0596eeb8b38198afeb4401a563e6ab30fdc386ed",
+      "targetSha256": null,
+      "status": "missingTarget",
+      "firebaseRepresentationEquivalent": null
+    }
+  ],
+  "orphanTargetIds": [
+    "synthetic-orphan"
+  ],
+  "automaticRepair": false,
+  "automaticDeduplication": false,
+  "productionWrites": 0,
+  "note": "Snapshot comparison only. This report does not prove that inputs are current cloud authority, and performs no migration.",
+  "sourceKind": "synthetic",
+  "inputs": [
+    {
+      "sha256": "84fb6ade14cce773089115b258638cda90b448d235a71bbd1ce02de1da3301a3",
+      "capture": null
+    },
+    {
+      "sha256": "ceaf0b4259b5b20e69fd36b1c5f970594897a8b9b75a1fc5c8281871b4c7c0c7",
+      "capture": null
+    },
+    {
+      "sha256": "659aba5aa0da039e2bd0d2dc06a51adf30a61ee4e92270ef907ceeb8f4c89ed1",
+      "capture": null
+    }
+  ]
+}

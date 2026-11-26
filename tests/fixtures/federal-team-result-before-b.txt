@@ -1,0 +1,11 @@
+// Exact baseline caller excerpt from 35b36a03d59d9ad64b7011c56364c011bef255e1:index.html. Audit fixture only.
+  window.fc26SaveTeamResult=async function(n){
+    if(!canEdit())return toast('Federal Cup může upravovat systémový administrátor.');
+    if(raceState().decided&&!cfg().teamResults?.[n]?.done)
+      return toast('Utkání už skončilo na 11 vítězných zápasů. Další výsledek nelze zapsat.');
+    const a=Math.max(0,Number($('fc26TeamScoreA'+n)?.value||0));
+    const b=Math.max(0,Number($('fc26TeamScoreB'+n)?.value||0));
+    if(a===b)return toast('Team utkání musí mít vítěze.');
+    const base=cfg(),next=cloneForUndo(base);next.teamResults[n]={a,b,done:true,updatedAt:new Date().toISOString()};
+    if(await commitConfig(next,base))toast('Team výsledek uložen.');
+  };
