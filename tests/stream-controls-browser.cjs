@@ -60,6 +60,12 @@ assert.ok(html.includes('window.streamTest='));
    const matchId=await page.evaluate(()=>streamTest.match.id);
    const explicitUrl=await page.locator('#matchStreamOverlayUrl').inputValue();
    assert.equal(new URL(explicitUrl).searchParams.get('matchId'),matchId);
+   // Counter rendering does not await the debounced stream PUT. Wait for this match,
+   // then keep checking the first payload (never filter by the expected streamMode).
+   if(!writes.some(w=>w.path==='/stream/users/isolated-stream.json'&&w.value.matchId===matchId)){
+    await page.waitForResponse(response=>new URL(response.url()).pathname==='/stream/users/isolated-stream.json'
+     &&response.request().method()==='PUT'&&response.request().postDataJSON()?.matchId===matchId);
+   }
    // Each newly selected match has its own URL. Do not silently rebind the old OBS source.
    const localUrl=new URL(explicitUrl);localUrl.protocol='http:';localUrl.host='stream-isolated.local';localUrl.pathname='/overlay.html';
    await overlay.goto(localUrl.toString());assert.equal(writes.find(w=>w.path==='/stream/users/isolated-stream.json'&&w.value.matchId===matchId)?.value.streamMode,'soon','first OBS publication is SOON');
